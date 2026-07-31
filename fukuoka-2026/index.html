@@ -1,0 +1,2697 @@
+<!DOCTYPE html>
+<html lang="zh-TW" data-theme="maple">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="color-scheme" content="light">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#E8A369">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="九州福岡七日自駕・完整行">
+<title>🍁 KYUSHU ROAD TRIP 2026 ♨️</title>
+<style>
+/* ═══════════════════════════════════════════════
+   設計層 —— 換旅程時不需要修改
+   ═══════════════════════════════════════════════ */
+:root{
+  /* 色彩：單一語意化系統 */
+  --c-bg:#F5F2ED;
+  --c-surface:#FFFFFF;
+  --c-text:#3B3733;
+  --c-text-dim:#8A8178;
+  --c-line:#E7E1D8;
+  --c-accent:#74B9FF;
+  --c-accent-soft:#E8F4FF;
+  --c-on-accent:#0F4670;
+  --deco-size:120px 120px,180px 180px,240px 240px;
+  --c-warn:#E0A458;
+  --c-warn-soft:#FDF4E7;
+  --c-danger:#D9534F;
+  --c-ok:#4CAF7D;
+  /* 外部服務色（固定不隨主題變） */
+  --c-naver:  #029343;
+  --c-booking:#E05000;
+  --c-map:    #1A73E8;
+  --c-pop:    #B85C00;   /* theme 樣式用的對比色，各主題覆寫 */
+  /* 尺寸 */
+  --w-app:480px;
+  --r-card:14px;
+  --r-pill:20px;
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:24px; --sp-6:32px;
+  --fs-xs:.75rem; --fs-sm:.85rem; --fs-md:1rem; --fs-lg:1.15rem; --fs-xl:1.5rem;
+  --shadow:0 2px 8px rgba(0,0,0,.06);
+}
+[data-theme="snow"]  { --c-accent:#74B9FF; --c-pop:#B85C00; --c-on-accent:#0F4670; --c-accent-soft:#E8F4FF; --c-bg:#F5F2ED;
+                       --deco:radial-gradient(circle,#FFFFFF 2px,transparent 3px); --deco-size:120px 120px,180px 180px; --deco-size2:240px 240px;
+                       --deco-op:.55; --anim-a:driftA; --anim-b:driftB; }
+[data-theme="sakura"]{ --c-accent:#F4A6C0; --c-pop:#04855A; --c-on-accent:#6E2338; --c-accent-soft:#FDEEF3; --c-bg:#FBF6F4;
+                       --deco:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><g transform='translate(30,24) rotate(-18) scale(0.875) translate(-8,-7)' opacity='1'><ellipse cx='8' cy='7' rx='6.5' ry='3.4' fill='%23F0A9C1'/></g><g transform='translate(86,58) rotate(42) scale(0.75) translate(-8,-7)' opacity='0.82'><ellipse cx='8' cy='7' rx='6.5' ry='3.4' fill='%23F0A9C1'/></g><g transform='translate(52,96) rotate(158) scale(0.95) translate(-8,-7)' opacity='0.66'><ellipse cx='8' cy='7' rx='6.5' ry='3.4' fill='%23F0A9C1'/></g></svg>"); --deco-size:120px 120px,120px 120px; --deco-size2:120px 120px;
+                       --deco-op:.55; --anim-a:driftA; --anim-b:driftB; }
+[data-theme="maple"] { --c-accent:#E8A369; --c-pop:#0077DB; --c-on-accent:#6B3410; --c-accent-soft:#FBEDE0; --c-bg:#F8F2EA;
+                       --deco:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><g transform='translate(30,24) rotate(-18) scale(0.875) translate(-8,-7)' opacity='1'><path d='M8 1.5 L9.6 5 L13 4.2 L10.9 7 L14 8.6 L10.6 9.2 L11.4 12.6 L8 10.6 L4.6 12.6 L5.4 9.2 L2 8.6 L5.1 7 L3 4.2 L6.4 5 Z' fill='%23D98442'/></g><g transform='translate(86,58) rotate(42) scale(0.75) translate(-8,-7)' opacity='0.82'><path d='M8 1.5 L9.6 5 L13 4.2 L10.9 7 L14 8.6 L10.6 9.2 L11.4 12.6 L8 10.6 L4.6 12.6 L5.4 9.2 L2 8.6 L5.1 7 L3 4.2 L6.4 5 Z' fill='%23D98442'/></g><g transform='translate(52,96) rotate(158) scale(0.95) translate(-8,-7)' opacity='0.66'><path d='M8 1.5 L9.6 5 L13 4.2 L10.9 7 L14 8.6 L10.6 9.2 L11.4 12.6 L8 10.6 L4.6 12.6 L5.4 9.2 L2 8.6 L5.1 7 L3 4.2 L6.4 5 Z' fill='%23D98442'/></g></svg>"); --deco-size:120px 120px,120px 120px; --deco-size2:120px 120px;
+                       --deco-op:.45; --anim-a:driftA; --anim-b:driftB; }
+[data-theme="ocean"] { --c-accent:#6FCBD5; --c-pop:#C2410C; --c-on-accent:#0C4A50; --c-accent-soft:#E3F5F7; --c-bg:#F2F7F7;
+                       --deco:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><g transform='translate(28,26) rotate(0) scale(1) translate(-8,-7)' opacity='0.95'><circle cx='8' cy='7' r='6.6' fill='none' stroke='%236FCBD5' stroke-width='1.5'/></g><g transform='translate(88,60) rotate(0) scale(0.58) translate(-8,-7)' opacity='0.8'><circle cx='8' cy='7' r='6.6' fill='none' stroke='%236FCBD5' stroke-width='1.5'/></g><g transform='translate(54,98) rotate(0) scale(0.78) translate(-8,-7)' opacity='0.62'><circle cx='8' cy='7' r='6.6' fill='none' stroke='%236FCBD5' stroke-width='1.5'/></g></svg>"); --deco-size:120px 120px,120px 120px; --deco-size2:120px 120px;
+                       --deco-op:.5; --anim-a:riseA; --anim-b:riseB; }
+[data-theme="city"]  { --c-accent:#A9A4E0; --c-pop:#8A6410; --c-on-accent:#322B70; --c-accent-soft:#EEEDFA; --c-bg:#F5F4F8;
+                       --deco:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='190' viewBox='0 0 480 190'><rect x='0' y='72' width='58' height='118' fill='%23322B70'/><rect x='10' y='88' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='10' y='128' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='25' y='88' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='25' y='108' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='25' y='148' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='40' y='108' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='62' y='32' width='34' height='158' fill='%23322B70'/><rect x='77.0' y='6' width='4' height='26' fill='%23322B70'/><circle cx='79.0' cy='2' r='3' fill='%23322B70'/><rect x='69' y='48' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='69' y='68' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='69' y='128' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='69' y='148' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='81' y='48' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='81' y='68' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='81' y='88' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='81' y='128' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='81' y='148' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='100' y='98' width='46' height='92' fill='%23322B70'/><rect x='108' y='154' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='119' y='114' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='119' y='154' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='130' y='114' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='130' y='134' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='130' y='154' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='150' y='54' width='40' height='136' fill='%23322B70'/><rect x='159' y='40' width='22' height='14' fill='%23322B70'/><rect x='159' y='130' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='159' y='150' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='173' y='70' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='173' y='90' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='173' y='110' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='173' y='130' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='173' y='150' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='194' y='84' width='66' height='106' fill='%23322B70'/><rect x='203' y='100' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='203' y='140' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='203' y='160' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='216' y='100' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='216' y='120' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='216' y='140' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='216' y='160' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='230' y='120' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='230' y='140' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='243' y='100' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='243' y='140' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='243' y='160' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='264' y='20' width='30' height='170' fill='%23322B70'/><rect x='277.0' y='-6' width='4' height='26' fill='%23322B70'/><circle cx='279.0' cy='-10' r='3' fill='%23322B70'/><rect x='270' y='36' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='270' y='56' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='270' y='76' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='270' y='96' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='270' y='116' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='270' y='136' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='270' y='156' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='280' y='36' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='280' y='56' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='280' y='76' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='280' y='96' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='280' y='136' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='280' y='156' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='298' y='66' width='52' height='124' fill='%23322B70'/><rect x='309' y='52' width='29' height='14' fill='%23322B70'/><rect x='307' y='82' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='307' y='102' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='307' y='122' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='307' y='142' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='307' y='162' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='320' y='102' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='333' y='82' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='333' y='142' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='333' y='162' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='354' y='104' width='44' height='86' fill='%23322B70'/><rect x='361' y='140' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='361' y='160' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='372' y='120' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='372' y='140' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='372' y='160' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='383' y='120' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='383' y='140' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='383' y='160' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='402' y='42' width='38' height='148' fill='%23322B70'/><rect x='411' y='58' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='411' y='78' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='423' y='58' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='423' y='78' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='423' y='98' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='423' y='138' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='423' y='158' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='444' y='90' width='36' height='100' fill='%23322B70'/><rect x='452' y='76' width='20' height='14' fill='%23322B70'/><rect x='452' y='106' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='452' y='126' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='452' y='146' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='464' y='106' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='464' y='126' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='464' y='146' width='8' height='10' rx='1' fill='%23F5F4F8'/></svg>");
+                       --deco-b:none; --deco-c:none;
+                       --deco-size:480px auto; --deco-repeat:repeat-x; --deco-pos:center bottom;
+                       --deco-op:.13; --anim-a:none; --anim-b:none; }
+[data-theme="none"]  { --deco:none; --deco-op:0; --anim-a:none; --anim-b:none; }
+
+*,*::before,*::after{ box-sizing:border-box; }
+html,body{ margin:0; padding:0; }
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",Roboto,sans-serif;
+  background:var(--c-bg); color:var(--c-text);
+  font-size:var(--fs-md); line-height:1.6;
+  display:flex; justify-content:center;
+  overflow-x:hidden; -webkit-text-size-adjust:100%;
+}
+
+/* 主題裝飾：兩個獨立圖層，速度與路徑都不同，避免整片同步平移 */
+body::before, body::after{
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+}
+body::before{
+  background-image:var(--deco-a,var(--deco)),var(--deco-b,var(--deco));
+  background-size:var(--deco-size);
+  background-repeat:var(--deco-repeat,repeat);
+  background-position:var(--deco-pos,0 0);
+  opacity:var(--deco-op);
+  animation:var(--anim-a) 24s linear infinite;
+}
+body::after{
+  background-image:var(--deco-c,var(--deco));
+  background-size:var(--deco-size2,var(--deco-size));
+  background-repeat:var(--deco-repeat,repeat);
+  background-position:var(--deco-pos,0 0);
+  opacity:calc(var(--deco-op) * .7);
+  animation:var(--anim-b) 17s linear infinite;
+}
+/* 垂直位移 720px（120／180／240 的公倍數），才能無縫接回；
+   水平回到原點，中間的節點刻意不等距，落下速度才不會像機器 */
+@keyframes driftA{
+  0%   { background-position:-26px -240px, 58px -240px; }
+  35%  { background-position: 18px   14px, 10px   34px; }
+  70%  { background-position:-22px  268px, 62px  288px; }
+  100% { background-position:-26px  480px, 58px  480px; }
+}
+@keyframes driftB{
+  0%   { background-position: 40px -300px; }
+  40%  { background-position:-16px  -12px; }
+  75%  { background-position: 34px  240px; }
+  100% { background-position: 40px  420px; }
+}
+/* 氣泡由下往上，同樣位移 720px */
+@keyframes riseA{
+  0%   { background-position:-22px  480px, 62px  480px; }
+  35%  { background-position: 16px  226px,  8px  206px; }
+  70%  { background-position:-18px  -28px, 58px  -48px; }
+  100% { background-position:-22px -240px, 62px -240px; }
+}
+@keyframes riseB{
+  0%   { background-position: 36px  420px; }
+  40%  { background-position:-12px  132px; }
+  75%  { background-position: 30px -120px; }
+  100% { background-position: 36px -300px; }
+}
+@media (prefers-reduced-motion:reduce){
+  body::before, body::after{ animation:none; opacity:0; }
+  .route-dot.on::after, .route-link .bar::after{ animation:none; opacity:0; }
+  *{ animation-duration:.01ms !important; transition-duration:.01ms !important; }
+}
+
+.app{ width:100%; max-width:var(--w-app); position:relative; z-index:1; padding-bottom:var(--sp-6); }
+
+/* ── Header ───────────────────────────── */
+header{ text-align:center; padding:var(--sp-5) var(--sp-4) var(--sp-3); }
+header h1{ font-size:var(--fs-xl); margin:0 0 var(--sp-1); letter-spacing:.5px; }
+header .subtitle{ font-size:var(--fs-sm); color:var(--c-text-dim); margin:0 0 var(--sp-4); }
+
+/* ── 目前天氣條 ───────────────────────── */
+.wx-now{
+  background:var(--c-surface); border-radius:var(--r-card); box-shadow:var(--shadow);
+  padding:var(--sp-4); text-align:left;
+}
+.wx-top{
+  display:flex; justify-content:space-between; align-items:baseline;
+  gap:var(--sp-2); margin-bottom:var(--sp-3);
+}
+.wx-date{ font-size:var(--fs-md); font-weight:800; color:var(--c-text); letter-spacing:.2px; }
+.wx-date span{ font-size:var(--fs-xs); font-weight:400; color:var(--c-text-dim); margin-left:var(--sp-2); }
+.wx-time{ font-size:var(--fs-sm); color:var(--c-text-dim); white-space:nowrap; }
+.wx-main{ display:flex; align-items:center; gap:var(--sp-4); }
+.wx-emoji{ font-size:2.6rem; line-height:1; flex:0 0 auto; }
+.wx-temp{ font-size:2.4rem; font-weight:800; line-height:1; letter-spacing:-2px; }
+.wx-desc{ font-size:var(--fs-sm); color:var(--c-text-dim); margin-top:3px; }
+.wx-hl{ margin-left:auto; text-align:right; white-space:nowrap; }
+.wx-hl .cap{ font-size:var(--fs-xs); color:var(--c-text-dim); }
+.wx-hl .hi{ font-size:1.3rem; font-weight:800; line-height:1.15; }
+.wx-hl .lo{ font-size:1.1rem; color:var(--c-text-dim); line-height:1.15; }
+/* 數據列：標籤與數值同一行，高度只有原本的一半 */
+.wx-grid{
+  display:flex; margin-top:var(--sp-3); background:var(--c-accent-soft);
+  border-radius:8px; padding:var(--sp-1) 0;
+}
+.wx-grid div{
+  flex:1; text-align:center; font-size:var(--fs-xs); color:var(--c-text-dim);
+  line-height:1.9; white-space:nowrap;
+}
+.wx-grid div + div{ border-left:1px solid rgba(0,0,0,.06); }
+.wx-grid b{ font-size:var(--fs-sm); color:var(--c-text); margin-left:3px; font-weight:700; }
+.wx-stamp{ font-size:var(--fs-xs); color:var(--c-text-dim); text-align:center; margin-top:var(--sp-1); }
+
+/* ── 導覽膠囊 ─────────────────────────── */
+.nav-bar{
+  display:flex; gap:var(--sp-1); overflow-x:auto; padding:var(--sp-2) var(--sp-4);
+  position:sticky; top:0; z-index:100;
+  background:color-mix(in srgb,var(--c-bg) 92%,transparent);
+  backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+  scrollbar-width:none; -webkit-overflow-scrolling:touch;
+}
+.nav-bar::-webkit-scrollbar{ display:none; }
+.nav-item{
+  flex:0 0 auto; padding:var(--sp-2) var(--sp-4); min-height:40px;
+  border:1px solid var(--c-line); border-radius:var(--r-pill);
+  background:var(--c-surface); color:var(--c-text-dim);
+  font-size:var(--fs-sm); font-family:inherit; font-weight:600;
+  cursor:pointer; white-space:nowrap; transition:background .15s,color .15s;
+}
+.nav-item[aria-selected="true"]{ background:var(--c-accent); border-color:var(--c-accent); color:var(--c-on-accent); }
+.nav-item:focus-visible,.btn:focus-visible,input:focus-visible,select:focus-visible,button:focus-visible{
+  outline:2px solid var(--c-accent); outline-offset:2px;
+}
+
+/* ── 內容 ─────────────────────────────── */
+main{ padding:var(--sp-3) var(--sp-4) 0; }
+.card.lodge{ background:var(--c-accent-soft); border:1px solid var(--c-accent); }
+.ttag{
+  display:inline-block; background:var(--c-accent); color:var(--c-on-accent);
+  font-size:var(--fs-xs); font-weight:700; padding:2px var(--sp-2);
+  border-radius:6px; margin-bottom:var(--sp-2); margin-right:var(--sp-2);
+}
+.info{ margin-top:var(--sp-3); padding-top:var(--sp-3); border-top:1px dashed var(--c-line); font-size:var(--fs-sm); }
+.info div{ padding:2px 0; }
+.card{
+  background:var(--c-surface); border-radius:var(--r-card); box-shadow:var(--shadow);
+  padding:var(--sp-4); margin-bottom:var(--sp-3);
+}
+.time{
+  display:inline-block; background:var(--c-accent-soft); color:var(--c-text);
+  font-size:var(--fs-xs); font-weight:700; padding:2px var(--sp-2);
+  border-radius:6px; margin-bottom:var(--sp-2);
+}
+.stay{
+  display:inline-block; font-size:var(--fs-xs); color:var(--c-text-dim);
+  margin-left:var(--sp-2); margin-bottom:var(--sp-2);
+}
+.subject{ font-size:var(--fs-lg); font-weight:700; margin-bottom:var(--sp-1); }
+.lang-local{ font-size:var(--fs-sm); color:var(--c-text-dim); font-weight:400; margin-left:var(--sp-1); }
+.meta{ font-size:var(--fs-sm); color:var(--c-text-dim); margin-bottom:var(--sp-1); }
+.note-box{
+  background:var(--c-accent-soft); border-radius:10px;
+  padding:var(--sp-3); margin-top:var(--sp-3); font-size:var(--fs-sm); line-height:1.7;
+}
+.note-box.warn{ background:var(--c-warn-soft); border-left:3px solid var(--c-warn); }
+
+/* ── 按鈕 ─────────────────────────────── */
+.btn{
+  display:inline-block; margin-top:var(--sp-2); margin-right:var(--sp-2);
+  padding:10px var(--sp-4); min-height:44px; line-height:24px;
+  border:none; border-radius:10px; text-decoration:none;
+  font-size:var(--fs-sm); font-weight:700; font-family:inherit;
+  color:#FFFFFF; background:var(--c-text); cursor:pointer;
+}
+.btn-naver{ background:var(--c-naver); }
+.btn-booking{ background:var(--c-booking); }
+.btn-map  { background:var(--c-map); }
+/* theme：主題色的互補色，在一排服務色按鈕裡跳出來 */
+.btn-theme{ background:var(--c-pop); color:#FFFFFF; }
+/* 路線：外框樣式，跟「開啟某個服務」的實心按鈕區隔開 */
+.btn-route{
+  background:transparent; color:var(--c-on-accent);
+  border:1.5px solid var(--c-accent); font-weight:700;
+}
+.btn:active{ opacity:.85; }
+
+/* ── 航班卡 ───────────────────────────── */
+.flight{ border:1px solid var(--c-accent); }
+.fl-head{
+  display:flex; justify-content:space-between; align-items:baseline;
+  font-size:var(--fs-xs); color:var(--c-text-dim); margin-bottom:var(--sp-3);
+}
+.fl-air{ font-weight:700; color:var(--c-text); letter-spacing:.3px; }
+.fl-air b{ color:var(--c-on-accent); margin-left:var(--sp-2); font-weight:800; }
+.fl-body{ display:grid; grid-template-columns:auto minmax(48px,1fr) auto; align-items:center; gap:var(--sp-3); }
+.fl-side .t{ font-size:1.4rem; font-weight:800; line-height:1.05; letter-spacing:-.5px; }
+.fl-side .p{ font-size:var(--fs-sm); font-weight:700; letter-spacing:1.5px; color:var(--c-on-accent); }
+.fl-side .g{ font-size:var(--fs-xs); color:var(--c-text-dim); white-space:nowrap; }
+.fl-side.end{ text-align:right; }
+.fl-mid{ position:relative; display:flex; align-items:center; justify-content:center; }
+.fl-mid::before{
+  content:""; position:absolute; left:0; right:0; top:50%;
+  border-top:1px dashed var(--c-line);
+}
+.fl-mid span{
+  position:relative; background:var(--c-surface); padding:0 var(--sp-2);
+  font-size:.9rem; color:var(--c-accent);
+}
+
+/* ── 交通路線 ─────────────────────────── */
+.route{ margin-top:var(--sp-3); padding-left:2px; }
+.route-step{ display:flex; gap:var(--sp-3); align-items:flex-start; }
+.route-dot{
+  position:relative; flex:0 0 14px; width:14px; height:14px; margin-top:5px;
+  border-radius:50%; background:var(--c-line); border:2px solid var(--c-surface);
+  box-sizing:content-box; z-index:2;
+}
+/* 起終點：脈動光暈 */
+.route-dot.on{ background:var(--c-accent); }
+.route-dot.on::after{
+  content:""; position:absolute; inset:0; border-radius:50%;
+  background:var(--c-accent); animation:pulse 2.4s ease-out infinite;
+}
+@keyframes pulse{
+  0%   { transform:scale(1);   opacity:.45; }
+  70%  { transform:scale(2.6); opacity:0; }
+  100% { transform:scale(1);   opacity:0; }
+}
+.route-body{ flex:1; padding-bottom:var(--sp-2); }
+.route-body strong{ font-size:var(--fs-md); }
+/* 連接線：光點由上往下流 */
+.route-link{ display:flex; gap:var(--sp-3); }
+.route-link .bar{ flex:0 0 18px; display:flex; justify-content:center; }
+.route-link .bar::before{
+  content:""; width:4px; min-height:34px; border-radius:2px;
+  background:var(--c-line); position:relative; overflow:hidden;
+}
+.route-link .bar{ position:relative; }
+.route-link .bar::after{
+  content:""; position:absolute; left:calc(50% - 2px); width:4px; height:16px;
+  border-radius:2px; background:var(--c-accent);
+  animation:flow 1.8s linear infinite;
+}
+@keyframes flow{
+  from{ top:-16px; opacity:0; }
+  15% { opacity:.85; }
+  85% { opacity:.85; }
+  to  { top:100%;   opacity:0; }
+}
+.route-link .via{ flex:1; font-size:var(--fs-xs); color:var(--c-text-dim); padding:var(--sp-2) 0; }
+.exit-note{ font-size:var(--fs-sm); color:var(--c-text-dim); }
+
+/* ── 選項（多選一） ───────────────────── */
+.choice{ border:1px solid var(--c-line); border-radius:10px; padding:var(--sp-3); margin-top:var(--sp-2); }
+.choice .tag{
+  display:inline-block; background:var(--c-accent); color:var(--c-on-accent); font-size:var(--fs-xs);
+  font-weight:700; padding:1px var(--sp-2); border-radius:5px; margin-bottom:var(--sp-1);
+}
+
+/* ── 勾選清單 ─────────────────────────── */
+.chk-group{ margin-top:var(--sp-3); }
+.chk-group:first-of-type{ margin-top:var(--sp-2); }
+.chk-group h4{ margin:0 0 var(--sp-2); font-size:var(--fs-sm); color:var(--c-on-accent); }
+.chk{
+  display:flex; align-items:center; gap:10px;
+  min-height:34px; padding:0; cursor:pointer; font-size:var(--fs-sm); line-height:1.4;
+}
+.chk input{ width:18px; height:18px; accent-color:var(--c-accent); flex:0 0 auto; }
+.chk input:checked + span{ color:var(--c-text-dim); text-decoration:line-through; }
+.chk-progress{ font-size:var(--fs-xs); color:var(--c-text-dim); }
+
+/* ── 天氣預報列 ───────────────────────── */
+.wx-strip{ display:flex; gap:var(--sp-2); overflow-x:auto; padding-bottom:var(--sp-2); scrollbar-width:none; }
+.wx-strip::-webkit-scrollbar{ display:none; }
+.wx-day{
+  flex:0 0 76px; text-align:center; background:var(--c-accent-soft);
+  border-radius:10px; padding:var(--sp-2) var(--sp-1); font-size:var(--fs-xs);
+}
+.wx-day .e{ font-size:1.4rem; line-height:1.3; }
+.wx-day .hi{ font-weight:800; }
+.wx-day .lo{ color:var(--c-text-dim); }
+
+/* ── 記帳 ─────────────────────────────── */
+.field{ margin-bottom:var(--sp-3); }
+.field > label{ display:block; font-size:var(--fs-sm); font-weight:700; margin-bottom:var(--sp-2); }
+.input{
+  width:100%; padding:10px var(--sp-3); min-height:44px;
+  border:1px solid var(--c-line); border-radius:10px;
+  background:var(--c-surface); color:var(--c-text);
+  font-size:var(--fs-md); font-family:inherit;
+}
+.chips{ display:flex; flex-wrap:wrap; gap:var(--sp-2); }
+.chip{
+  display:inline-flex; align-items:center; min-height:40px; padding:var(--sp-1) var(--sp-3);
+  border:1px solid var(--c-line); border-radius:var(--r-pill);
+  background:var(--c-surface); font-size:var(--fs-sm); cursor:pointer; user-select:none;
+}
+.chip input{ position:absolute; opacity:0; width:0; height:0; }
+.chip:has(input:checked){ background:var(--c-accent); border-color:var(--c-accent); color:var(--c-on-accent); font-weight:700; }
+.row2{ display:flex; gap:var(--sp-2); }
+.row2 > *{ flex:1; }
+.exp-list{ margin-top:var(--sp-2); }
+.exp-item{
+  display:flex; justify-content:space-between; align-items:flex-start; gap:var(--sp-2);
+  padding:var(--sp-2) 0; border-bottom:1px solid var(--c-line); font-size:var(--fs-sm);
+}
+.exp-item:last-child{ border-bottom:none; }
+.exp-item .amt{ font-weight:700; white-space:nowrap; text-align:right; }
+.exp-del{
+  border:none; background:none; color:var(--c-danger); cursor:pointer;
+  font-size:var(--fs-sm); padding:0 var(--sp-1); min-height:32px;
+}
+.settle{ display:flex; justify-content:space-between; padding:var(--sp-2) 0; font-size:var(--fs-sm); }
+.settle b{ color:var(--c-on-accent); }
+
+/* ── 同步狀態 ─────────────────────────── */
+.sync{
+  position:fixed; top:var(--sp-2); right:var(--sp-2); z-index:200;
+  font-size:var(--fs-xs); font-weight:700; padding:var(--sp-1) var(--sp-3);
+  border-radius:var(--r-pill); background:var(--c-surface); box-shadow:var(--shadow);
+}
+.sync[data-s="ok"]{ color:var(--c-ok); }
+.sync[data-s="offline"]{ color:var(--c-warn); }
+.sync[data-s="local"]{ color:var(--c-text-dim); }
+.sync[data-s="error"]{ color:var(--c-danger); }
+
+/* ── 其他 ─────────────────────────────── */
+.src{
+  font-size:var(--fs-xs); color:var(--c-text-dim); line-height:1.6;
+  background:var(--c-accent-soft); border-radius:8px;
+  padding:var(--sp-2) var(--sp-3); margin-bottom:var(--sp-3);
+}
+.ph{ padding:var(--sp-2) 0; border-bottom:1px solid var(--c-line); }
+.ph:last-child{ border-bottom:none; }
+.ph-l{ font-size:var(--fs-md); line-height:1.5; }
+.ph-l.dim{ color:var(--c-text-dim); }
+.ph-z{ font-size:var(--fs-sm); color:var(--c-text-dim); margin-top:1px; }
+.phrase{
+  display:flex; justify-content:space-between; align-items:baseline;
+  gap:var(--sp-3); padding:var(--sp-2) 0; border-bottom:1px solid var(--c-line);
+}
+.phrase > span:first-child{ min-width:0; }              /* 讓標題可以折行 */
+.phrase > span:last-child{
+  flex:0 0 auto; white-space:nowrap; text-align:right;  /* 電話號碼絕不折行 */
+  font-variant-numeric:tabular-nums;
+}
+.phrase:last-child{ border-bottom:none; }
+.phrase .zh{ color:var(--c-text-dim); font-size:var(--fs-sm); }
+.err{ background:var(--c-warn-soft); border-left:3px solid var(--c-danger); padding:var(--sp-3); border-radius:8px; font-size:var(--fs-sm); }
+/* ── PWA：瀏海與底部安全區 ─────────────── */
+body{
+  padding-top:env(safe-area-inset-top);
+  padding-bottom:env(safe-area-inset-bottom);
+}
+.sync{ top:calc(var(--sp-2) + env(safe-area-inset-top)); }
+.nav-bar{ top:env(safe-area-inset-top); }
+.toast{
+  position:fixed; left:50%; bottom:calc(var(--sp-5) + env(safe-area-inset-bottom));
+  transform:translateX(-50%); z-index:300; max-width:calc(var(--w-app) - var(--sp-6));
+  background:var(--c-text); color:var(--c-bg); font-size:var(--fs-sm); font-weight:600;
+  padding:var(--sp-3) var(--sp-4); border-radius:var(--r-pill); box-shadow:var(--shadow);
+  opacity:0; pointer-events:none; transition:opacity .25s;
+}
+.toast.show{ opacity:.96; }
+/* ── 自適應：手機放大、平板加寬、桌機雙欄 ───────── */
+/* 基準字級跟著螢幕微調：iPhone SE 16px → 17 Pro 16.9px → 17 Pro Max 18px */
+html{ font-size:clamp(16px, 4.2vw, 18px); }
+
+/* 平板：單欄但加寬 */
+@media (min-width:600px){
+  :root{ --w-app:600px; }
+  body{ padding:var(--sp-4) var(--sp-4) 0; }
+  main{ padding-left:0; padding-right:0; }
+  header{ padding-left:0; padding-right:0; }
+  .nav-bar{ padding-left:0; padding-right:0; }
+}
+
+/* 桌機：左欄放天氣與導覽（吸頂），右欄放行程 */
+@media (min-width:1024px){
+  html{ font-size:17px; }
+  body{ align-items:flex-start; padding:var(--sp-5) var(--sp-5) 0; }
+  .app{
+    max-width:960px;
+    display:grid;
+    grid-template-columns:300px minmax(0,1fr);
+    grid-template-rows:auto 1fr auto;
+    column-gap:var(--sp-6);
+  }
+  header{ grid-column:1; grid-row:1; text-align:left; padding:0 0 var(--sp-4); }
+  header h1{ font-size:1.35rem; }
+  .nav-bar{
+    grid-column:1; grid-row:2; align-self:start;
+    position:sticky; top:var(--sp-4);
+    flex-direction:column; overflow:visible;
+    padding:0; background:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  }
+  .nav-item{ width:100%; text-align:left; }
+  main{ grid-column:2; grid-row:1 / span 2; padding:0; }
+  footer{ grid-column:1 / -1; grid-row:3; }
+  /* 行程卡片較寬，內距跟著加大 */
+  main .card{ padding:var(--sp-5); }
+  main .card + .card{ margin-top:var(--sp-4); }
+}
+
+/* 超寬螢幕：只把內容欄加寬，不要拆成兩欄。
+   行程是有時間順序的，拆欄之後閱讀動線會從第一欄底部跳到第二欄頂端，很難跟。 */
+@media (min-width:1440px){
+  .app{ max-width:1100px; grid-template-columns:300px minmax(0,720px); }
+}
+
+#edit-bar{ display:flex; gap:var(--sp-2); justify-content:center; flex-wrap:wrap; margin-bottom:var(--sp-4); }
+#edit-bar a{
+  display:inline-block; padding:9px var(--sp-4); min-height:40px; line-height:22px;
+  border:1px solid var(--c-line); border-radius:var(--r-pill); background:var(--c-surface);
+  color:var(--c-text); font-size:var(--fs-sm); font-weight:700; text-decoration:none;
+}
+#edit-bar a.go{ background:var(--c-accent); border-color:var(--c-accent); color:var(--c-on-accent); }
+footer{ text-align:center; font-size:var(--fs-xs); color:var(--c-text-dim); padding:var(--sp-5) var(--sp-4); }
+footer a{ color:inherit; }
+</style>
+</head>
+<body>
+
+<div class="sync" id="sync" data-s="local">單機模式</div>
+<div class="app">
+  <header>
+    <h1 id="app-title">—</h1>
+    <p class="subtitle" id="app-sub"></p>
+    <div class="wx-now" id="wx-now"><div class="col">載入中…</div></div>
+    <div class="wx-stamp" id="wx-stamp"></div>
+  </header>
+  <nav class="nav-bar" id="nav" role="tablist"></nav>
+  <main id="main"></main>
+  <footer>
+    <div id="edit-bar"></div>
+    天氣資料 <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> · CC BY 4.0
+  </footer>
+</div>
+
+<script type="module">
+/* ═══════════════════════════════════════════════
+   資料層 —— 換旅程時「只改這一段」
+   ═══════════════════════════════════════════════ */
+const TRIP_DATA = {
+  "meta": {
+    "tripId": "kyushu-fukuoka-2026",
+    "title": "🍁 KYUSHU ROAD TRIP 2026 ♨️",
+    "subtitle": "九州福岡七日自駕・完整行程與動態導航",
+    "theme": "maple",
+    "startDate": "2026-11-14",
+    "endDate": "2026-11-20",
+    "place": {
+      "name": "Fukuoka",
+      "nameLocal": "福岡",
+      "lat": 33.6,
+      "lon": 130.41667,
+      "timezone": "Asia/Tokyo"
+    },
+    "travelMode": "driving",
+    "money": {
+      "home": "TWD",
+      "local": "JPY",
+      "rate": 0.1996,
+      "rateDate": "Fri, 31 Jul 2026"
+    },
+    "members": [
+      "白",
+      "周",
+      "陳",
+      "盧"
+    ],
+    "categories": [
+      "食",
+      "衣",
+      "住",
+      "行",
+      "玩"
+    ],
+    "sheetUrl": "https://docs.google.com/spreadsheets/d/1HRLC_tFThyZKE9o3pu-Xl71wd5k8JNOXhN-o6lQkMYQ/edit",
+    "builderUrl": "https://heatherchou58.github.io/travel-itinerary-template/builder/"
+  },
+  "days": [
+    {
+      "id": "d0",
+      "nav": "📝 行前",
+      "blocks": [
+        {
+          "type": "weather",
+          "days": 7
+        },
+        {
+          "type": "checklist",
+          "key": "list0",
+          "title": "出發前準備",
+          "groups": [
+            {
+              "name": "出發前",
+              "items": [
+                "確認護照效期（需滿 6 個月）",
+                "線上填寫 Visit Japan Web 入境手續",
+                "國際駕照譯本＋台灣駕照正本（自駕必備）",
+                "確認租車訂單：Toyota Rent a Car 博多取車 / 博多還車",
+                "預約高千穗峽划船",
+                "預約由布院豐後牛晚餐",
+                "確認阿蘇火口規制與收費道路開放時間",
+                "eSIM 或漫遊開通",
+                "下載離線地圖（Google Maps 九州離線區域）",
+                "告知家人行程與住宿"
+              ]
+            }
+          ]
+        },
+        {
+          "type": "checklist",
+          "key": "list1",
+          "title": "行李清單",
+          "groups": [
+            {
+              "name": "個人物品",
+              "items": [
+                "隱形眼鏡與藥水",
+                "眼鏡或備用眼鏡"
+              ]
+            },
+            {
+              "name": "自駕專用",
+              "items": [
+                "車用手機支架",
+                "USB 車充與長線",
+                "零錢包（收費道路與停車場）"
+              ]
+            },
+            {
+              "name": "溫泉專用",
+              "items": [
+                "小毛巾與盥洗小包（由布院、阿蘇兩晚）",
+                "髮圈或浴帽"
+              ]
+            },
+            {
+              "name": "這趟專用",
+              "items": [
+                "保暖薄外套（阿蘇早晚溫差大）",
+                "手電筒或頭燈（阿蘇觀星）",
+                "空袋（天神、Outlet 戰利品）"
+              ]
+            },
+            {
+              "name": "證件與金錢",
+              "items": [
+                "護照（效期需滿 6 個月）",
+                "護照影本（與正本分開放）",
+                "當地貨幣現金",
+                "信用卡（出發前開通海外交易）",
+                "旅遊保險保單或投保證明",
+                "駕照與國際駕照（需要開車才帶）"
+              ]
+            },
+            {
+              "name": "電子用品",
+              "items": [
+                "手機與充電線",
+                "行動電源（必須隨身，不可託運）",
+                "相機／記憶卡／備用電池",
+                "耳機",
+                "轉接頭（A / B 型・100V）"
+              ]
+            },
+            {
+              "name": "藥品與清潔",
+              "items": [
+                "常備藥（感冒、腸胃、止痛）",
+                "OK 繃與外傷藥膏",
+                "個人處方藥（連同處方箋）",
+                "牙刷、牙膏",
+                "洗面乳與保養品",
+                "面紙、濕紙巾"
+              ]
+            },
+            {
+              "name": "其他",
+              "items": [
+                "換洗衣物與睡衣",
+                "盥洗包",
+                "太陽眼鏡",
+                "口罩（飛機上與人多的地方）",
+                "摺疊傘",
+                "購物袋或折疊袋",
+                "衣架或掛衣繩",
+                "小型行李秤（買太多時）"
+              ]
+            },
+            {
+              "name": "換季衣物（早晚溫差大）",
+              "items": [
+                "可穿脫的薄外套",
+                "長袖與短袖各幾件",
+                "輕便圍巾",
+                "一件薄長褲"
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "d1",
+      "nav": "D1 博多",
+      "date": "2026-11-14",
+      "blocks": [
+        {
+          "type": "flight",
+          "airline": "EVA AIR",
+          "code": "BR102",
+          "from": "TPE",
+          "fromTerminal": "桃園 T2",
+          "to": "FUK",
+          "toTerminal": "福岡",
+          "date": "2026-11-14",
+          "depart": "16:25",
+          "arrive": "19:55"
+        },
+        {
+          "type": "stop",
+          "kind": "sight",
+          "time": "21:00",
+          "title": "抵達/出境",
+          "titleLocal": "到着/出発",
+          "place": "",
+          "notes": [],
+          "links": [
+            {
+              "label": "🗺️ 地圖",
+              "url": "https://www.google.com/maps/search/?api=1&query=%E6%8A%B5%E9%81%94%2F%E5%87%BA%E5%A2%83%2C%20Fukuoka",
+              "style": "map"
+            }
+          ],
+          "stay": 30,
+          "mode": "transit",
+          "_mt": true
+        },
+        {
+          "type": "stop",
+          "kind": "meal",
+          "time": "21:30",
+          "title": "博多晚餐",
+          "titleLocal": "博多",
+          "place": "博多站周邊",
+          "notes": [
+            "步行前往・停留 1.5hr",
+            "牛腸鍋、一雙拉麵、一蘭皆可",
+            "多數店家營業至深夜"
+          ],
+          "links": [
+            {
+              "label": "🗺️ 地圖",
+              "url": "https://www.google.com/maps/search/?api=1&query=%E5%8D%9A%E5%A4%9A%2C%20%E5%8D%9A%E5%A4%9A%E7%AB%99%E5%91%A8%E9%82%8A",
+              "style": "map"
+            },
+            {
+              "label": "🚆 從上一站",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E6%8A%B5%E9%81%94%2F%E5%87%BA%E5%A2%83%2C%20Fukuoka&destination=%E5%8D%9A%E5%A4%9A%2C%20%E5%8D%9A%E5%A4%9A%E7%AB%99%E5%91%A8%E9%82%8A&travelmode=transit",
+              "style": "route"
+            }
+          ],
+          "stay": 90,
+          "mode": "transit"
+        },
+        {
+          "type": "lodging",
+          "time": "23:00",
+          "title": "HOTEL ORIGO HAKATA",
+          "titleLocal": "ホテル オリゴ 博多",
+          "address": "博多站附近（機場地鐵約 10 分）",
+          "notes": [
+            "Check-in 21:00・櫃檯 24hr",
+            "一修已先預訂，可取消",
+            "每人每晚約 NT$1,563",
+            "隔天開始自駕，請早點休息"
+          ],
+          "links": [
+            {
+              "label": "🏨 Agoda",
+              "url": "https://www.agoda.com/zh-tw/hotel-origo-hakata-gion/hotel/fukuoka-jp.html?checkIn=2026-11-14&adults=4&rooms=1&los=1&currencyCode=JPY",
+              "style": "booking"
+            },
+            {
+              "label": "🗺️ 地圖",
+              "url": "https://www.google.com/maps/search/?api=1&query=%E3%83%9B%E3%83%86%E3%83%AB%20%E3%82%AA%E3%83%AA%E3%82%B4%20%E5%8D%9A%E5%A4%9A%2C%20%E5%8D%9A%E5%A4%9A%E7%AB%99%E9%99%84%E8%BF%91%EF%BC%88%E6%A9%9F%E5%A0%B4%E5%9C%B0%E9%90%B5%E7%B4%84%2010%20%E5%88%86%EF%BC%89",
+              "style": "map"
+            },
+            {
+              "label": "🚆 從上一站",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E5%8D%9A%E5%A4%9A%2C%20%E5%8D%9A%E5%A4%9A%E7%AB%99%E5%91%A8%E9%82%8A&destination=%E3%83%9B%E3%83%86%E3%83%AB%20%E3%82%AA%E3%83%AA%E3%82%B4%20%E5%8D%9A%E5%A4%9A%2C%20%E5%8D%9A%E5%A4%9A%E7%AB%99%E9%99%84%E8%BF%91%EF%BC%88%E6%A9%9F%E5%A0%B4%E5%9C%B0%E9%90%B5%E7%B4%84%2010%20%E5%88%86%EF%BC%89&travelmode=transit",
+              "style": "route"
+            }
+          ],
+          "stay": null,
+          "mode": "transit"
+        }
+      ]
+    },
+    {
+      "id": "d2",
+      "nav": "D2 小倉",
+      "date": "2026-11-15",
+      "blocks": [
+        {
+          "type": "stop",
+          "kind": "sight",
+          "time": "08:00",
+          "title": "博多取車",
+          "titleLocal": "レンタカー受取",
+          "place": "博多站周邊",
+          "notes": [
+            "步行前往・手續約 30 分",
+            "建議 Toyota Rent a Car",
+            "營業 08:00–20:00（依租車網點）"
+          ],
+          "links": [
+            {
+              "label": "🗺️ 地圖",
+              "url": "https://www.google.com/maps/search/?api=1&query=%E3%83%AC%E3%83%B3%E3%82%BF%E3%82%AB%E3%83%BC%E5%8F%97%E5%8F%96%2C%20%E5%8D%9A%E5%A4%9A%E7%AB%99%E5%91%A8%E9%82%8A",
+              "style": "map"
+            },
+            {
+              "label": "🚗 從住處",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E3%83%9B%E3%83%86%E3%83%AB%20%E3%82%AA%E3%83%AA%E3%82%B4%20%E5%8D%9A%E5%A4%9A%2C%20%E5%8D%9A%E5%A4%9A%E7%AB%99%E9%99%84%E8%BF%91%EF%BC%88%E6%A9%9F%E5%A0%B4%E5%9C%B0%E9%90%B5%E7%B4%84%2010%20%E5%88%86%EF%BC%89&destination=%E3%83%AC%E3%83%B3%E3%82%BF%E3%82%AB%E3%83%BC%E5%8F%97%E5%8F%96%2C%20%E5%8D%9A%E5%A4%9A%E7%AB%99%E5%91%A8%E9%82%8A&travelmode=driving",
+              "style": "route"
+            }
+          ],
+          "stay": 60,
+          "mode": "driving"
+        },
+        {
+          "type": "stop",
+          "kind": "sight",
+          "time": "09:00",
+          "title": "宮地嶽神社",
+          "titleLocal": "宮地嶽神社",
+          "place": "福津市",
+          "notes": [
+            "自駕約 50 分・停留 1.5hr",
+            "光之道拍照景點",
+            "開放 07:00–19:00"
+          ],
+          "links": [
+            {
+              "label": "🗺️ 地圖",
+              "url": "https://www.google.com/maps/search/?api=1&query=%E5%AE%AE%E5%9C%B0%E5%B6%BD%E7%A5%9E%E7%A4%BE%2C%20%E7%A6%8F%E6%B4%A5%E5%B8%82",
+              "style": "map"
+            },
+            {
+              "label": "🚗 從上一站",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E3%83%AC%E3%83%B3%E3%82%BF%E3%82%AB%E3%83%BC%E5%8F%97%E5%8F%96%2C%20%E5%8D%9A%E5%A4%9A%E7%AB%99%E5%91%A8%E9%82%8A&destination=%E5%AE%AE%E5%9C%B0%E5%B6%BD%E7%A5%9E%E7%A4%BE%2C%20%E7%A6%8F%E6%B4%A5%E5%B8%82&travelmode=driving",
+              "style": "route"
+            }
+          ],
+          "stay": 120,
+          "mode": "driving"
+        },
+        {
+          "type": "stop",
+          "kind": "shop",
+          "time": "11:00",
+          "title": "THE OUTLETS KITAKYUSHU",
+          "titleLocal": "ジ アウトレット北九州",
+          "place": "北九州市八幡東區",
+          "notes": [
+            "自駕約 30 分・停留 3hr",
+            "午餐直接在 Outlet 解決",
+            "營業 10:00–20:00"
+          ],
+          "links": [
+            {
+              "label": "🗺️ 地圖",
+              "url": "https://www.google.com/maps/search/?api=1&query=%E3%82%B8%20%E3%82%A2%E3%82%A6%E3%83%88%E3%83%AC%E3%83%83%E3%83%88%E5%8C%97%E4%B9%9D%E5%B7%9E%2C%20%E5%8C%97%E4%B9%9D%E5%B7%9E%E5%B8%82%E5%85%AB%E5%B9%A1%E6%9D%B1%E5%8D%80",
+              "style": "map"
+            },
+            {
+              "label": "🚗 從上一站",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E5%AE%AE%E5%9C%B0%E5%B6%BD%E7%A5%9E%E7%A4%BE%2C%20%E7%A6%8F%E6%B4%A5%E5%B8%82&destination=%E3%82%B8%20%E3%82%A2%E3%82%A6%E3%83%88%E3%83%AC%E3%83%83%E3%83%88%E5%8C%97%E4%B9%9D%E5%B7%9E%2C%20%E5%8C%97%E4%B9%9D%E5%B7%9E%E5%B8%82%E5%85%AB%E5%B9%A1%E6%9D%B1%E5%8D%80&travelmode=driving",
+              "style": "route"
+            }
+          ],
+          "stay": 210,
+          "mode": "driving"
+        },
+        {
+          "type": "stop",
+          "kind": "sight",
+          "time": "14:30",
+          "title": "門司港懷舊區",
+          "titleLocal": "門司港レトロ",
+          "place": "北九州市門司區",
+          "notes": [
+            "自駕約 25 分・停留 2hr",
+            "必吃燒咖哩",
+            "設施多為 09:00–17:00"
+          ],
+          "links": [
+            {
+              "label": "🗺️ 地圖",
+              "url": "https://www.google.com/maps/search/?api=1&query=%E9%96%80%E5%8F%B8%E6%B8%AF%E3%83%AC%E3%83%88%E3%83%AD%2C%20%E5%8C%97%E4%B9%9D%E5%B7%9E%E5%B8%82%E9%96%80%E5%8F%B8%E5%8D%80",
+              "style": "map"
+            },
+            {
+              "label": "🚗 從上一站",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E3%82%B8%20%E3%82%A2%E3%82%A6%E3%83%88%E3%83%AC%E3%83%83%E3%83%88%E5%8C%97%E4%B9%9D%E5%B7%9E%2C%20%E5%8C%97%E4%B9%9D%E5%B7%9E%E5%B8%82%E5%85%AB%E5%B9%A1%E6%9D%B1%E5%8D%80&destination=%E9%96%80%E5%8F%B8%E6%B8%AF%E3%83%AC%E3%83%88%E3%83%AD%2C%20%E5%8C%97%E4%B9%9D%E5%B7%9E%E5%B8%82%E9%96%80%E5%8F%B8%E5%8D%80&travelmode=driving",
+              "style": "route"
+            }
+          ],
+          "stay": 180,
+          "mode": "driving"
+        },
+        {
+          "type": "stop",
+          "kind": "sight",
+          "time": "17:30",
+          "title": "皿倉山夜景",
+          "titleLocal": "皿倉山",
+          "place": "北九州市八幡東區",
+          "notes": [
+            "自駕＋纜車約 20 分・停留 2hr",
+            "日本新三大夜景之一",
+            "⚠️ 纜車平日只到 18:00、假日到 22:00，平日務必提早上山"
+          ],
+          "links": [
+            {
+              "label": "🗺️ 地圖",
+              "url": "https://www.google.com/maps/search/?api=1&query=%E7%9A%BF%E5%80%89%E5%B1%B1%2C%20%E5%8C%97%E4%B9%9D%E5%B7%9E%E5%B8%82%E5%85%AB%E5%B9%A1%E6%9D%B1%E5%8D%80",
+              "style": "map"
+            },
+            {
+              "label": "🚗 從上一站",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E9%96%80%E5%8F%B8%E6%B8%AF%E3%83%AC%E3%83%88%E3%83%AD%2C%20%E5%8C%97%E4%B9%9D%E5%B7%9E%E5%B8%82%E9%96%80%E5%8F%B8%E5%8D%80&destination=%E7%9A%BF%E5%80%89%E5%B1%B1%2C%20%E5%8C%97%E4%B9%9D%E5%B7%9E%E5%B8%82%E5%85%AB%E5%B9%A1%E6%9D%B1%E5%8D%80&travelmode=driving",
+              "style": "route"
+            }
+          ],
+          "stay": 150,
+          "mode": "driving"
+        },
+        {
+          "type": "stop",
+          "kind": "meal",
+          "time": "20:00",
+          "title": "小倉晚餐",
+          "titleLocal": "小倉",
+          "place": "小倉站周邊",
+          "notes": [
+            "步行約 20 分・停留 1.5hr",
+            "燒肉或居酒屋"
+          ],
+          "links": [
+            {
+              "label": "🗺️ 地圖",
+              "url": "https://www.google.com/maps/search/?api=1&query=%E5%B0%8F%E5%80%89%2C%20%E5%B0%8F%E5%80%89%E7%AB%99%E5%91%A8%E9%82%8A",
+              "style": "map"
+            },
+            {
+              "label": "🚗 從上一站",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E7%9A%BF%E5%80%89%E5%B1%B1%2C%20%E5%8C%97%E4%B9%9D%E5%B7%9E%E5%B8%82%E5%85%AB%E5%B9%A1%E6%9D%B1%E5%8D%80&destination=%E5%B0%8F%E5%80%89%2C%20%E5%B0%8F%E5%80%89%E7%AB%99%E5%91%A8%E9%82%8A&travelmode=driving",
+              "style": "route"
+            }
+          ],
+          "stay": 90,
+          "mode": "driving"
+        },
+        {
+          "type": "lodging",
+          "time": "21:30",
+          "title": "HOTEL RELIEF Kokura ANNEX",
+          "titleLocal": "ホテルリブマックス 小倉 アネックス",
+          "address": "小倉站附近",
+          "notes": [
+            "Check-in 16:45・櫃檯 24hr",
+            "兩間雙人房",
+            "每人每晚約 NT$746"
+          ],
+          "links": [
+            {
+              "label": "🏨 Agoda",
+              "url": "https://www.agoda.com/zh-tw/ark-blue-hotel_2/hotel/kitakyushu-jp.html?checkIn=2026-11-15&adults=4&rooms=1&los=1&currencyCode=JPY",
+              "style": "booking"
+            },
+            {
+              "label": "🗺️ 地圖",
+              "url": "https://www.google.com/maps/search/?api=1&query=%E3%83%9B%E3%83%86%E3%83%AB%E3%83%AA%E3%83%96%E3%83%9E%E3%83%83%E3%82%AF%E3%82%B9%20%E5%B0%8F%E5%80%89%20%E3%82%A2%E3%83%8D%E3%83%83%E3%82%AF%E3%82%B9%2C%20%E5%B0%8F%E5%80%89%E7%AB%99%E9%99%84%E8%BF%91",
+              "style": "map"
+            },
+            {
+              "label": "🚗 從上一站",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E5%B0%8F%E5%80%89%2C%20%E5%B0%8F%E5%80%89%E7%AB%99%E5%91%A8%E9%82%8A&destination=%E3%83%9B%E3%83%86%E3%83%AB%E3%83%AA%E3%83%96%E3%83%9E%E3%83%83%E3%82%AF%E3%82%B9%20%E5%B0%8F%E5%80%89%20%E3%82%A2%E3%83%8D%E3%83%83%E3%82%AF%E3%82%B9%2C%20%E5%B0%8F%E5%80%89%E7%AB%99%E9%99%84%E8%BF%91&travelmode=driving",
+              "style": "route"
+            }
+          ],
+          "stay": null,
+          "mode": "driving"
+        }
+      ]
+    },
+    {
+      "id": "d3",
+      "nav": "D3 由布院",
+      "date": "2026-11-16",
+      "blocks": [
+        {
+          "type": "stop",
+          "kind": "meal",
+          "time": "08:00",
+          "title": "旦過市場早餐",
+          "titleLocal": "旦過市場",
+          "place": "小倉北區",
+          "notes": [
+            "步行／自駕約 10 分・停留 1hr",
+            "海鮮丼推薦",
+            "早市約 08:00 開，食堂多 10:00 才開"
+          ],
+          "links": [
+            {
+              "label": "🗺️ 地圖",
+              "url": "https://www.google.com/maps/search/?api=1&query=%E6%97%A6%E9%81%8E%E5%B8%82%E5%A0%B4%2C%20%E5%B0%8F%E5%80%89%E5%8C%97%E5%8D%80",
+              "style": "map"
+            },
+            {
+              "label": "🚗 從住處",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E3%83%9B%E3%83%86%E3%83%AB%E3%83%AA%E3%83%96%E3%83%9E%E3%83%83%E3%82%AF%E3%82%B9%20%E5%B0%8F%E5%80%89%20%E3%82%A2%E3%83%8D%E3%83%83%E3%82%AF%E3%82%B9%2C%20%E5%B0%8F%E5%80%89%E7%AB%99%E9%99%84%E8%BF%91&destination=%E6%97%A6%E9%81%8E%E5%B8%82%E5%A0%B4%2C%20%E5%B0%8F%E5%80%89%E5%8C%97%E5%8D%80&travelmode=driving",
+              "style": "route"
+            }
+          ],
+          "stay": 150,
+          "mode": "driving"
+        },
+        {
+          "type": "stop",
+          "kind": "sight",
+          "time": "10:30",
+          "title": "耶馬溪（一目八景）",
+          "titleLocal": "耶馬渓 一目八景",
+          "place": "大分縣中津市",
+          "notes": [
+            "09:15 出發・自駕約 1 小時 15 分（山區道路較多）",
+            "停留 1.5hr",
+            "秋季楓葉名所・24hr 開放"
+          ],
+          "links": [
+            {
+              "label": "🗺️ 地圖",
+              "url": "https://www.google.com/maps/search/?api=1&query=%E8%80%B6%E9%A6%AC%E6%B8%93%20%E4%B8%80%E7%9B%AE%E5%85%AB%E6%99%AF%2C%20%E5%A4%A7%E5%88%86%E7%B8%A3%E4%B8%AD%E6%B4%A5%E5%B8%82",
+              "style": "map"
+            },
+            {
+              "label": "🚗 從上一站",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E6%97%A6%E9%81%8E%E5%B8%82%E5%A0%B4%2C%20%E5%B0%8F%E5%80%89%E5%8C%97%E5%8D%80&destination=%E8%80%B6%E9%A6%AC%E6%B8%93%20%E4%B8%80%E7%9B%AE%E5%85%AB%E6%99%AF%2C%20%E5%A4%A7%E5%88%86%E7%B8%A3%E4%B8%AD%E6%B4%A5%E5%B8%82&travelmode=driving",
+              "style": "route"
+            }
+          ],
+          "stay": 90,
+          "mode": "driving"
+        },
+        {
+          "type": "stop",
+          "kind": "meal",
+          "time": "12:00",
+          "title": "午餐",
+          "titleLocal": "昼食",
+          "place": "耶馬溪周邊",
+          "notes": [
+            "停留 1hr",
+            "推薦地雞料理",
+            "多數店家約 11:00–14:00"
+          ],
+          "links": [
+            {
+              "label": "🗺️ 地圖",
+              "url": "https://www.google.com/maps/search/?api=1&query=%E5%8D%88%E9%A4%90%2C%20%E8%80%B6%E9%A6%AC%E6%BA%AA%E5%91%A8%E9%82%8A",
+              "style": "map"
+            },
+            {
+              "label": "🚗 從上一站",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E8%80%B6%E9%A6%AC%E6%B8%93%20%E4%B8%80%E7%9B%AE%E5%85%AB%E6%99%AF%2C%20%E5%A4%A7%E5%88%86%E7%B8%A3%E4%B8%AD%E6%B4%A5%E5%B8%82&destination=%E5%8D%88%E9%A4%90%2C%20%E8%80%B6%E9%A6%AC%E6%BA%AA%E5%91%A8%E9%82%8A&travelmode=driving",
+              "style": "route"
+            }
+          ],
+          "stay": 150,
+          "mode": "driving",
+          "_mt": true
+        },
+        {
+          "type": "stop",
+          "kind": "sight",
+          "time": "14:30",
+          "title": "旅館寄放行李・辦入住",
+          "titleLocal": "ホテルでの荷物預かりとチェックイン",
+          "place": "由布院",
+          "notes": [
+            "13:30 出發・自駕約 1 小時",
+            "約 30 分，建議先把入住手續辦好"
+          ],
+          "links": [
+            {
+              "label": "🗺️ 地圖",
+              "url": "https://www.google.com/maps/search/?api=1&query=%E6%97%85%E9%A4%A8%E5%AF%84%E6%94%BE%E8%A1%8C%E6%9D%8E%E3%83%BB%E8%BE%A6%E5%85%A5%E4%BD%8F%2C%20%E7%94%B1%E5%B8%83%E9%99%A2",
+              "style": "map"
+            },
+            {
+              "label": "🚗 從上一站",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E5%8D%88%E9%A4%90%2C%20%E8%80%B6%E9%A6%AC%E6%BA%AA%E5%91%A8%E9%82%8A&destination=%E6%97%85%E9%A4%A8%E5%AF%84%E6%94%BE%E8%A1%8C%E6%9D%8E%E3%83%BB%E8%BE%A6%E5%85%A5%E4%BD%8F%2C%20%E7%94%B1%E5%B8%83%E9%99%A2&travelmode=driving",
+              "style": "route"
+            }
+          ],
+          "stay": 30,
+          "mode": "driving",
+          "_mt": true
+        },
+        {
+          "type": "stop",
+          "kind": "shop",
+          "time": "15:00",
+          "title": "湯之坪街道",
+          "titleLocal": "湯の坪街道",
+          "place": "由布市湯布院町",
+          "notes": [
+            "步行・停留 3hr",
+            "甜點與伴手禮集中地",
+            "商店約 09:30–17:00"
+          ],
+          "links": [
+            {
+              "label": "🗺️ 地圖",
+              "url": "https://www.google.com/maps/search/?api=1&query=%E6%B9%AF%E3%81%AE%E5%9D%AA%E8%A1%97%E9%81%93%2C%20%E7%94%B1%E5%B8%83%E5%B8%82%E6%B9%AF%E5%B8%83%E9%99%A2%E7%94%BA",
+              "style": "map"
+            },
+            {
+              "label": "🚗 從上一站",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E6%97%85%E9%A4%A8%E5%AF%84%E6%94%BE%E8%A1%8C%E6%9D%8E%E3%83%BB%E8%BE%A6%E5%85%A5%E4%BD%8F%2C%20%E7%94%B1%E5%B8%83%E9%99%A2&destination=%E6%B9%AF%E3%81%AE%E5%9D%AA%E8%A1%97%E9%81%93%2C%20%E7%94%B1%E5%B8%83%E5%B8%82%E6%B9%AF%E5%B8%83%E9%99%A2%E7%94%BA&travelmode=driving",
+              "style": "route"
+            }
+          ],
+          "stay": 180,
+          "mode": "driving"
+        },
+        {
+          "type": "stop",
+          "kind": "meal",
+          "time": "18:00",
+          "title": "豐後牛晚餐",
+          "titleLocal": "豊後牛",
+          "place": "由布院",
+          "notes": [
+            "步行／自駕・停留 1hr",
+            "⚠️ 建議事先預約"
+          ],
+          "links": [
+            {
+              "label": "🗺️ 地圖",
+              "url": "https://www.google.com/maps/search/?api=1&query=%E8%B1%8A%E5%BE%8C%E7%89%9B%2C%20%E7%94%B1%E5%B8%83%E9%99%A2",
+              "style": "map"
+            },
+            {
+              "label": "🚗 從上一站",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E6%B9%AF%E3%81%AE%E5%9D%AA%E8%A1%97%E9%81%93%2C%20%E7%94%B1%E5%B8%83%E5%B8%82%E6%B9%AF%E5%B8%83%E9%99%A2%E7%94%BA&destination=%E8%B1%8A%E5%BE%8C%E7%89%9B%2C%20%E7%94%B1%E5%B8%83%E9%99%A2&travelmode=driving",
+              "style": "route"
+            }
+          ],
+          "stay": 60,
+          "mode": "driving"
+        },
+        {
+          "type": "lodging",
+          "time": "19:00",
+          "title": "由布の宿 YUFU-Inn",
+          "titleLocal": "由布の宿 YUFU-Inn",
+          "address": "由布市湯布院町",
+          "notes": [
+            "本趟最值得升級住宿的一晚",
+            "每人每晚約 NT$1,462"
+          ],
+          "links": [
+            {
+              "label": "🏨 Agoda",
+              "url": "https://www.agoda.com/zh-tw/yufu-inn-2-8/hotel/all/yufu-jp.html?checkIn=2026-11-16&adults=4&rooms=1&los=1&currencyCode=JPY",
+              "style": "booking"
+            },
+            {
+              "label": "🗺️ 地圖",
+              "url": "https://www.google.com/maps/search/?api=1&query=%E7%94%B1%E5%B8%83%E3%81%AE%E5%AE%BF%20YUFU-Inn%2C%20%E7%94%B1%E5%B8%83%E5%B8%82%E6%B9%AF%E5%B8%83%E9%99%A2%E7%94%BA",
+              "style": "map"
+            },
+            {
+              "label": "🚗 從上一站",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E8%B1%8A%E5%BE%8C%E7%89%9B%2C%20%E7%94%B1%E5%B8%83%E9%99%A2&destination=%E7%94%B1%E5%B8%83%E3%81%AE%E5%AE%BF%20YUFU-Inn%2C%20%E7%94%B1%E5%B8%83%E5%B8%82%E6%B9%AF%E5%B8%83%E9%99%A2%E7%94%BA&travelmode=driving",
+              "style": "route"
+            }
+          ],
+          "stay": null,
+          "mode": "driving"
+        }
+      ]
+    },
+    {
+      "id": "d4",
+      "nav": "D4 阿蘇",
+      "date": "2026-11-17",
+      "blocks": [
+        {
+          "type": "stop",
+          "kind": "sight",
+          "time": "07:00",
+          "title": "金鱗湖晨景",
+          "titleLocal": "金鱗湖",
+          "place": "由布市湯布院町",
+          "notes": [
+            "步行・停留 45 分",
+            "清晨湖面最美，有機會看到湖霧",
+            "24hr 開放"
+          ],
+          "links": [
+            {
+              "label": "🗺️ 地圖",
+              "url": "https://www.google.com/maps/search/?api=1&query=%E9%87%91%E9%B1%97%E6%B9%96%2C%20%E7%94%B1%E5%B8%83%E5%B8%82%E6%B9%AF%E5%B8%83%E9%99%A2%E7%94%BA",
+              "style": "map"
+            },
+            {
+              "label": "🚗 從住處",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E7%94%B1%E5%B8%83%E3%81%AE%E5%AE%BF%20YUFU-Inn%2C%20%E7%94%B1%E5%B8%83%E5%B8%82%E6%B9%AF%E5%B8%83%E9%99%A2%E7%94%BA&destination=%E9%87%91%E9%B1%97%E6%B9%96%2C%20%E7%94%B1%E5%B8%83%E5%B8%82%E6%B9%AF%E5%B8%83%E9%99%A2%E7%94%BA&travelmode=driving",
+              "style": "route"
+            }
+          ],
+          "stay": 60,
+          "mode": "driving"
+        },
+        {
+          "type": "stop",
+          "kind": "meal",
+          "time": "08:00",
+          "title": "旅館早餐",
+          "titleLocal": "ホテルの朝食",
+          "place": "由布院",
+          "notes": [
+            "停留 1hr",
+            "享受溫泉旅館早餐"
+          ],
+          "links": [
+            {
+              "label": "🗺️ 地圖",
+              "url": "https://www.google.com/maps/search/?api=1&query=%E6%97%85%E9%A4%A8%E6%97%A9%E9%A4%90%2C%20%E7%94%B1%E5%B8%83%E9%99%A2",
+              "style": "map"
+            },
+            {
+              "label": "🚗 從上一站",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E9%87%91%E9%B1%97%E6%B9%96%2C%20%E7%94%B1%E5%B8%83%E5%B8%82%E6%B9%AF%E5%B8%83%E9%99%A2%E7%94%BA&destination=%E6%97%85%E9%A4%A8%E6%97%A9%E9%A4%90%2C%20%E7%94%B1%E5%B8%83%E9%99%A2&travelmode=driving",
+              "style": "route"
+            }
+          ],
+          "stay": 180,
+          "mode": "driving",
+          "_mt": true
+        },
+        {
+          "type": "stop",
+          "kind": "sight",
+          "time": "11:00",
+          "title": "高千穗峽＋划船",
+          "titleLocal": "高千穂峡",
+          "place": "宮崎縣高千穗町",
+          "notes": [
+            "09:00 由布院出發・自駕約 2hr（今日車程最長）",
+            "停留 2.5hr",
+            "⚠️ 划船務必提前預約",
+            "08:30–17:00"
+          ],
+          "links": [
+            {
+              "label": "🗺️ 地圖",
+              "url": "https://www.google.com/maps/search/?api=1&query=%E9%AB%98%E5%8D%83%E7%A9%82%E5%B3%A1%2C%20%E5%AE%AE%E5%B4%8E%E7%B8%A3%E9%AB%98%E5%8D%83%E7%A9%97%E7%94%BA",
+              "style": "map"
+            },
+            {
+              "label": "🚗 從上一站",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E6%97%85%E9%A4%A8%E6%97%A9%E9%A4%90%2C%20%E7%94%B1%E5%B8%83%E9%99%A2&destination=%E9%AB%98%E5%8D%83%E7%A9%82%E5%B3%A1%2C%20%E5%AE%AE%E5%B4%8E%E7%B8%A3%E9%AB%98%E5%8D%83%E7%A9%97%E7%94%BA&travelmode=driving",
+              "style": "route"
+            }
+          ],
+          "stay": 150,
+          "mode": "driving"
+        },
+        {
+          "type": "stop",
+          "kind": "meal",
+          "time": "13:30",
+          "title": "高千穗牛午餐",
+          "titleLocal": "高千穂牛",
+          "place": "高千穗町",
+          "notes": [
+            "停留 1hr",
+            "推薦燒肉或牛排",
+            "約 11:00–14:30"
+          ],
+          "links": [
+            {
+              "label": "🗺️ 地圖",
+              "url": "https://www.google.com/maps/search/?api=1&query=%E9%AB%98%E5%8D%83%E7%A9%82%E7%89%9B%2C%20%E9%AB%98%E5%8D%83%E7%A9%97%E7%94%BA",
+              "style": "map"
+            },
+            {
+              "label": "🚗 從上一站",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E9%AB%98%E5%8D%83%E7%A9%82%E5%B3%A1%2C%20%E5%AE%AE%E5%B4%8E%E7%B8%A3%E9%AB%98%E5%8D%83%E7%A9%97%E7%94%BA&destination=%E9%AB%98%E5%8D%83%E7%A9%82%E7%89%9B%2C%20%E9%AB%98%E5%8D%83%E7%A9%97%E7%94%BA&travelmode=driving",
+              "style": "route"
+            }
+          ],
+          "stay": 90,
+          "mode": "driving"
+        },
+        {
+          "type": "stop",
+          "kind": "sight",
+          "time": "15:00",
+          "title": "上色見熊野座神社",
+          "titleLocal": "上色見熊野座神社",
+          "place": "熊本縣高森町",
+          "notes": [
+            "自駕約 40 分・停留 1hr",
+            "森林秘境感超強",
+            "24hr 開放"
+          ],
+          "links": [
+            {
+              "label": "🗺️ 地圖",
+              "url": "https://www.google.com/maps/search/?api=1&query=%E4%B8%8A%E8%89%B2%E8%A6%8B%E7%86%8A%E9%87%8E%E5%BA%A7%E7%A5%9E%E7%A4%BE%2C%20%E7%86%8A%E6%9C%AC%E7%B8%A3%E9%AB%98%E6%A3%AE%E7%94%BA",
+              "style": "map"
+            },
+            {
+              "label": "🚗 從上一站",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E9%AB%98%E5%8D%83%E7%A9%82%E7%89%9B%2C%20%E9%AB%98%E5%8D%83%E7%A9%97%E7%94%BA&destination=%E4%B8%8A%E8%89%B2%E8%A6%8B%E7%86%8A%E9%87%8E%E5%BA%A7%E7%A5%9E%E7%A4%BE%2C%20%E7%86%8A%E6%9C%AC%E7%B8%A3%E9%AB%98%E6%A3%AE%E7%94%BA&travelmode=driving",
+              "style": "route"
+            }
+          ],
+          "stay": 80,
+          "mode": "driving"
+        },
+        {
+          "type": "stop",
+          "kind": "sight",
+          "time": "16:20",
+          "title": "草千里",
+          "titleLocal": "草千里ヶ浜",
+          "place": "阿蘇市",
+          "notes": [
+            "自駕約 30 分・停留 40 分",
+            "阿蘇經典大草原景觀",
+            "24hr 開放"
+          ],
+          "links": [
+            {
+              "label": "🗺️ 地圖",
+              "url": "https://www.google.com/maps/search/?api=1&query=%E8%8D%89%E5%8D%83%E9%87%8C%E3%83%B6%E6%B5%9C%2C%20%E9%98%BF%E8%98%87%E5%B8%82",
+              "style": "map"
+            },
+            {
+              "label": "🚗 從上一站",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E4%B8%8A%E8%89%B2%E8%A6%8B%E7%86%8A%E9%87%8E%E5%BA%A7%E7%A5%9E%E7%A4%BE%2C%20%E7%86%8A%E6%9C%AC%E7%B8%A3%E9%AB%98%E6%A3%AE%E7%94%BA&destination=%E8%8D%89%E5%8D%83%E9%87%8C%E3%83%B6%E6%B5%9C%2C%20%E9%98%BF%E8%98%87%E5%B8%82&travelmode=driving",
+              "style": "route"
+            }
+          ],
+          "stay": 50,
+          "mode": "driving"
+        },
+        {
+          "type": "stop",
+          "kind": "sight",
+          "time": "17:10",
+          "title": "阿蘇火山口",
+          "titleLocal": "阿蘇中岳火口",
+          "place": "阿蘇市",
+          "notes": [
+            "自駕約 15 分・停留 45 分",
+            "⚠️ 收費道路通常 09:00–17:00，17:00 可能已關閉",
+            "出發前務必再確認火口規制狀況"
+          ],
+          "links": [
+            {
+              "label": "🗺️ 地圖",
+              "url": "https://www.google.com/maps/search/?api=1&query=%E9%98%BF%E8%98%87%E4%B8%AD%E5%B2%B3%E7%81%AB%E5%8F%A3%2C%20%E9%98%BF%E8%98%87%E5%B8%82",
+              "style": "map"
+            },
+            {
+              "label": "🚗 從上一站",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E8%8D%89%E5%8D%83%E9%87%8C%E3%83%B6%E6%B5%9C%2C%20%E9%98%BF%E8%98%87%E5%B8%82&destination=%E9%98%BF%E8%98%87%E4%B8%AD%E5%B2%B3%E7%81%AB%E5%8F%A3%2C%20%E9%98%BF%E8%98%87%E5%B8%82&travelmode=driving",
+              "style": "route"
+            }
+          ],
+          "stay": 45,
+          "mode": "driving"
+        },
+        {
+          "type": "lodging",
+          "time": "17:55",
+          "title": "龜之井酒店 阿蘇 公園度假村",
+          "titleLocal": "亀の井ホテル 阿蘇",
+          "address": "阿蘇市",
+          "notes": [
+            "18:15 出發・自駕約 20 分",
+            "Check-in 18:40",
+            "本館日式 A ＋早／晚餐",
+            "每人每晚約 NT$2,792",
+            "可安排 BBQ 與觀星"
+          ],
+          "links": [
+            {
+              "label": "🏨 Agoda",
+              "url": "https://www.agoda.com/zh-tw/aso-villa-park-hotel/hotel/aso-jp.html?ds=iOu4J1kMdRXKKBT%2F",
+              "style": "booking"
+            },
+            {
+              "label": "🗺️ 地圖",
+              "url": "https://www.google.com/maps/search/?api=1&query=%E4%BA%80%E3%81%AE%E4%BA%95%E3%83%9B%E3%83%86%E3%83%AB%20%E9%98%BF%E8%98%87%2C%20%E9%98%BF%E8%98%87%E5%B8%82",
+              "style": "map"
+            },
+            {
+              "label": "🚗 從上一站",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E9%98%BF%E8%98%87%E4%B8%AD%E5%B2%B3%E7%81%AB%E5%8F%A3%2C%20%E9%98%BF%E8%98%87%E5%B8%82&destination=%E4%BA%80%E3%81%AE%E4%BA%95%E3%83%9B%E3%83%86%E3%83%AB%20%E9%98%BF%E8%98%87%2C%20%E9%98%BF%E8%98%87%E5%B8%82&travelmode=driving",
+              "style": "route"
+            }
+          ],
+          "stay": null,
+          "mode": "driving"
+        }
+      ]
+    },
+    {
+      "id": "d5",
+      "nav": "D5 熊本",
+      "date": "2026-11-18",
+      "blocks": [
+        {
+          "type": "stop",
+          "kind": "sight",
+          "time": "09:30",
+          "title": "熊本城",
+          "titleLocal": "熊本城",
+          "place": "熊本市中央區",
+          "notes": [
+            "08:00 阿蘇出發・自駕約 1 小時 30 分",
+            "停留 2.5hr",
+            "九州必訪景點",
+            "09:00–17:00（最終入場 16:30）"
+          ],
+          "links": [
+            {
+              "label": "🗺️ 地圖",
+              "url": "https://www.google.com/maps/search/?api=1&query=%E7%86%8A%E6%9C%AC%E5%9F%8E%2C%20%E7%86%8A%E6%9C%AC%E5%B8%82%E4%B8%AD%E5%A4%AE%E5%8D%80",
+              "style": "map"
+            },
+            {
+              "label": "🚗 從住處",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E4%BA%80%E3%81%AE%E4%BA%95%E3%83%9B%E3%83%86%E3%83%AB%20%E9%98%BF%E8%98%87%2C%20%E9%98%BF%E8%98%87%E5%B8%82&destination=%E7%86%8A%E6%9C%AC%E5%9F%8E%2C%20%E7%86%8A%E6%9C%AC%E5%B8%82%E4%B8%AD%E5%A4%AE%E5%8D%80&travelmode=driving",
+              "style": "route"
+            }
+          ],
+          "stay": 150,
+          "mode": "driving"
+        },
+        {
+          "type": "stop",
+          "kind": "meal",
+          "time": "12:00",
+          "title": "勝烈亭午餐",
+          "titleLocal": "勝烈亭",
+          "place": "熊本市中央區",
+          "notes": [
+            "步行／自駕・停留 1hr",
+            "熊本人氣炸豬排",
+            "11:30–21:30"
+          ],
+          "links": [
+            {
+              "label": "🗺️ 地圖",
+              "url": "https://www.google.com/maps/search/?api=1&query=%E5%8B%9D%E7%83%88%E4%BA%AD%2C%20%E7%86%8A%E6%9C%AC%E5%B8%82%E4%B8%AD%E5%A4%AE%E5%8D%80",
+              "style": "map"
+            },
+            {
+              "label": "🚗 從上一站",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E7%86%8A%E6%9C%AC%E5%9F%8E%2C%20%E7%86%8A%E6%9C%AC%E5%B8%82%E4%B8%AD%E5%A4%AE%E5%8D%80&destination=%E5%8B%9D%E7%83%88%E4%BA%AD%2C%20%E7%86%8A%E6%9C%AC%E5%B8%82%E4%B8%AD%E5%A4%AE%E5%8D%80&travelmode=driving",
+              "style": "route"
+            }
+          ],
+          "stay": 150,
+          "mode": "driving"
+        },
+        {
+          "type": "stop",
+          "kind": "sight",
+          "time": "14:30",
+          "title": "柳川遊船",
+          "titleLocal": "柳川川下り",
+          "place": "福岡縣柳川市",
+          "notes": [
+            "13:30 出發・自駕約 1 小時",
+            "停留 1.5hr，船程約 70 分鐘",
+            "約 09:00–17:00"
+          ],
+          "links": [
+            {
+              "label": "🗺️ 地圖",
+              "url": "https://www.google.com/maps/search/?api=1&query=%E6%9F%B3%E5%B7%9D%E5%B7%9D%E4%B8%8B%E3%82%8A%2C%20%E7%A6%8F%E5%B2%A1%E7%B8%A3%E6%9F%B3%E5%B7%9D%E5%B8%82",
+              "style": "map"
+            },
+            {
+              "label": "🚗 從上一站",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E5%8B%9D%E7%83%88%E4%BA%AD%2C%20%E7%86%8A%E6%9C%AC%E5%B8%82%E4%B8%AD%E5%A4%AE%E5%8D%80&destination=%E6%9F%B3%E5%B7%9D%E5%B7%9D%E4%B8%8B%E3%82%8A%2C%20%E7%A6%8F%E5%B2%A1%E7%B8%A3%E6%9F%B3%E5%B7%9D%E5%B8%82&travelmode=driving",
+              "style": "route"
+            }
+          ],
+          "stay": 170,
+          "mode": "driving"
+        },
+        {
+          "type": "stop",
+          "kind": "sight",
+          "time": "17:20",
+          "title": "太宰府天滿宮",
+          "titleLocal": "太宰府天満宮",
+          "place": "福岡縣太宰府市",
+          "notes": [
+            "16:30 出發・自駕約 50 分",
+            "停留 1.5hr，傍晚人潮較少",
+            "06:30–18:30（部分季節至 19:00）"
+          ],
+          "links": [
+            {
+              "label": "🗺️ 地圖",
+              "url": "https://www.google.com/maps/search/?api=1&query=%E5%A4%AA%E5%AE%B0%E5%BA%9C%E5%A4%A9%E6%BA%80%E5%AE%AE%2C%20%E7%A6%8F%E5%B2%A1%E7%B8%A3%E5%A4%AA%E5%AE%B0%E5%BA%9C%E5%B8%82",
+              "style": "map"
+            },
+            {
+              "label": "🚗 從上一站",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E6%9F%B3%E5%B7%9D%E5%B7%9D%E4%B8%8B%E3%82%8A%2C%20%E7%A6%8F%E5%B2%A1%E7%B8%A3%E6%9F%B3%E5%B7%9D%E5%B8%82&destination=%E5%A4%AA%E5%AE%B0%E5%BA%9C%E5%A4%A9%E6%BA%80%E5%AE%AE%2C%20%E7%A6%8F%E5%B2%A1%E7%B8%A3%E5%A4%AA%E5%AE%B0%E5%BA%9C%E5%B8%82&travelmode=driving",
+              "style": "route"
+            }
+          ],
+          "stay": 160,
+          "mode": "driving"
+        },
+        {
+          "type": "stop",
+          "kind": "sight",
+          "time": "20:00",
+          "title": "還車",
+          "titleLocal": "レンタカー返却",
+          "place": "博多站周邊",
+          "notes": [
+            "19:50 出發・自駕約 10 分",
+            "手續約 15 分，結束自駕行程",
+            "⚠️ 需留意店家最後還車時間，多數營業至 20:00"
+          ],
+          "links": [
+            {
+              "label": "🗺️ 地圖",
+              "url": "https://www.google.com/maps/search/?api=1&query=%E3%83%AC%E3%83%B3%E3%82%BF%E3%82%AB%E3%83%BC%E8%BF%94%E5%8D%B4%2C%20%E5%8D%9A%E5%A4%9A%E7%AB%99%E5%91%A8%E9%82%8A",
+              "style": "map"
+            },
+            {
+              "label": "🚗 從上一站",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E5%A4%AA%E5%AE%B0%E5%BA%9C%E5%A4%A9%E6%BA%80%E5%AE%AE%2C%20%E7%A6%8F%E5%B2%A1%E7%B8%A3%E5%A4%AA%E5%AE%B0%E5%BA%9C%E5%B8%82&destination=%E3%83%AC%E3%83%B3%E3%82%BF%E3%82%AB%E3%83%BC%E8%BF%94%E5%8D%B4%2C%20%E5%8D%9A%E5%A4%9A%E7%AB%99%E5%91%A8%E9%82%8A&travelmode=driving",
+              "style": "route"
+            }
+          ],
+          "stay": 30,
+          "mode": "driving"
+        },
+        {
+          "type": "stop",
+          "kind": "meal",
+          "time": "20:30",
+          "title": "博多晚餐",
+          "titleLocal": "博多",
+          "place": "博多站周邊",
+          "notes": [
+            "步行／地鐵・停留 1.5hr",
+            "牛腸鍋、燒鳥、居酒屋，可小酌"
+          ],
+          "links": [
+            {
+              "label": "🗺️ 地圖",
+              "url": "https://www.google.com/maps/search/?api=1&query=%E5%8D%9A%E5%A4%9A%2C%20%E5%8D%9A%E5%A4%9A%E7%AB%99%E5%91%A8%E9%82%8A",
+              "style": "map"
+            },
+            {
+              "label": "🚆 從上一站",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E3%83%AC%E3%83%B3%E3%82%BF%E3%82%AB%E3%83%BC%E8%BF%94%E5%8D%B4%2C%20%E5%8D%9A%E5%A4%9A%E7%AB%99%E5%91%A8%E9%82%8A&destination=%E5%8D%9A%E5%A4%9A%2C%20%E5%8D%9A%E5%A4%9A%E7%AB%99%E5%91%A8%E9%82%8A&travelmode=transit",
+              "style": "route"
+            }
+          ],
+          "stay": 90,
+          "mode": "transit"
+        },
+        {
+          "type": "lodging",
+          "time": "22:00",
+          "title": "博多住宿（尚未定案）",
+          "titleLocal": "博多の宿泊施設（未定）",
+          "address": "建議博多站附近",
+          "notes": [
+            "19:00 出發・自駕約 30 分",
+            "19:30 Check-in 放行李（約 20 分）",
+            "⚠️ 原始行程表這一晚未填，請補上飯店名稱與訂房連結"
+          ],
+          "links": [
+            {
+              "label": "🗺️ 地圖",
+              "url": "https://www.google.com/maps/search/?api=1&query=%E5%8D%9A%E5%A4%9A%E4%BD%8F%E5%AE%BF%EF%BC%88%E5%B0%9A%E6%9C%AA%E5%AE%9A%E6%A1%88%EF%BC%89%2C%20%E5%BB%BA%E8%AD%B0%E5%8D%9A%E5%A4%9A%E7%AB%99%E9%99%84%E8%BF%91",
+              "style": "map"
+            },
+            {
+              "label": "🚆 從上一站",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E5%8D%9A%E5%A4%9A%2C%20%E5%8D%9A%E5%A4%9A%E7%AB%99%E5%91%A8%E9%82%8A&destination=%E5%8D%9A%E5%A4%9A%E4%BD%8F%E5%AE%BF%EF%BC%88%E5%B0%9A%E6%9C%AA%E5%AE%9A%E6%A1%88%EF%BC%89%2C%20%E5%BB%BA%E8%AD%B0%E5%8D%9A%E5%A4%9A%E7%AB%99%E9%99%84%E8%BF%91&travelmode=transit",
+              "style": "route"
+            }
+          ],
+          "stay": null,
+          "mode": "transit",
+          "_mt": true
+        }
+      ]
+    },
+    {
+      "id": "d6",
+      "nav": "D6 天神",
+      "date": "2026-11-19",
+      "blocks": [
+        {
+          "type": "stop",
+          "kind": "shop",
+          "time": "09:00",
+          "title": "博多 AMU Plaza",
+          "titleLocal": "アミュプラザ博多",
+          "place": "JR 博多城",
+          "notes": [
+            "步行・停留 2hr",
+            "百貨多 10 點才開，可先買周邊伴手禮",
+            "10:00–20:00"
+          ],
+          "links": [
+            {
+              "label": "🗺️ 地圖",
+              "url": "https://www.google.com/maps/search/?api=1&query=%E3%82%A2%E3%83%9F%E3%83%A5%E3%83%97%E3%83%A9%E3%82%B6%E5%8D%9A%E5%A4%9A%2C%20JR%20%E5%8D%9A%E5%A4%9A%E5%9F%8E",
+              "style": "map"
+            },
+            {
+              "label": "🚆 從住處",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E5%8D%9A%E5%A4%9A%E4%BD%8F%E5%AE%BF%EF%BC%88%E5%B0%9A%E6%9C%AA%E5%AE%9A%E6%A1%88%EF%BC%89%2C%20%E5%BB%BA%E8%AD%B0%E5%8D%9A%E5%A4%9A%E7%AB%99%E9%99%84%E8%BF%91&destination=%E3%82%A2%E3%83%9F%E3%83%A5%E3%83%97%E3%83%A9%E3%82%B6%E5%8D%9A%E5%A4%9A%2C%20JR%20%E5%8D%9A%E5%A4%9A%E5%9F%8E&travelmode=transit",
+              "style": "route"
+            }
+          ],
+          "stay": 180,
+          "mode": "transit"
+        },
+        {
+          "type": "stop",
+          "kind": "meal",
+          "time": "12:00",
+          "title": "午餐",
+          "titleLocal": "昼食",
+          "place": "博多站周邊",
+          "notes": [
+            "步行・停留 1hr",
+            "餐廳多 11:00 起"
+          ],
+          "links": [
+            {
+              "label": "🗺️ 地圖",
+              "url": "https://www.google.com/maps/search/?api=1&query=%E5%8D%88%E9%A4%90%2C%20%E5%8D%9A%E5%A4%9A%E7%AB%99%E5%91%A8%E9%82%8A",
+              "style": "map"
+            },
+            {
+              "label": "🚆 從上一站",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E3%82%A2%E3%83%9F%E3%83%A5%E3%83%97%E3%83%A9%E3%82%B6%E5%8D%9A%E5%A4%9A%2C%20JR%20%E5%8D%9A%E5%A4%9A%E5%9F%8E&destination=%E5%8D%88%E9%A4%90%2C%20%E5%8D%9A%E5%A4%9A%E7%AB%99%E5%91%A8%E9%82%8A&travelmode=transit",
+              "style": "route"
+            }
+          ],
+          "stay": 60,
+          "mode": "transit",
+          "_mt": true
+        },
+        {
+          "type": "stop",
+          "kind": "shop",
+          "time": "13:00",
+          "title": "Canal City",
+          "titleLocal": "キャナルシティ博多",
+          "place": "博多區住吉",
+          "notes": [
+            "步行／公車・停留 2hr",
+            "藥妝與服飾品牌",
+            "10:00–21:00"
+          ],
+          "links": [
+            {
+              "label": "🗺️ 地圖",
+              "url": "https://www.google.com/maps/search/?api=1&query=%E3%82%AD%E3%83%A3%E3%83%8A%E3%83%AB%E3%82%B7%E3%83%86%E3%82%A3%E5%8D%9A%E5%A4%9A%2C%20%E5%8D%9A%E5%A4%9A%E5%8D%80%E4%BD%8F%E5%90%89",
+              "style": "map"
+            },
+            {
+              "label": "🚆 從上一站",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E5%8D%88%E9%A4%90%2C%20%E5%8D%9A%E5%A4%9A%E7%AB%99%E5%91%A8%E9%82%8A&destination=%E3%82%AD%E3%83%A3%E3%83%8A%E3%83%AB%E3%82%B7%E3%83%86%E3%82%A3%E5%8D%9A%E5%A4%9A%2C%20%E5%8D%9A%E5%A4%9A%E5%8D%80%E4%BD%8F%E5%90%89&travelmode=transit",
+              "style": "route"
+            }
+          ],
+          "stay": 120,
+          "mode": "transit"
+        },
+        {
+          "type": "stop",
+          "kind": "shop",
+          "time": "15:00",
+          "title": "天神地下街",
+          "titleLocal": "天神地下街",
+          "place": "中央區天神",
+          "notes": [
+            "地鐵・停留 2hr",
+            "購物主戰場",
+            "10:00–20:00"
+          ],
+          "links": [
+            {
+              "label": "🗺️ 地圖",
+              "url": "https://www.google.com/maps/search/?api=1&query=%E5%A4%A9%E7%A5%9E%E5%9C%B0%E4%B8%8B%E8%A1%97%2C%20%E4%B8%AD%E5%A4%AE%E5%8D%80%E5%A4%A9%E7%A5%9E",
+              "style": "map"
+            },
+            {
+              "label": "🚆 從上一站",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E3%82%AD%E3%83%A3%E3%83%8A%E3%83%AB%E3%82%B7%E3%83%86%E3%82%A3%E5%8D%9A%E5%A4%9A%2C%20%E5%8D%9A%E5%A4%9A%E5%8D%80%E4%BD%8F%E5%90%89&destination=%E5%A4%A9%E7%A5%9E%E5%9C%B0%E4%B8%8B%E8%A1%97%2C%20%E4%B8%AD%E5%A4%AE%E5%8D%80%E5%A4%A9%E7%A5%9E&travelmode=transit",
+              "style": "route"
+            }
+          ],
+          "stay": 120,
+          "mode": "transit"
+        },
+        {
+          "type": "stop",
+          "kind": "shop",
+          "time": "17:00",
+          "title": "PARCO、Loft",
+          "titleLocal": "福岡パルコ",
+          "place": "中央區天神",
+          "notes": [
+            "步行・停留 2hr",
+            "年輕品牌集中",
+            "10:00–20:30"
+          ],
+          "links": [
+            {
+              "label": "🗺️ 地圖",
+              "url": "https://www.google.com/maps/search/?api=1&query=%E7%A6%8F%E5%B2%A1%E3%83%91%E3%83%AB%E3%82%B3%2C%20%E4%B8%AD%E5%A4%AE%E5%8D%80%E5%A4%A9%E7%A5%9E",
+              "style": "map"
+            },
+            {
+              "label": "🚆 從上一站",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E5%A4%A9%E7%A5%9E%E5%9C%B0%E4%B8%8B%E8%A1%97%2C%20%E4%B8%AD%E5%A4%AE%E5%8D%80%E5%A4%A9%E7%A5%9E&destination=%E7%A6%8F%E5%B2%A1%E3%83%91%E3%83%AB%E3%82%B3%2C%20%E4%B8%AD%E5%A4%AE%E5%8D%80%E5%A4%A9%E7%A5%9E&travelmode=transit",
+              "style": "route"
+            }
+          ],
+          "stay": 120,
+          "mode": "transit"
+        },
+        {
+          "type": "stop",
+          "kind": "meal",
+          "time": "19:00",
+          "title": "晚餐",
+          "titleLocal": "夕食",
+          "place": "天神／博多",
+          "notes": [
+            "步行／地鐵・停留 1hr",
+            "補吃遺珠名店"
+          ],
+          "links": [
+            {
+              "label": "🗺️ 地圖",
+              "url": "https://www.google.com/maps/search/?api=1&query=%E6%99%9A%E9%A4%90%2C%20%E5%A4%A9%E7%A5%9E%EF%BC%8F%E5%8D%9A%E5%A4%9A",
+              "style": "map"
+            },
+            {
+              "label": "🚆 從上一站",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E7%A6%8F%E5%B2%A1%E3%83%91%E3%83%AB%E3%82%B3%2C%20%E4%B8%AD%E5%A4%AE%E5%8D%80%E5%A4%A9%E7%A5%9E&destination=%E6%99%9A%E9%A4%90%2C%20%E5%A4%A9%E7%A5%9E%EF%BC%8F%E5%8D%9A%E5%A4%9A&travelmode=transit",
+              "style": "route"
+            }
+          ],
+          "stay": 90,
+          "mode": "transit",
+          "_mt": true
+        },
+        {
+          "type": "stop",
+          "kind": "meal",
+          "time": "20:30",
+          "title": "中洲屋台",
+          "titleLocal": "中洲屋台",
+          "place": "博多區中洲",
+          "notes": [
+            "步行／地鐵・停留 1.5hr",
+            "九州最後一晚",
+            "18:00–00:00 左右"
+          ],
+          "links": [
+            {
+              "label": "🗺️ 地圖",
+              "url": "https://www.google.com/maps/search/?api=1&query=%E4%B8%AD%E6%B4%B2%E5%B1%8B%E5%8F%B0%2C%20%E5%8D%9A%E5%A4%9A%E5%8D%80%E4%B8%AD%E6%B4%B2",
+              "style": "map"
+            },
+            {
+              "label": "🚆 從上一站",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E6%99%9A%E9%A4%90%2C%20%E5%A4%A9%E7%A5%9E%EF%BC%8F%E5%8D%9A%E5%A4%9A&destination=%E4%B8%AD%E6%B4%B2%E5%B1%8B%E5%8F%B0%2C%20%E5%8D%9A%E5%A4%9A%E5%8D%80%E4%B8%AD%E6%B4%B2&travelmode=transit",
+              "style": "route"
+            }
+          ],
+          "stay": 90,
+          "mode": "transit"
+        },
+        {
+          "type": "lodging",
+          "time": "22:00",
+          "title": "博多住宿（尚未定案）",
+          "titleLocal": "博多の宿泊施設（未定）",
+          "address": "建議博多站附近",
+          "notes": [
+            "⚠️ 原始行程表這一晚未填，請補上飯店名稱與訂房連結"
+          ],
+          "links": [
+            {
+              "label": "🗺️ 地圖",
+              "url": "https://www.google.com/maps/search/?api=1&query=%E5%8D%9A%E5%A4%9A%E4%BD%8F%E5%AE%BF%EF%BC%88%E5%B0%9A%E6%9C%AA%E5%AE%9A%E6%A1%88%EF%BC%89%2C%20%E5%BB%BA%E8%AD%B0%E5%8D%9A%E5%A4%9A%E7%AB%99%E9%99%84%E8%BF%91",
+              "style": "map"
+            },
+            {
+              "label": "🚆 從上一站",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E4%B8%AD%E6%B4%B2%E5%B1%8B%E5%8F%B0%2C%20%E5%8D%9A%E5%A4%9A%E5%8D%80%E4%B8%AD%E6%B4%B2&destination=%E5%8D%9A%E5%A4%9A%E4%BD%8F%E5%AE%BF%EF%BC%88%E5%B0%9A%E6%9C%AA%E5%AE%9A%E6%A1%88%EF%BC%89%2C%20%E5%BB%BA%E8%AD%B0%E5%8D%9A%E5%A4%9A%E7%AB%99%E9%99%84%E8%BF%91&travelmode=transit",
+              "style": "route"
+            }
+          ],
+          "stay": null,
+          "mode": "transit",
+          "_mt": true
+        }
+      ]
+    },
+    {
+      "id": "d7",
+      "nav": "D7 回程",
+      "date": "2026-11-20",
+      "blocks": [
+        {
+          "type": "stop",
+          "kind": "sight",
+          "time": "08:30",
+          "title": "早餐、退房",
+          "titleLocal": "朝食、チェックアウト",
+          "place": "博多站附近",
+          "notes": [
+            "整理戰利品，確認託運行李重量"
+          ],
+          "links": [
+            {
+              "label": "🗺️ 地圖",
+              "url": "https://www.google.com/maps/search/?api=1&query=%E6%97%A9%E9%A4%90%E3%80%81%E9%80%80%E6%88%BF%2C%20%E5%8D%9A%E5%A4%9A%E7%AB%99%E9%99%84%E8%BF%91",
+              "style": "map"
+            },
+            {
+              "label": "🚆 從住處",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E5%8D%9A%E5%A4%9A%E4%BD%8F%E5%AE%BF%EF%BC%88%E5%B0%9A%E6%9C%AA%E5%AE%9A%E6%A1%88%EF%BC%89%2C%20%E5%BB%BA%E8%AD%B0%E5%8D%9A%E5%A4%9A%E7%AB%99%E9%99%84%E8%BF%91&destination=%E6%97%A9%E9%A4%90%E3%80%81%E9%80%80%E6%88%BF%2C%20%E5%8D%9A%E5%A4%9A%E7%AB%99%E9%99%84%E8%BF%91&travelmode=transit",
+              "style": "route"
+            }
+          ],
+          "stay": 30,
+          "mode": "transit",
+          "_mt": true
+        },
+        {
+          "type": "stop",
+          "kind": "sight",
+          "time": "09:00",
+          "title": "前往福岡機場",
+          "titleLocal": "福岡空港",
+          "place": "福岡機場國際線",
+          "notes": [
+            "地鐵約 10 分或計程車",
+            "建議提早抵達"
+          ],
+          "links": [
+            {
+              "label": "🗺️ 地圖",
+              "url": "https://www.google.com/maps/search/?api=1&query=%E7%A6%8F%E5%B2%A1%E7%A9%BA%E6%B8%AF%2C%20%E7%A6%8F%E5%B2%A1%E6%A9%9F%E5%A0%B4%E5%9C%8B%E9%9A%9B%E7%B7%9A",
+              "style": "map"
+            },
+            {
+              "label": "🚆 從上一站",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E6%97%A9%E9%A4%90%E3%80%81%E9%80%80%E6%88%BF%2C%20%E5%8D%9A%E5%A4%9A%E7%AB%99%E9%99%84%E8%BF%91&destination=%E7%A6%8F%E5%B2%A1%E7%A9%BA%E6%B8%AF%2C%20%E7%A6%8F%E5%B2%A1%E6%A9%9F%E5%A0%B4%E5%9C%8B%E9%9A%9B%E7%B7%9A&travelmode=transit",
+              "style": "route"
+            }
+          ],
+          "stay": 60,
+          "mode": "transit"
+        },
+        {
+          "type": "stop",
+          "kind": "sight",
+          "time": "10:00",
+          "title": "辦理登機",
+          "titleLocal": "チェックイン",
+          "place": "福岡機場國際線航廈",
+          "notes": [
+            "航班起飛前 2.5 小時開櫃",
+            "退稅與最後採買"
+          ],
+          "links": [
+            {
+              "label": "🗺️ 地圖",
+              "url": "https://www.google.com/maps/search/?api=1&query=%E8%BE%A6%E7%90%86%E7%99%BB%E6%A9%9F%2C%20%E7%A6%8F%E5%B2%A1%E6%A9%9F%E5%A0%B4%E5%9C%8B%E9%9A%9B%E7%B7%9A%E8%88%AA%E5%BB%88",
+              "style": "map"
+            },
+            {
+              "label": "🚆 從上一站",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E7%A6%8F%E5%B2%A1%E7%A9%BA%E6%B8%AF%2C%20%E7%A6%8F%E5%B2%A1%E6%A9%9F%E5%A0%B4%E5%9C%8B%E9%9A%9B%E7%B7%9A&destination=%E8%BE%A6%E7%90%86%E7%99%BB%E6%A9%9F%2C%20%E7%A6%8F%E5%B2%A1%E6%A9%9F%E5%A0%B4%E5%9C%8B%E9%9A%9B%E7%B7%9A%E8%88%AA%E5%BB%88&travelmode=transit",
+              "style": "route"
+            }
+          ],
+          "stay": null,
+          "mode": "transit",
+          "_mt": true
+        },
+        {
+          "type": "flight",
+          "airline": "EVA AIR",
+          "code": "BR105",
+          "from": "FUK",
+          "fromTerminal": "福岡",
+          "to": "TPE",
+          "toTerminal": "桃園 T2",
+          "date": "2026-11-20",
+          "depart": "12:15",
+          "arrive": "13:50"
+        }
+      ]
+    },
+    {
+      "id": "wallet",
+      "nav": "💰 記帳",
+      "blocks": [
+        {
+          "type": "expenses"
+        }
+      ]
+    },
+    {
+      "id": "info",
+      "nav": "ℹ️ 資訊",
+      "blocks": [
+        {
+          "type": "phrases"
+        },
+        {
+          "type": "emergency",
+          "country": "日本",
+          "countryCode": "JP",
+          "auto": 4
+        }
+      ]
+    }
+  ],
+  "phrases": [
+    {
+      "local": "いくらですか？",
+      "zh": "多少錢？"
+    },
+    {
+      "local": "これはいくらですか？",
+      "zh": "這個多少錢？"
+    },
+    {
+      "local": "値段が高すぎますが、もっと安くできますか？",
+      "zh": "太貴了，可以便宜一點嗎？"
+    },
+    {
+      "local": "これが欲しい。",
+      "zh": "我要這個"
+    },
+    {
+      "local": "1つください。",
+      "zh": "請給我一份"
+    },
+    {
+      "local": "カードは使えますか？",
+      "zh": "可以刷卡嗎？"
+    },
+    {
+      "local": "トイレはどこにありますか？",
+      "zh": "廁所在哪裡？"
+    },
+    {
+      "local": "ステーションへの行き方を教えてください。",
+      "zh": "車站怎麼走？"
+    },
+    {
+      "local": "この列車はここに着いたのですか？",
+      "zh": "這班車有到這裡嗎？"
+    },
+    {
+      "local": "荷造りを手伝ってください",
+      "zh": "請幫我打包"
+    },
+    {
+      "local": "刺激を与えないでください。",
+      "zh": "請不要加辣"
+    },
+    {
+      "local": "私はこれにアレルギーがあります",
+      "zh": "我對這個過敏"
+    },
+    {
+      "local": "中華メニューはありますか？",
+      "zh": "有中文菜單嗎？"
+    },
+    {
+      "local": "写真を撮ってもいいですか？",
+      "zh": "可以拍照嗎？"
+    },
+    {
+      "local": "私の写真を撮ってください",
+      "zh": "請幫我拍張照"
+    },
+    {
+      "local": "Wi - Fiはありますか？",
+      "zh": "有 Wi-Fi 嗎？"
+    },
+    {
+      "local": "パスワードは何ですか？",
+      "zh": "密碼是多少？"
+    },
+    {
+      "local": "ドアは何時に開きますか？",
+      "zh": "幾點開門？"
+    },
+    {
+      "local": "助けてください。",
+      "zh": "請幫幫我"
+    },
+    {
+      "local": "道に迷っています",
+      "zh": "我迷路了"
+    },
+    {
+      "local": "救急車を呼ぶ",
+      "zh": "請叫救護車"
+    },
+    {
+      "local": "ありがとうございます",
+      "zh": "謝謝"
+    },
+    {
+      "local": "恥ずかしいですよぉっ……",
+      "zh": "不好意思"
+    }
+  ],
+  "emergency": [
+    {
+      "label": "報警",
+      "value": "110",
+      "tel": true
+    },
+    {
+      "label": "火警／救護車",
+      "value": "119",
+      "tel": true
+    },
+    {
+      "label": "日本旅遊熱線（24h・中文）",
+      "value": "050-3816-2787",
+      "tel": true
+    },
+    {
+      "label": "台灣急難救助免付費專線",
+      "value": "001-800-0885-0885",
+      "tel": true
+    },
+    {
+      "label": "外交部緊急聯絡中心（海外付費）",
+      "value": "+886-800-085-095",
+      "tel": true
+    },
+    {
+      "label": "旅外國人緊急服務專線（台灣境內免付費）",
+      "value": "0800-085-095",
+      "tel": true
+    }
+  ]
+};
+
+/* Firebase：填入設定即啟用多人同步；留 null 則為單機模式 */
+const FIREBASE_CONFIG = {
+  "apiKey": "AIzaSyDOwskrMZNZeOYrcmU3m-ablYNI0ZLxa98",
+  "authDomain": "travel-sites-9aeb7.firebaseapp.com",
+  "projectId": "travel-sites-9aeb7",
+  "storageBucket": "travel-sites-9aeb7.firebasestorage.app",
+  "messagingSenderId": "255631152558",
+  "appId": "1:255631152558:web:3c3d27a68df613d3c5643f"
+};
+/* 範例：
+const FIREBASE_CONFIG = {
+  apiKey:"...", authDomain:"xxx.firebaseapp.com",
+  projectId:"xxx", storageBucket:"xxx.appspot.com",
+  messagingSenderId:"...", appId:"..."
+};
+*/
+
+/* ═══════════════════════════════════════════════
+   邏輯層 —— 以下皆不需修改
+   ═══════════════════════════════════════════════ */
+const M = TRIP_DATA.meta;
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c =>
+  ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+
+/* ── 安全的本地儲存（沙箱環境不支援時退回記憶體） ── */
+const memStore = new Map();
+const LS = {
+  get(k){ try{ return localStorage.getItem(k); }catch{ return memStore.get(k) ?? null; } },
+  set(k,v){ try{ localStorage.setItem(k,v); }catch{ memStore.set(k,v); } }
+};
+const KEY = `trip:${M.tripId}`;
+
+/* ── 狀態 ── */
+const load = () => { try{ return JSON.parse(LS.get(KEY)) || {}; }catch{ return {}; } };
+const saved = load();
+const state = {
+  checks: saved.checks || {},
+  expenses: saved.expenses || [],
+  queue: saved.queue || [],
+  me: LS.get(`${KEY}:me`) || null
+};
+const persist = () => LS.set(KEY, JSON.stringify({
+  checks: state.checks, expenses: state.expenses, queue: state.queue
+}));
+
+/* ── 同步狀態顯示 ── */
+const syncEl = document.getElementById("sync");
+function setSync(s, text){ syncEl.dataset.s = s; syncEl.textContent = text; }
+
+/* ── 渲染分派 ── */
+const linksHTML = (links=[]) => links.map(l =>
+  `<a class="btn btn-${esc(l.style||"plain")}" href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.label)}</a>`
+).join("");
+const localSpan = t => t ? `<span class="lang-local">${esc(t)}</span>` : "";
+const notesHTML = n => (n && n.length)
+  ? `<div class="note-box">${n.map(x=>esc(x)).join("<br>")}</div>` : "";
+
+const WEEK = ["日","一","二","三","四","五","六"];
+const niceDate = d => {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(d || ""));
+  if (!m) return d || "";
+  const dt = new Date(`${d}T00:00:00Z`);
+  return `${Number(m[2])}/${Number(m[3])}（${WEEK[dt.getUTCDay()]}）`;
+};
+
+const KIND = { sight:"🧭", meal:"🍽️", shop:"🛍️" };
+const fmtStay = n => {
+  if (!n) return "";
+  if (n < 60) return `${n} 分`;
+  const hh = Math.floor(n / 60), r = n % 60;
+  return r ? `${hh} 小時 ${r} 分` : `${hh} 小時`;
+};
+const stayTag = b => b.stay ? `<span class="stay">⏳ 停留 ${fmtStay(b.stay)}</span>` : "";
+
+const RENDERERS = {
+  flight: b => `<div class="card flight">
+    <div class="fl-head">
+      <span class="fl-air">${esc(b.airline)} <b>${esc(b.code)}</b></span>
+      <span>${esc(niceDate(b.date))}</span>
+    </div>
+    <div class="fl-body">
+      <div class="fl-side">
+        <div class="t">${esc(b.depart)}</div>
+        <div class="p">${esc(b.from)}</div>
+        <div class="g">${esc(b.fromTerminal || "")}</div>
+      </div>
+      <div class="fl-mid"><span>✈</span></div>
+      <div class="fl-side end">
+        <div class="t">${esc(b.arrive)}</div>
+        <div class="p">${esc(b.to)}</div>
+        <div class="g">${esc(b.toTerminal || "")}</div>
+      </div>
+    </div></div>`,
+
+  stop: b => `<div class="card">
+    ${b.time ? `<span class="time">${esc(b.time)}</span>` : ""}${stayTag(b)}
+    <div class="subject">${KIND[b.kind] || KIND.sight} ${esc(b.title)}${localSpan(b.titleLocal)}</div>
+    ${b.place ? `<div class="meta">📍 ${esc(b.place)}${localSpan(b.placeLocal)}</div>` : ""}
+    ${notesHTML(b.notes)}${linksHTML(b.links)}</div>`,
+
+  transit: b => `<div class="card">
+    ${b.time ? `<span class="time">${esc(b.time)}</span>` : ""}
+    <div class="subject">${esc(b.title)}</div>
+    ${b.line ? `<div class="meta">🚇 ${esc(b.line)}</div>` : ""}
+    ${b.duration ? `<div class="meta">⏱️ ${esc(b.duration)}</div>` : ""}
+    <div class="route">${(b.steps||[]).map((s, i, all) => {
+      const dot = s.via ? "" : `<div class="route-step">
+           <div class="route-dot${s.active ? " on" : ""}"></div>
+           <div class="route-body">
+             <strong>${esc(s.name)}</strong>${localSpan(s.nameLocal)}
+             ${s.exit ? `<div class="exit-note">${esc(s.exit)}</div>` : ""}
+             ${s.note ? `<div class="note-box warn">⚠️ ${esc(s.note)}</div>` : ""}
+           </div></div>`;
+      if (s.via) return `<div class="route-link"><div class="bar"></div><div class="via">${esc(s.via)}</div></div>`;
+      // 站與站之間自動補一條流動的連接線
+      const next = all[i + 1];
+      const line = (next && !next.via)
+        ? `<div class="route-link"><div class="bar"></div><div class="via"></div></div>` : "";
+      return dot + line;
+    }).join("")}</div>
+    ${notesHTML(b.notes)}${linksHTML(b.links)}</div>`,
+
+  lodging: b => `<div class="card lodge">
+    <div><span class="ttag">🏨 住宿</span>${b.time ? `<span class="time">${esc(b.time)}</span>` : ""}${stayTag(b)}</div>
+    <div class="subject">${esc(b.title)}${localSpan(b.titleLocal)}</div>
+    ${b.address ? `<div class="meta">📍 ${esc(b.address)}</div>` : ""}
+    ${(b.notes && b.notes.length)
+      ? `<div class="info">${b.notes.map(n => `<div>${esc(n)}</div>`).join("")}</div>` : ""}
+    ${linksHTML(b.links)}</div>`,
+
+  options: b => `<div class="card">
+    ${b.time ? `<span class="time">${esc(b.time)}</span>` : ""}${stayTag(b)}
+    <div class="subject">${esc(b.title)}</div>
+    ${b.place ? `<div class="meta">📍 ${esc(b.place)}${localSpan(b.placeLocal)}</div>` : ""}
+    ${(b.choices||[]).map(c => `<div class="choice">
+      <span class="tag">${esc(c.label)}</span>
+      <div><strong>${esc(c.title)}</strong>${localSpan(c.titleLocal)}</div>
+      ${c.note ? `<div class="meta">${esc(c.note)}</div>` : ""}
+      ${linksHTML(c.links)}</div>`).join("")}</div>`,
+
+  checklist: b => {
+    const total = (b.groups||[]).reduce((n,g)=>n+g.items.length,0);
+    const done = (b.groups||[]).reduce((n,g)=>
+      n + g.items.filter((_,i)=>state.checks[`${b.key}:${g.name}:${i}`]).length, 0);
+    return `<div class="card" data-chk="${esc(b.key)}">
+      <div class="subject">${esc(b.title||"清單")}
+        <span class="chk-progress">${done}/${total}</span></div>
+      ${(b.groups||[]).map(g => `<div class="chk-group"><h4>${esc(g.name)}</h4>
+        ${g.items.map((it,i)=>{
+          const k = `${b.key}:${g.name}:${i}`;
+          return `<label class="chk"><input type="checkbox" data-k="${esc(k)}"${state.checks[k]?" checked":""}><span>${esc(it)}</span></label>`;
+        }).join("")}</div>`).join("")}
+      ${notesHTML(b.notes)}${linksHTML(b.links)}</div>`;
+  },
+
+  weather: () => `<div class="card"><div class="subject">🌡️ 行程期間天氣</div>
+    <div class="wx-strip" id="wx-strip">載入中…</div></div>`,
+
+  phrases: () => `<div class="card"><div class="subject">💬 常用片語</div>
+    ${(TRIP_DATA.phrases||[]).map(p => p.local
+      ? `<div class="ph"><div class="ph-l">${esc(p.local)}</div><div class="ph-z">${esc(p.zh)}</div></div>`
+      : `<div class="ph"><div class="ph-l dim">${esc(p.zh)}</div><div class="ph-z">（沒有翻譯結果）</div></div>`
+    ).join("")}</div>`,
+
+  emergency: b => `<div class="card"><div class="subject">🆘 緊急資訊</div>
+    ${b && b.country ? `<div class="src">${esc(b.country)}${b.countryCode ? `（${esc(b.countryCode)}）` : ""}
+      ${b.auto ? `　前 ${b.auto} 筆為當地官方緊急號碼` : ""}<br>
+      出發前請再確認一次，號碼可能更動。</div>` : ""}
+    ${(TRIP_DATA.emergency||[]).map(e => `<div class="phrase"><span>${esc(e.label)}</span>
+      <span>${e.tel ? `<a href="tel:${esc(e.value)}">${esc(e.value)}</a>` : esc(e.value)}</span></div>`).join("")}</div>`,
+
+  expenses: () => renderExpenses()
+};
+
+function renderBlock(b){
+  const fn = RENDERERS[b.type];
+  if (!fn) return `<div class="card"><div class="err">未知的 block 型別：<code>${esc(b.type)}</code><br>
+    請在 RENDERERS 補上對應的渲染函式。</div></div>`;
+  try { return fn(b); }
+  catch (e) { return `<div class="card"><div class="err">渲染 <code>${esc(b.type)}</code> 失敗：${esc(e.message)}</div></div>`; }
+}
+
+/* ── 分頁 ── */
+let current = TRIP_DATA.days[0].id;
+function renderDay(id){
+  current = id;
+  const day = TRIP_DATA.days.find(d => d.id === id);
+  document.getElementById("main").innerHTML = day.blocks.map(renderBlock).join("");
+  document.querySelectorAll(".nav-item").forEach(b =>
+    b.setAttribute("aria-selected", String(b.dataset.day === id)));
+  paintForecast();
+  window.scrollTo({ top:0, behavior:"smooth" });
+}
+
+function buildNav(){
+  document.getElementById("nav").innerHTML = TRIP_DATA.days.map(d =>
+    `<button class="nav-item" role="tab" data-day="${esc(d.id)}" aria-selected="false">${esc(d.nav)}</button>`
+  ).join("");
+}
+
+/* ── 天氣（Open-Meteo，免 API key） ── */
+const WMO = {
+  0:["☀️","晴"],1:["🌤️","大致晴"],2:["⛅","多雲"],3:["☁️","陰"],
+  45:["🌫️","霧"],48:["🌫️","霧淞"],
+  51:["🌦️","毛毛雨"],53:["🌦️","毛毛雨"],55:["🌦️","毛毛雨"],
+  56:["🌧️","凍雨"],57:["🌧️","凍雨"],
+  61:["🌧️","小雨"],63:["🌧️","雨"],65:["🌧️","大雨"],
+  66:["🌧️","凍雨"],67:["🌧️","凍雨"],
+  71:["🌨️","小雪"],73:["🌨️","雪"],75:["❄️","大雪"],77:["🌨️","冰珠"],
+  80:["🌦️","陣雨"],81:["🌦️","陣雨"],82:["⛈️","強陣雨"],
+  85:["🌨️","陣雪"],86:["❄️","強陣雪"],
+  95:["⛈️","雷雨"],96:["⛈️","雷雨冰雹"],99:["⛈️","雷雨冰雹"]
+};
+const wmo = c => WMO[c] || ["🌡️","—"];
+const WXKEY = `${KEY}:wx`;
+let wx = (() => { try { return JSON.parse(LS.get(WXKEY)); } catch { return null; } })();
+
+async function fetchWeather(){
+  const p = M.place;
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${p.lat}&longitude=${p.lon}`
+    + `&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code`
+    + `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max`
+    + `&timezone=${encodeURIComponent(p.timezone)}&forecast_days=16`;
+  try{
+    const r = await fetch(url);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const j = await r.json();
+    wx = { ...j, fetchedAt: Date.now() };
+    LS.set(WXKEY, JSON.stringify(wx));
+  }catch(e){
+    console.warn("天氣抓取失敗，使用快取：", e.message);
+  }
+  paintNow(); paintForecast();
+}
+
+/* 目的地當地時間；沒有時區資料就不顯示 */
+function localTime(){
+  const tz = M.place && M.place.timezone;
+  if (!tz || tz === "auto") return "";
+  try{
+    return "當地 " + new Intl.DateTimeFormat("zh-TW", {
+      timeZone: tz, hour: "2-digit", minute: "2-digit", hour12: false
+    }).format(new Date());
+  }catch{ return ""; }
+}
+
+function paintNow(){
+  const el = document.getElementById("wx-now");
+  const stamp = document.getElementById("wx-stamp");
+  const now = new Date();
+  const WK = ["日","一","二","三","四","五","六"];
+
+  /* 今天是第幾天，或距離出發還有幾天 */
+  const t0 = Date.parse(M.startDate + "T00:00:00");
+  const t1 = Date.parse((M.endDate || M.startDate) + "T00:00:00");
+  const tn = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  let tag = "";
+  if (!isNaN(t0)){
+    if (tn < t0)      tag = `出發倒數 ${Math.round((t0 - tn) / 86400000)} 天`;
+    else if (tn > t1) tag = "行程已結束";
+    else              tag = `第 ${Math.round((tn - t0) / 86400000) + 1} 天`;
+  }
+  const topHTML = `<div class="wx-top">
+      <div class="wx-date">${now.getMonth()+1}/${now.getDate()}<span>週${WK[now.getDay()]}${tag ? " · " + tag : ""}</span></div>
+      <div class="wx-time">${esc(localTime())}</div>
+    </div>`;
+
+  if (!wx || !wx.current){
+    el.innerHTML = topHTML + `<div class="wx-main"><div class="wx-emoji">🌐</div>
+      <div><div class="wx-desc">尚無天氣資料</div></div></div>`;
+    stamp.textContent = "連上網路後會自動更新";
+    return;
+  }
+  const c = wx.current, [emoji, desc] = wmo(c.weather_code);
+  const d = wx.daily || {};
+  const key = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+  const i = d.time ? d.time.indexOf(key) : -1;
+  const hi = i >= 0 ? Math.round(d.temperature_2m_max[i]) : null;
+  const lo = i >= 0 ? Math.round(d.temperature_2m_min[i]) : null;
+  const rain = i >= 0 ? d.precipitation_probability_max[i] : null;
+
+  el.innerHTML = topHTML + `
+    <div class="wx-main">
+      <div class="wx-emoji">${emoji}</div>
+      <div>
+        <div class="wx-temp">${Math.round(c.temperature_2m)}°</div>
+        <div class="wx-desc">${esc(desc)}</div>
+      </div>
+      ${hi !== null ? `<div class="wx-hl">
+        <div class="cap">今日</div><div class="hi">${hi}°</div><div class="lo">${lo}°</div></div>` : ""}
+    </div>
+    <div class="wx-grid">
+      <div>體感<b>${Math.round(c.apparent_temperature)}°</b></div>
+      <div>濕度<b>${c.relative_humidity_2m}%</b></div>
+      <div>降雨<b>${rain ?? "—"}%</b></div>
+    </div>`;
+
+  const age = Date.now() - wx.fetchedAt;
+  stamp.textContent = age < 6e5 ? "" :
+    `最後更新：${new Date(wx.fetchedAt).toLocaleString("zh-TW",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"})}`;
+}
+
+function paintForecast(){
+  const strip = document.getElementById("wx-strip");
+  if (!strip) return;
+  if (!wx || !wx.daily){
+    strip.innerHTML = `<div class="note-box">尚無預報資料，連上網路後會自動更新。</div>`;
+    return;
+  }
+  const d = wx.daily;
+  const from = M.startDate, to = M.endDate || M.startDate;
+  const idx = d.time.map((t, i) => i).filter(i => d.time[i] >= from && d.time[i] <= to);
+
+  if (!idx.length){
+    const gap = Math.round((Date.parse(from + "T00:00:00Z") - Date.now()) / 86400000);
+    strip.innerHTML = `<div class="note-box">${
+      gap > 0
+        ? `距離出發還有 ${gap} 天。氣象預報只提供未來 16 天，接近出發日就會自動出現。`
+        : "行程期間已過，沒有可顯示的預報。"
+    }</div>`;
+    return;
+  }
+  strip.innerHTML = idx.map(i => {
+    const [e] = wmo(d.weather_code[i]);
+    const dt = new Date(d.time[i] + "T00:00:00Z");
+    const wd = ["日","一","二","三","四","五","六"][dt.getUTCDay()];
+    return `<div class="wx-day">
+      <div>${dt.getUTCMonth()+1}/${dt.getUTCDate()} 週${wd}</div>
+      <div class="e">${e}</div>
+      <div class="hi">${Math.round(d.temperature_2m_max[i])}°</div>
+      <div class="lo">${Math.round(d.temperature_2m_min[i])}°</div>
+      <div class="lo">${d.precipitation_probability_max[i] ?? "—"}%</div></div>`;
+  }).join("");
+}
+
+/* ── 記帳與分帳 ── */
+const fmt = n => Math.round(n).toLocaleString("en-US");
+
+function renderExpenses(){
+  const cats = M.categories, members = M.members;
+  const days = TRIP_DATA.days.filter(d => d.date);
+  const rows = [...state.expenses].sort((a,b)=>b.createdAt-a.createdAt);
+  const total = state.expenses.reduce((s,e)=>s+e.home,0);
+  return `<div class="card">
+    <div class="subject">新增花費</div>
+    <div class="field"><label for="e-day">日期</label>
+      <select class="input" id="e-day">${days.map(d=>`<option value="${esc(d.id)}">${esc(d.nav)}</option>`).join("")}</select></div>
+    <div class="field"><label>誰付錢</label><div class="chips" id="e-payer">
+      ${members.map((m,i)=>`<label class="chip"><input type="radio" name="payer" value="${esc(m)}"${i===0?" checked":""}>${esc(m)}</label>`).join("")}
+    </div></div>
+    <div class="field"><label>分攤對象</label><div class="chips" id="e-split">
+      ${members.map(m=>`<label class="chip"><input type="checkbox" name="split" value="${esc(m)}" checked>${esc(m)}</label>`).join("")}
+    </div></div>
+    <div class="field"><label for="e-item">項目</label>
+      <input class="input" id="e-item" type="text" placeholder="例：晚餐"></div>
+    <div class="field"><div class="row2">
+      <div><label for="e-local">${esc(M.money.local)}</label><input class="input" id="e-local" type="number" inputmode="numeric" placeholder="0"></div>
+      <div><label for="e-home">${esc(M.money.home)}</label><input class="input" id="e-home" type="number" inputmode="numeric" placeholder="自動換算"></div>
+    </div></div>
+    <div class="field"><label for="e-cat">分類</label>
+      <select class="input" id="e-cat">${cats.map(c=>`<option>${esc(c)}</option>`).join("")}</select></div>
+    <button class="btn btn-plain" id="e-add" style="width:100%">新增花費</button>
+    ${M.money.rate
+      ? `<div class="meta" style="margin-top:var(--sp-2)">匯率 1 ${esc(M.money.local)} = ${M.money.rate} ${esc(M.money.home)}${M.money.rateDate ? `（${esc(M.money.rateDate)} 查得）` : ""}，僅供估算。</div>`
+      : `<div class="meta" style="margin-top:var(--sp-2)">沒有匯率資料，兩種幣別請各自填寫。</div>`}
+  </div>
+
+  <div class="card"><div class="subject">花費明細
+      <span class="chk-progress">合計 ${esc(M.money.home)} ${fmt(total)}</span></div>
+    <div class="exp-list">${rows.length ? rows.map(e=>`
+      <div class="exp-item">
+        <div><strong>${esc(e.item)}</strong> <span class="lang-local">${esc(e.cat)}</span><br>
+          <span class="meta">${esc(e.payer)} 付 · 分 ${esc(e.split.join("、"))}</span></div>
+        <div class="amt">${esc(M.money.home)} ${fmt(e.home)}
+          ${e.local ? `<br><span class="lang-local">${esc(M.money.local)} ${fmt(e.local)}</span>` : ""}
+          <button class="exp-del" data-del="${esc(e.id)}" aria-label="刪除">✕</button></div>
+      </div>`).join("") : `<div class="meta">還沒有紀錄。</div>`}</div></div>
+
+  <div class="card"><div class="subject">結清建議</div>${settleHTML()}
+    <button class="btn btn-plain" id="e-csv">📥 匯出明細 CSV</button>
+    <button class="btn" id="e-csv2">📊 匯出結清摘要</button>
+    <div class="meta" style="margin-top:var(--sp-2)">CSV 已加 UTF-8 BOM，Excel 與 Google Sheets 都能直接開，中文不會亂碼。</div>
+  </div>`;
+}
+
+function settle(){
+  const net = Object.fromEntries(M.members.map(m=>[m,0]));
+  for (const e of state.expenses){
+    if (net[e.payer] !== undefined) net[e.payer] += e.home;
+    const share = e.home / e.split.length;
+    for (const m of e.split) if (net[m] !== undefined) net[m] -= share;
+  }
+  const cred = Object.entries(net).filter(([,v])=>v > 0.5).map(([m,v])=>({m,v})).sort((a,b)=>b.v-a.v);
+  const debt = Object.entries(net).filter(([,v])=>v < -0.5).map(([m,v])=>({m,v:-v})).sort((a,b)=>b.v-a.v);
+  const tx = [];
+  let i=0, j=0;
+  while (i < debt.length && j < cred.length){
+    const amt = Math.min(debt[i].v, cred[j].v);
+    tx.push({ from:debt[i].m, to:cred[j].m, amt });
+    debt[i].v -= amt; cred[j].v -= amt;
+    if (debt[i].v < 0.5) i++;
+    if (cred[j].v < 0.5) j++;
+  }
+  return { net, tx };
+}
+
+function settleHTML(){
+  if (!state.expenses.length) return `<div class="meta">還沒有紀錄。</div>`;
+  const { net, tx } = settle();
+  return M.members.map(m => `<div class="settle"><span>${esc(m)}</span>
+      <span>${net[m] >= 0 ? "應收" : "應付"} <b>${esc(M.money.home)} ${fmt(Math.abs(net[m]))}</b></span></div>`).join("")
+    + (tx.length ? `<div class="note-box">${tx.map(t =>
+        `${esc(t.from)} → ${esc(t.to)}　<strong>${esc(M.money.home)} ${fmt(t.amt)}</strong>`).join("<br>")}</div>`
+      : `<div class="note-box">已經結清。</div>`);
+}
+
+/* ── 匯出 CSV ── */
+const csvCell = v => {
+  const s = String(v ?? "");
+  return /[",\n\r]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s;
+};
+const dateTag = () => new Date().toISOString().slice(0,10).replace(/-/g,"");
+
+function downloadCSV(name, rows){
+  // \uFEFF (BOM) 讓 Excel 正確辨識 UTF-8，否則中文會變亂碼
+  const text = "\uFEFF" + rows.map(r => r.map(csvCell).join(",")).join("\r\n");
+  const url = URL.createObjectURL(new Blob([text], { type:"text/csv;charset=utf-8" }));
+  const a = document.createElement("a");
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function exportDetail(){
+  if (!state.expenses.length){ alert("還沒有花費紀錄"); return; }
+  const day  = id => TRIP_DATA.days.find(d => d.id === id) || {};
+  const rows = [[
+    "日期","行程","項目","分類","付款人","分攤對象","分攤人數",
+    M.money.local, M.money.home, `每人分攤(${M.money.home})`,"記錄時間","記錄者"
+  ]];
+  for (const e of [...state.expenses].sort((a,b)=>a.createdAt-b.createdAt)){
+    const d = day(e.day);
+    rows.push([
+      d.date || "", d.nav || e.day, e.item, e.cat, e.payer,
+      e.split.join("、"), e.split.length,
+      e.local || "", e.home, Math.round(e.home / e.split.length),
+      new Date(e.createdAt).toLocaleString("sv-SE"), e.createdBy || ""
+    ]);
+  }
+  downloadCSV(`${M.tripId}_花費明細_${dateTag()}.csv`, rows);
+}
+
+function exportSettle(){
+  if (!state.expenses.length){ alert("還沒有花費紀錄"); return; }
+  const { net, tx } = settle();
+  const paid = Object.fromEntries(M.members.map(m=>[m,0]));
+  const owe  = Object.fromEntries(M.members.map(m=>[m,0]));
+  const byCat = {};
+  for (const e of state.expenses){
+    if (paid[e.payer] !== undefined) paid[e.payer] += e.home;
+    const s = e.home / e.split.length;
+    for (const m of e.split) if (owe[m] !== undefined) owe[m] += s;
+    byCat[e.cat] = (byCat[e.cat] || 0) + e.home;
+  }
+  const rows = [["成員","代墊總額","應分攤","淨額","狀態"]];
+  for (const m of M.members)
+    rows.push([m, Math.round(paid[m]), Math.round(owe[m]),
+               Math.round(Math.abs(net[m])), net[m] >= 0 ? "應收" : "應付"]);
+  rows.push([], ["結清建議","付款人","收款人",`金額(${M.money.home})`]);
+  tx.forEach((t,i) => rows.push([i+1, t.from, t.to, Math.round(t.amt)]));
+  rows.push([], ["分類統計","金額"]);
+  for (const [c,v] of Object.entries(byCat).sort((a,b)=>b[1]-a[1])) rows.push([c, Math.round(v)]);
+  rows.push([], ["總計", Math.round(state.expenses.reduce((s,e)=>s+e.home,0))]);
+  downloadCSV(`${M.tripId}_結清摘要_${dateTag()}.csv`, rows);
+}
+
+/* ── 事件（統一委派，不用 inline onclick） ── */
+document.getElementById("nav").addEventListener("click", e => {
+  const b = e.target.closest(".nav-item");
+  if (b) renderDay(b.dataset.day);
+});
+
+document.getElementById("main").addEventListener("change", e => {
+  const cb = e.target.closest("input[data-k]");
+  if (cb){
+    state.checks[cb.dataset.k] = cb.checked;
+    persist(); push({ type:"checks" });
+    const card = cb.closest("[data-chk]");
+    const p = card.querySelector(".chk-progress");
+    const all = card.querySelectorAll("input[data-k]");
+    p.textContent = `${[...all].filter(x=>x.checked).length}/${all.length}`;
+    return;
+  }
+  if (e.target.id === "e-local"){
+    const v = Number(e.target.value);
+    const home = document.getElementById("e-home");
+    if (v && M.money.rate && !home.value) home.value = Math.round(v * M.money.rate);
+  }
+});
+
+document.getElementById("main").addEventListener("click", e => {
+  if (e.target.id === "e-add")  return addExpense();
+  if (e.target.id === "e-csv")  return exportDetail();
+  if (e.target.id === "e-csv2") return exportSettle();
+  const del = e.target.closest("[data-del]");
+  if (del){
+    state.expenses = state.expenses.filter(x => x.id !== del.dataset.del);
+    persist(); push({ type:"expenses" }); renderDay(current);
+  }
+});
+
+function addExpense(){
+  const item = document.getElementById("e-item").value.trim();
+  const local = Number(document.getElementById("e-local").value) || 0;
+  let home = Number(document.getElementById("e-home").value) || 0;
+  if (!home && local && M.money.rate) home = Math.round(local * M.money.rate);
+  const split = [...document.querySelectorAll('#e-split input:checked')].map(x=>x.value);
+  if (!item){ alert("請填寫項目"); return; }
+  if (!home){ alert("請填寫金額"); return; }
+  if (!split.length){ alert("請至少選一位分攤對象"); return; }
+  state.expenses.push({
+    id: crypto.randomUUID(),
+    day: document.getElementById("e-day").value,
+    payer: document.querySelector('#e-payer input:checked').value,
+    item, local, home,
+    cat: document.getElementById("e-cat").value,
+    split, createdAt: Date.now(), createdBy: state.me || ""
+  });
+  persist(); push({ type:"expenses" }); renderDay(current);
+}
+
+/* ── 離線優先同步 ── */
+let db = null, uid = null;
+function push(change){
+  state.queue.push({ ...change, at: Date.now() });
+  persist();
+  flush();
+}
+async function flush(){
+  if (!db || !navigator.onLine){
+    const n = state.queue.length;
+    setSync(db ? "offline" : "local", db ? (n ? `離線中（${n} 筆待傳）` : "離線中") : "單機模式");
+    return;
+  }
+  if (!state.queue.length){ setSync("ok","已同步"); return; }
+  try{
+    const { doc, setDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    await setDoc(doc(db, "trips", M.tripId, "shared", "state"), {
+      checks: state.checks, expenses: state.expenses, updatedAt: Date.now()
+    });
+    state.queue = []; persist(); setSync("ok","已同步");
+  }catch(e){
+    console.error("同步失敗：", e);
+    setSync("error", "同步失敗");
+  }
+}
+
+async function initFirebase(){
+  if (!FIREBASE_CONFIG){ setSync("local","單機模式"); return; }
+  if (!navigator.onLine){
+    setSync("offline","離線中");
+    window.addEventListener("online", initFirebase, { once:true });
+    return;
+  }
+  try{
+    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js");
+    const { getAuth, signInAnonymously } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js");
+    const { getFirestore, doc, onSnapshot } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    const app = initializeApp(FIREBASE_CONFIG);
+    const cred = await signInAnonymously(getAuth(app));
+    uid = cred.user.uid;
+    db = getFirestore(app);
+    if (!state.me){
+      const name = prompt(`你是誰？（${M.members.join(" / ")}）`) || "";
+      if (M.members.includes(name)){ state.me = name; LS.set(`${KEY}:me`, name); }
+    }
+    onSnapshot(doc(db, "trips", M.tripId, "shared", "state"), snap => {
+      const d = snap.data();
+      if (!d || state.queue.length) return;   // 本地有未傳資料時不覆蓋
+      state.checks = d.checks || {};
+      state.expenses = d.expenses || [];
+      persist(); renderDay(current);
+    });
+    flush();
+  }catch(e){
+    console.error("Firebase 初始化失敗：", e);
+    setSync("error","雲端連線失敗");
+  }
+}
+
+window.addEventListener("online", flush);
+window.addEventListener("offline", () => setSync(db ? "offline" : "local", db ? "離線中" : "單機模式"));
+
+/* ── PWA：註冊 Service Worker ── */
+function toast(msg, ms = 3200){
+  let t = document.getElementById("toast");
+  if (!t){
+    t = document.createElement("div");
+    t.id = "toast"; t.className = "toast"; t.setAttribute("role","status");
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  requestAnimationFrame(() => t.classList.add("show"));
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove("show"), ms);
+}
+
+if ("serviceWorker" in navigator && location.protocol.startsWith("http")){
+  const hadController = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.register("sw.js")
+    .catch(err => console.warn("Service Worker 註冊失敗：", err));
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (hadController) toast("行程已更新，重新開啟即可看到最新版");
+  });
+}
+
+/* ── 啟動 ── */
+document.documentElement.dataset.theme = M.theme || "none";
+document.title = M.title;
+document.getElementById("app-title").textContent = M.title;
+document.getElementById("app-sub").textContent = M.subtitle || "";
+/* 編輯入口：有填試算表網址才出現 */
+(function editBar(){
+  const bar = document.getElementById("edit-bar");
+  const out = [];
+  if (M.sheetUrl)
+    out.push(`<a href="${esc(M.sheetUrl)}" target="_blank" rel="noopener">✏️ 編輯行程</a>`);
+  if (M.builderUrl){
+    const u = M.builderUrl + (M.sheetUrl ? (M.builderUrl.includes("?") ? "&" : "?") +
+              "sheet=" + encodeURIComponent(M.sheetUrl) : "");
+    out.push(`<a class="go" href="${esc(u)}" target="_blank" rel="noopener">🔄 重新產生網站</a>`);
+  }
+  bar.innerHTML = out.join("");
+})();
+
+buildNav();
+renderDay(TRIP_DATA.days[0].id);
+paintNow();
+fetchWeather();
+initFirebase();
+</script>
+</body>
+</html>
