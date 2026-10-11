@@ -377,7 +377,10 @@ export function parseGrids(book){
       if (!byList.has(ln)) byList.set(ln, new Map());
       const g = byList.get(ln);
       if (!g.has(cat)) g.set(cat, []);
-      g.get(cat).push(item);
+      /* 填了「連結」就變成 { text, url }，網站上項目旁會多一顆「開啟」。
+         適合「線上填寫 Visit Japan Web」這種待辦，省得現場自己找網址。 */
+      const url = s(r["連結"]);
+      g.get(cat).push(url ? { text: item, url: fixUrl(url) } : item);
     });
     let n = 0;
     for (const [ln, groups] of byList){

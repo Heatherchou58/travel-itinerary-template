@@ -75,7 +75,9 @@ SWAP_TRIP = {
         {"id": "d2", "nav": "D2 回程", "date": "2027-07-02", "title": "Day 2 - 回家", "blocks": [
             {"type": "weather"},
             {"type": "checklist", "key": "pack", "title": "行李",
-             "groups": [{"name": "證件", "items": ["護照", "簽證"]}]},
+             "groups": [{"name": "證件", "items": [
+                 "護照",
+                 {"text": "線上填寫入境手續", "url": "https://example.com/visa"}]}]},
             {"type": "expenses"},
         ]},
     ],
@@ -438,6 +440,28 @@ def run(trip: str) -> bool:
             r.check("介紹：換行有分成兩段", body.locator("p").count() == 2,
                     f"{body.locator('p').count()} 段")
             r.check("介紹：內容正確", "介紹第一段" in body.inner_text())
+
+            # 清單項目的連結（在第二天）
+            page.locator(".nav-item").nth(1).click()
+            page.wait_for_timeout(400)
+            link = page.locator(".chk-link")
+            r.check("清單連結：有填網址的項目才出現", link.count() == 1,
+                    f"{link.count()} 個（這組資料只有 1 項填了網址）")
+            r.check("清單連結：觸控目標 ≥ 44px",
+                    round(link.bounding_box()["height"]) >= 44 and round(link.bounding_box()["width"]) >= 44,
+                    f"{round(link.bounding_box()['width'])}×{round(link.bounding_box()['height'])}")
+            r.check("清單連結：網址正確", link.get_attribute("href") == "https://example.com/visa")
+            # 這題才是重點：連結若放在 <label> 裡，點它會順便把項目打勾
+            r.check("清單連結：不在 <label> 內（否則點了會打勾）",
+                    page.evaluate("!document.querySelector('.chk-link').closest('label')"))
+            boxes = page.locator(".chk input")
+            before = [boxes.nth(i).is_checked() for i in range(boxes.count())]
+            with ctx.expect_page() as popup:
+                link.click()
+            popup.value.close()
+            page.wait_for_timeout(300)
+            after = [boxes.nth(i).is_checked() for i in range(boxes.count())]
+            r.check("清單連結：點了不會把項目打勾", before == after, f"{before} → {after}")
             ctx.close()
 
             # 6 ── theme 為 auto／留空時的執行時推導 ──────────

@@ -560,9 +560,12 @@ async function process({ data, errors, warnings }){
       prep.blocks.push(target);
     }
 
-    /* 去重：忽略括號內容與標點後比對，使用者填過的就不再加 */
-    const norm = t => String(t).replace(/[（(].*?[)）]/g, "")
-                               .replace(/[\s、，,。．・/／()（）]/g, "").toLowerCase();
+    /* 去重：忽略括號內容與標點後比對，使用者填過的就不再加。
+       項目可能是字串，也可能是帶連結的 { text, url }——直接 String() 會變成
+       "[object Object]"，比對失效，通用清單就會重複加一次。 */
+    const itemText = it => typeof it === "string" ? it : String(it?.text ?? "");
+    const norm = t => itemText(t).replace(/[（(].*?[)）]/g, "")
+                                 .replace(/[\s、，,。．・/／()（）]/g, "").toLowerCase();
     const existing = new Set();
     for (const b of lists) for (const g of b.groups) for (const it of g.items) existing.add(norm(it));
 

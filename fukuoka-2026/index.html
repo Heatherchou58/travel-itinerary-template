@@ -343,6 +343,16 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 .chk input{ width:18px; height:18px; accent-color:var(--c-accent); flex:0 0 auto; }
 .chk input:checked + span{ color:var(--c-text-dim); text-decoration:line-through; }
 .chk-progress{ font-size:var(--fs-xs); color:var(--c-text-dim); }
+/* 帶連結的清單項目：連結是 label 外的獨立元素，點它不會順便打勾 */
+.chk-row{ display:flex; align-items:center; gap:var(--sp-2); }
+.chk-row .chk{ flex:1; min-width:0; }
+.chk-link{
+  flex:0 0 auto; display:inline-flex; align-items:center; justify-content:center;
+  min-height:44px; min-width:44px; padding:0 var(--sp-2);
+  color:var(--c-on-accent); font-size:var(--fs-sm); font-weight:700;
+  text-decoration:none; white-space:nowrap;
+}
+.chk-link:hover{ text-decoration:underline; }
 
 /* ── 天氣預報列 ───────────────────────── */
 .wx-strip{ display:flex; gap:var(--sp-2); overflow-x:auto; padding-bottom:var(--sp-2); scrollbar-width:none; }
@@ -574,7 +584,10 @@ const TRIP_DATA = {
               "name": "出發前",
               "items": [
                 "確認護照效期（需滿 6 個月）",
-                "線上填寫 Visit Japan Web 入境手續",
+                {
+                  "text": "線上填寫 Visit Japan Web 入境手續",
+                  "url": "https://services.digital.go.jp/zh-cmn-hant/visit-japan-web/"
+                },
                 "國際駕照譯本＋台灣駕照正本（自駕必備）",
                 "確認租車訂單：Toyota Rent a Car 博多取車 / 博多還車",
                 "預約高千穗峽划船",
@@ -2263,7 +2276,15 @@ const RENDERERS = {
       ${(b.groups||[]).map(g => `<div class="chk-group"><h4>${esc(g.name)}</h4>
         ${g.items.map((it,i)=>{
           const k = `${b.key}:${g.name}:${i}`;
-          return `<label class="chk"><input type="checkbox" data-k="${esc(k)}"${state.checks[k]?" checked":""}><span>${esc(it)}</span></label>`;
+          /* 項目可以是字串，也可以是 { text, url }——像「線上填寫 Visit Japan Web」
+             這種待辦，直接把網址帶在旁邊比自己去搜尋快。 */
+          const text = typeof it === "string" ? it : String(it?.text ?? "");
+          const url  = (it && typeof it === "object") ? String(it.url || "") : "";
+          const box  = `<label class="chk"><input type="checkbox" data-k="${esc(k)}"${state.checks[k]?" checked":""}><span>${esc(text)}</span></label>`;
+          /* 連結刻意放在 <label> 外面。放裡面的話點連結會順便把項目打勾。 */
+          return url
+            ? `<div class="chk-row">${box}<a class="chk-link" href="${esc(url)}" target="_blank" rel="noopener">開啟</a></div>`
+            : box;
         }).join("")}</div>`).join("")}
       ${notesHTML(b.notes)}${linksHTML(b.links)}</div>`;
   },
