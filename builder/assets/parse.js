@@ -314,6 +314,10 @@ export function parseGrids(book){
     else if (clock) time = clock;
     if (clock && stay) clock = addMinutes(clock, stay);
     const notes = lines(r["說明／備註"]);
+    /* 「介紹」是景點的背景知識（這地方是什麼、為什麼值得看），與「說明／備註」
+       的操作資訊（交通時間、開放時間、提醒）分開。網站上收合顯示。
+       儲存格裡換行會在網站上分段。 */
+    const intro = s(r["介紹"]);
     let b;
     if (bt === "transit"){
       b = { type:"transit", time, title: s(r["標題"]) || "交通",
@@ -328,8 +332,13 @@ export function parseGrids(book){
     } else {
       if (!s(r["標題"])){ err(SHEETS.plan, rowNo, `「${type}」必須填標題`); return; }
       b = { type:"stop", kind: def.kind, time, title: s(r["標題"]), titleLocal: s(r["當地語"]),
-            place: s(r["地點"]), notes, links, stay, mode: curMode };
+            place: s(r["地點"]), notes, intro, links, stay, mode: curMode };
     }
+    /* 填了介紹卻用在不支援的類型上，要講出來。安靜丟掉會讓使用者
+       以為 Excel 沒存到，回去找半天。 */
+    if (intro && b.type !== "stop")
+      warn(SHEETS.plan, rowNo,
+        `「${type}」不會顯示「介紹」欄，這一列填的介紹會被略過。目前只有景點、美食、購物會顯示。`);
     day.blocks.push(b);
     lastBlock = b;
   });

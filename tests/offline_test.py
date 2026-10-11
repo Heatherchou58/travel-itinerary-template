@@ -60,6 +60,7 @@ SWAP_TRIP = {
             {"type": "stop", "kind": "sight", "time": "11:30",
              "title": "雪梨歌劇院", "titleLocal": "Sydney Opera House",
              "place": "Bennelong Point", "stay": 90, "notes": ["測試備註"],
+             "intro": "介紹第一段，確認有渲染。\n第二段，確認換行會分段。",
              "links": [{"label": "官網", "url": "https://example.com", "style": "theme"}]},
             {"type": "transit", "time": "13:00", "line": "T1 線", "duration": "約 12 分",
              "steps": [{"name": "Circular Quay", "active": True},
@@ -420,6 +421,23 @@ def run(trip: str) -> bool:
                                   ("options 多選一", "海鮮市場"),
                                   ("lodging 住宿", "測試飯店")]:
                 r.check(f"置換 TRIP_DATA：{label} 有渲染", needle in shown)
+
+            # 景點介紹：預設收合，點了才展開
+            intro = page.locator("details.intro")
+            body = intro.locator(".intro-body")
+            r.check("介紹：只有填了 intro 的景點才出現", intro.count() == 1,
+                    f"{intro.count()} 個（這組資料只有 1 個景點填了）")
+            r.check("介紹：預設是收合的", not body.is_visible())
+            r.check("介紹：標題列是「看介紹」", intro.locator("summary").inner_text().strip() == "看介紹")
+            r.check("介紹：標題列觸控目標 ≥ 44px",
+                    round(intro.locator("summary").bounding_box()["height"]) >= 44,
+                    f"{round(intro.locator('summary').bounding_box()['height'])}px")
+            intro.locator("summary").click()
+            page.wait_for_timeout(400)
+            r.check("介紹：點了會展開", body.is_visible())
+            r.check("介紹：換行有分成兩段", body.locator("p").count() == 2,
+                    f"{body.locator('p').count()} 段")
+            r.check("介紹：內容正確", "介紹第一段" in body.inner_text())
             ctx.close()
 
             # 6 ── theme 為 auto／留空時的執行時推導 ──────────

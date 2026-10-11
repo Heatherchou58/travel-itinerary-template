@@ -223,6 +223,22 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 }
 .note-box.warn{ background:var(--c-warn-soft); border-left:3px solid var(--c-warn); }
 
+/* ── 景點介紹（預設收合）─────────────────
+   旅途中主要看的是時間與交通，介紹是背景知識，收起來才不會把
+   一天的版面拉得太長。展開/收合由原生 <details> 處理，沒有 JS。 */
+.intro{ margin-top:var(--sp-3); border-top:1px solid var(--c-line); }
+.intro summary{
+  display:flex; align-items:center; gap:var(--sp-2);
+  min-height:44px; cursor:pointer; list-style:none;
+  font-size:var(--fs-sm); font-weight:700; color:var(--c-on-accent);
+}
+.intro summary::-webkit-details-marker{ display:none; }   /* Safari 的預設三角 */
+.intro summary::before{ content:"▸"; display:inline-block; transition:transform .15s; }
+.intro[open] summary::before{ transform:rotate(90deg); }
+.intro-body{ padding-bottom:var(--sp-2); font-size:var(--fs-sm); line-height:1.8; }
+.intro-body p{ margin:0 0 var(--sp-3); }
+.intro-body p:last-child{ margin-bottom:0; }
+
 /* ── 按鈕 ─────────────────────────────── */
 .btn{
   display:inline-block; margin-top:var(--sp-2); margin-right:var(--sp-2);
@@ -2114,6 +2130,18 @@ const localSpan = t => t ? `<span class="lang-local">${esc(t)}</span>` : "";
 const notesHTML = n => (n && n.length)
   ? `<div class="note-box">${n.map(x=>esc(x)).join("<br>")}</div>` : "";
 
+/* 景點介紹：預設收合。用原生 <details> 而不是自己寫 JS——免事件綁定、
+   鍵盤可操作、離線沒問題，重新渲染也不會壞。
+   接受字串（以空行或換行分段）或字串陣列，Excel 給的是前者。 */
+const introHTML = v => {
+  const parts = (Array.isArray(v) ? v : String(v ?? "").split(/\n+/))
+    .map(x => String(x ?? "").trim()).filter(Boolean);
+  if (!parts.length) return "";
+  return `<details class="intro"><summary>看介紹</summary>
+    <div class="intro-body">${parts.map(p => `<p>${esc(p)}</p>`).join("")}</div>
+  </details>`;
+};
+
 const WEEK = ["日","一","二","三","四","五","六"];
 const niceDate = d => {
   const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(d || ""));
@@ -2155,7 +2183,7 @@ const RENDERERS = {
     ${b.time ? `<span class="time">${esc(b.time)}</span>` : ""}${stayTag(b)}
     <div class="subject">${KIND[b.kind] || KIND.sight} ${esc(b.title)}${localSpan(b.titleLocal)}</div>
     ${b.place ? `<div class="meta">📍 ${esc(b.place)}${localSpan(b.placeLocal)}</div>` : ""}
-    ${notesHTML(b.notes)}${linksHTML(b.links)}</div>`,
+    ${notesHTML(b.notes)}${introHTML(b.intro)}${linksHTML(b.links)}</div>`,
 
   transit: b => `<div class="card">
     ${b.time ? `<span class="time">${esc(b.time)}</span>` : ""}
