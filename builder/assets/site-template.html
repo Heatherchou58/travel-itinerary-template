@@ -910,6 +910,13 @@ function renderExpenses(){
   const rows = [...state.expenses].sort((a,b)=>b.createdAt-a.createdAt);
   const total = state.expenses.reduce((s,e)=>s+e.home,0);
   return `<div class="card">
+    <div class="subject">我是誰</div>
+    <div class="field"><div class="chips" id="e-me">
+      ${members.map(m=>`<label class="chip"><input type="radio" name="me" value="${esc(m)}"${state.me===m?" checked":""}>${esc(m)}</label>`).join("")}
+    </div></div>
+    <div class="note-box">只存在這台裝置，用來標記每筆花費是誰記的。</div>
+  </div>
+  <div class="card">
     <div class="subject">新增花費</div>
     <div class="field"><label for="e-day">日期</label>
       <select class="input" id="e-day">${days.map(d=>`<option value="${esc(d.id)}">${esc(d.nav)}</option>`).join("")}</select></div>
@@ -1059,6 +1066,11 @@ document.getElementById("main").addEventListener("change", e => {
     p.textContent = `${[...all].filter(x=>x.checked).length}/${all.length}`;
     return;
   }
+  if (e.target.name === "me"){
+    state.me = e.target.value;
+    LS.set(`${KEY}:me`, state.me);
+    return;
+  }
   if (e.target.id === "e-local"){
     const v = Number(e.target.value);
     const home = document.getElementById("e-home");
@@ -1138,10 +1150,9 @@ async function initFirebase(){
     const cred = await signInAnonymously(getAuth(app));
     uid = cred.user.uid;
     db = getFirestore(app);
-    if (!state.me){
-      const name = prompt(`你是誰？（${M.members.join(" / ")}）`) || "";
-      if (M.members.includes(name)){ state.me = name; LS.set(`${KEY}:me`, name); }
-    }
+    /* 成員名稱不在這裡問。prompt() 若不被支援會丟錯，整個初始化就掉進
+       catch 顯示「雲端連線失敗」——即使登入與 Firestore 其實都成功了；
+       使用者按取消也沒有第二次機會。改用記帳頁的「我是誰」選擇器。 */
     onSnapshot(doc(db, "trips", M.tripId, "shared", "state"), snap => {
       const d = snap.data();
       if (!d || state.queue.length) return;   // 本地有未傳資料時不覆蓋

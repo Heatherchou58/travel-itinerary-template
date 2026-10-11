@@ -878,12 +878,26 @@ function firebaseText(){
   return JSON.stringify(obj, null, 2);
 }
 
+/* 主畫面圖示下方只顯示約 12 字，硬切會斷在半句——
+   「九州福岡七日自駕・完整行程與動態導航」會變成「九州福岡七日自駕・完整行」。
+   先在標點處斷開取第一段，那段還是太長才按字元截斷。 */
+function shortName(meta){
+  /* 副標題可能只有空白，要真的 trim 過才算「有填」，否則會產生空的 short_name */
+  const src = String(meta.subtitle || "").trim()
+           || String(meta.title || "").trim()
+           || "行程";
+  /* 取第一段非空白的，開頭就是標點時才不會整串原樣回傳 */
+  const head = src.split(/[・·、，,／/|｜—–]/).map(s => s.trim()).find(Boolean) || src;
+  const cp = Array.from(head);          // 按字元切，避免把 emoji 切成半個
+  return cp.length <= 12 ? head : cp.slice(0, 12).join("").trim();
+}
+
 function makeIndex(data){
   /* 供產出的網站顯示「編輯行程」與「重新產生網站」按鈕 */
   data.meta.sheetUrl = SOURCE_SHEET || "";
   data.meta.builderUrl = location.origin + location.pathname.replace(/[^/]*$/, "");
   const t = THEME[data.meta.theme] || THEME.none;
-  const shortName = (data.meta.subtitle || data.meta.title).slice(0, 12);
+  const short = shortName(data.meta);
   let h = TPL;
 
   const a = h.indexOf("const TRIP_DATA = {");
@@ -895,7 +909,7 @@ function makeIndex(data){
   h = h.replace(/<title>[^<]*<\/title>/, `<title>${esc(data.meta.title)}</title>`);
   h = h.replace(/<meta name="theme-color" content="[^"]*">/, `<meta name="theme-color" content="${t.accent}">`);
   h = h.replace(/<meta name="apple-mobile-web-app-title" content="[^"]*">/,
-                `<meta name="apple-mobile-web-app-title" content="${esc(shortName)}">`);
+                `<meta name="apple-mobile-web-app-title" content="${esc(short)}">`);
   return h;
 }
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));
@@ -904,7 +918,7 @@ function makeManifest(data){
   const t = THEME[data.meta.theme] || THEME.none;
   return JSON.stringify({
     name: data.meta.title,
-    short_name: (data.meta.subtitle || data.meta.title).slice(0, 12),
+    short_name: shortName(data.meta),
     description: data.meta.subtitle || "旅遊行程",
     start_url: "./", scope: "./", display: "standalone", orientation: "portrait",
     background_color: t.bg, theme_color: t.accent, lang: "zh-TW",
