@@ -43,6 +43,20 @@ fukuoka-2026/         已產出的行程網站
 
 第 4 步漏掉的症狀很迷惑：本機測一切正常，一上線同步就壞。
 
+## 測試
+
+`tests/offline_test.py` 用 Playwright 驗證肉眼不好確認的部分：離線行為、CSV 的 BOM、鍵盤 focus，以及「把 `TRIP_DATA` 換掉，網站仍完整運作」。
+
+```bash
+pip install playwright && playwright install chromium
+python tests/offline_test.py                  # 預設測 fukuoka-2026
+python tests/offline_test.py --trip seoul-2027
+```
+
+腳本會先把行程資料夾複製到系統暫存區，**並把複製品的 `FIREBASE_CONFIG` 改成 `null`** 才拿去測——否則「離線新增花費」會把測試資料寫進真正的共用 Firestore。跑完自動清掉暫存檔。
+
+代價是「恢復連線後自動補傳」那一段驗不到，只能手動測：手機開飛航模式新增一筆花費，關掉飛航模式後看右上角是否從「離線中（1 筆待傳）」變回「已同步」，再用另一支手機確認那筆有出現。
+
 ## 架構
 
 `index.html` 內部固定切成三層：

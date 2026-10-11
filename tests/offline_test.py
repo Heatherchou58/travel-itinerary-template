@@ -1,0 +1,281 @@
+#!/usr/bin/env python3
+"""旅遊行程網站 —— 離線與資料層的自動化驗證。
+
+跑的是「專案規範的除錯檢查清單」裡沒辦法靠肉眼確認的那幾項：離線行為、
+CSV 的 BOM、鍵盤 focus，以及最重要的「把 TRIP_DATA 換掉，網站仍完整運作」。
+
+安全性：腳本會把行程資料夾複製到系統暫存區，並把複製品的 FIREBASE_CONFIG
+改成 null 才拿去測。這是刻意的——否則「離線新增花費」會把測試資料寫進
+真正的共用 Firestore。代價是「恢復連線後自動補傳」那一段驗不到，只能手動
+測（手機開飛航模式新增一筆，關掉後看右上角是否變回「已同步」）。
+
+用法：
+    python tests/offline_test.py                  # 預設測 fukuoka-2026
+    python tests/offline_test.py --trip seoul-2027
+
+需要：pip install playwright && playwright install chromium
+"""
+
+import argparse
+import functools
+import http.server
+import json
+import re
+import shutil
+import sys
+import tempfile
+import threading
+from pathlib import Path
+
+from playwright.sync_api import sync_playwright
+
+sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+
+REPO = Path(__file__).resolve().parent.parent
+
+# 置換用的測試資料。每個 block 型別各放一個，漏掉 renderer 的話這裡就會抓到。
+#
+# theme 填具體值而不是 "auto"：執行時只做 dataset.theme = M.theme，
+# "auto" → 半球與月份的推導是 builder 產生網站時算好的，這支腳本測的是
+# 產出後的網站，碰不到那段邏輯。填 "auto" 只會得到一個沒有主題的頁面。
+SWAP_TRIP = {
+    "meta": {
+        "tripId": "swaptest-2027",
+        "title": "SWAP TEST 2027",
+        "subtitle": "置換測試・驗證資料層",
+        "theme": "ocean",
+        "startDate": "2027-07-01",
+        "endDate": "2027-07-02",
+        "place": {"name": "Sydney", "nameLocal": "Sydney",
+                  "lat": -33.8688, "lon": 151.2093, "timezone": "Australia/Sydney"},
+        "money": {"home": "TWD", "local": "AUD", "rate": 21.5},
+        "members": ["A", "B"],
+        "categories": ["食", "行"],
+    },
+    "days": [
+        {"id": "d1", "nav": "D1 抵達", "date": "2027-07-01", "title": "Day 1 - 出發", "blocks": [
+            {"type": "flight", "airline": "China Airlines", "code": "CI51",
+             "from": "TPE", "to": "SYD", "date": "2027-07-01",
+             "depart": "21:30", "arrive": "10:05", "fromTerminal": "T1"},
+            {"type": "stop", "kind": "sight", "time": "11:30",
+             "title": "雪梨歌劇院", "titleLocal": "Sydney Opera House",
+             "place": "Bennelong Point", "stay": 90, "notes": ["測試備註"],
+             "links": [{"label": "官網", "url": "https://example.com", "style": "theme"}]},
+            {"type": "transit", "time": "13:00", "line": "T1 線", "duration": "約 12 分",
+             "steps": [{"name": "Circular Quay", "active": True},
+                       {"name": "Town Hall", "active": False},
+                       {"name": "Central", "active": True}]},
+            {"type": "options", "time": "18:00", "title": "晚餐二選一",
+             "place": "Darling Harbour",
+             "choices": [{"title": "海鮮市場"}, {"title": "牛排館"}]},
+            {"type": "lodging", "title": "測試飯店", "address": "1 Test St",
+             "notes": ["含早餐"]},
+        ]},
+        {"id": "d2", "nav": "D2 回程", "date": "2027-07-02", "title": "Day 2 - 回家", "blocks": [
+            {"type": "weather"},
+            {"type": "checklist", "key": "pack", "title": "行李",
+             "groups": [{"name": "證件", "items": ["護照", "簽證"]}]},
+            {"type": "expenses"},
+        ]},
+    ],
+    "phrases": [{"local": "How much?", "zh": "多少錢？"}],
+    "emergency": [{"label": "報警", "value": "000", "tel": True}],
+}
+
+
+# ── 準備測試用的副本 ────────────────────────────────────────
+
+def disable_firebase(path: Path) -> None:
+    """把 FIREBASE_CONFIG 換成 null，確保測試碰不到真正的 Firestore。"""
+    html = path.read_text(encoding="utf-8")
+    patched = re.sub(r"const FIREBASE_CONFIG = \{[\s\S]*?\n\};",
+                     "const FIREBASE_CONFIG = null;", html)
+    if "const FIREBASE_CONFIG = null;" not in patched:
+        sys.exit("準備測試副本失敗：找不到 FIREBASE_CONFIG，不敢繼續（可能會寫到真的雲端）")
+    path.write_text(patched, encoding="utf-8")
+    if re.search(r"AIza[A-Za-z0-9_-]{20,}", patched):
+        sys.exit("準備測試副本失敗：副本裡仍有 API 金鑰殘留")
+
+
+def swap_trip_data(path: Path) -> None:
+    """用大括號配對找出 TRIP_DATA 的範圍再整段換掉（正則數不準巢狀括號）。"""
+    html = path.read_text(encoding="utf-8")
+    start = html.find("const TRIP_DATA = ")
+    if start < 0:
+        sys.exit("置換失敗：找不到 TRIP_DATA")
+    i, depth, end = html.index("{", start), 0, -1
+    for i in range(i, len(html)):
+        if html[i] == "{":
+            depth += 1
+        elif html[i] == "}":
+            depth -= 1
+            if depth == 0:
+                end = i + 1
+                break
+    if end < 0:
+        sys.exit("置換失敗：找不到 TRIP_DATA 的結尾")
+    body = json.dumps(SWAP_TRIP, ensure_ascii=False, indent=2)
+    path.write_text(html[:start] + "const TRIP_DATA = " + body + html[end:],
+                    encoding="utf-8")
+
+
+def serve(root: Path) -> int:
+    """在背景起一個靜態伺服器，回傳實際使用的埠號（0 = 讓系統挑）。"""
+    class Quiet(http.server.SimpleHTTPRequestHandler):
+        def log_message(self, *a):  # 不要把每個請求都印出來
+            pass
+
+    handler = functools.partial(Quiet, directory=str(root))
+    srv = http.server.ThreadingHTTPServer(("127.0.0.1", 0), handler)
+    threading.Thread(target=srv.serve_forever, daemon=True).start()
+    return srv.server_address[1]
+
+
+# ── 測試 ────────────────────────────────────────────────────
+
+class Report:
+    def __init__(self):
+        self.rows = []
+
+    def check(self, name, ok, detail=""):
+        self.rows.append(ok)
+        print(("  PASS  " if ok else "  FAIL  ") + name + (f"  — {detail}" if detail else ""))
+
+    def summary(self):
+        passed = sum(self.rows)
+        print(f"\n{'=' * 52}\n通過 {passed} / {len(self.rows)}")
+        return passed == len(self.rows)
+
+
+def run(trip: str) -> bool:
+    src = REPO / trip
+    if not (src / "index.html").exists():
+        sys.exit(f"找不到 {src / 'index.html'}")
+
+    tmp = Path(tempfile.mkdtemp(prefix="tripsite-"))
+    try:
+        shutil.copytree(src, tmp / "site")
+        disable_firebase(tmp / "site" / "index.html")
+        shutil.copytree(tmp / "site", tmp / "swap")
+        swap_trip_data(tmp / "swap" / "index.html")
+
+        port = serve(tmp)
+        base, swap = f"http://127.0.0.1:{port}/site/", f"http://127.0.0.1:{port}/swap/"
+        r = Report()
+
+        with sync_playwright() as p:
+            browser = p.chromium.launch(headless=True)
+
+            # 1 ── 離線後重新整理，各分頁仍可用 ────────────────
+            ctx = browser.new_context()
+            page = ctx.new_page()
+            page.goto(base)
+            page.wait_for_load_state("networkidle")
+            page.wait_for_function("navigator.serviceWorker.controller !== null", timeout=15000)
+            page.reload()                      # 讓 Service Worker 接管這個頁面
+            page.wait_for_load_state("networkidle")
+
+            ctx.set_offline(True)
+            page.reload()
+            page.wait_for_load_state("domcontentloaded")
+            page.wait_for_timeout(1500)
+
+            r.check("離線重新整理：頁面開得起來",
+                    page.title() != "" and "503" not in page.content())
+            days = page.locator(".nav-item").count()
+            r.check("離線：行程日期導覽有渲染", days >= 2, f"{days} 個分頁")
+            items = page.locator(".chk").count()
+            r.check("離線：打包清單有渲染", items > 0, f"{items} 項")
+            sync = page.locator("#sync").inner_text().strip()
+            r.check("離線：連線狀態有標示（非空白）", sync != "", f"顯示「{sync}」")
+            wx = page.locator("#wx-now").inner_text().strip()
+            r.check("離線：天氣區塊不是空白", wx != "", f"{wx[:24]}…")
+
+            # 2 ── 離線新增花費 ──────────────────────────────
+            errors = []
+            page.on("pageerror", lambda e: errors.append(str(e)))
+            page.get_by_role("tab", name=re.compile("記帳")).click()
+            page.wait_for_timeout(500)
+            page.locator("#e-item").fill("離線測試項目")
+            page.locator("#e-local").fill("1000")
+            page.locator("#e-add").click()
+            page.wait_for_timeout(800)
+
+            r.check("離線新增花費：沒有 JS 例外", not errors, "; ".join(errors[:2]))
+            r.check("離線新增花費：出現在列表", "離線測試項目" in page.content())
+
+            page.reload()
+            page.wait_for_load_state("domcontentloaded")
+            page.wait_for_timeout(1200)
+            page.get_by_role("tab", name=re.compile("記帳")).click()
+            page.wait_for_timeout(500)
+            r.check("離線新增花費：重新整理後還在", "離線測試項目" in page.content())
+
+            # 3 ── 離線匯出 CSV ──────────────────────────────
+            with page.expect_download() as dl:
+                page.locator("#e-csv").click()
+            raw = Path(dl.value.path()).read_bytes()
+            r.check("離線匯出 CSV：下載成功", len(raw) > 0, f"{len(raw)} bytes")
+            r.check("CSV 開頭有 BOM（Excel 開中文不亂碼）", raw[:3] == b"\xef\xbb\xbf",
+                    f"前三個位元組 {raw[:3].hex()}")
+            text = raw.decode("utf-8-sig")
+            r.check("CSV 中文可正確解碼", "離線測試項目" in text)
+            r.check("CSV 換行是 CRLF", "\r\n" in text)
+            ctx.close()
+
+            # 4 ── 鍵盤操作看得見 focus ──────────────────────
+            ctx = browser.new_context()
+            page = ctx.new_page()
+            page.goto(base)
+            page.wait_for_load_state("networkidle")
+            visible = 0
+            for _ in range(12):
+                page.keyboard.press("Tab")
+                info = page.evaluate("""() => {
+                    const el = document.activeElement;
+                    if (!el || el === document.body) return null;
+                    const s = getComputedStyle(el);
+                    return { style: s.outlineStyle, width: s.outlineWidth };
+                }""")
+                if info and info["style"] != "none" and info["width"] not in ("0px", ""):
+                    visible += 1
+            r.check("鍵盤 Tab：focus 框看得見", visible >= 5, f"12 次 Tab 有 {visible} 次有外框")
+            ctx.close()
+
+            # 5 ── 置換 TRIP_DATA，網站仍完整運作 ─────────────
+            ctx = browser.new_context()
+            page = ctx.new_page()
+            swap_errors = []
+            page.on("pageerror", lambda e: swap_errors.append(str(e)))
+            page.goto(swap)
+            page.wait_for_load_state("networkidle")
+            page.wait_for_timeout(1200)
+
+            r.check("置換 TRIP_DATA：沒有 JS 例外", not swap_errors, "; ".join(swap_errors[:2]))
+            r.check("置換 TRIP_DATA：標題換掉了", "SWAP TEST 2027" in page.content())
+            n = page.locator(".nav-item").count()
+            r.check("置換 TRIP_DATA：導覽由資料自動生成", n >= 2, f"{n} 個分頁")
+            theme = page.evaluate("document.documentElement.dataset.theme")
+            r.check("置換 TRIP_DATA：主題由資料套用（原站是 maple）", theme == "ocean",
+                    f"實際 {theme}")
+
+            html = page.content()
+            for label, needle in [("flight 航班卡", "CI51"), ("stop 景點", "雪梨歌劇院"),
+                                  ("transit 交通", "Circular Quay"),
+                                  ("options 多選一", "海鮮市場"),
+                                  ("lodging 住宿", "測試飯店")]:
+                r.check(f"置換 TRIP_DATA：{label} 有渲染", needle in html)
+            ctx.close()
+            browser.close()
+
+        return r.summary()
+    finally:
+        shutil.rmtree(tmp, ignore_errors=True)
+
+
+if __name__ == "__main__":
+    ap = argparse.ArgumentParser(description="旅遊行程網站的離線與資料層驗證")
+    ap.add_argument("--trip", default="fukuoka-2026", help="要測的行程資料夾（預設 fukuoka-2026）")
+    args = ap.parse_args()
+    print(f"測試 {args.trip}（副本已停用 Firebase，不會碰到真正的雲端資料）\n")
+    sys.exit(0 if run(args.trip) else 1)
