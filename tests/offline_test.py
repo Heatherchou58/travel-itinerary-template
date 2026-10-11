@@ -91,6 +91,105 @@ AUTO_THEME_CASES = [
 ]
 
 
+# 分帳測試用：四名成員、只放記帳區塊。各情境靠注入 localStorage 餵不同花費，
+# 所以只需要這一份副本。
+SETTLE_TRIP = {
+    "meta": {
+        "tripId": "settletest", "title": "SETTLE TEST", "subtitle": "分帳測試",
+        "theme": "city", "startDate": "2027-05-01", "endDate": "2027-05-01",
+        "place": {"name": "Test", "lat": 25.0, "lon": 121.5, "timezone": "Asia/Taipei"},
+        "money": {"home": "TWD", "local": "JPY", "rate": 0.22},
+        "members": ["A", "B", "C", "D"], "categories": ["食"],
+    },
+    # 只有一天，所以載入後它就是選取中的分頁，不需要再點任何 tab。
+    # （真實網站的「💰 記帳」也是一個 day，分頁完全由 days 生成。）
+    "days": [{"id": "d1", "nav": "記帳", "date": "2027-05-01", "title": "記帳",
+              "blocks": [{"type": "expenses"}]}],
+    "phrases": [], "emergency": [],
+}
+
+
+def expense(payer: str, home: int, split: list) -> dict:
+    return {"id": f"e{payer}{home}", "day": "d1", "payer": payer, "item": "測試",
+            "local": 0, "home": home, "cat": "食", "split": split,
+            "createdAt": 1, "createdBy": payer}
+
+
+# (說明, 花費清單, 檢查函式)。檢查函式收到 {rows, tx}，回傳 (通過, 細節)。
+def _sum_balanced(data):
+    recv = sum(r["amt"] for r in data["rows"] if r["dir"] == "recv")
+    pay = sum(r["amt"] for r in data["rows"] if r["dir"] == "pay")
+    return recv == pay, f"畫面上應收 {recv}、應付 {pay}"
+
+
+def _two_way_split(data):
+    by = {r["who"]: r for r in data["rows"]}
+    ok = (by["A"]["dir"] == "recv" and by["A"]["amt"] == 500
+          and by["B"]["dir"] == "pay" and by["B"]["amt"] == 500
+          and by["C"]["amt"] == 0 and by["D"]["amt"] == 0
+          and len(data["tx"]) == 1)
+    return ok, f"A {by['A']['dir']}{by['A']['amt']} / B {by['B']['dir']}{by['B']['amt']} / 轉帳 {len(data['tx'])} 筆"
+
+
+def _only_split_members(data):
+    by = {r["who"]: r for r in data["rows"]}
+    ok = by["A"]["amt"] == 450 and by["B"]["amt"] == 450 and by["C"]["amt"] == 0 and by["D"]["amt"] == 0
+    return ok, f"C {by['C']['amt']} / D {by['D']['amt']}（沒參與的人應為 0）"
+
+
+def _fewest_transfers(data):
+    # 四人兩兩相抵，最少 2 筆就能結清；貪婪法配對正確的話不會多出第三筆
+    return len(data["tx"]) == 2, f"產生 {len(data['tx'])} 筆轉帳，最少應為 2 筆"
+
+
+SETTLE_CASES = [
+    ("兩人均分 1000 整除", [expense("A", 1000, ["A", "B"])], _two_way_split),
+    ("三人均分 1000 除不盡：淨額加總要對得起來",
+     [expense("A", 1000, ["A", "B", "C"])], _sum_balanced),
+    ("沒列在分攤名單的人不該被算進去",
+     [expense("A", 900, ["A", "B"])], _only_split_members),
+    ("轉帳建議要是最少筆數",
+     [expense("A", 400, ["A", "B", "C", "D"]), expense("B", 400, ["A", "B", "C", "D"])],
+     _fewest_transfers),
+]
+
+# 讀出畫面上「結清建議」卡片的內容，而不是重算一次——要驗的是使用者看到什麼。
+READ_SETTLE = """() => {
+  const card = [...document.querySelectorAll('.card')]
+    .find(c => c.querySelector('.subject')?.textContent.includes('結清建議'));
+  if (!card) return null;
+  const rows = [...card.querySelectorAll('.settle')].map(d => {
+    const s = d.querySelectorAll('span');
+    return {
+      who: s[0].textContent.trim(),
+      dir: s[1].textContent.trim().startsWith('應收') ? 'recv' : 'pay',
+      amt: Number((s[1].querySelector('b')?.textContent || '').replace(/[^\\d.]/g, '')) || 0
+    };
+  });
+  const note = card.querySelector('.note-box');
+  const txt = note ? note.innerText.trim() : '';
+  const tx = (!txt || txt.includes('已經結清')) ? [] : txt.split('\\n').filter(Boolean);
+  return { rows, tx };
+}"""
+
+
+def rate_null_trip() -> dict:
+    """匯率查不到時 rate 會是 null，網站必須照常可用（規範明文要求實測）。"""
+    trip = json.loads(json.dumps(SETTLE_TRIP))
+    trip["meta"]["tripId"] = "ratenull"
+    trip["meta"]["money"]["rate"] = None
+    return trip
+
+
+def unknown_block_trip() -> dict:
+    """未知型別要在畫面上顯示明確錯誤，不可靜默跳過（否則以為行程存到了，其實不見）。"""
+    trip = json.loads(json.dumps(SETTLE_TRIP))
+    trip["meta"]["tripId"] = "unknownblock"
+    trip["days"][0]["blocks"] = [{"type": "totally-made-up-type", "title": "不存在的型別"},
+                                 {"type": "expenses"}]
+    return trip
+
+
 def auto_theme_trip(theme: str, start: str, lat: float) -> dict:
     """照 SWAP_TRIP 複製一份，只改主題判定會用到的三個欄位。"""
     trip = json.loads(json.dumps(SWAP_TRIP))
@@ -184,6 +283,11 @@ def run(trip: str) -> bool:
             swap_trip_data(tmp / f"auto{i}" / "index.html",
                            auto_theme_trip(theme, start, lat))
 
+        for name, trip in [("settle", SETTLE_TRIP), ("rate", rate_null_trip()),
+                           ("unknown", unknown_block_trip())]:
+            shutil.copytree(tmp / "site", tmp / name)
+            swap_trip_data(tmp / name / "index.html", trip)
+
         port = serve(tmp)
         base, swap = f"http://127.0.0.1:{port}/site/", f"http://127.0.0.1:{port}/swap/"
         r = Report()
@@ -226,15 +330,20 @@ def run(trip: str) -> bool:
             page.locator("#e-add").click()
             page.wait_for_timeout(800)
 
+            # 注意：一律讀 #main 的 innerText，不要用 page.content()。這個網站是
+            # 單一 HTML、JS 內嵌，原始碼裡本來就含有 TRIP_DATA 和所有樣板字串，
+            # 用 content() 比對等於永遠會中——就算 renderer 根本沒畫出來。
             r.check("離線新增花費：沒有 JS 例外", not errors, "; ".join(errors[:2]))
-            r.check("離線新增花費：出現在列表", "離線測試項目" in page.content())
+            r.check("離線新增花費：出現在列表",
+                    "離線測試項目" in page.locator("#main").inner_text())
 
             page.reload()
             page.wait_for_load_state("domcontentloaded")
             page.wait_for_timeout(1200)
             page.get_by_role("tab", name=re.compile("記帳")).click()
             page.wait_for_timeout(500)
-            r.check("離線新增花費：重新整理後還在", "離線測試項目" in page.content())
+            r.check("離線新增花費：重新整理後還在",
+                    "離線測試項目" in page.locator("#main").inner_text())
 
             # 3 ── 離線匯出 CSV ──────────────────────────────
             with page.expect_download() as dl:
@@ -277,19 +386,20 @@ def run(trip: str) -> bool:
             page.wait_for_timeout(1200)
 
             r.check("置換 TRIP_DATA：沒有 JS 例外", not swap_errors, "; ".join(swap_errors[:2]))
-            r.check("置換 TRIP_DATA：標題換掉了", "SWAP TEST 2027" in page.content())
+            r.check("置換 TRIP_DATA：標題換掉了",
+                    page.locator("#app-title").inner_text().strip() == "SWAP TEST 2027")
             n = page.locator(".nav-item").count()
             r.check("置換 TRIP_DATA：導覽由資料自動生成", n >= 2, f"{n} 個分頁")
             theme = page.evaluate("document.documentElement.dataset.theme")
             r.check("置換 TRIP_DATA：主題由資料套用（原站是 maple）", theme == "ocean",
                     f"實際 {theme}")
 
-            html = page.content()
+            shown = page.locator("#main").inner_text()
             for label, needle in [("flight 航班卡", "CI51"), ("stop 景點", "雪梨歌劇院"),
                                   ("transit 交通", "Circular Quay"),
                                   ("options 多選一", "海鮮市場"),
                                   ("lodging 住宿", "測試飯店")]:
-                r.check(f"置換 TRIP_DATA：{label} 有渲染", needle in html)
+                r.check(f"置換 TRIP_DATA：{label} 有渲染", needle in shown)
             ctx.close()
 
             # 6 ── theme 為 auto／留空時的執行時推導 ──────────
@@ -302,6 +412,73 @@ def run(trip: str) -> bool:
                 got = page.evaluate("document.documentElement.dataset.theme")
                 r.check(f"主題推導：{label}", got == want, f"實際 {got}")
                 ctx.close()
+
+            # 7 ── 分帳計算 ─────────────────────────────────
+            for label, expenses, verify in SETTLE_CASES:
+                ctx = browser.new_context()
+                page = ctx.new_page()
+                seed = json.dumps({"checks": {}, "expenses": expenses, "queue": []},
+                                  ensure_ascii=False)
+                page.add_init_script(
+                    f"localStorage.setItem('trip:settletest', {json.dumps(seed)})")
+                page.goto(f"http://127.0.0.1:{port}/settle/")
+                page.wait_for_load_state("networkidle")
+                page.wait_for_timeout(600)
+                data = page.evaluate(READ_SETTLE)
+                if data is None:
+                    r.check(f"分帳：{label}", False, "找不到結清建議卡片")
+                else:
+                    ok, detail = verify(data)
+                    r.check(f"分帳：{label}", ok, detail)
+                ctx.close()
+
+            # 8 ── 匯率查不到（rate = null）時網站不能壞 ───────
+            ctx = browser.new_context()
+            page = ctx.new_page()
+            rate_errors = []
+            page.on("pageerror", lambda e: rate_errors.append(str(e)))
+            page.goto(f"http://127.0.0.1:{port}/rate/")
+            page.wait_for_load_state("networkidle")
+            page.wait_for_timeout(600)
+
+            r.check("匯率 null：沒有 JS 例外", not rate_errors, "; ".join(rate_errors[:2]))
+            r.check("匯率 null：記帳表單仍然可用",
+                    page.locator("#e-item").count() == 1 and page.locator("#e-add").count() == 1)
+            shown = page.locator("#main").inner_text()
+            r.check("匯率 null：不顯示匯率說明", "僅供估算" not in shown)
+            r.check("匯率 null：改為提示兩種幣別各自填寫", "沒有匯率資料" in shown)
+
+            page.locator("#e-local").fill("1000")
+            page.locator("#e-item").click()          # 觸發 change
+            page.wait_for_timeout(300)
+            r.check("匯率 null：不會亂自動換算",
+                    page.locator("#e-home").input_value() == "",
+                    f"本幣欄實際值「{page.locator('#e-home').input_value()}」")
+
+            page.locator("#e-item").fill("手動填金額")
+            page.locator("#e-home").fill("250")
+            page.locator("#e-add").click()
+            page.wait_for_timeout(600)
+            r.check("匯率 null：手動填本幣仍能記帳",
+                    "手動填金額" in page.locator("#main").inner_text())
+            ctx.close()
+
+            # 9 ── 未知 block 型別要顯示錯誤，不可靜默跳過 ──────
+            ctx = browser.new_context()
+            page = ctx.new_page()
+            page.goto(f"http://127.0.0.1:{port}/unknown/")
+            page.wait_for_load_state("networkidle")
+            page.wait_for_timeout(600)
+            body = page.locator("#main").inner_text()
+
+            r.check("未知 block：畫面上有明確錯誤訊息", "未知的 block 型別" in body)
+            r.check("未知 block：錯誤訊息指出是哪個型別", "totally-made-up-type" in body)
+            err = page.locator("text=未知的 block 型別").first
+            r.check("未知 block：錯誤訊息真的看得見（不是藏起來）",
+                    err.count() > 0 and err.is_visible())
+            r.check("未知 block：後面的區塊照常渲染（不會整頁中斷）",
+                    page.locator("#e-add").count() == 1)
+            ctx.close()
 
             browser.close()
 
