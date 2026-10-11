@@ -345,7 +345,27 @@ def run(trip: str) -> bool:
             r.check("離線新增花費：重新整理後還在",
                     "離線測試項目" in page.locator("#main").inner_text())
 
+            # 2b ── 打包清單是各自的，不進同步佇列 ────────────
+            # 每個人的打包進度本來就不一樣，勾選不該上傳給其他人。
+            # 記帳會進佇列、清單不會——兩者的差別就是這一項在把關。
+            # （此時仍是離線狀態，正好是最容易誤把勾選排進佇列的情境。）
+            page.locator(".nav-item").first.click()     # 清單在第一個分頁，不在記帳頁
+            page.wait_for_timeout(400)
+            page.locator(".chk input").first.check()
+            page.wait_for_timeout(600)
+            queued = page.evaluate(
+                "JSON.parse(localStorage.getItem('trip:kyushu-fukuoka-2026') || '{}')"
+                ".queue?.map(q => q.type) ?? []")
+            r.check("打包清單：勾選不會進同步佇列", "checks" not in queued,
+                    f"佇列內容 {queued}")
+            r.check("打包清單：勾選有存在本機",
+                    page.evaluate("Object.values(JSON.parse("
+                                  "localStorage.getItem('trip:kyushu-fukuoka-2026')||'{}'"
+                                  ").checks || {}).some(Boolean)"))
+
             # 3 ── 離線匯出 CSV ──────────────────────────────
+            page.get_by_role("tab", name=re.compile("記帳")).click()   # 上一項切走了
+            page.wait_for_timeout(400)
             with page.expect_download() as dl:
                 page.locator("#e-csv").click()
             raw = Path(dl.value.path()).read_bytes()

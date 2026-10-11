@@ -2572,7 +2572,9 @@ document.getElementById("main").addEventListener("change", e => {
   const cb = e.target.closest("input[data-k]");
   if (cb){
     state.checks[cb.dataset.k] = cb.checked;
-    persist(); push({ type:"checks" });
+    /* 打包清單只存在這台裝置，不上傳——每個人的打包進度本來就不一樣。
+       共用的是記帳，不是清單。 */
+    persist();
     const card = cb.closest("[data-chk]");
     const p = card.querySelector(".chk-progress");
     const all = card.querySelectorAll("input[data-k]");
@@ -2639,7 +2641,7 @@ async function flush(){
   try{
     const { doc, setDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
     await setDoc(doc(db, "trips", M.tripId, "shared", "state"), {
-      checks: state.checks, expenses: state.expenses, updatedAt: Date.now()
+      expenses: state.expenses, updatedAt: Date.now()
     });
     state.queue = []; persist(); setSync("ok","已同步");
   }catch(e){
@@ -2669,7 +2671,7 @@ async function initFirebase(){
     onSnapshot(doc(db, "trips", M.tripId, "shared", "state"), snap => {
       const d = snap.data();
       if (!d || state.queue.length) return;   // 本地有未傳資料時不覆蓋
-      state.checks = d.checks || {};
+      /* 刻意不碰 state.checks：打包清單是各自的，遠端殘留的舊值要忽略。 */
       state.expenses = d.expenses || [];
       persist(); renderDay(current);
     });
