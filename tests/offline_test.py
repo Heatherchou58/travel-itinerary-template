@@ -82,6 +82,26 @@ SWAP_TRIP = {
     "emergency": [{"label": "報警", "value": "000", "tel": True}],
 }
 
+# theme 填 "auto" 或留空時的執行時推導。南北半球同月份必須得到不同結果，
+# 否則等於沒有處理半球——紐澳的 12 月是盛夏，套飄雪就錯了。
+AUTO_THEME_CASES = [
+    ("auto + 北半球 1 月 → snow",   "auto", "2027-01-15",  35.6762, "snow"),
+    ("auto + 南半球 1 月 → ocean",  "auto", "2027-01-15", -33.8688, "ocean"),
+    ("留空 + 北半球 10 月 → maple", "",     "2027-10-15",  35.6762, "maple"),
+]
+
+
+def auto_theme_trip(theme: str, start: str, lat: float) -> dict:
+    """照 SWAP_TRIP 複製一份，只改主題判定會用到的三個欄位。"""
+    trip = json.loads(json.dumps(SWAP_TRIP))
+    trip["meta"]["theme"] = theme
+    trip["meta"]["startDate"] = start
+    trip["meta"]["endDate"] = start
+    trip["meta"]["place"]["lat"] = lat
+    for i, day in enumerate(trip["days"]):
+        day["date"] = start
+    return trip
+
 
 # ── 準備測試用的副本 ────────────────────────────────────────
 
@@ -97,7 +117,7 @@ def disable_firebase(path: Path) -> None:
         sys.exit("準備測試副本失敗：副本裡仍有 API 金鑰殘留")
 
 
-def swap_trip_data(path: Path) -> None:
+def swap_trip_data(path: Path, trip: dict) -> None:
     """用大括號配對找出 TRIP_DATA 的範圍再整段換掉（正則數不準巢狀括號）。"""
     html = path.read_text(encoding="utf-8")
     start = html.find("const TRIP_DATA = ")
@@ -114,7 +134,7 @@ def swap_trip_data(path: Path) -> None:
                 break
     if end < 0:
         sys.exit("置換失敗：找不到 TRIP_DATA 的結尾")
-    body = json.dumps(SWAP_TRIP, ensure_ascii=False, indent=2)
+    body = json.dumps(trip, ensure_ascii=False, indent=2)
     path.write_text(html[:start] + "const TRIP_DATA = " + body + html[end:],
                     encoding="utf-8")
 
@@ -157,7 +177,12 @@ def run(trip: str) -> bool:
         shutil.copytree(src, tmp / "site")
         disable_firebase(tmp / "site" / "index.html")
         shutil.copytree(tmp / "site", tmp / "swap")
-        swap_trip_data(tmp / "swap" / "index.html")
+        swap_trip_data(tmp / "swap" / "index.html", SWAP_TRIP)
+
+        for i, (_, theme, start, lat, _) in enumerate(AUTO_THEME_CASES):
+            shutil.copytree(tmp / "site", tmp / f"auto{i}")
+            swap_trip_data(tmp / f"auto{i}" / "index.html",
+                           auto_theme_trip(theme, start, lat))
 
         port = serve(tmp)
         base, swap = f"http://127.0.0.1:{port}/site/", f"http://127.0.0.1:{port}/swap/"
@@ -266,6 +291,18 @@ def run(trip: str) -> bool:
                                   ("lodging 住宿", "測試飯店")]:
                 r.check(f"置換 TRIP_DATA：{label} 有渲染", needle in html)
             ctx.close()
+
+            # 6 ── theme 為 auto／留空時的執行時推導 ──────────
+            for i, (label, _, _, _, want) in enumerate(AUTO_THEME_CASES):
+                ctx = browser.new_context()
+                page = ctx.new_page()
+                page.goto(f"http://127.0.0.1:{port}/auto{i}/")
+                page.wait_for_load_state("networkidle")
+                page.wait_for_timeout(800)
+                got = page.evaluate("document.documentElement.dataset.theme")
+                r.check(f"主題推導：{label}", got == want, f"實際 {got}")
+                ctx.close()
+
             browser.close()
 
         return r.summary()

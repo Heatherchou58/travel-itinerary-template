@@ -1198,8 +1198,26 @@ if ("serviceWorker" in navigator && location.protocol.startsWith("http")){
   });
 }
 
+/* 主題為 auto 或留空時，依出發月份與半球推導。
+   產生器在輸出時就會算好，所以這裡通常用不到——但手動編輯 TRIP_DATA
+   的人照規範可以填 "auto"，少了這段就會變成 data-theme="auto"，對不上
+   任何 CSS 規則，整頁沒有主題。邏輯與 builder/assets/parse.js 的
+   autoTheme() 相同：用字串取月份，不經過 Date，避開時區位移。 */
+function resolveTheme(meta){
+  const t = (meta.theme || "").trim();
+  if (t && t !== "auto") return t;
+  if (!meta.startDate) return "none";
+  const m = Number(String(meta.startDate).slice(5, 7)) || 1;
+  const lat = meta.place && meta.place.lat;
+  const shift = (lat != null && lat < 0) ? ((m + 5) % 12) + 1 : m;   // 南半球季節對調
+  if (shift === 12 || shift <= 2) return "snow";
+  if (shift <= 5) return "sakura";
+  if (shift <= 8) return "ocean";
+  return "maple";
+}
+
 /* ── 啟動 ── */
-document.documentElement.dataset.theme = M.theme || "none";
+document.documentElement.dataset.theme = resolveTheme(M);
 document.title = M.title;
 document.getElementById("app-title").textContent = M.title;
 document.getElementById("app-sub").textContent = M.subtitle || "";
