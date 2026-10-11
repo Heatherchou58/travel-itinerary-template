@@ -4,9 +4,10 @@
    行程內容（index.html）採「網路優先」，所以改完行程
    重新部署，使用者一有網路就會拿到新版，不用改這裡。
 
-   manifest.json、icons/ 與 sw.js 本身走「快取優先」，改動
-   這幾個檔案時必須把下面的 VERSION 加 1，否則已經開過網站
-   的人會一直拿到舊版——重新部署也救不回來。
+   manifest.json 與 icons/ 走「快取優先」，改動它們時必須把
+   下面的 VERSION 加 1，否則已經開過網站的人會一直拿到舊版，
+   重新部署也救不回來。（sw.js 本身不在 PRECACHE 裡，瀏覽器
+   會自己偵測並安裝新版，不需要為了它升版。）
    ══════════════════════════════════════════════════ */
 const VERSION  = "v1";
 const CACHE    = `trip-${VERSION}`;
@@ -57,7 +58,12 @@ async function networkFirst(req){
   const cache = await caches.open(CACHE);
   try{
     const net = await Promise.race([
-      fetch(req),
+      /* cache:"no-cache" 會強制向伺服器驗證。少了它，這個 fetch 會先撞上
+         瀏覽器自己的 HTTP 快取——GitHub Pages 對 HTML 回 max-age=600，
+         等於「網路優先」在部署後 10 分鐘內拿到的還是舊檔。
+         用 no-cache 而非 no-store：帶 ETag 發條件式請求，沒變就回 304，
+         既保證最新又不會每次都重傳整頁。 */
+      fetch(req, { cache: "no-cache" }),
       new Promise((_, rej) => setTimeout(() => rej(new Error("timeout")), TIMEOUT))
     ]);
     if (net && net.ok) cache.put(req, net.clone());
