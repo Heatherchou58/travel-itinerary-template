@@ -432,6 +432,36 @@ def run(trip: str) -> bool:
                     r.check(f"分帳：{label}", ok, detail)
                 ctx.close()
 
+            # 7b ── 結清摘要 CSV 的數字要跟畫面一致 ─────────────
+            ctx = browser.new_context(accept_downloads=True)
+            page = ctx.new_page()
+            seed = json.dumps({"checks": {},
+                               "expenses": [expense("A", 1000, ["A", "B", "C"])],
+                               "queue": []}, ensure_ascii=False)
+            page.add_init_script(
+                f"localStorage.setItem('trip:settletest', {json.dumps(seed)})")
+            page.goto(f"http://127.0.0.1:{port}/settle/")
+            page.wait_for_load_state("networkidle")
+            page.wait_for_timeout(600)
+            with page.expect_download() as dl:
+                page.locator("#e-csv2").click()
+            csv = Path(dl.value.path()).read_bytes().decode("utf-8-sig")
+
+            # 成員那幾列：成員,代墊總額,應分攤,淨額,狀態
+            member_rows = [ln.split(",") for ln in csv.splitlines()
+                           if ln.split(",")[0] in ("A", "B", "C", "D") and len(ln.split(",")) >= 4]
+            advanced = sum(int(c[1]) for c in member_rows)
+            owed = sum(int(c[2]) for c in member_rows)
+            r.check("CSV 結清摘要：代墊總額加總 = 花費總額", advanced == 1000, f"實際 {advanced}")
+            r.check("CSV 結清摘要：應分攤加總 = 花費總額", owed == 1000, f"實際 {owed}")
+
+            screen = page.evaluate(READ_SETTLE)
+            csv_net = {c[0]: int(c[3]) for c in member_rows}
+            screen_net = {row["who"]: row["amt"] for row in screen["rows"]}
+            r.check("CSV 結清摘要：淨額與畫面相同", csv_net == screen_net,
+                    f"CSV {csv_net} / 畫面 {screen_net}")
+            ctx.close()
+
             # 8 ── 匯率查不到（rate = null）時網站不能壞 ───────
             ctx = browser.new_context()
             page = ctx.new_page()

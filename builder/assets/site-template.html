@@ -963,12 +963,31 @@ function renderExpenses(){
   </div>`;
 }
 
+/* 一筆花費的每人分攤，整數。除不盡的餘數一人多攤 1 元，攤完為止，
+   所以加總一定等於原金額。
+
+   直接寫 e.home / e.split.length 會留下小數，各處再各自四捨五入就湊不
+   回來——1000 三人均分，畫面會顯示「A 應收 667」但「B、C 各應付 333」，
+   差 1 元。筆數越多誤差越明顯。
+
+   settle() 與兩個 CSV 匯出都走這個函式，畫面和匯出才不會各算各的。 */
+function shares(e){
+  const out = {};
+  const n = e.split.length;
+  if (!n) return out;                       // 舊資料可能沒有分攤對象
+  const total = Math.round(e.home);
+  const base = Math.floor(total / n);
+  const rem  = total - base * n;            // 0 ≤ rem < n
+  e.split.forEach((m, i) => { out[m] = base + (i < rem ? 1 : 0); });
+  return out;
+}
+
 function settle(){
   const net = Object.fromEntries(M.members.map(m=>[m,0]));
   for (const e of state.expenses){
-    if (net[e.payer] !== undefined) net[e.payer] += e.home;
-    const share = e.home / e.split.length;
-    for (const m of e.split) if (net[m] !== undefined) net[m] -= share;
+    if (net[e.payer] !== undefined) net[e.payer] += Math.round(e.home);
+    const sh = shares(e);
+    for (const m in sh) if (net[m] !== undefined) net[m] -= sh[m];
   }
   const cred = Object.entries(net).filter(([,v])=>v > 0.5).map(([m,v])=>({m,v})).sort((a,b)=>b.v-a.v);
   const debt = Object.entries(net).filter(([,v])=>v < -0.5).map(([m,v])=>({m,v:-v})).sort((a,b)=>b.v-a.v);
@@ -1023,7 +1042,9 @@ function exportDetail(){
     rows.push([
       d.date || "", d.nav || e.day, e.item, e.cat, e.payer,
       e.split.join("、"), e.split.length,
-      e.local || "", e.home, Math.round(e.home / e.split.length),
+      /* 分攤不一定每人相同（餘數會多攤 1 元），所以逐人列出，
+         順序與「分攤對象」欄一致，加起來剛好等於金額。 */
+      e.local || "", e.home, e.split.map(m => shares(e)[m]).join("、"),
       new Date(e.createdAt).toLocaleString("sv-SE"), e.createdBy || ""
     ]);
   }
@@ -1037,10 +1058,11 @@ function exportSettle(){
   const owe  = Object.fromEntries(M.members.map(m=>[m,0]));
   const byCat = {};
   for (const e of state.expenses){
-    if (paid[e.payer] !== undefined) paid[e.payer] += e.home;
-    const s = e.home / e.split.length;
-    for (const m of e.split) if (owe[m] !== undefined) owe[m] += s;
-    byCat[e.cat] = (byCat[e.cat] || 0) + e.home;
+    const total = Math.round(e.home);
+    if (paid[e.payer] !== undefined) paid[e.payer] += total;
+    const sh = shares(e);
+    for (const m in sh) if (owe[m] !== undefined) owe[m] += sh[m];
+    byCat[e.cat] = (byCat[e.cat] || 0) + total;
   }
   const rows = [["成員","代墊總額","應分攤","淨額","狀態"]];
   for (const m of M.members)
