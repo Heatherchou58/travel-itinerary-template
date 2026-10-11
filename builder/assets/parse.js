@@ -531,10 +531,16 @@ function cellValue(v){
   if (v instanceof Date) return v;
   if (typeof v === "object"){
     if (Array.isArray(v.richText)) return v.richText.map(t => t.text).join("");
+    /* 公式：有快取結果就用，沒有就視為空值。沒被試算軟體打開過的檔案
+       （例如程式產生的）公式不帶結果，直接 String() 會得到
+       "[object Object]" 並被當成時間寫進網站。回傳 null 的話，解析器
+       會自己用「停留(分)」累加——那本來就是公式被刪掉時的備援路徑。 */
+    if (v.formula !== undefined || v.sharedFormula !== undefined)
+      return v.result !== undefined ? v.result : null;
     if (v.text !== undefined)      return v.text;          // 超連結
-    if (v.result !== undefined)    return v.result;        // 公式
+    if (v.result !== undefined)    return v.result;
     if (v.hyperlink !== undefined) return v.hyperlink;
-    return String(v);
+    return null;      // 不認得的物件寧可當空值，也不要塞 "[object Object]" 進資料
   }
   return v;
 }
