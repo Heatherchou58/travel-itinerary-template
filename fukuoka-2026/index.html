@@ -205,6 +205,27 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
   background:var(--c-surface); border-radius:var(--r-card); box-shadow:var(--shadow);
   padding:var(--sp-4); margin-bottom:var(--sp-3);
 }
+/* ── 現在進行到哪 ─────────────────────────
+   目前項目用主題色標出來，已結束的降低存在感，讓視線自動落到「現在」。
+   邊框用 transparent 佔位，套用時才不會整張卡片位移。 */
+.card{ border-left:4px solid transparent; }
+/* 用 shorthand 連寬度一起指定。住宿卡片的 .card.lodge 有自己的 1px 邊框，
+   只改 border-left-color 的話，住宿變成「現在」時高亮只有 1px。 */
+.card.is-now{ border-left:4px solid var(--c-accent); background:var(--c-accent-soft); }
+.card.is-next{ border-left:4px solid var(--c-line); }
+.card.is-past{ opacity:.62; }
+/* 這行不能省：瀏覽器的 [hidden]{display:none} 來自 UA 樣式表，
+   會被下面的 display:inline-flex 蓋掉，收起來的膠囊仍會露出一小條色塊。 */
+.now-line[hidden]{ display:none; }
+.now-line{
+  display:inline-flex; align-items:center; margin-bottom:var(--sp-2);
+  padding:3px var(--sp-3); border-radius:var(--r-pill);
+  background:var(--c-accent); color:var(--c-on-accent);
+  font-size:var(--fs-xs); font-weight:700;
+}
+.card.is-next .now-line{ background:var(--c-line); color:var(--c-text); }
+.nav-item.is-today::after{ content:"・今天"; font-size:var(--fs-xs); opacity:.8; }
+
 .time{
   display:inline-block; background:var(--c-accent-soft); color:var(--c-text);
   font-size:var(--fs-xs); font-weight:700; padding:2px var(--sp-2);
@@ -2171,6 +2192,18 @@ const localSpan = t => t ? `<span class="lang-local">${esc(t)}</span>` : "";
 const notesHTML = n => (n && n.length)
   ? `<div class="note-box">${n.map(x=>esc(x)).join("<br>")}</div>` : "";
 
+/* ── 「現在進行到哪」用的時間換算 ──────────────
+   卡片上掛 data-start / data-stay，實際的結束時間由 markNow() 依前後
+   相鄰項目推算：沒填停留時間的項目（例如當天最後的住宿）若直接用
+   start 當結束，會在抵達的那一秒就被判定成「已結束」。 */
+const toMin  = t => { const m = /^(\d{1,2}):(\d{2})$/.exec(String(t ?? "")); return m ? +m[1] * 60 + +m[2] : null; };
+const toHHMM = n => `${String(Math.floor(n / 60) % 24).padStart(2,"0")}:${String(n % 60).padStart(2,"0")}`;
+const fmtMin = n => n >= 60 ? `${Math.floor(n / 60)} 小時${n % 60 ? ` ${n % 60} 分` : ""}` : `${n} 分`;
+/* 沒有時間的項目不參與判斷 */
+const slotAttrs = b => toMin(b.time) === null ? ""
+  : ` data-start="${toMin(b.time)}" data-stay="${Number(b.stay) || 0}"`;
+const nowSlot   = b => toMin(b.time) === null ? "" : `<div class="now-line" hidden></div>`;
+
 /* 景點介紹：預設收合。用原生 <details> 而不是自己寫 JS——免事件綁定、
    鍵盤可操作、離線沒問題，重新渲染也不會壞。
    接受字串（以空行或換行分段）或字串陣列，Excel 給的是前者。 */
@@ -2220,8 +2253,8 @@ const RENDERERS = {
       </div>
     </div></div>`,
 
-  stop: b => `<div class="card">
-    ${b.time ? `<span class="time">${esc(b.time)}</span>` : ""}${stayTag(b)}
+  stop: b => `<div class="card"${slotAttrs(b)}>
+    ${nowSlot(b)}${b.time ? `<span class="time">${esc(b.time)}</span>` : ""}${stayTag(b)}
     <div class="subject">${KIND[b.kind] || KIND.sight} ${esc(b.title)}${localSpan(b.titleLocal)}</div>
     ${b.place ? `<div class="meta">📍 ${esc(b.place)}${localSpan(b.placeLocal)}</div>` : ""}
     ${notesHTML(b.notes)}${introHTML(b.intro)}${linksHTML(b.links)}</div>`,
@@ -2248,8 +2281,8 @@ const RENDERERS = {
     }).join("")}</div>
     ${notesHTML(b.notes)}${linksHTML(b.links)}</div>`,
 
-  lodging: b => `<div class="card lodge">
-    <div><span class="ttag">🏨 住宿</span>${b.time ? `<span class="time">${esc(b.time)}</span>` : ""}${stayTag(b)}</div>
+  lodging: b => `<div class="card lodge"${slotAttrs(b)}>
+    ${nowSlot(b)}<div><span class="ttag">🏨 住宿</span>${b.time ? `<span class="time">${esc(b.time)}</span>` : ""}${stayTag(b)}</div>
     <div class="subject">${esc(b.title)}${localSpan(b.titleLocal)}</div>
     ${b.address ? `<div class="meta">📍 ${esc(b.address)}</div>` : ""}
     ${(b.notes && b.notes.length)
@@ -2326,6 +2359,66 @@ function renderDay(id){
     b.setAttribute("aria-selected", String(b.dataset.day === id)));
   paintForecast();
   window.scrollTo({ top:0, behavior:"smooth" });
+  markNow();           // 捲到頂之後才標記；第一次進站會再捲到目前項目
+}
+
+/* ── 現在進行到哪 ─────────────────────────────
+   旅途中打開網站，最想知道的是「現在該在哪、還剩多久」。
+   每 30 秒只改 class 與一行字，不重畫整頁——否則展開到一半的介紹會被收起來。 */
+let firstNowPaint = true;
+
+function markNow(){
+  const n = nowAtDestination();
+  const day = TRIP_DATA.days.find(d => d.id === current);
+  const cards = [...document.querySelectorAll("#main .card[data-start]")];
+
+  cards.forEach(c => {
+    c.classList.remove("is-now", "is-next", "is-past");
+    const l = c.querySelector(".now-line");
+    if (l){ l.hidden = true; l.textContent = ""; }
+  });
+
+  /* 導覽列標出今天是哪一個分頁 */
+  document.querySelectorAll(".nav-item").forEach(btn => {
+    const d = TRIP_DATA.days.find(x => x.id === btn.dataset.day);
+    btn.classList.toggle("is-today", !!(d && d.date === n.date));
+  });
+
+  if (!day || day.date !== n.date) return;     // 不是今天就不標任何東西
+
+  /* 結束時間：有填停留就用它，沒填就接到下一個項目的開始時間，
+     最後一項沒得接就給 2 小時。否則住宿這種沒填停留的會立刻變「已結束」。 */
+  const ends = cards.map((c, i) => {
+    const s = +c.dataset.start, stay = +(c.dataset.stay || 0);
+    let e = stay > 0 ? s + stay : (cards[i + 1] ? +cards[i + 1].dataset.start : s + 120);
+    return e > s ? e : s + 60;
+  });
+
+  let cur = null, next = null;
+  cards.forEach((c, i) => {
+    const s = +c.dataset.start;
+    if (n.minutes >= ends[i]) c.classList.add("is-past");
+    else if (n.minutes >= s)  { if (!cur) cur = { card: c, end: ends[i] }; }
+    else if (!next)           next = { card: c, start: s };
+  });
+
+  const show = (card, cls, text) => {
+    card.classList.add(cls);
+    const l = card.querySelector(".now-line");
+    if (l){ l.textContent = text; l.hidden = false; }
+  };
+  if (cur)       show(cur.card, "is-now",  `現在 · 還有 ${fmtMin(cur.end - n.minutes)}（預計 ${toHHMM(cur.end)} 離開）`);
+  else if (next) show(next.card, "is-next", `接下來 · ${fmtMin(next.start - n.minutes)}後開始（${toHHMM(next.start)}）`);
+
+  /* 開啟網站時捲到目前位置。只做第一次，之後自己切分頁就不要再被拉走。 */
+  if (firstNowPaint){
+    firstNowPaint = false;
+    const target = (cur || next || {}).card;
+    if (target) target.scrollIntoView({
+      block: "center",
+      behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"
+    });
+  }
 }
 
 function buildNav(){
@@ -2380,24 +2473,60 @@ function localTime(){
   }catch{ return ""; }
 }
 
+/* 目的地當地的「現在」：{ date:"YYYY-MM-DD", minutes:距午夜幾分, weekday:0-6 }
+
+   一定要用目的地時區，不能用裝置時區。台日差一小時，台灣時間 23:00 之後
+   日本已經是隔天——「第 N 天」會整整差一天，而旁邊的時鐘卻顯示當地時間，
+   兩個數字互相矛盾。判斷「現在進行到哪一站」更不能錯。
+   沒有時區資料就退回裝置時間。 */
+function nowAtDestination(){
+  const d = new Date();
+  const pad = n => String(n).padStart(2, "0");
+  const fallback = () => ({
+    date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`,
+    minutes: d.getHours() * 60 + d.getMinutes(),
+    weekday: d.getDay()
+  });
+  const tz = M.place && M.place.timezone;
+  if (!tz || tz === "auto") return fallback();
+  try{
+    /* hourCycle:"h23" 不能省——hour12:false 在部分瀏覽器午夜會給出「24」 */
+    const p = new Intl.DateTimeFormat("en-CA", {
+      timeZone: tz, year:"numeric", month:"2-digit", day:"2-digit",
+      hour:"2-digit", minute:"2-digit", hourCycle:"h23"
+    }).formatToParts(d).reduce((o, x) => (o[x.type] = x.value, o), {});
+    const date = `${p.year}-${p.month}-${p.day}`;
+    return {
+      date,
+      minutes: Number(p.hour) * 60 + Number(p.minute),
+      weekday: new Date(date + "T00:00:00Z").getUTCDay()   // 由日期字串推，避開語系差異
+    };
+  }catch{ return fallback(); }
+}
+
 function paintNow(){
   const el = document.getElementById("wx-now");
   const stamp = document.getElementById("wx-stamp");
   const now = new Date();
   const WK = ["日","一","二","三","四","五","六"];
+  /* 日期一律以目的地當地時間為準。旁邊顯示的就是當地時鐘，若這裡用裝置
+     時區，台灣半夜時兩個數字會對不起來（日本已跨日，天數卻還沒加）。 */
+  const nd = nowAtDestination();
+  const utcDay = s => Date.parse(s + "T00:00:00Z");   // 一律當 UTC 解讀，相減才是整數天
 
   /* 今天是第幾天，或距離出發還有幾天 */
-  const t0 = Date.parse(M.startDate + "T00:00:00");
-  const t1 = Date.parse((M.endDate || M.startDate) + "T00:00:00");
-  const tn = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+  const t0 = utcDay(M.startDate);
+  const t1 = utcDay(M.endDate || M.startDate);
+  const tn = utcDay(nd.date);
   let tag = "";
-  if (!isNaN(t0)){
+  if (!isNaN(t0) && !isNaN(tn)){
     if (tn < t0)      tag = `出發倒數 ${Math.round((t0 - tn) / 86400000)} 天`;
     else if (tn > t1) tag = "行程已結束";
     else              tag = `第 ${Math.round((tn - t0) / 86400000) + 1} 天`;
   }
+  const [, mm, dd] = nd.date.split("-");
   const topHTML = `<div class="wx-top">
-      <div class="wx-date">${now.getMonth()+1}/${now.getDate()}<span>週${WK[now.getDay()]}${tag ? " · " + tag : ""}</span></div>
+      <div class="wx-date">${Number(mm)}/${Number(dd)}<span>週${WK[nd.weekday]}${tag ? " · " + tag : ""}</span></div>
       <div class="wx-time">${esc(localTime())}</div>
     </div>`;
 
@@ -2409,7 +2538,9 @@ function paintNow(){
   }
   const c = wx.current, [emoji, desc] = wmo(c.weather_code);
   const d = wx.daily || {};
-  const key = new Date(now.getTime() - now.getTimezoneOffset() * 60000).toISOString().slice(0, 10);
+  /* 「今日」要查的是目的地的日期。Open-Meteo 回的 daily.time 也是當地日期，
+     用裝置日期比對，跨時區時會對到前一天的預報。 */
+  const key = nd.date;
   const i = d.time ? d.time.indexOf(key) : -1;
   const hi = i >= 0 ? Math.round(d.temperature_2m_max[i]) : null;
   const lo = i >= 0 ? Math.round(d.temperature_2m_min[i]) : null;
@@ -2823,7 +2954,14 @@ document.getElementById("app-sub").textContent = M.subtitle || "";
 })();
 
 buildNav();
-renderDay(TRIP_DATA.days[0].id);
+/* 開啟時直接跳到今天。旅途中每次都要自己點到正確的分頁很煩；
+   不在行程期間（還沒出發、或已結束）就照舊顯示第一個分頁。 */
+renderDay((TRIP_DATA.days.find(d => d.date === nowAtDestination().date) || TRIP_DATA.days[0]).id);
+
+/* 每 30 秒更新一次；從背景切回來時也立刻更新，
+   否則放了幾小時再打開會停在舊的標記上。 */
+setInterval(markNow, 30000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) markNow(); });
 paintNow();
 fetchWeather();
 initFirebase();

@@ -524,6 +524,72 @@ def run(trip: str) -> bool:
                     f"CSV {csv_net} / 畫面 {screen_net}")
             ctx.close()
 
+            # 7c ── 「現在進行到哪」與跨時區的天數 ──────────────
+            # 真實日期不在行程期間內，所以用假時鐘把時間固定在旅程中。
+            # 瀏覽器時區刻意設成台北，目的地是東京——兩者差一小時，
+            # 正好用來驗證日期是不是真的用目的地時區在算。
+            def at(utc_iso, tz="Asia/Taipei"):
+                c = browser.new_context(timezone_id=tz)
+                pg = c.new_page()
+                pg.clock.set_fixed_time(utc_iso)
+                pg.goto(f"http://127.0.0.1:{port}/site/")
+                pg.wait_for_load_state("networkidle")
+                pg.wait_for_timeout(600)
+                return c, pg
+
+            # 2026-11-17 03:00Z = 東京 12:00，高千穗峽（11:00 起、停留 150 分）進行中
+            ctx, page = at("2026-11-17T03:00:00Z")
+            nowc = page.locator("#main .card.is-now")
+            r.check("目前行程：剛好標出一張卡片", nowc.count() == 1, f"{nowc.count()} 張")
+            r.check("目前行程：標在高千穗峽上", "高千穗峽" in nowc.inner_text())
+            line = page.locator("#main .card.is-now .now-line").inner_text()
+            r.check("目前行程：顯示剩餘時間與離開時刻",
+                    "還有 1 小時 30 分" in line and "13:30" in line, f"「{line}」")
+            r.check("已結束的項目有淡化", page.locator("#main .card.is-past").count() >= 2,
+                    f"{page.locator('#main .card.is-past').count()} 張")
+            r.check("自動跳到今天的分頁",
+                    "D4" in page.locator('.nav-item[aria-selected="true"]').inner_text())
+            r.check("導覽列標出今天", page.locator(".nav-item.is-today").count() == 1)
+            # [hidden] 來自 UA 樣式表，會被 .now-line 的 display:inline-flex 蓋掉，
+            # 導致每張有時間的卡片都露出一小條空的色塊。只驗 is-now 那張抓不到。
+            r.check("其他卡片的標記列真的看不見",
+                    page.locator("#main .card:not(.is-now):not(.is-next) .now-line:visible").count() == 0,
+                    f"{page.locator('#main .card:not(.is-now):not(.is-next) .now-line:visible').count()} 條露出來")
+            # 住宿卡片自己有 1px 邊框，高亮用 shorthand 才壓得過
+            w = page.evaluate("getComputedStyle(document.querySelector('#main .card.is-now')).borderLeftWidth")
+            r.check("目前項目的高亮邊框是 4px", w == "4px", f"實際 {w}")
+            ctx.close()
+
+            # 東京 06:00：當天第一項（金鱗湖 07:00）還沒開始，應標成「接下來」
+            # 而不是什麼都不標——早上起床打開 app 就是這個情境。
+            ctx, page = at("2026-11-16T21:00:00Z")
+            nxt = page.locator("#main .card.is-next")
+            r.check("還沒開始時標「接下來」",
+                    nxt.count() == 1 and page.locator("#main .card.is-now").count() == 0,
+                    f"is-next {nxt.count()} / is-now {page.locator('#main .card.is-now').count()}")
+            if nxt.count():
+                t = nxt.locator(".now-line").inner_text()
+                r.check("「接下來」顯示還要多久才開始",
+                        "後開始" in t and "07:00" in t, f"「{t}」")
+                r.check("「接下來」標在當天第一項上", "金鱗湖" in nxt.inner_text())
+            ctx.close()
+
+            # 跨日關鍵測試：台北 2026-11-16 23:30，此時東京已是 11-17
+            # 用裝置時區會算成「第 3 天」，用目的地時區才是「第 4 天」
+            ctx, page = at("2026-11-16T15:30:00Z")
+            head = page.locator("#wx-now").inner_text()
+            r.check("跨日：天數用目的地時區（台北 11/16 深夜 → 東京已 11/17）",
+                    "第 4 天" in head, f"標頭顯示「{head.splitlines()[0] if head else ''}」")
+            r.check("跨日：日期也顯示目的地的 11/17", "11/17" in head)
+            ctx.close()
+
+            # 行程還沒開始：不該標任何東西，且顯示倒數
+            ctx, page = at("2026-10-01T03:00:00Z")
+            r.check("還沒出發：不標目前行程",
+                    page.locator("#main .card.is-now, #main .card.is-next").count() == 0)
+            r.check("還沒出發：顯示倒數天數", "出發倒數" in page.locator("#wx-now").inner_text())
+            ctx.close()
+
             # 8 ── 匯率查不到（rate = null）時網站不能壞 ───────
             ctx = browser.new_context()
             page = ctx.new_page()
