@@ -207,6 +207,61 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
   background:var(--c-surface); border-radius:var(--r-card); box-shadow:var(--shadow);
   padding:var(--sp-4); margin-bottom:var(--sp-3);
 }
+/* ── 購物清單與優惠券 ─────────────────────
+   兩欄網格，每格一張圖加三個欄位。手機上兩欄剛好，圖片縮圖點了放大。 */
+.shop-g{ margin-top:var(--sp-3); border-top:1px solid var(--c-line); }
+.shop-g summary{
+  display:flex; align-items:center; gap:var(--sp-2);
+  min-height:44px; cursor:pointer; list-style:none;
+  font-size:var(--fs-sm); font-weight:700; color:var(--c-on-accent);
+}
+.shop-g summary::-webkit-details-marker{ display:none; }
+.shop-g summary::before{ content:"▸"; display:inline-block; transition:transform .15s; }
+.shop-g[open] summary::before{ transform:rotate(90deg); }
+.shop-gn{ flex:1; }
+.shop-n{ font-weight:400; color:var(--c-text-dim); }
+.shop-gx{
+  min-height:44px; padding:0 var(--sp-2); border:none; background:none;
+  color:var(--c-text-dim); font-family:inherit; font-size:var(--fs-xs); cursor:pointer;
+}
+.shop-grid{ display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-2); }
+.shop-i{
+  position:relative; display:flex; flex-direction:column; gap:var(--sp-2);
+  border:1px solid var(--c-line); border-radius:10px; padding:var(--sp-2);
+}
+/* 沒有圖片的卡片，內容要讓開左上角那顆 ✕，否則會跟勾選框疊在一起 */
+.shop-i.no-img{ padding-top:34px; }
+.shop-x{
+  position:absolute; top:2px; left:2px; z-index:1;
+  width:28px; height:28px; border-radius:50%;
+  border:1px solid var(--c-line); background:var(--c-surface);
+  color:var(--c-text-dim); font-family:inherit; line-height:1; cursor:pointer;
+}
+.shop-img{
+  width:100%; height:120px; object-fit:cover;
+  border-radius:8px; background:var(--c-accent-soft); cursor:zoom-in;
+}
+.shop-who{ display:block; font-size:var(--fs-xs); font-weight:400; color:var(--c-text-dim); }
+.shop-note, .shop-amt{ font-size:var(--fs-xs); padding:6px var(--sp-2); min-height:36px; }
+.shop-link{ margin:0; width:100%; text-align:center; }
+.shop-add, .shop-addg{ display:flex; gap:var(--sp-2); margin-top:var(--sp-2); }
+.shop-add .input, .shop-addg .input{ flex:1; min-width:0; }
+.shop-add .btn, .shop-addg .btn{ margin-top:0; flex:0 0 auto; }
+.shop-addg{ margin-top:var(--sp-3); }
+
+/* 放大檢視：給店員看的時候要夠大 */
+#zoom{
+  border:none; border-radius:14px; padding:0; max-width:96vw; max-height:92vh;
+  background:var(--c-surface);
+}
+#zoom::backdrop{ background:rgba(0,0,0,.72); }
+#zoom img{ display:block; max-width:96vw; max-height:80vh; object-fit:contain; }
+.zoom-x{
+  display:block; width:100%; min-height:44px; border:none;
+  background:var(--c-accent); color:var(--c-on-accent);
+  font-family:inherit; font-weight:700; cursor:pointer;
+}
+
 /* ── 信用卡回饋額度 ───────────────────────
    每張卡一塊，重點是「還能刷多少」而不是卡片清單本身。 */
 .cc{
@@ -239,9 +294,32 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 .cc-left{ margin-top:2px; font-weight:700; color:var(--c-on-accent); }
 .cc-left.cc-full{ color:var(--c-danger); }   /* 額度用完，再刷就沒加碼了 */
 .cc-reg{ margin-top:var(--sp-2); }
-/* ── 加密的私人區塊 ─────────────────────────
-   門鎖密碼與訂單編號：網站上只有密文，輸入通關密語才在這台裝置解開。 */
-.vault-form{ display:flex; flex-wrap:wrap; align-items:center; gap:0 var(--sp-2); margin-top:var(--sp-3); }
+/* ── 卡片上的私人資料 ─────────────────────────
+   門鎖密碼與訂單編號：網站上只有密文，輸入通關密語才在這台裝置解開，
+   解開後直接顯示在對應的卡片上。鎖著時只有一顆按鈕。 */
+.secret{
+  margin-top:var(--sp-3); padding:var(--sp-2) var(--sp-3);
+  border:1px dashed var(--c-line); border-radius:10px;
+}
+.secret.is-locked{ padding:0; border:none; }
+.secret-ask{
+  width:100%; min-height:44px; padding:0 var(--sp-3); text-align:left;
+  border:1px dashed var(--c-line); border-radius:10px;
+  background:var(--c-surface); color:var(--c-text-dim);
+  font-family:inherit; font-size:var(--fs-sm); cursor:pointer;
+}
+/* 標籤在上、值在下：值多半是長串編號，靠右擺在窄螢幕會被拆成好幾段 */
+.secret-row{ padding:var(--sp-1) 0; }
+.secret-label{ display:block; font-size:var(--fs-xs); color:var(--c-text-dim); }
+.secret-val{ display:block; font-size:var(--fs-md); font-weight:700; word-break:break-all; user-select:all;
+             font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.secret-note{ margin:var(--sp-2) 0; font-size:var(--fs-sm); color:var(--c-text-dim); }
+.secret-lock{
+  display:block; min-height:44px; padding:0; margin-top:var(--sp-1);
+  border:none; background:none; color:var(--c-text-dim);
+  font-family:inherit; font-size:var(--fs-xs); text-decoration:underline; cursor:pointer;
+}
+.vault-form{ display:flex; flex-wrap:wrap; align-items:center; gap:0 var(--sp-2); }
 .vault-form .input{ flex:1 1 10em; width:auto; min-width:0; }
 .vault-form .btn{ margin:0; }
 .vault-remember{ display:flex; align-items:center; gap:var(--sp-2); flex:1 0 100%;
@@ -249,20 +327,6 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 .vault-remember input{ width:18px; height:18px; accent-color:var(--c-accent); flex:0 0 auto; }
 .vault-msg{ flex:1 0 100%; min-height:1.4em; font-size:var(--fs-sm); color:var(--c-text-dim); }
 .vault-msg.is-err{ color:var(--c-danger); font-weight:700; }
-.vault-sec{ border-top:1px solid var(--c-line); margin-top:var(--sp-3); padding-top:var(--sp-3); }
-.vault-sec h4{ margin:0 0 var(--sp-2); font-size:var(--fs-sm); color:var(--c-on-accent); }
-/* 標籤在上、值在下：值多半是長串編號，靠右擺在窄螢幕會被拆成好幾段 */
-.vault-row{ padding:var(--sp-1) 0; }
-.vault-label{ display:block; font-size:var(--fs-xs); color:var(--c-text-dim); }
-.vault-val{ display:block; font-size:var(--fs-md); font-weight:700; word-break:break-all; user-select:all;
-            font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
-.vault-note{ margin:var(--sp-2) 0; font-size:var(--fs-sm); color:var(--c-text-dim); }
-.vault-lock{
-  width:100%; min-height:44px; margin-top:var(--sp-4); padding:0 var(--sp-3);
-  border:1px solid var(--c-line); border-radius:var(--r-pill);
-  background:var(--c-surface); color:var(--c-text-dim);
-  font-family:inherit; font-size:var(--fs-xs); cursor:pointer;
-}
 /* 有備註的清單項目：勾選框對齊第一行，備註不要被刪除線劃到 */
 .chk.has-note{ align-items:flex-start; padding:var(--sp-2) 0; }
 .chk-note{ display:block; margin-top:2px; font-size:var(--fs-xs);
@@ -760,6 +824,41 @@ const itemText = it => typeof it === "string" ? it : String(it?.text ?? "");
    用索引的話在中間插一項，後面所有打勾就整排錯位。 */
 const chkKey = (b, g, it) => `${b.key}:${g.name}:${itemText(it)}`;
 
+/* ── 購物清單 ────────────────────────────────
+   Excel 給的是「種子」，使用者在網站上的增刪改存在 state.shopping。
+   種子用「群組:名稱」當 id，所以之後用 builder 重新產生網站，
+   Excel 新增的項目會出現、她在網站上加的不會消失、刪掉的也不會跑回來。 */
+const shopBag = () => {
+  const s = state.shopping;
+  if (!s.edits)   s.edits   = {};
+  if (!s.removed) s.removed = [];
+  if (!s.added)   s.added   = [];
+  if (!s.groups)  s.groups  = [];
+  return s;
+};
+
+/* 把種子與本機資料合併成要渲染的群組。Map 保留插入順序：
+   先種子群組、再使用者自己加的。 */
+function shopGroups(b){
+  const s = shopBag();
+  const out = new Map();
+  for (const g of (b.groups || [])){
+    out.set(g.name, (g.items || []).map(it => {
+      const o = (it && typeof it === "object") ? it : {};
+      const name = String(o.name ?? o.text ?? it ?? "");
+      return { id: `${g.name}:${name}`, group: g.name, name,
+               img: o.img || "", url: o.url || "", who: o.who || "", seed: true };
+    }));
+  }
+  for (const name of s.groups) if (!out.has(name)) out.set(name, []);
+  for (const a of s.added){
+    if (!out.has(a.group)) out.set(a.group, []);
+    out.get(a.group).push({ ...a, seed: false });
+  }
+  for (const [k, arr] of out) out.set(k, arr.filter(x => !s.removed.includes(x.id)));
+  return out;
+}
+
 /* ── 「現在進行到哪」用的時間換算 ──────────────
    卡片上掛 data-start / data-stay，實際的結束時間由 markNow() 依前後
    相鄰項目推算：沒填停留時間的項目（例如當天最後的住宿）若直接用
@@ -825,7 +924,7 @@ const RENDERERS = {
     ${nowSlot(b)}${b.time ? `<span class="time">${esc(b.time)}</span>` : ""}${stayTag(b)}
     <div class="subject">${KIND[b.kind] || KIND.sight} ${esc(b.title)}${localSpan(b.titleLocal)}</div>
     ${b.place ? `<div class="meta">📍 ${esc(b.place)}${localSpan(b.placeLocal)}</div>` : ""}
-    ${notesHTML(b.notes)}${introHTML(b.intro)}${linksHTML(b.links)}</div>`,
+    ${notesHTML(b.notes)}${secretHTML(b)}${introHTML(b.intro)}${linksHTML(b.links)}</div>`,
 
   transit: b => `<div class="card">
     ${b.time ? `<span class="time">${esc(b.time)}</span>` : ""}
@@ -855,7 +954,7 @@ const RENDERERS = {
     ${b.address ? `<div class="meta">📍 ${esc(b.address)}</div>` : ""}
     ${(b.notes && b.notes.length)
       ? `<div class="info">${b.notes.map(n => `<div>${esc(n)}</div>`).join("")}</div>` : ""}
-    ${linksHTML(b.links)}</div>`,
+    ${secretHTML(b)}${linksHTML(b.links)}</div>`,
 
   options: b => `<div class="card">
     ${b.time ? `<span class="time">${esc(b.time)}</span>` : ""}${stayTag(b)}
@@ -937,26 +1036,6 @@ const RENDERERS = {
     </div>`;
   },
 
-  /* 加密的私人區塊：門鎖密碼、訂單編號這類不能公開的資料。
-     repo 與網站都是公開的，所以 TRIP_DATA 裡只有密文（tools/encrypt-vault.mjs 產生），
-     輸入通關密語才在這台裝置解開。解開的內容只放在記憶體，不同步、也不寫回原始碼。 */
-  vault: b => {
-    const key = b.key || "vault";
-    const open = vaultOpen.get(key);
-    const body = open ? vaultContentHTML(open, key) : `
-      <form class="vault-form" data-vault-form="${esc(key)}" autocomplete="off">
-        <input class="input vault-pass" type="password" name="pass" placeholder="通關密語"
-               autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go">
-        <button class="btn btn-theme" type="submit">解鎖</button>
-        <label class="vault-remember"><input type="checkbox" name="remember" checked>
-          <span>在這台裝置記住，下次自動解開</span></label>
-        <div class="vault-msg" aria-live="polite"></div>
-      </form>`;
-    return `<div class="card vault" data-vault="${esc(key)}">
-      <div class="subject">${esc(b.title || "🔒 私人資料")}</div>
-      ${notesHTML(b.notes)}${body}</div>`;
-  },
-
   weather: () => `<div class="card"><div class="subject">🌡️ 行程期間天氣</div>
     <div class="wx-strip" id="wx-strip">載入中…</div></div>`,
 
@@ -993,7 +1072,7 @@ function renderDay(id){
   document.querySelectorAll(".nav-item").forEach(b =>
     b.setAttribute("aria-selected", String(b.dataset.day === id)));
   paintForecast();
-  paintVaults();        // 記住密語的私人區塊在這裡自動解開（解密是非同步的）
+  paintVaults();        // 記住密語的話，卡片上的私人資料在這裡自動解開（解密是非同步的）
   window.scrollTo({ top:0, behavior:"smooth" });
   markNow();           // 捲到頂之後才標記；第一次進站會再捲到目前項目
 }
@@ -1416,14 +1495,13 @@ function exportSettle(){
   downloadCSV(`${M.tripId}_結清摘要_${dateTag()}.csv`, rows);
 }
 
-/* ── 加密的私人區塊 ──────────────────────────
-   密文由 tools/encrypt-vault.mjs 產生：PBKDF2-SHA256 推導金鑰、AES-GCM 加密。
-   解密用瀏覽器內建的 Web Crypto，不靠網路，離線也解得開。
-   解開的內容只放在記憶體；勾「記住」的話密語存在這台裝置，下次打開自動解。 */
-const vaultOpen = new Map();
-const vaultLS = key => `${KEY}:vault:${key}`;
-const vaultBlock = key => TRIP_DATA.days.flatMap(d => d.blocks || [])
-  .find(b => b.type === "vault" && (b.key || "vault") === key);
+/* ── 卡片上的私人資料 ──────────────────────────
+   密文在 TRIP_DATA.vault（tools/encrypt-vault.mjs 產生：PBKDF2-SHA256 推導金鑰、AES-GCM 加密），
+   卡片只帶一個 secret 鍵。鎖著時那一格是一顆按鈕，解開後每張帶鍵的卡片換成自己那一段。
+   解密用瀏覽器內建的 Web Crypto，不靠網路，離線也解得開。解開的內容只放在記憶體；
+   勾「記住」的話密語存在這台裝置，下次打開自動解。 */
+let vaultData = null;
+const VAULT_LS = `${KEY}:vault`;
 
 /* 大小寫、空白、連字號都不計較——手機鍵盤會自動把第一個字母改大寫。
    跟 tools/encrypt-vault.mjs 的規則必須一模一樣，否則加密與解密對不上。 */
@@ -1431,58 +1509,73 @@ const normPass = p => String(p ?? "").normalize("NFKC").toLowerCase()
   .replace(/[\s\-\u2010-\u2015]/g, "");
 const unb64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
 
-async function openVault(b, pass){
+async function openVault(pass){
+  const v = TRIP_DATA.vault;
   const subtle = globalThis.crypto && crypto.subtle;
   if (!subtle) throw Object.assign(new Error("這個網址不是 HTTPS，瀏覽器不允許解密"), { fatal:true });
   const base = await subtle.importKey("raw", new TextEncoder().encode(normPass(pass)),
                                       "PBKDF2", false, ["deriveKey"]);
   const key = await subtle.deriveKey(
-    { name:"PBKDF2", hash:"SHA-256", salt:unb64(b.salt), iterations:b.iterations },
+    { name:"PBKDF2", hash:"SHA-256", salt:unb64(v.salt), iterations:v.iterations },
     base, { name:"AES-GCM", length:256 }, false, ["decrypt"]);
-  const plain = await subtle.decrypt({ name:"AES-GCM", iv:unb64(b.iv) }, key, unb64(b.data));
+  const plain = await subtle.decrypt({ name:"AES-GCM", iv:unb64(v.iv) }, key, unb64(v.data));
   return JSON.parse(new TextDecoder().decode(plain));
 }
 
-function vaultContentHTML(p, key){
-  const safeUrl = u => /^https?:\/\//i.test(String(u || ""));
-  return (p.sections || []).map(s => `<div class="vault-sec"><h4>${esc(s.title)}</h4>
-    ${(s.items || []).map(it => {
-      if (it.note) return `<div class="vault-note">${esc(it.note)}</div>`;
-      if (safeUrl(it.url)) return `<a class="btn btn-theme" href="${esc(it.url)}" target="_blank" rel="noopener">${esc(it.label || "開啟")}</a>`;
-      return `<div class="vault-row"><span class="vault-label">${esc(it.label)}</span>
-        <span class="vault-val">${esc(it.value)}</span></div>`;
-    }).join("")}</div>`).join("") +
-    `<button class="vault-lock" data-vault-lock="${esc(key)}" type="button">上鎖，並忘記這台裝置記住的密語</button>`;
+const secretItemHTML = it => {
+  if (it.note) return `<div class="secret-note">${esc(it.note)}</div>`;
+  if (/^https?:\/\//i.test(String(it.url || "")))
+    return `<a class="btn btn-theme" href="${esc(it.url)}" target="_blank" rel="noopener">${esc(it.label || "開啟")}</a>`;
+  return `<div class="secret-row"><span class="secret-label">${esc(it.label)}</span>
+    <span class="secret-val">${esc(it.value)}</span></div>`;
+};
+
+function secretHTML(b){
+  if (!b.secret || !TRIP_DATA.vault) return "";
+  const key = esc(b.secret), hint = esc(b.secretHint || "私人資料");
+  const sec = vaultData && vaultData.sections && vaultData.sections[b.secret];
+  return sec
+    ? `<div class="secret" data-secret="${key}" data-hint="${hint}">
+        ${(sec.items || []).map(secretItemHTML).join("")}
+        <button class="secret-lock" data-vault-lock type="button">上鎖</button></div>`
+    : `<div class="secret is-locked" data-secret="${key}" data-hint="${hint}">
+        <button class="secret-ask" data-vault-ask type="button">🔒 顯示${hint}</button></div>`;
 }
 
-/* 只換掉這一張卡，不重畫整頁——整頁重畫會捲回頂端，展開的介紹也會收起來 */
-function repaintVault(key){
-  const el = document.querySelector(`#main [data-vault="${CSS.escape(key)}"]`);
-  const b = vaultBlock(key);
-  if (el && b) el.outerHTML = RENDERERS.vault(b);
+/* 只換掉卡片上的私人資料那一格，不重畫整頁——整頁重畫會捲回頂端，展開的介紹也會收起來 */
+function repaintSecrets(){
+  for (const el of document.querySelectorAll("#main .secret[data-secret]"))
+    el.outerHTML = secretHTML({ secret: el.dataset.secret, secretHint: el.dataset.hint });
+}
+
+/* 按下「🔒 顯示…」：就在這張卡片裡展開輸入框 */
+function askVault(btn){
+  const box = btn.closest(".secret");
+  box.classList.remove("is-locked");
+  box.innerHTML = `<form class="vault-form" autocomplete="off">
+      <input class="input vault-pass" type="password" name="pass" placeholder="通關密語"
+             autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go">
+      <button class="btn btn-theme" type="submit">解鎖</button>
+      <label class="vault-remember"><input type="checkbox" name="remember" checked>
+        <span>在這台裝置記住，下次自動解開</span></label>
+      <div class="vault-msg" aria-live="polite"></div>
+    </form>`;
+  box.querySelector(".vault-pass").focus();
 }
 
 /* 渲染完才跑：有記住密語、還沒解開的，在這裡自動解 */
 async function paintVaults(){
-  for (const el of document.querySelectorAll("#main [data-vault]")){
-    const key = el.dataset.vault;
-    const pass = LS.get(vaultLS(key));
-    if (vaultOpen.has(key) || !pass) continue;
-    const msg = el.querySelector(".vault-msg");
-    if (msg) msg.textContent = "解鎖中…";
-    try {
-      vaultOpen.set(key, await openVault(vaultBlock(key), pass));
-      repaintVault(key);
-    } catch (e) {
-      if (!e.fatal) LS.del(vaultLS(key));     // 密語換過了：忘掉舊的，請重新輸入
-      const m = document.querySelector(`#main [data-vault="${CSS.escape(key)}"] .vault-msg`);
-      if (m){ m.textContent = e.fatal ? e.message : "記住的密語已經失效，請重新輸入"; m.classList.add("is-err"); }
-    }
+  const pass = LS.get(VAULT_LS);
+  if (vaultData || !pass || !TRIP_DATA.vault || !document.querySelector("#main .secret")) return;
+  try {
+    vaultData = await openVault(pass);
+    repaintSecrets();
+  } catch (e) {
+    if (!e.fatal) LS.del(VAULT_LS);     // 密語換過了：忘掉舊的，下次按按鈕重新輸入
   }
 }
 
 async function unlockVault(form){
-  const key  = form.dataset.vaultForm;
   const pass = form.elements.pass.value;
   const msg  = form.querySelector(".vault-msg");
   const btn  = form.querySelector("button[type=submit]");
@@ -1491,10 +1584,10 @@ async function unlockVault(form){
   btn.disabled = true;
   say("解鎖中…");
   try {
-    vaultOpen.set(key, await openVault(vaultBlock(key), pass));
-    if (form.elements.remember.checked) LS.set(vaultLS(key), pass);
-    else LS.del(vaultLS(key));
-    repaintVault(key);
+    vaultData = await openVault(pass);
+    if (form.elements.remember.checked) LS.set(VAULT_LS, pass);
+    else LS.del(VAULT_LS);
+    repaintSecrets();
   } catch (e) {
     btn.disabled = false;
     say(e.fatal ? e.message : "通關密語不對", true);
@@ -1502,10 +1595,10 @@ async function unlockVault(form){
   }
 }
 
-function lockVault(key){
-  vaultOpen.delete(key);
-  LS.del(vaultLS(key));
-  repaintVault(key);
+function lockVault(){
+  vaultData = null;
+  LS.del(VAULT_LS);
+  repaintSecrets();
 }
 
 /* ── 事件（統一委派，不用 inline onclick） ── */
@@ -1533,6 +1626,17 @@ document.getElementById("main").addEventListener("change", e => {
     p.textContent = `${[...all].filter(x=>x.checked).length}/${all.length}`;
     return;
   }
+  if (e.target.dataset.sid){
+    const s = shopBag(), id = e.target.dataset.sid;
+    s.edits[id] = { ...(s.edits[id] || {}), done: e.target.checked };
+    persist();
+    /* 群組標題的 n/總數 就地更新，不重畫——重畫會把其他輸入框的游標弄掉 */
+    const g = e.target.closest(".shop-g");
+    const all = g.querySelectorAll("[data-sid]");
+    g.querySelector(".shop-n").textContent =
+      `${[...all].filter(x => x.checked).length}/${all.length}`;
+    return;
+  }
   if (e.target.dataset.reg){
     const n = e.target.dataset.reg;
     state.cards[n] = { ...(state.cards[n] || {}), done: e.target.checked };
@@ -1549,6 +1653,19 @@ document.getElementById("main").addEventListener("change", e => {
     const home = document.getElementById("e-home");
     if (v && M.money.rate && !home.value) home.value = Math.round(v * M.money.rate);
   }
+});
+
+/* 購物清單的備註與金額：同樣就地存，不重新渲染，否則輸入框會失焦。 */
+document.getElementById("main").addEventListener("input", e => {
+  const note = e.target.closest("[data-snote]");
+  const amt  = e.target.closest("[data-samt]");
+  if (!note && !amt) return;
+  const s  = shopBag();
+  const id = (note || amt).dataset.snote || (note || amt).dataset.samt;
+  s.edits[id] = { ...(s.edits[id] || {}) };
+  if (note) s.edits[id].note = note.value;
+  else      s.edits[id].amount = amt.value === "" ? "" : Number(amt.value);
+  persist();
 });
 
 /* 信用卡的已刷金額：就地更新進度條與剩餘，不重新渲染整頁——
@@ -1573,9 +1690,76 @@ document.getElementById("main").addEventListener("input", e => {
   leftEl.classList.toggle("cc-full", left === 0);
 });
 
+/* 點圖放大給店員看。用原生 <dialog>：免自己做焦點管理，Esc 也能關。 */
 document.getElementById("main").addEventListener("click", e => {
-  const lock = e.target.closest("[data-vault-lock]");
-  if (lock) return lockVault(lock.dataset.vaultLock);
+  const img = e.target.closest("[data-zoom]");
+  if (!img) return;
+  let dlg = document.getElementById("zoom");
+  if (!dlg){
+    dlg = document.createElement("dialog");
+    dlg.id = "zoom";
+    dlg.innerHTML = `<img alt=""><button type="button" class="zoom-x">關閉</button>`;
+    dlg.addEventListener("click", ev => {
+      if (ev.target === dlg || ev.target.closest(".zoom-x")) dlg.close();
+    });
+    document.body.appendChild(dlg);
+  }
+  dlg.querySelector("img").src = img.dataset.zoom;
+  dlg.showModal();
+});
+
+/* 購物清單的增刪。會改變項目數量，所以要重畫，但只重畫當前分頁。 */
+document.getElementById("main").addEventListener("click", e => {
+  const s = shopBag();
+  const forget = id => {
+    /* 種子項目記進 removed（重新產生網站後才不會跑回來），
+       自己加的直接從 added 拿掉。 */
+    const i = s.added.findIndex(a => a.id === id);
+    if (i >= 0) s.added.splice(i, 1);
+    else if (!s.removed.includes(id)) s.removed.push(id);
+    delete s.edits[id];
+  };
+  const del = e.target.closest("[data-del]");
+  if (del){ forget(del.dataset.del); persist(); renderDay(current); return; }
+
+  const dg = e.target.closest("[data-delgroup]");
+  if (dg){
+    const box = dg.closest(".shop-g");
+    for (const el of box.querySelectorAll("[data-id]")) forget(el.dataset.id);
+    s.groups = s.groups.filter(g => g !== dg.dataset.delgroup);
+    persist(); renderDay(current); return;
+  }
+});
+
+/* 新增項目與群組。用 <form> 的 submit，Enter 鍵才會自然生效。 */
+document.getElementById("main").addEventListener("submit", e => {
+  const s = shopBag();
+  const addItem = e.target.closest(".shop-add");
+  if (addItem){
+    e.preventDefault();
+    const inp = addItem.querySelector('[name="n"]');
+    const name = inp.value.trim();
+    if (!name) return;
+    s.added.push({ id: `+${Date.now().toString(36)}`, group: addItem.dataset.addto, name });
+    inp.value = "";
+    persist(); renderDay(current); return;
+  }
+  const addGroup = e.target.closest(".shop-addg");
+  if (addGroup){
+    e.preventDefault();
+    const inp = addGroup.querySelector('[name="g"]');
+    const name = inp.value.trim();
+    if (!name || s.groups.includes(name)) return;
+    s.groups.push(name);
+    inp.value = "";
+    persist(); renderDay(current); return;
+  }
+});
+
+document.getElementById("main").addEventListener("click", e => {
+  const ask = e.target.closest("[data-vault-ask]");
+  if (ask) return askVault(ask);
+  if (e.target.closest("[data-vault-lock]")) return lockVault();
   /* 移除只隱藏在這台裝置，隨時可以還原——誤觸不該讓一張卡永久消失 */
   const hide = e.target.closest("[data-hide]");
   if (hide){
@@ -1765,6 +1949,26 @@ renderDay((TRIP_DATA.days.find(d => d.date === nowAtDestination().date) || TRIP_
 
 /* 每 30 秒更新一次；從背景切回來時也立刻更新，
    否則放了幾小時再打開會停在舊的標記上。 */
+/* 優惠券圖片要先抓進快取：在店裡結帳時不一定有訊號，而那正是要打開它的時候。
+   放在自己的快取名稱（trip-img），這樣換優惠券就不必改 sw.js、也不用升 VERSION。
+   sw.js 的 cacheFirst 用的是 caches.match()，會搜尋所有快取，所以找得到。 */
+(async function cacheCouponImages(){
+  if (!("caches" in window)) return;
+  const urls = [];
+  for (const day of TRIP_DATA.days || [])
+    for (const b of day.blocks || [])
+      if (b.type === "shopping")
+        for (const g of b.groups || [])
+          for (const it of g.items || [])
+            if (it && it.img) urls.push(it.img);
+  if (!urls.length) return;
+  try{
+    const c = await caches.open("trip-img");
+    /* 一張一張加，有一張失敗不要讓其他的也沒快取到（addAll 是全有或全無） */
+    await Promise.all(urls.map(u => c.match(u).then(hit => hit || c.add(u)).catch(() => {})));
+  }catch{ /* 快取滿了或被拒絕就算了，線上仍然看得到 */ }
+})();
+
 setInterval(markNow, 30000);
 document.addEventListener("visibilitychange", () => { if (!document.hidden) markNow(); });
 paintNow();

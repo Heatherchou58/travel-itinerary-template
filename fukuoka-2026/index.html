@@ -207,6 +207,61 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
   background:var(--c-surface); border-radius:var(--r-card); box-shadow:var(--shadow);
   padding:var(--sp-4); margin-bottom:var(--sp-3);
 }
+/* ── 購物清單與優惠券 ─────────────────────
+   兩欄網格，每格一張圖加三個欄位。手機上兩欄剛好，圖片縮圖點了放大。 */
+.shop-g{ margin-top:var(--sp-3); border-top:1px solid var(--c-line); }
+.shop-g summary{
+  display:flex; align-items:center; gap:var(--sp-2);
+  min-height:44px; cursor:pointer; list-style:none;
+  font-size:var(--fs-sm); font-weight:700; color:var(--c-on-accent);
+}
+.shop-g summary::-webkit-details-marker{ display:none; }
+.shop-g summary::before{ content:"▸"; display:inline-block; transition:transform .15s; }
+.shop-g[open] summary::before{ transform:rotate(90deg); }
+.shop-gn{ flex:1; }
+.shop-n{ font-weight:400; color:var(--c-text-dim); }
+.shop-gx{
+  min-height:44px; padding:0 var(--sp-2); border:none; background:none;
+  color:var(--c-text-dim); font-family:inherit; font-size:var(--fs-xs); cursor:pointer;
+}
+.shop-grid{ display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-2); }
+.shop-i{
+  position:relative; display:flex; flex-direction:column; gap:var(--sp-2);
+  border:1px solid var(--c-line); border-radius:10px; padding:var(--sp-2);
+}
+/* 沒有圖片的卡片，內容要讓開左上角那顆 ✕，否則會跟勾選框疊在一起 */
+.shop-i.no-img{ padding-top:34px; }
+.shop-x{
+  position:absolute; top:2px; left:2px; z-index:1;
+  width:28px; height:28px; border-radius:50%;
+  border:1px solid var(--c-line); background:var(--c-surface);
+  color:var(--c-text-dim); font-family:inherit; line-height:1; cursor:pointer;
+}
+.shop-img{
+  width:100%; height:120px; object-fit:cover;
+  border-radius:8px; background:var(--c-accent-soft); cursor:zoom-in;
+}
+.shop-who{ display:block; font-size:var(--fs-xs); font-weight:400; color:var(--c-text-dim); }
+.shop-note, .shop-amt{ font-size:var(--fs-xs); padding:6px var(--sp-2); min-height:36px; }
+.shop-link{ margin:0; width:100%; text-align:center; }
+.shop-add, .shop-addg{ display:flex; gap:var(--sp-2); margin-top:var(--sp-2); }
+.shop-add .input, .shop-addg .input{ flex:1; min-width:0; }
+.shop-add .btn, .shop-addg .btn{ margin-top:0; flex:0 0 auto; }
+.shop-addg{ margin-top:var(--sp-3); }
+
+/* 放大檢視：給店員看的時候要夠大 */
+#zoom{
+  border:none; border-radius:14px; padding:0; max-width:96vw; max-height:92vh;
+  background:var(--c-surface);
+}
+#zoom::backdrop{ background:rgba(0,0,0,.72); }
+#zoom img{ display:block; max-width:96vw; max-height:80vh; object-fit:contain; }
+.zoom-x{
+  display:block; width:100%; min-height:44px; border:none;
+  background:var(--c-accent); color:var(--c-on-accent);
+  font-family:inherit; font-weight:700; cursor:pointer;
+}
+
 /* ── 信用卡回饋額度 ───────────────────────
    每張卡一塊，重點是「還能刷多少」而不是卡片清單本身。 */
 .cc{
@@ -239,9 +294,32 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 .cc-left{ margin-top:2px; font-weight:700; color:var(--c-on-accent); }
 .cc-left.cc-full{ color:var(--c-danger); }   /* 額度用完，再刷就沒加碼了 */
 .cc-reg{ margin-top:var(--sp-2); }
-/* ── 加密的私人區塊 ─────────────────────────
-   門鎖密碼與訂單編號：網站上只有密文，輸入通關密語才在這台裝置解開。 */
-.vault-form{ display:flex; flex-wrap:wrap; align-items:center; gap:0 var(--sp-2); margin-top:var(--sp-3); }
+/* ── 卡片上的私人資料 ─────────────────────────
+   門鎖密碼與訂單編號：網站上只有密文，輸入通關密語才在這台裝置解開，
+   解開後直接顯示在對應的卡片上。鎖著時只有一顆按鈕。 */
+.secret{
+  margin-top:var(--sp-3); padding:var(--sp-2) var(--sp-3);
+  border:1px dashed var(--c-line); border-radius:10px;
+}
+.secret.is-locked{ padding:0; border:none; }
+.secret-ask{
+  width:100%; min-height:44px; padding:0 var(--sp-3); text-align:left;
+  border:1px dashed var(--c-line); border-radius:10px;
+  background:var(--c-surface); color:var(--c-text-dim);
+  font-family:inherit; font-size:var(--fs-sm); cursor:pointer;
+}
+/* 標籤在上、值在下：值多半是長串編號，靠右擺在窄螢幕會被拆成好幾段 */
+.secret-row{ padding:var(--sp-1) 0; }
+.secret-label{ display:block; font-size:var(--fs-xs); color:var(--c-text-dim); }
+.secret-val{ display:block; font-size:var(--fs-md); font-weight:700; word-break:break-all; user-select:all;
+             font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.secret-note{ margin:var(--sp-2) 0; font-size:var(--fs-sm); color:var(--c-text-dim); }
+.secret-lock{
+  display:block; min-height:44px; padding:0; margin-top:var(--sp-1);
+  border:none; background:none; color:var(--c-text-dim);
+  font-family:inherit; font-size:var(--fs-xs); text-decoration:underline; cursor:pointer;
+}
+.vault-form{ display:flex; flex-wrap:wrap; align-items:center; gap:0 var(--sp-2); }
 .vault-form .input{ flex:1 1 10em; width:auto; min-width:0; }
 .vault-form .btn{ margin:0; }
 .vault-remember{ display:flex; align-items:center; gap:var(--sp-2); flex:1 0 100%;
@@ -249,20 +327,6 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 .vault-remember input{ width:18px; height:18px; accent-color:var(--c-accent); flex:0 0 auto; }
 .vault-msg{ flex:1 0 100%; min-height:1.4em; font-size:var(--fs-sm); color:var(--c-text-dim); }
 .vault-msg.is-err{ color:var(--c-danger); font-weight:700; }
-.vault-sec{ border-top:1px solid var(--c-line); margin-top:var(--sp-3); padding-top:var(--sp-3); }
-.vault-sec h4{ margin:0 0 var(--sp-2); font-size:var(--fs-sm); color:var(--c-on-accent); }
-/* 標籤在上、值在下：值多半是長串編號，靠右擺在窄螢幕會被拆成好幾段 */
-.vault-row{ padding:var(--sp-1) 0; }
-.vault-label{ display:block; font-size:var(--fs-xs); color:var(--c-text-dim); }
-.vault-val{ display:block; font-size:var(--fs-md); font-weight:700; word-break:break-all; user-select:all;
-            font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
-.vault-note{ margin:var(--sp-2) 0; font-size:var(--fs-sm); color:var(--c-text-dim); }
-.vault-lock{
-  width:100%; min-height:44px; margin-top:var(--sp-4); padding:0 var(--sp-3);
-  border:1px solid var(--c-line); border-radius:var(--r-pill);
-  background:var(--c-surface); color:var(--c-text-dim);
-  font-family:inherit; font-size:var(--fs-xs); cursor:pointer;
-}
 /* 有備註的清單項目：勾選框對齊第一行，備註不要被刪除線劃到 */
 .chk.has-note{ align-items:flex-start; padding:var(--sp-2) 0; }
 .chk-note{ display:block; margin-top:2px; font-size:var(--fs-xs);
@@ -683,8 +747,8 @@ const TRIP_DATA = {
                   "url": "https://services.digital.go.jp/zh-cmn-hant/visit-japan-web/"
                 },
                 "國際駕照譯本＋台灣駕照正本（自駕必備）",
-                "確認 ORIX 租車訂單：博多站博多口店，11/15 08:00 取車、11/18 19:00 前還車",
-                "跟 YUFU-Inn 確認廚房有沒有鍋具（不含餐，11/16 晚餐與 11/17 早餐要自己張羅）",
+                "確認 ORIX 租車訂單",
+                "跟 YUFU-Inn 確認廚房有沒有鍋具",
                 "出發前查阿蘇噴火警戒等級與阿蘇パノラマライン通行狀況",
                 "出發前確認柳川乘合船時刻（受付只到 14:30）與皿倉山纜車運行（週二公休）",
                 "備妥日圓現金",
@@ -816,20 +880,11 @@ const TRIP_DATA = {
           "place": "福岡機場國際線航廈",
           "notes": [
             "BR102 19:55 落地・入境與提行李約 30–45 分",
-            "🚨 飯店受理只到 22:00 — 今晚先進飯店放行李，再出門吃",
+            "🚨 飯店受理只到 22:00 — 先進飯店放行李，再出門吃",
             "⚠️ 地鐵「福岡空港站」在國內線航廈地下，國際線走不過去，一定要先換航廈",
-            "🚇 最直接：免費接駁巴士→國內線（10 分、約 10 分一班）→ 空港線往姪浜方向坐 3 站到「祇園」，飯店就在這站・約 8 分、¥260",
-            "🚌 或西鐵巴士：國際線航廈→博多站筑紫口約 25 分、¥310，再走 10 分到祇園",
-            "🚕 四人帶行李最省事：計程車直接到飯店門口，約 15 分、¥1,500–2,000，分攤約 ¥400–500／人",
-            "Suica／PASMO 在福岡地鐵與西鐵巴士都能用，當地卡叫はやかけん"
+            "🚇 最直接：免費接駁巴士→國內線（10 分、約 10 分一班）→ 空港線往姪浜方向坐 3 站到「祇園」，飯店就在這站・約 8 分、¥260"
           ],
-          "links": [
-            {
-              "label": "🗺️ 地圖",
-              "url": "https://www.google.com/maps/search/?api=1&query=%E7%A6%8F%E5%B2%A1%E7%A9%BA%E6%B8%AF%20%E5%88%B0%E7%9D%80%E3%83%BB%E5%85%A5%E5%9B%BD%2C%20%E7%A6%8F%E5%B2%A1%E6%A9%9F%E5%A0%B4%E5%9C%8B%E9%9A%9B%E7%B7%9A%E8%88%AA%E5%BB%88",
-              "style": "map"
-            }
-          ],
+          "links": [],
           "stay": 75,
           "mode": "transit"
         },
@@ -838,21 +893,20 @@ const TRIP_DATA = {
           "kind": "sight",
           "time": "21:15",
           "title": "飯店 Check-in・放行李",
-          "titleLocal": "チェックイン",
-          "place": "福岡市博多區祇園",
+          "titleLocal": "ホテル オリゴ 博多 祇園",
+          "place": "福岡市博多區祇園町 2-31",
           "notes": [
-            "🚨 受理時間 16:00–22:00，務必在 22:00 前抵達",
-            "放完行李再出門吃飯，不用拖著行李"
+            "無人飯店・自助入住；飯店在大樓 2–6 樓，入口不太好找，照地圖走"
           ],
           "links": [
             {
               "label": "🗺️ 地圖",
-              "url": "https://www.google.com/maps/search/?api=1&query=%E3%83%81%E3%82%A7%E3%83%83%E3%82%AF%E3%82%A4%E3%83%B3%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8D%80%E7%A5%87%E5%9C%92",
+              "url": "https://maps.app.goo.gl/zhwxT6RU7A2FTBu99",
               "style": "map"
             },
             {
               "label": "🚆 從上一站",
-              "url": "https://www.google.com/maps/dir/?api=1&origin=%E7%A6%8F%E5%B2%A1%E7%A9%BA%E6%B8%AF%20%E5%88%B0%E7%9D%80%E3%83%BB%E5%85%A5%E5%9B%BD%2C%20%E7%A6%8F%E5%B2%A1%E6%A9%9F%E5%A0%B4%E5%9C%8B%E9%9A%9B%E7%B7%9A%E8%88%AA%E5%BB%88&destination=%E3%83%81%E3%82%A7%E3%83%83%E3%82%AF%E3%82%A4%E3%83%B3%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8D%80%E7%A5%87%E5%9C%92&travelmode=transit",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E7%A6%8F%E5%B2%A1%E7%A9%BA%E6%B8%AF%20%E5%88%B0%E7%9D%80%E3%83%BB%E5%85%A5%E5%9B%BD%2C%20%E7%A6%8F%E5%B2%A1%E6%A9%9F%E5%A0%B4%E5%9C%8B%E9%9A%9B%E7%B7%9A%E8%88%AA%E5%BB%88&destination=%E3%83%9B%E3%83%86%E3%83%AB%20%E3%82%AA%E3%83%AA%E3%82%B4%20%E5%8D%9A%E5%A4%9A%20%E7%A5%87%E5%9C%92%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8D%80%E7%A5%87%E5%9C%92%E7%94%BA%202-31&travelmode=transit",
               "style": "route"
             }
           ],
@@ -863,58 +917,51 @@ const TRIP_DATA = {
           "type": "stop",
           "kind": "meal",
           "time": "21:35",
-          "title": "Shin-Shin 博多拉麵",
-          "titleLocal": "博多らーめん Shin-Shin KITTE博多店",
-          "place": "博多站 KITTE 博多 B1F 博多ほろよい通り",
+          "title": "博多一双 祇園店",
+          "titleLocal": "博多一双 祇園店",
+          "place": "福岡市博多區祇園町 3-2",
           "notes": [
-            "祇園走到博多站約 10 分・停留 1hr25",
-            "試算表 4.5★「喜歡一蘭的話這個你也會愛死」",
-            "⚠️ 博多站店約營業至 23:30，出發前再確認",
-            "太晚的話：一蘭本社總本店（中洲川端・24 小時）或 Shin-Shin 天神本店（至 03:00、週三休）"
+            "飯店走路約 2 分・停留 1hr25",
+            "11:00–24:00、不定休，湯頭賣完就收",
+            "備案：Shin-Shin 博多站 KITTE 店（試算表 4.5★，走路約 10 分）／一蘭本社總本店（中洲，24 小時）"
           ],
           "links": [
             {
               "label": "🗺️ 地圖",
-              "url": "https://www.google.com/maps/search/?api=1&query=%E5%8D%9A%E5%A4%9A%E3%82%89%E3%83%BC%E3%82%81%E3%82%93%20Shin-Shin%20KITTE%E5%8D%9A%E5%A4%9A%E5%BA%97%2C%20%E5%8D%9A%E5%A4%9A%E7%AB%99%20KITTE%20%E5%8D%9A%E5%A4%9A%20B1F%20%E5%8D%9A%E5%A4%9A%E3%81%BB%E3%82%8D%E3%82%88%E3%81%84%E9%80%9A%E3%82%8A",
+              "url": "https://www.google.com/maps/search/?api=1&query=%E5%8D%9A%E5%A4%9A%E4%B8%80%E5%8F%8C%20%E7%A5%87%E5%9C%92%E5%BA%97%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8D%80%E7%A5%87%E5%9C%92%E7%94%BA%203-2",
               "style": "map"
             },
             {
               "label": "🚆 從上一站",
-              "url": "https://www.google.com/maps/dir/?api=1&origin=%E3%83%81%E3%82%A7%E3%83%83%E3%82%AF%E3%82%A4%E3%83%B3%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8D%80%E7%A5%87%E5%9C%92&destination=%E5%8D%9A%E5%A4%9A%E3%82%89%E3%83%BC%E3%82%81%E3%82%93%20Shin-Shin%20KITTE%E5%8D%9A%E5%A4%9A%E5%BA%97%2C%20%E5%8D%9A%E5%A4%9A%E7%AB%99%20KITTE%20%E5%8D%9A%E5%A4%9A%20B1F%20%E5%8D%9A%E5%A4%9A%E3%81%BB%E3%82%8D%E3%82%88%E3%81%84%E9%80%9A%E3%82%8A&travelmode=transit",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E3%83%9B%E3%83%86%E3%83%AB%20%E3%82%AA%E3%83%AA%E3%82%B4%20%E5%8D%9A%E5%A4%9A%20%E7%A5%87%E5%9C%92%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8D%80%E7%A5%87%E5%9C%92%E7%94%BA%202-31&destination=%E5%8D%9A%E5%A4%9A%E4%B8%80%E5%8F%8C%20%E7%A5%87%E5%9C%92%E5%BA%97%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8D%80%E7%A5%87%E5%9C%92%E7%94%BA%203-2&travelmode=transit",
               "style": "route"
             }
           ],
           "stay": 85,
           "mode": "transit",
-          "intro": "Shin-Shin 由在屋台修業過的老闆於 2004 年開業，湯頭走細緻路線，豚骨味不像老派博多拉麵那麼衝，配極細直麵。\n博多的代表性食物是豚骨拉麵、牛腸鍋與屋台。一蘭與一風堂都是從福岡起家的，本店就在市區。"
+          "intro": "博多站東口起家、常大排長龍的豚骨拉麵店，祇園店是第三家分店。湯頭表面浮著一層細泡，屬於福岡人說的「泡系」豚骨，味道濃郁。\n博多的代表性食物是豚骨拉麵、牛腸鍋與屋台。一蘭與一風堂都是從福岡起家的，本店就在市區。"
         },
         {
           "type": "lodging",
           "time": "23:00",
           "title": "HOTEL ORIGO HAKATA - Gion -",
           "titleLocal": "ホテル オリゴ 博多 祇園",
-          "address": "福岡市博多區祇園（地鐵空港線 祇園站）",
+          "address": "福岡市博多區祇園町 2-31（祇園站 5 號出口步行 2 分）",
           "notes": [
-            "🚨 Check-in 16:00–22:00／退房 ~11:00（不是 24hr 櫃檯）",
+            "退房 ~11:00",
             "【促銷方案】優惠入住・不含餐",
             "舒適單房 ×1・大人 4 名",
-            "¥35,280 含稅（約 NT$1,760／人）",
-            "明早 08:00 要取車開始自駕，退房 11:00 前"
+            "¥35,280 含稅（約 NT$1,760／人）"
           ],
           "links": [
             {
-              "label": "🏨 Agoda",
-              "url": "https://www.agoda.com/zh-tw/hotel-origo-hakata-gion/hotel/fukuoka-jp.html?checkIn=2026-11-14&adults=4&rooms=1&los=1&currencyCode=JPY",
-              "style": "booking"
-            },
-            {
               "label": "🗺️ 地圖",
-              "url": "https://www.google.com/maps/search/?api=1&query=%E3%83%9B%E3%83%86%E3%83%AB%20%E3%82%AA%E3%83%AA%E3%82%B4%20%E5%8D%9A%E5%A4%9A%20%E7%A5%87%E5%9C%92%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8D%80%E7%A5%87%E5%9C%92%EF%BC%88%E5%9C%B0%E9%90%B5%E7%A9%BA%E6%B8%AF%E7%B7%9A%20%E7%A5%87%E5%9C%92%E7%AB%99%EF%BC%89",
+              "url": "https://maps.app.goo.gl/zhwxT6RU7A2FTBu99",
               "style": "map"
             },
             {
               "label": "🚆 從上一站",
-              "url": "https://www.google.com/maps/dir/?api=1&origin=%E5%8D%9A%E5%A4%9A%E3%82%89%E3%83%BC%E3%82%81%E3%82%93%20Shin-Shin%20KITTE%E5%8D%9A%E5%A4%9A%E5%BA%97%2C%20%E5%8D%9A%E5%A4%9A%E7%AB%99%20KITTE%20%E5%8D%9A%E5%A4%9A%20B1F%20%E5%8D%9A%E5%A4%9A%E3%81%BB%E3%82%8D%E3%82%88%E3%81%84%E9%80%9A%E3%82%8A&destination=%E3%83%9B%E3%83%86%E3%83%AB%20%E3%82%AA%E3%83%AA%E3%82%B4%20%E5%8D%9A%E5%A4%9A%20%E7%A5%87%E5%9C%92%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8D%80%E7%A5%87%E5%9C%92%EF%BC%88%E5%9C%B0%E9%90%B5%E7%A9%BA%E6%B8%AF%E7%B7%9A%20%E7%A5%87%E5%9C%92%E7%AB%99%EF%BC%89&travelmode=transit",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E5%8D%9A%E5%A4%9A%E4%B8%80%E5%8F%8C%20%E7%A5%87%E5%9C%92%E5%BA%97%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8D%80%E7%A5%87%E5%9C%92%E7%94%BA%203-2&destination=%E3%83%9B%E3%83%86%E3%83%AB%20%E3%82%AA%E3%83%AA%E3%82%B4%20%E5%8D%9A%E5%A4%9A%20%E7%A5%87%E5%9C%92%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8D%80%E7%A5%87%E5%9C%92%E7%94%BA%202-31%EF%BC%88%E7%A5%87%E5%9C%92%E7%AB%99%205%20%E8%99%9F%E5%87%BA%E5%8F%A3%E6%AD%A5%E8%A1%8C%202%20%E5%88%86%EF%BC%89&travelmode=transit",
               "style": "route"
             }
           ],
@@ -939,8 +986,7 @@ const TRIP_DATA = {
             "退房後帶行李從祇園走到博多站約 10 分・停留 30 分",
             "7:00–23:00、無休",
             "試算表 4.6★「博多車站必吃之一，小小的可頌內餡超級豐富」",
-            "量秤計價的迷你可頌，回轉快，排隊也不太久",
-            "Full Full 要 10:00 才開，早上吃不到 — 改在 D6 逛 Canal City 時順路買"
+            "量秤計價的迷你可頌，回轉快，排隊也不太久"
           ],
           "links": [
             {
@@ -950,7 +996,7 @@ const TRIP_DATA = {
             },
             {
               "label": "🚶 從住處",
-              "url": "https://www.google.com/maps/dir/?api=1&origin=%E3%83%9B%E3%83%86%E3%83%AB%20%E3%82%AA%E3%83%AA%E3%82%B4%20%E5%8D%9A%E5%A4%9A%20%E7%A5%87%E5%9C%92%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8D%80%E7%A5%87%E5%9C%92%EF%BC%88%E5%9C%B0%E9%90%B5%E7%A9%BA%E6%B8%AF%E7%B7%9A%20%E7%A5%87%E5%9C%92%E7%AB%99%EF%BC%89&destination=%E3%83%9F%E3%83%8B%E3%83%A8%E3%83%B3%20%E5%8D%9A%E5%A4%9A%E9%A7%85%E5%BA%97%2C%20JR%20%E5%8D%9A%E5%A4%9A%E7%AB%99%E6%A7%8B%E5%85%A7&travelmode=walking",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E3%83%9B%E3%83%86%E3%83%AB%20%E3%82%AA%E3%83%AA%E3%82%B4%20%E5%8D%9A%E5%A4%9A%20%E7%A5%87%E5%9C%92%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8D%80%E7%A5%87%E5%9C%92%E7%94%BA%202-31%EF%BC%88%E7%A5%87%E5%9C%92%E7%AB%99%205%20%E8%99%9F%E5%87%BA%E5%8F%A3%E6%AD%A5%E8%A1%8C%202%20%E5%88%86%EF%BC%89&destination=%E3%83%9F%E3%83%8B%E3%83%A8%E3%83%B3%20%E5%8D%9A%E5%A4%9A%E9%A7%85%E5%BA%97%2C%20JR%20%E5%8D%9A%E5%A4%9A%E7%AB%99%E6%A7%8B%E5%85%A7&travelmode=walking",
               "style": "route"
             }
           ],
@@ -968,10 +1014,8 @@ const TRIP_DATA = {
           "notes": [
             "步行前往・手續約 30 分（已開通快速取車，會再快一點）",
             "🚗 WS CLASS Campaign Limited・大型廂型車・禁菸・大人 4 人",
-            "租期 11/15（日）08:00 ～ 11/18（三）19:00",
             "已加保事故免責險與租車安心優惠制度",
             "¥43,714 含稅・於店鋪付款",
-            "⚠️ 國際駕照譯本＋台灣駕照正本缺一不可",
             "⚠️ 博多口是車站西側，別跑到筑紫口"
           ],
           "links": [
@@ -1000,8 +1044,7 @@ const TRIP_DATA = {
           "notes": [
             "自駕約 1 小時 20 分・停留 2.5hr",
             "🍽 午餐：BEAR FRUITS 門司港本店 燒咖哩（11:00–22:00、週日至 23:00）",
-            "舊門司三井俱樂部等設施 09:00–17:00，排上午才進得去",
-            "宮地嶽神社已取消，改從博多直奔門司港"
+            "舊門司三井俱樂部等設施 09:00–17:00，排上午才進得去"
           ],
           "links": [
             {
@@ -1059,7 +1102,6 @@ const TRIP_DATA = {
             "自駕僅約 10 分（纜車站就在 Outlet 旁）・停留 2.5hr",
             "☀️ 11/15 日落 17:16，16:25 前上到山頂才接得到夕陽轉夜景",
             "纜車 11–3 月 10:00–20:00、上行末班 19:20、週二公休（今天週日正常）",
-            "⚠️ 原行程寫「假日到 22:00」是夏季時刻，11 月只到 20:00",
             "山頂風大，外套帶著"
           ],
           "links": [
@@ -1087,7 +1129,6 @@ const TRIP_DATA = {
           "place": "北九州市小倉北區魚町",
           "notes": [
             "自駕約 25 分・停留 1.5hr",
-            "⚠️ 試算表上沒有小倉的店，這家是我另外挑的",
             "小倉名物「鉄なべ餃子」：一口大小、連鑄鐵鍋上桌，底部焦脆",
             "備案：旦過周邊的燒肉與居酒屋，步行範圍內"
           ],
@@ -1117,9 +1158,8 @@ const TRIP_DATA = {
             "Check-in 15:00／退房 10:00",
             "☎ +81 93-521-5006",
             "2 間客房・各 20㎡・禁菸・2 張小型雙人床",
-            "✅ 含早餐與免費 Wi-Fi — 明早就在飯店吃，不用另外找",
-            "¥15,204 含稅（約 NT$759／人）",
-            "明早 09:00 要去小倉城，出門前先退房把行李搬上車"
+            "含早餐・免費 Wi-Fi",
+            "¥15,204 含稅（約 NT$759／人）"
           ],
           "links": [
             {
@@ -1157,7 +1197,6 @@ const TRIP_DATA = {
           "place": "HOTEL RELIEF Kokura ANNEX",
           "notes": [
             "停留 45 分",
-            "✅ 訂房已含早餐，不用另外花錢",
             "吃完先退房，把行李搬上車再出門"
           ],
           "links": [
@@ -1213,7 +1252,7 @@ const TRIP_DATA = {
           "notes": [
             "步行約 10 分・停留 50 分",
             "11–3 月 9:00–19:00（最終入城 18:30）、無休、¥500（現金）",
-            "9:00 一開門就進去，才趕得上後面耶馬溪的上午光線"
+            "9:00 一開門就進去"
           ],
           "links": [
             {
@@ -1300,7 +1339,7 @@ const TRIP_DATA = {
           "notes": [
             "步行・停留 1hr45（含停車）",
             "⚠️ 商店約 09:30–17:00，17 點一到陸續關門，先吃最想吃的",
-            "🍽 今晚的晚餐就是這些小吃＋等一下超市買的東西，可以多買一點帶回旅館",
+            "🍽 今晚晚餐就是這些小吃＋超市採買",
             "🍡 試算表上的湯布院 6 家甜點全在這條街：",
             "・金賞可樂餅 4.3★／鞠智銅鑼燒 4.5★（要點現做的）／吉吾炸雞 4.4★",
             "・telato 抹茶義式冰淇淋 4.6★（五倍抹茶）／Milch 半熟起司蛋糕 4.6★",
@@ -1331,10 +1370,10 @@ const TRIP_DATA = {
           "place": "大分縣由布市湯布院町川上3090-8",
           "notes": [
             "自駕約 5 分・停留 50 分",
-            "10:00–20:00・☎ 0977-85-8182・有停車場，離由布院站約 600m",
-            "🥩 生鮮區就買得到豐後牛 — 有廚房的話自己煎，價錢是餐廳的零頭；沒廚房就挑熟食與便當",
-            "另一個選擇：イオン湯布院店（湯布院町川上2924-1，營業時間出發前再查）",
-            "⚠️ 由布院的超商不密集，入夜後想補東西不一定走得到，趁現在買齊（含明早的早餐）"
+            "10:00–20:00・☎ 0977-85-8182・有停車場",
+            "🥩 生鮮區買得到豐後牛，有廚房的話可以自己煎",
+            "連明早的早餐一起買，由布院入夜後附近很難補貨",
+            "另一個選擇：イオン湯布院店（湯布院町川上2924-1）"
           ],
           "links": [
             {
@@ -1360,12 +1399,10 @@ const TRIP_DATA = {
           "address": "大分縣由布市湯布院町川上3732-1（由布院站步行 2 分）",
           "notes": [
             "Check-in 15:00／退房 10:00",
-            "♨️ 附私人露天風呂 — 不用跟人擠大浴場，本趟最值得的一晚",
+            "♨️ 附私人露天風呂",
             "65㎡・1 張日式床墊＋3 張雙人床・免費 Wi-Fi",
             "¥29,248 含稅（約 NT$1,459／人）",
-            "⚠️ 不含餐 — 今晚是湯之坪小吃＋超市採買，明早也要自己張羅",
-            "⚠️ 有沒有廚房與鍋具請先跟房東確認，沒有的話超市就買熟食便當",
-            "明早 07:00 要去金鱗湖看湖霧，早點休息"
+            "不含餐"
           ],
           "links": [
             {
@@ -1431,8 +1468,7 @@ const TRIP_DATA = {
           "place": "由布院",
           "notes": [
             "停留 45 分",
-            "⚠️ YUFU-Inn 不含餐 — 前一晚在超市先買好，或到由布院站前覓食（住處離車站只要 2 分）",
-            "08:30 要出發，別吃太久"
+            "吃前一晚超市買的，或到由布院站前覓食"
           ],
           "links": [
             {
@@ -1516,9 +1552,8 @@ const TRIP_DATA = {
           "place": "宮崎縣高千穗町・高千穗峽入口",
           "notes": [
             "自駕約 30 分・用餐 1hr",
-            "10:00–16:00、通年營業 — 不用趕 LO，吃完直接走峽谷步道",
+            "10:00–16:00、通年營業",
             "元祖流水素麵 ¥700／山女鹽烤 ¥800，用玉垂瀑布的湧泉",
-            "⚠️ 不划船了，所以午餐從高千穗牛餐廳改到峽谷邊，省掉來回跑",
             "想吃正式高千穗牛的話：高千穂牛レストラン 和（11:00–14:30、牛排 LO 14:00、不收卡）在町中心，車程 5 分"
           ],
           "links": [
@@ -1546,7 +1581,6 @@ const TRIP_DATA = {
           "place": "宮崎縣高千穗町",
           "notes": [
             "步行・停留 1hr15",
-            "已決定不划船，改走遊步道慢慢晃",
             "御塩井→真名井瀑布展望台→御橋→玉垂の滝，單程約 600m，來回含拍照約 1hr",
             "散策自由、不收費、沒有時間限制",
             "停車：第 1 御塩井駐車場"
@@ -1574,15 +1608,13 @@ const TRIP_DATA = {
           "titleLocal": "亀の井ホテル 阿蘇",
           "address": "熊本縣阿蘇市",
           "notes": [
-            "16:00 高千穗出發・自駕約 1 小時 20 分・Check-in 17:20（受理 15:00 起／退房 10:00）",
+            "自駕約 1 小時 20 分・17:20 Check-in（受理 15:00 起／退房 10:00）",
             "☎ +81 967-34-0811",
             "山景・40㎡・禁菸・6 張日式床墊",
-            "✅ 含晚餐與早餐：ASO BOLD KITCHEN 日西式自助餐",
-            "⚠️ 晚餐限時 90 分鐘，17:20 進房後別拖太久",
-            "有大浴場；3 間家族湯屋要另外收費",
+            "含晚餐與早餐：ASO BOLD KITCHEN 日西式自助餐，晚餐限時 90 分",
+            "有大浴場；3 間家族湯屋另外收費",
             "¥55,836 含稅（約 NT$2,786／人）",
-            "阿蘇光害少，天氣好很值得出去看星星",
-            "明早 07:30 要出發看大觀峰雲海，早餐請趕第一輪"
+            "阿蘇光害少，天氣好可以出去看星星"
           ],
           "links": [
             {
@@ -1619,9 +1651,8 @@ const TRIP_DATA = {
           "titleLocal": "ホテル 朝食",
           "place": "阿蘇市",
           "notes": [
-            "停留 30 分，吃快一點",
-            "ASO BOLD KITCHEN 自助餐，趕第一輪",
-            "07:30 要出發才接得上柳川的船"
+            "停留 30 分",
+            "自助餐趕第一輪，07:30 要出發才接得上柳川的船"
           ],
           "links": [
             {
@@ -1678,7 +1709,7 @@ const TRIP_DATA = {
           "notes": [
             "ミルクロード→菊池→植木 IC→九州道→みやま柳川 IC 約 1 小時 50 分",
             "10:25 到乘船場・10:45 上船・船程約 70 分",
-            "⚠️ 乘合船受付只到 14:30（柳川観光開発 9:00–14:40），之後只剩包船 — 所以今天砍了熊本城",
+            "⚠️ 乘合船受付只到 14:30（柳川観光開発 9:00–14:40），之後只剩包船",
             "こたつ舟（暖桌船）12/1 才開始，11 月沒有，船上會冷",
             "☎ 柳川観光開発 0944-72-6177"
           ],
@@ -1709,8 +1740,7 @@ const TRIP_DATA = {
             "步行約 10 分・用餐 1hr25",
             "11:00–14:30／17:00–19:15",
             "柳川名物うなぎせいろ蒸し，跟關東的蒲燒完全不同",
-            "備案：元祖本吉屋（1681 年創業・10:30–20:00・週一休）",
-            "⚠️ 這家不在試算表上，試算表的四代目菊川實際在中洲春吉、不在博多站"
+            "備案：元祖本吉屋（1681 年創業・10:30–20:00・週一休）"
           ],
           "links": [
             {
@@ -1737,7 +1767,7 @@ const TRIP_DATA = {
           "place": "福岡縣太宰府市",
           "notes": [
             "自駕約 50 分・停留 2.5hr",
-            "本殿 06:30–18:30；參道店家多半 17:00–18:00 就關，所以今天 14:20 就到",
+            "本殿 06:30–18:30；參道店家多半 17:00–18:00 就關",
             "🍡 試算表上的太宰府 4 家：",
             "・天山 太宰府本店 10:00–17:00（太宰府布丁 4.3★）",
             "・⚠️ 草莓大福 4.8★ 是 11 月下旬–3 月限定，11/18 可能還沒開賣",
@@ -1769,9 +1799,8 @@ const TRIP_DATA = {
           "place": "福岡市博多區・博多站博多口",
           "notes": [
             "自駕約 40 分・手續約 30 分，結束自駕行程",
-            "🚨 租期到今天 19:00 為止 — 預計 18:00 到，只有 1 小時緩衝",
-            "太宰府逛到 16:50 就得走，延誤了寧可少逛也不要壓線",
-            "還車前先加滿油，並把車上東西清乾淨"
+            "🚨 租期到 19:00 — 預計 18:00 到，只有 1 小時緩衝，太宰府延誤寧可少逛",
+            "還車前先加滿油，把車上東西清乾淨"
           ],
           "links": [
             {
@@ -1796,10 +1825,9 @@ const TRIP_DATA = {
           "titleLocal": "博多もつ鍋 いちたか 博多駅前通り店",
           "place": "福岡市博多區祇園町8-13 2F",
           "notes": [
-            "先回飯店放行李約 30 分・18:30 用餐 1.5hr",
-            "☎ +81 92-627-7007",
-            "試算表推薦的牛腸鍋之一；另一家前田屋 3.5★「蔬菜最多的一餐，口味偏重」",
-            "⚠️ 今天週三：Shin-Shin 天神本店、今泉的博多天ぷらながおか 都公休"
+            "先回住處放行李約 30 分・18:30 用餐 1.5hr",
+            "17:00–23:30、不定休・☎ +81 92-627-7007",
+            "備案：前田屋（試算表 3.5★「蔬菜最多的一餐，口味偏重」）"
           ],
           "links": [
             {
@@ -1824,12 +1852,10 @@ const TRIP_DATA = {
           "titleLocal": "SHIELD21",
           "address": "福岡市博多區（博多站步行 6 分）",
           "notes": [
-            "✅ 已在 Airbnb 訂好，11/18、11/19 連住兩晚，不用換宿",
-            "入住 16:00",
+            "入住 16:00・11/18、11/19 連住兩晚",
             "整套出租・2 間臥室・最多 9 人",
-            "博多站步行 6 分 — 18:00 還完車走回來放行李剛好",
-            "⚠️ 房間在 2 樓、大樓沒有電梯，四個人的行李要自己搬上去",
-            "🔒 自助入住：密碼盒密碼、房號與入住指南在「ℹ️ 資訊」分頁的私人資料裡，輸入通關密語才看得到"
+            "博多站步行 6 分",
+            "⚠️ 房間在 2 樓、大樓沒有電梯，行李要自己搬上去"
           ],
           "links": [
             {
@@ -2011,8 +2037,7 @@ const TRIP_DATA = {
           "notes": [
             "地鐵天神→中洲川端 2 分・停留 30 分",
             "只逛 5F 免費的商店街（拍照、買周邊），不進館",
-            "博物館本體在 6F：10:00–17:00、最終入場 16:00、1 歲以上 ¥2,000–2,200",
-            "要進館的話得另外抓 1.5hr，後面的 Canal City 就得砍"
+            "博物館本體在 6F：10:00–17:00、最終入場 16:00、1 歲以上 ¥2,000–2,200"
           ],
           "links": [
             {
@@ -2068,9 +2093,8 @@ const TRIP_DATA = {
           "titleLocal": "薬院 焼肉",
           "place": "福岡市中央區藥院",
           "notes": [
-            "🎫 已預訂 11/19 17:30・用餐 2hr",
+            "🎫 已預訂 17:30・地鐵／步行約 20 分・用餐 2hr",
             "試算表 4.2★「福岡人氣燒肉，CP 值還可以但要自己烤」",
-            "地鐵／步行約 20 分，16:50 前就要往藥院移動",
             "順路：NO COFFEE（藥院極簡風咖啡，推薦竹炭拿鐵）"
           ],
           "links": [
@@ -2125,10 +2149,7 @@ const TRIP_DATA = {
           "titleLocal": "SHIELD21",
           "address": "福岡市博多區（博多站步行 6 分）",
           "notes": [
-            "✅ 同一間，昨晚就住這裡，不用換宿",
-            "明天 09:25 要出發去機場，博多站步行 6 分很方便",
-            "今晚先把行李整理好，早餐與伴手禮都在博多站解決",
-            "⚠️ 退房時鑰匙放回密碼盒、關上並把號碼轉亂"
+            "同一間，不用換宿"
           ],
           "links": [
             {
@@ -2166,9 +2187,9 @@ const TRIP_DATA = {
           "place": "博多站附近",
           "notes": [
             "停留 45 分",
-            "🥖 早餐吃昨天在 Full Full 買的明太子法棍，用烤箱或平底鍋回烤一下更好吃",
-            "退房 10:00，08:45 出門很從容",
-            "整理戰利品，確認託運行李重量"
+            "🥖 早餐吃昨天在 Full Full 買的明太子法棍，回烤一下更好吃",
+            "退房 10:00：鑰匙放回密碼盒、關上並把號碼轉亂",
+            "確認託運行李重量"
           ],
           "links": [
             {
@@ -2225,9 +2246,7 @@ const TRIP_DATA = {
           "place": "福岡機場國際線航廈",
           "notes": [
             "地鐵博多→福岡空港 5 分、¥260・整段抓 35 分",
-            "⚠️ 地鐵到的是「國內線」，要再轉免費接駁巴士 10–15 分才到國際線航廈",
-            "🚌 想省掉轉乘：博多站筑紫口有西鐵巴士直達國際線航廈，約 25 分、¥310",
-            "12:15 起飛、起飛前 2.5 小時開櫃，10:00 到剛好"
+            "⚠️ 地鐵到的是國內線，要再轉免費接駁巴士 10–15 分到國際線航廈"
           ],
           "links": [
             {
@@ -2252,7 +2271,7 @@ const TRIP_DATA = {
           "titleLocal": "チェックイン",
           "place": "福岡機場國際線航廈",
           "notes": [
-            "航班起飛前 2.5 小時開櫃",
+            "12:15 起飛，起飛前 2.5 小時開櫃",
             "退稅與最後採買"
           ],
           "links": [
@@ -2281,6 +2300,103 @@ const TRIP_DATA = {
           "date": "2026-11-20",
           "depart": "12:15",
           "arrive": "13:50"
+        }
+      ]
+    },
+    {
+      "id": "shop",
+      "nav": "🛍️ 購物",
+      "blocks": [
+        {
+          "type": "shopping",
+          "title": "🛍️ 購物清單與優惠券",
+          "notes": [
+            "優惠券點圖片就能放大給店員看，離線也打得開。",
+            "唐吉訶德與 AEON 的券要現場生成，所以是直接跳轉的按鈕。"
+          ],
+          "groups": [
+            {
+              "name": "折價券",
+              "items": [
+                {
+                  "name": "唐吉訶德 Donki",
+                  "url": "https://japanportal.donki-global.com/coupon/cp001_zhtw.html"
+                },
+                {
+                  "name": "AEON",
+                  "url": "https://www.welcome-aeon.com/coupon/web_coupon.php?lang=zh-CHT&id=19&cid=cp1694597628&cv=1"
+                },
+                {
+                  "name": "鶴羽藥妝",
+                  "img": "img/tsuruha.jpg"
+                },
+                {
+                  "name": "SUGI 藥妝",
+                  "img": "img/sugi.jpg"
+                },
+                {
+                  "name": "SUN DRUG",
+                  "img": "img/sundrug.jpg"
+                },
+                {
+                  "name": "大賀藥局",
+                  "img": "img/daiga-drug.jpg"
+                },
+                {
+                  "name": "Drug 11",
+                  "img": "img/drug11.jpg"
+                },
+                {
+                  "name": "天神 COSMOS",
+                  "img": "img/tenjin-cosmos.jpg"
+                },
+                {
+                  "name": "BicCamera／KOJIMA",
+                  "img": "img/biccamera.jpg"
+                },
+                {
+                  "name": "BicCamera／SALONIA",
+                  "img": "img/biccamera-salonia.jpg"
+                },
+                {
+                  "name": "YAMADA 電機",
+                  "img": "img/yamada.jpg"
+                },
+                {
+                  "name": "愛電王",
+                  "img": "img/aidenwang.jpg"
+                },
+                {
+                  "name": "Alpen 運動用品",
+                  "img": "img/alpen.jpg"
+                },
+                {
+                  "name": "Snow Peak",
+                  "img": "img/snowpeak.jpg"
+                },
+                {
+                  "name": "PARIS MIKI 眼鏡",
+                  "img": "img/paris-miki.jpg"
+                },
+                {
+                  "name": "福岡機場免稅店",
+                  "img": "img/fukuoka-airport-dutyfree.jpg"
+                }
+              ]
+            },
+            {
+              "name": "藥妝店",
+              "items": []
+            },
+            {
+              "name": "電器 3C",
+              "items": []
+            },
+            {
+              "name": "伴手禮",
+              "items": []
+            }
+          ]
         }
       ]
     },
@@ -2638,6 +2754,41 @@ const itemText = it => typeof it === "string" ? it : String(it?.text ?? "");
    用索引的話在中間插一項，後面所有打勾就整排錯位。 */
 const chkKey = (b, g, it) => `${b.key}:${g.name}:${itemText(it)}`;
 
+/* ── 購物清單 ────────────────────────────────
+   Excel 給的是「種子」，使用者在網站上的增刪改存在 state.shopping。
+   種子用「群組:名稱」當 id，所以之後用 builder 重新產生網站，
+   Excel 新增的項目會出現、她在網站上加的不會消失、刪掉的也不會跑回來。 */
+const shopBag = () => {
+  const s = state.shopping;
+  if (!s.edits)   s.edits   = {};
+  if (!s.removed) s.removed = [];
+  if (!s.added)   s.added   = [];
+  if (!s.groups)  s.groups  = [];
+  return s;
+};
+
+/* 把種子與本機資料合併成要渲染的群組。Map 保留插入順序：
+   先種子群組、再使用者自己加的。 */
+function shopGroups(b){
+  const s = shopBag();
+  const out = new Map();
+  for (const g of (b.groups || [])){
+    out.set(g.name, (g.items || []).map(it => {
+      const o = (it && typeof it === "object") ? it : {};
+      const name = String(o.name ?? o.text ?? it ?? "");
+      return { id: `${g.name}:${name}`, group: g.name, name,
+               img: o.img || "", url: o.url || "", who: o.who || "", seed: true };
+    }));
+  }
+  for (const name of s.groups) if (!out.has(name)) out.set(name, []);
+  for (const a of s.added){
+    if (!out.has(a.group)) out.set(a.group, []);
+    out.get(a.group).push({ ...a, seed: false });
+  }
+  for (const [k, arr] of out) out.set(k, arr.filter(x => !s.removed.includes(x.id)));
+  return out;
+}
+
 /* ── 「現在進行到哪」用的時間換算 ──────────────
    卡片上掛 data-start / data-stay，實際的結束時間由 markNow() 依前後
    相鄰項目推算：沒填停留時間的項目（例如當天最後的住宿）若直接用
@@ -2703,7 +2854,7 @@ const RENDERERS = {
     ${nowSlot(b)}${b.time ? `<span class="time">${esc(b.time)}</span>` : ""}${stayTag(b)}
     <div class="subject">${KIND[b.kind] || KIND.sight} ${esc(b.title)}${localSpan(b.titleLocal)}</div>
     ${b.place ? `<div class="meta">📍 ${esc(b.place)}${localSpan(b.placeLocal)}</div>` : ""}
-    ${notesHTML(b.notes)}${introHTML(b.intro)}${linksHTML(b.links)}</div>`,
+    ${notesHTML(b.notes)}${secretHTML(b)}${introHTML(b.intro)}${linksHTML(b.links)}</div>`,
 
   transit: b => `<div class="card">
     ${b.time ? `<span class="time">${esc(b.time)}</span>` : ""}
@@ -2733,7 +2884,7 @@ const RENDERERS = {
     ${b.address ? `<div class="meta">📍 ${esc(b.address)}</div>` : ""}
     ${(b.notes && b.notes.length)
       ? `<div class="info">${b.notes.map(n => `<div>${esc(n)}</div>`).join("")}</div>` : ""}
-    ${linksHTML(b.links)}</div>`,
+    ${secretHTML(b)}${linksHTML(b.links)}</div>`,
 
   options: b => `<div class="card">
     ${b.time ? `<span class="time">${esc(b.time)}</span>` : ""}${stayTag(b)}
@@ -2815,26 +2966,6 @@ const RENDERERS = {
     </div>`;
   },
 
-  /* 加密的私人區塊：門鎖密碼、訂單編號這類不能公開的資料。
-     repo 與網站都是公開的，所以 TRIP_DATA 裡只有密文（tools/encrypt-vault.mjs 產生），
-     輸入通關密語才在這台裝置解開。解開的內容只放在記憶體，不同步、也不寫回原始碼。 */
-  vault: b => {
-    const key = b.key || "vault";
-    const open = vaultOpen.get(key);
-    const body = open ? vaultContentHTML(open, key) : `
-      <form class="vault-form" data-vault-form="${esc(key)}" autocomplete="off">
-        <input class="input vault-pass" type="password" name="pass" placeholder="通關密語"
-               autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go">
-        <button class="btn btn-theme" type="submit">解鎖</button>
-        <label class="vault-remember"><input type="checkbox" name="remember" checked>
-          <span>在這台裝置記住，下次自動解開</span></label>
-        <div class="vault-msg" aria-live="polite"></div>
-      </form>`;
-    return `<div class="card vault" data-vault="${esc(key)}">
-      <div class="subject">${esc(b.title || "🔒 私人資料")}</div>
-      ${notesHTML(b.notes)}${body}</div>`;
-  },
-
   weather: () => `<div class="card"><div class="subject">🌡️ 行程期間天氣</div>
     <div class="wx-strip" id="wx-strip">載入中…</div></div>`,
 
@@ -2871,7 +3002,7 @@ function renderDay(id){
   document.querySelectorAll(".nav-item").forEach(b =>
     b.setAttribute("aria-selected", String(b.dataset.day === id)));
   paintForecast();
-  paintVaults();        // 記住密語的私人區塊在這裡自動解開（解密是非同步的）
+  paintVaults();        // 記住密語的話，卡片上的私人資料在這裡自動解開（解密是非同步的）
   window.scrollTo({ top:0, behavior:"smooth" });
   markNow();           // 捲到頂之後才標記；第一次進站會再捲到目前項目
 }
@@ -3294,14 +3425,13 @@ function exportSettle(){
   downloadCSV(`${M.tripId}_結清摘要_${dateTag()}.csv`, rows);
 }
 
-/* ── 加密的私人區塊 ──────────────────────────
-   密文由 tools/encrypt-vault.mjs 產生：PBKDF2-SHA256 推導金鑰、AES-GCM 加密。
-   解密用瀏覽器內建的 Web Crypto，不靠網路，離線也解得開。
-   解開的內容只放在記憶體；勾「記住」的話密語存在這台裝置，下次打開自動解。 */
-const vaultOpen = new Map();
-const vaultLS = key => `${KEY}:vault:${key}`;
-const vaultBlock = key => TRIP_DATA.days.flatMap(d => d.blocks || [])
-  .find(b => b.type === "vault" && (b.key || "vault") === key);
+/* ── 卡片上的私人資料 ──────────────────────────
+   密文在 TRIP_DATA.vault（tools/encrypt-vault.mjs 產生：PBKDF2-SHA256 推導金鑰、AES-GCM 加密），
+   卡片只帶一個 secret 鍵。鎖著時那一格是一顆按鈕，解開後每張帶鍵的卡片換成自己那一段。
+   解密用瀏覽器內建的 Web Crypto，不靠網路，離線也解得開。解開的內容只放在記憶體；
+   勾「記住」的話密語存在這台裝置，下次打開自動解。 */
+let vaultData = null;
+const VAULT_LS = `${KEY}:vault`;
 
 /* 大小寫、空白、連字號都不計較——手機鍵盤會自動把第一個字母改大寫。
    跟 tools/encrypt-vault.mjs 的規則必須一模一樣，否則加密與解密對不上。 */
@@ -3309,58 +3439,73 @@ const normPass = p => String(p ?? "").normalize("NFKC").toLowerCase()
   .replace(/[\s\-\u2010-\u2015]/g, "");
 const unb64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
 
-async function openVault(b, pass){
+async function openVault(pass){
+  const v = TRIP_DATA.vault;
   const subtle = globalThis.crypto && crypto.subtle;
   if (!subtle) throw Object.assign(new Error("這個網址不是 HTTPS，瀏覽器不允許解密"), { fatal:true });
   const base = await subtle.importKey("raw", new TextEncoder().encode(normPass(pass)),
                                       "PBKDF2", false, ["deriveKey"]);
   const key = await subtle.deriveKey(
-    { name:"PBKDF2", hash:"SHA-256", salt:unb64(b.salt), iterations:b.iterations },
+    { name:"PBKDF2", hash:"SHA-256", salt:unb64(v.salt), iterations:v.iterations },
     base, { name:"AES-GCM", length:256 }, false, ["decrypt"]);
-  const plain = await subtle.decrypt({ name:"AES-GCM", iv:unb64(b.iv) }, key, unb64(b.data));
+  const plain = await subtle.decrypt({ name:"AES-GCM", iv:unb64(v.iv) }, key, unb64(v.data));
   return JSON.parse(new TextDecoder().decode(plain));
 }
 
-function vaultContentHTML(p, key){
-  const safeUrl = u => /^https?:\/\//i.test(String(u || ""));
-  return (p.sections || []).map(s => `<div class="vault-sec"><h4>${esc(s.title)}</h4>
-    ${(s.items || []).map(it => {
-      if (it.note) return `<div class="vault-note">${esc(it.note)}</div>`;
-      if (safeUrl(it.url)) return `<a class="btn btn-theme" href="${esc(it.url)}" target="_blank" rel="noopener">${esc(it.label || "開啟")}</a>`;
-      return `<div class="vault-row"><span class="vault-label">${esc(it.label)}</span>
-        <span class="vault-val">${esc(it.value)}</span></div>`;
-    }).join("")}</div>`).join("") +
-    `<button class="vault-lock" data-vault-lock="${esc(key)}" type="button">上鎖，並忘記這台裝置記住的密語</button>`;
+const secretItemHTML = it => {
+  if (it.note) return `<div class="secret-note">${esc(it.note)}</div>`;
+  if (/^https?:\/\//i.test(String(it.url || "")))
+    return `<a class="btn btn-theme" href="${esc(it.url)}" target="_blank" rel="noopener">${esc(it.label || "開啟")}</a>`;
+  return `<div class="secret-row"><span class="secret-label">${esc(it.label)}</span>
+    <span class="secret-val">${esc(it.value)}</span></div>`;
+};
+
+function secretHTML(b){
+  if (!b.secret || !TRIP_DATA.vault) return "";
+  const key = esc(b.secret), hint = esc(b.secretHint || "私人資料");
+  const sec = vaultData && vaultData.sections && vaultData.sections[b.secret];
+  return sec
+    ? `<div class="secret" data-secret="${key}" data-hint="${hint}">
+        ${(sec.items || []).map(secretItemHTML).join("")}
+        <button class="secret-lock" data-vault-lock type="button">上鎖</button></div>`
+    : `<div class="secret is-locked" data-secret="${key}" data-hint="${hint}">
+        <button class="secret-ask" data-vault-ask type="button">🔒 顯示${hint}</button></div>`;
 }
 
-/* 只換掉這一張卡，不重畫整頁——整頁重畫會捲回頂端，展開的介紹也會收起來 */
-function repaintVault(key){
-  const el = document.querySelector(`#main [data-vault="${CSS.escape(key)}"]`);
-  const b = vaultBlock(key);
-  if (el && b) el.outerHTML = RENDERERS.vault(b);
+/* 只換掉卡片上的私人資料那一格，不重畫整頁——整頁重畫會捲回頂端，展開的介紹也會收起來 */
+function repaintSecrets(){
+  for (const el of document.querySelectorAll("#main .secret[data-secret]"))
+    el.outerHTML = secretHTML({ secret: el.dataset.secret, secretHint: el.dataset.hint });
+}
+
+/* 按下「🔒 顯示…」：就在這張卡片裡展開輸入框 */
+function askVault(btn){
+  const box = btn.closest(".secret");
+  box.classList.remove("is-locked");
+  box.innerHTML = `<form class="vault-form" autocomplete="off">
+      <input class="input vault-pass" type="password" name="pass" placeholder="通關密語"
+             autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go">
+      <button class="btn btn-theme" type="submit">解鎖</button>
+      <label class="vault-remember"><input type="checkbox" name="remember" checked>
+        <span>在這台裝置記住，下次自動解開</span></label>
+      <div class="vault-msg" aria-live="polite"></div>
+    </form>`;
+  box.querySelector(".vault-pass").focus();
 }
 
 /* 渲染完才跑：有記住密語、還沒解開的，在這裡自動解 */
 async function paintVaults(){
-  for (const el of document.querySelectorAll("#main [data-vault]")){
-    const key = el.dataset.vault;
-    const pass = LS.get(vaultLS(key));
-    if (vaultOpen.has(key) || !pass) continue;
-    const msg = el.querySelector(".vault-msg");
-    if (msg) msg.textContent = "解鎖中…";
-    try {
-      vaultOpen.set(key, await openVault(vaultBlock(key), pass));
-      repaintVault(key);
-    } catch (e) {
-      if (!e.fatal) LS.del(vaultLS(key));     // 密語換過了：忘掉舊的，請重新輸入
-      const m = document.querySelector(`#main [data-vault="${CSS.escape(key)}"] .vault-msg`);
-      if (m){ m.textContent = e.fatal ? e.message : "記住的密語已經失效，請重新輸入"; m.classList.add("is-err"); }
-    }
+  const pass = LS.get(VAULT_LS);
+  if (vaultData || !pass || !TRIP_DATA.vault || !document.querySelector("#main .secret")) return;
+  try {
+    vaultData = await openVault(pass);
+    repaintSecrets();
+  } catch (e) {
+    if (!e.fatal) LS.del(VAULT_LS);     // 密語換過了：忘掉舊的，下次按按鈕重新輸入
   }
 }
 
 async function unlockVault(form){
-  const key  = form.dataset.vaultForm;
   const pass = form.elements.pass.value;
   const msg  = form.querySelector(".vault-msg");
   const btn  = form.querySelector("button[type=submit]");
@@ -3369,10 +3514,10 @@ async function unlockVault(form){
   btn.disabled = true;
   say("解鎖中…");
   try {
-    vaultOpen.set(key, await openVault(vaultBlock(key), pass));
-    if (form.elements.remember.checked) LS.set(vaultLS(key), pass);
-    else LS.del(vaultLS(key));
-    repaintVault(key);
+    vaultData = await openVault(pass);
+    if (form.elements.remember.checked) LS.set(VAULT_LS, pass);
+    else LS.del(VAULT_LS);
+    repaintSecrets();
   } catch (e) {
     btn.disabled = false;
     say(e.fatal ? e.message : "通關密語不對", true);
@@ -3380,10 +3525,10 @@ async function unlockVault(form){
   }
 }
 
-function lockVault(key){
-  vaultOpen.delete(key);
-  LS.del(vaultLS(key));
-  repaintVault(key);
+function lockVault(){
+  vaultData = null;
+  LS.del(VAULT_LS);
+  repaintSecrets();
 }
 
 /* ── 事件（統一委派，不用 inline onclick） ── */
@@ -3411,6 +3556,17 @@ document.getElementById("main").addEventListener("change", e => {
     p.textContent = `${[...all].filter(x=>x.checked).length}/${all.length}`;
     return;
   }
+  if (e.target.dataset.sid){
+    const s = shopBag(), id = e.target.dataset.sid;
+    s.edits[id] = { ...(s.edits[id] || {}), done: e.target.checked };
+    persist();
+    /* 群組標題的 n/總數 就地更新，不重畫——重畫會把其他輸入框的游標弄掉 */
+    const g = e.target.closest(".shop-g");
+    const all = g.querySelectorAll("[data-sid]");
+    g.querySelector(".shop-n").textContent =
+      `${[...all].filter(x => x.checked).length}/${all.length}`;
+    return;
+  }
   if (e.target.dataset.reg){
     const n = e.target.dataset.reg;
     state.cards[n] = { ...(state.cards[n] || {}), done: e.target.checked };
@@ -3427,6 +3583,19 @@ document.getElementById("main").addEventListener("change", e => {
     const home = document.getElementById("e-home");
     if (v && M.money.rate && !home.value) home.value = Math.round(v * M.money.rate);
   }
+});
+
+/* 購物清單的備註與金額：同樣就地存，不重新渲染，否則輸入框會失焦。 */
+document.getElementById("main").addEventListener("input", e => {
+  const note = e.target.closest("[data-snote]");
+  const amt  = e.target.closest("[data-samt]");
+  if (!note && !amt) return;
+  const s  = shopBag();
+  const id = (note || amt).dataset.snote || (note || amt).dataset.samt;
+  s.edits[id] = { ...(s.edits[id] || {}) };
+  if (note) s.edits[id].note = note.value;
+  else      s.edits[id].amount = amt.value === "" ? "" : Number(amt.value);
+  persist();
 });
 
 /* 信用卡的已刷金額：就地更新進度條與剩餘，不重新渲染整頁——
@@ -3451,9 +3620,76 @@ document.getElementById("main").addEventListener("input", e => {
   leftEl.classList.toggle("cc-full", left === 0);
 });
 
+/* 點圖放大給店員看。用原生 <dialog>：免自己做焦點管理，Esc 也能關。 */
 document.getElementById("main").addEventListener("click", e => {
-  const lock = e.target.closest("[data-vault-lock]");
-  if (lock) return lockVault(lock.dataset.vaultLock);
+  const img = e.target.closest("[data-zoom]");
+  if (!img) return;
+  let dlg = document.getElementById("zoom");
+  if (!dlg){
+    dlg = document.createElement("dialog");
+    dlg.id = "zoom";
+    dlg.innerHTML = `<img alt=""><button type="button" class="zoom-x">關閉</button>`;
+    dlg.addEventListener("click", ev => {
+      if (ev.target === dlg || ev.target.closest(".zoom-x")) dlg.close();
+    });
+    document.body.appendChild(dlg);
+  }
+  dlg.querySelector("img").src = img.dataset.zoom;
+  dlg.showModal();
+});
+
+/* 購物清單的增刪。會改變項目數量，所以要重畫，但只重畫當前分頁。 */
+document.getElementById("main").addEventListener("click", e => {
+  const s = shopBag();
+  const forget = id => {
+    /* 種子項目記進 removed（重新產生網站後才不會跑回來），
+       自己加的直接從 added 拿掉。 */
+    const i = s.added.findIndex(a => a.id === id);
+    if (i >= 0) s.added.splice(i, 1);
+    else if (!s.removed.includes(id)) s.removed.push(id);
+    delete s.edits[id];
+  };
+  const del = e.target.closest("[data-del]");
+  if (del){ forget(del.dataset.del); persist(); renderDay(current); return; }
+
+  const dg = e.target.closest("[data-delgroup]");
+  if (dg){
+    const box = dg.closest(".shop-g");
+    for (const el of box.querySelectorAll("[data-id]")) forget(el.dataset.id);
+    s.groups = s.groups.filter(g => g !== dg.dataset.delgroup);
+    persist(); renderDay(current); return;
+  }
+});
+
+/* 新增項目與群組。用 <form> 的 submit，Enter 鍵才會自然生效。 */
+document.getElementById("main").addEventListener("submit", e => {
+  const s = shopBag();
+  const addItem = e.target.closest(".shop-add");
+  if (addItem){
+    e.preventDefault();
+    const inp = addItem.querySelector('[name="n"]');
+    const name = inp.value.trim();
+    if (!name) return;
+    s.added.push({ id: `+${Date.now().toString(36)}`, group: addItem.dataset.addto, name });
+    inp.value = "";
+    persist(); renderDay(current); return;
+  }
+  const addGroup = e.target.closest(".shop-addg");
+  if (addGroup){
+    e.preventDefault();
+    const inp = addGroup.querySelector('[name="g"]');
+    const name = inp.value.trim();
+    if (!name || s.groups.includes(name)) return;
+    s.groups.push(name);
+    inp.value = "";
+    persist(); renderDay(current); return;
+  }
+});
+
+document.getElementById("main").addEventListener("click", e => {
+  const ask = e.target.closest("[data-vault-ask]");
+  if (ask) return askVault(ask);
+  if (e.target.closest("[data-vault-lock]")) return lockVault();
   /* 移除只隱藏在這台裝置，隨時可以還原——誤觸不該讓一張卡永久消失 */
   const hide = e.target.closest("[data-hide]");
   if (hide){
@@ -3641,6 +3877,26 @@ renderDay((TRIP_DATA.days.find(d => d.date === nowAtDestination().date) || TRIP_
 
 /* 每 30 秒更新一次；從背景切回來時也立刻更新，
    否則放了幾小時再打開會停在舊的標記上。 */
+/* 優惠券圖片要先抓進快取：在店裡結帳時不一定有訊號，而那正是要打開它的時候。
+   放在自己的快取名稱（trip-img），這樣換優惠券就不必改 sw.js、也不用升 VERSION。
+   sw.js 的 cacheFirst 用的是 caches.match()，會搜尋所有快取，所以找得到。 */
+(async function cacheCouponImages(){
+  if (!("caches" in window)) return;
+  const urls = [];
+  for (const day of TRIP_DATA.days || [])
+    for (const b of day.blocks || [])
+      if (b.type === "shopping")
+        for (const g of b.groups || [])
+          for (const it of g.items || [])
+            if (it && it.img) urls.push(it.img);
+  if (!urls.length) return;
+  try{
+    const c = await caches.open("trip-img");
+    /* 一張一張加，有一張失敗不要讓其他的也沒快取到（addAll 是全有或全無） */
+    await Promise.all(urls.map(u => c.match(u).then(hit => hit || c.add(u)).catch(() => {})));
+  }catch{ /* 快取滿了或被拒絕就算了，線上仍然看得到 */ }
+})();
+
 setInterval(markNow, 30000);
 document.addEventListener("visibilitychange", () => { if (!document.hidden) markNow(); });
 paintNow();

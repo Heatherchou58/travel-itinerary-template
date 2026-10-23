@@ -9,8 +9,9 @@
    重新部署也救不回來。（sw.js 本身不在 PRECACHE 裡，瀏覽器
    會自己偵測並安裝新版，不需要為了它升版。）
    ══════════════════════════════════════════════════ */
-const VERSION  = "v3";
+const VERSION  = "v4";
 const CACHE    = `trip-${VERSION}`;
+const IMG_CACHE = "trip-img";   // 優惠券圖片，不隨版本清掉
 const TIMEOUT  = 3000;   // 網路等待上限（毫秒），超過就用快取
 
 const PRECACHE = [
@@ -35,7 +36,11 @@ self.addEventListener("install", e => {
 self.addEventListener("activate", e => {
   e.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+      /* IMG_CACHE 要豁免：優惠券圖片放在那裡，由網頁自己填入。
+         不豁免的話每次換版就被清掉，進店裡沒訊號就看不到券了。 */
+      .then(keys => Promise.all(keys
+        .filter(k => k !== CACHE && k !== IMG_CACHE)
+        .map(k => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });

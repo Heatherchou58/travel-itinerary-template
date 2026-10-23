@@ -3,3 +3,8 @@ node_modules/
 
 # 加密私人區塊的明文（門鎖密碼、訂單編號）。只能留在本機，絕對不能進 repo
 *-vault.json
+
+# 優惠券原圖。tools/optimise-coupons.mjs 會把它們壓縮、改成 ASCII 檔名後
+# 輸出到 <行程>/img/，進 repo 的是那一份。原圖留在本機就好：
+# 檔名是中文，而且 6.7MB 壓完只剩 2.8MB。
+*/優惠券/
