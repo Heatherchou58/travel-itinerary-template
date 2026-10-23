@@ -181,17 +181,75 @@ clear(pk, 5);
 let pr = 5, skipped = 0;
 for (const day of T.days) for (const b of (day.blocks || [])) {
   if (b.type !== "checklist") continue;
+  /* 放在資訊分頁的清單（免稅規定、電子支付那類）要把「分頁」寫回去，
+     否則重新產生時會全部掉回行前，把打包清單撐長。 */
+  const page = day.id === "info" ? "資訊" : "";
   for (const g of b.groups || []) {
     if (AUTO_PACK_CATS.has(g.name)) { skipped += g.items.length; continue; }
     for (const it of g.items) {
       const R = pk.getRow(pr);
-      styleFrom(pk, 5, pr, 4);
+      styleFrom(pk, 5, pr, 5);
       R.getCell(1).value = b.title;
       R.getCell(2).value = g.name;
       R.getCell(3).value = typeof it === "string" ? it : it.text;
       R.getCell(4).value = typeof it === "string" ? "" : (it.url || "");
+      R.getCell(5).value = page;
       pr++;
     }
+  }
+}
+
+/* ── 購物清單與優惠券 ── */
+/* clear() 會把第 5 列一起刪掉，styleFrom 就抄不到樣式了，所以先存起來 */
+const grabStyle = (ws, cols) => {
+  const out = [];
+  for (let c = 1; c <= cols; c++) out.push({ ...ws.getRow(5).getCell(c).style });
+  return out;
+};
+const putStyle = (ws, r, st) => st.forEach((v, n) => { ws.getRow(r).getCell(n + 1).style = v; });
+
+const blocksOf = type => T.days.flatMap(d => d.blocks || []).filter(b => b.type === type);
+
+const sh = wb.getWorksheet("購物清單");
+if (sh) {
+  const st = grabStyle(sh, 5);
+  clear(sh, 5);
+  let sr = 5;
+  for (const b of blocksOf("shopping"))
+    for (const g of b.groups || []) for (const it of g.items || []) {
+      const R = sh.getRow(sr);
+      putStyle(sh, sr, st);
+      R.getCell(1).value = g.name;
+      R.getCell(2).value = it.name || "";
+      R.getCell(3).value = it.who || "";
+      R.getCell(4).value = it.img || "";
+      R.getCell(5).value = it.url || "";
+      sr++;
+    }
+}
+
+/* ── 信用卡 ── */
+const cd = wb.getWorksheet("信用卡");
+if (cd) {
+  const st = grabStyle(cd, 8);
+  clear(cd, 5);
+  let cr = 5;
+  /* 查證日期藏在 block 的說明裡——那句話是 parse.js 依日期生成的。
+     把日期抓回來寫進每一列，重新產生時整句就會一字不差地重建。 */
+  const checked = (blocksOf("cards")[0]?.notes || [])
+    .map(n => (/(\d{4}-\d{2}-\d{2})/.exec(n) || [])[1]).find(Boolean) || "";
+  for (const b of blocksOf("cards")) for (const c of b.items || []) {
+    const R = cd.getRow(cr);
+    putStyle(cd, cr, st);
+    R.getCell(1).value = c.name || "";
+    R.getCell(2).value = c.rate ?? "";
+    R.getCell(3).value = c.regions || "";
+    R.getCell(4).value = c.until || "";
+    R.getCell(5).value = c.quota || "";
+    R.getCell(6).value = c.register ? "是" : "否";
+    R.getCell(7).value = checked;
+    R.getCell(8).value = c.note || "";
+    cr++;
   }
 }
 
@@ -258,6 +316,30 @@ const booking = X => flat(X).flatMap(x => (x.links || []).filter(l => l.style ==
 ok("訂房連結保留", booking(T).join() === booking(B).join());
 ok("機器翻譯的當地語已留空",
    flat(B).filter((x, n) => a[n]?._mt).every(x => !x.titleLocal));
+
+const blockOf = (X, t) => X.days.flatMap(d => d.blocks || []).find(b => b.type === t);
+const shopRows = X => (blockOf(X, "shopping")?.groups || [])
+  .flatMap(g => g.items.map(i => [g.name, i.name, i.who || "", i.img || "", i.url || ""].join("/")));
+ok("購物清單一致", shopRows(T).join("|") === shopRows(B).join("|"),
+   shopRows(T).length + " 項 → " + shopRows(B).length + " 項");
+
+const cardRows = X => (blockOf(X, "cards")?.items || []).map(c =>
+  [c.name, c.rate ?? "", c.regions || "", c.until || "", c.quota || "",
+   c.register ? 1 : 0, c.note || ""].join("/"));
+ok("信用卡一致", cardRows(T).join("|") === cardRows(B).join("|"),
+   cardRows(T).length + " 張 → " + cardRows(B).length + " 張");
+
+/* 說明不是寫在表裡的，是 parse.js 依內容生成的。這兩項若不過，
+   代表生成規則跟現有內容對不上，重新產生時說明會變。 */
+const notesOf = (X, t) => (blockOf(X, t)?.notes || []).join(" ⏎ ");
+for (const t of ["shopping", "cards"])
+  ok(t + " 的說明重建一致", notesOf(T, t) === notesOf(B, t),
+     notesOf(T, t).slice(0, 40) + " ≠ " + notesOf(B, t).slice(0, 40));
+
+const infoLists = X => (X.days.find(d => d.id === "info")?.blocks || [])
+  .filter(b => b.type === "checklist").map(b => b.title);
+ok("資訊分頁的清單沒掉回行前", infoLists(T).join() === infoLists(B).join(),
+   "[" + infoLists(T).join() + "] → [" + infoLists(B).join() + "]");
 
 if (bad) { console.error("\n往返驗證失敗 " + bad + " 項，這份檔案不要用。"); process.exit(1); }
 console.log("\n往返驗證全部通過：" + OUT);

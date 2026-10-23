@@ -423,7 +423,9 @@ export function parseGrids(book){
       /* 說明依實際內容生成：沒有圖就不必講放大，沒有連結就不必講現場生成 */
       const notes = [];
       if (all.some(i => i.img)) notes.push("優惠券點圖片就能放大給店員看，離線也打得開。");
-      if (all.some(i => i.url)) notes.push("有些券要現場生成，所以做成直接跳轉的按鈕。");
+      /* 把要現場生成的店名列出來——「有些券」等於還要自己一個一個點開找 */
+      const live = all.filter(i => i.url).map(i => i.name);
+      if (live.length) notes.push(`${live.join("、")} 的券要現場生成，所以是直接跳轉的按鈕。`);
       shopping = { type:"shopping", title:"🛍️ 購物清單與優惠券", notes, groups };
     }
   }
