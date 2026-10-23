@@ -89,6 +89,14 @@ SWAP_TRIP = {
                 {"name": "過期卡", "rate": 5, "regions": "日本",
                  "until": "2020-01-01", "quota": 1000},
             ]},
+            {"type": "shopping", "title": "購物", "notes": ["購物說明"],
+             "groups": [
+                 {"name": "折價券", "items": [
+                     {"name": "有圖的券", "img": "img/swap-coupon.png"},
+                     {"name": "要現場生成的券", "url": "https://example.com/coupon"}]},
+                 {"name": "藥妝店", "items": [
+                     {"name": "托買的東西", "who": "媽媽"}]},
+             ]},
             {"type": "expenses"},
         ]},
     ],
@@ -537,6 +545,115 @@ def run(trip: str) -> bool:
                     "cards" not in page.evaluate(
                         "(JSON.parse(localStorage.getItem('trip:swaptest-2027')||'{}').queue||[])"
                         ".map(q => q.type).join(',')"))
+            # 購物清單與優惠券（同一個元件，也在第二天）
+            r.check("購物：兩個群組都渲染", page.locator(".shop-g").count() == 2,
+                    f"{page.locator('.shop-g').count()} 組")
+            r.check("購物：三個項目都渲染", page.locator(".shop-i").count() == 3,
+                    f"{page.locator('.shop-i').count()} 項")
+            r.check("購物：有填圖片的才有縮圖", page.locator(".shop-img").count() == 1)
+            r.check("購物：有填連結的才有跳轉按鈕", page.locator(".shop-link").count() == 1)
+            r.check("購物：沒有圖片的要讓開左上角的 ✕",
+                    page.locator('.shop-i[data-id="折價券:要現場生成的券"].no-img').count() == 1)
+            r.check("購物：誰要的有顯示",
+                    "媽媽" in page.locator('.shop-i[data-id="藥妝店:托買的東西"]').inner_text())
+
+            coupon = page.locator('.shop-i[data-id="折價券:有圖的券"]')
+            coupon.locator("input[type=checkbox]").check()
+            page.wait_for_timeout(300)
+            r.check("購物：勾選後群組計數就地更新",
+                    page.locator('.shop-g[data-group="折價券"] .shop-n').inner_text() == "1/2",
+                    page.locator('.shop-g[data-group="折價券"] .shop-n').inner_text())
+            amt = coupon.locator(".shop-amt")
+            amt.click()
+            amt.type("1600", delay=30)
+            page.wait_for_timeout(300)
+            # 跟信用卡同一個理由：重畫整頁會讓輸入框失焦
+            r.check("購物：輸入金額時輸入框不失焦",
+                    page.evaluate("document.activeElement.classList.contains('shop-amt')"))
+            r.check("購物：勾選與金額不進同步佇列",
+                    "shopping" not in page.evaluate(
+                        "(JSON.parse(localStorage.getItem('trip:swaptest-2027')||'{}').queue||[])"
+                        ".map(q => q.type).join(',')"))
+            page.reload(wait_until="domcontentloaded")
+            page.wait_for_timeout(1200)
+            page.locator(".nav-item").nth(1).click()
+            page.wait_for_timeout(400)
+            coupon = page.locator('.shop-i[data-id="折價券:有圖的券"]')
+            r.check("購物：重新整理後勾選與金額都還在",
+                    coupon.locator("input[type=checkbox]").is_checked()
+                    and coupon.locator(".shop-amt").input_value() == "1600",
+                    coupon.locator(".shop-amt").input_value())
+
+            # ✕ 的熱區。圓圈只有 28px（放大會擋住券上的條碼），
+            # 靠 ::after 補到 44px——所以要量實際可點範圍，不是元素尺寸。
+            page.locator(".shop-x").first.scroll_into_view_if_needed()
+            page.wait_for_timeout(300)
+            hit = page.evaluate("""() => {
+              const b = document.querySelector('.shop-x');
+              b.scrollIntoView({block:'center'});
+              const r = b.getBoundingClientRect();
+              /* 圓圈本身一定要打得到，否則下面量到的 0 是「捲出畫面」而不是「沒熱區」 */
+              const self = document.elementFromPoint(r.left + r.width/2, r.top + r.height/2) === b;
+              let w = 0, h = 0;
+              for (let d = 1; d <= 20; d++){
+                if (document.elementFromPoint(r.left - d, r.top + r.height/2) === b) w = d;
+                if (document.elementFromPoint(r.left + r.width/2, r.top - d) === b) h = d;
+              }
+              return { self, w: Math.round(r.width) + w * 2, h: Math.round(r.height) + h * 2 };
+            }""")
+            r.check("購物：✕ 的可點範圍 ≥ 44px",
+                    hit["self"] and hit["w"] >= 44 and hit["h"] >= 44,
+                    f"{hit['w']}×{hit['h']}" + ("" if hit["self"] else "（圓圈本身就打不到）"))
+
+            # 刪掉的項目要能還原——誤觸 ✕ 不該讓一張券永久消失
+            r.check("購物：沒刪東西時不顯示還原按鈕",
+                    page.locator(".shop-restore").count() == 0)
+            page.locator('.shop-i[data-id="折價券:有圖的券"] .shop-x').click()
+            page.wait_for_timeout(400)
+            r.check("購物：刪除後項目消失", page.locator(".shop-i").count() == 2)
+            r.check("購物：刪除後出現還原按鈕",
+                    "1 項" in page.locator(".shop-restore").inner_text(),
+                    page.locator(".shop-restore").inner_text())
+            page.reload(wait_until="domcontentloaded")
+            page.wait_for_timeout(1200)
+            page.locator(".nav-item").nth(1).click()
+            page.wait_for_timeout(400)
+            r.check("購物：重新整理後刪掉的不會跑回來",
+                    page.locator(".shop-i").count() == 2)
+            page.locator(".shop-restore").click()
+            page.wait_for_timeout(400)
+            r.check("購物：還原後項目回來了", page.locator(".shop-i").count() == 3)
+
+            # 新增項目與群組
+            page.locator('.shop-add[data-addto="藥妝店"] [name="n"]').fill("自己加的東西")
+            page.locator('.shop-add[data-addto="藥妝店"] button[type="submit"]').click()
+            page.wait_for_timeout(400)
+            page.locator('.shop-addg [name="g"]').fill("超市")
+            page.locator('.shop-addg button[type="submit"]').click()
+            page.wait_for_timeout(400)
+            page.reload(wait_until="domcontentloaded")
+            page.wait_for_timeout(1200)
+            page.locator(".nav-item").nth(1).click()
+            page.wait_for_timeout(400)
+            r.check("購物：新增的項目重新整理後還在",
+                    page.locator('.shop-g[data-group="藥妝店"] .shop-i').count() == 2,
+                    f"{page.locator('.shop-g[data-group=\"藥妝店\"] .shop-i').count()} 項")
+            r.check("購物：新增的群組重新整理後還在",
+                    page.locator('.shop-g[data-group="超市"]').count() == 1)
+
+            # 點圖放大給店員看
+            page.locator(".shop-img").first.click()
+            page.wait_for_timeout(400)
+            r.check("購物：點圖會放大", page.locator("#zoom[open]").count() == 1)
+            page.keyboard.press("Escape")
+            page.wait_for_timeout(300)
+            r.check("購物：Esc 可以關掉", page.locator("#zoom[open]").count() == 0)
+
+            # 通用打包物品不該被倒進購物清單（購物是另一個型別、另一個分頁）
+            page.locator(".nav-item").nth(1).click()
+            page.wait_for_timeout(400)
+            r.check("購物：沒有混進通用打包物品",
+                    "護照" not in page.locator("#main .shop-grid").first.inner_text())
 
             # 清單備註
             r.check("清單項目的附註有渲染", page.locator(".chk-note").count() == 1,

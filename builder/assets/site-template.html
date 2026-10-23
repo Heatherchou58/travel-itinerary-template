@@ -239,7 +239,10 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 }
 /* 可點範圍補到 44px：圓圈本身再放大會擋住券上的條碼與折扣數字，
    所以只往外擴張熱區，視覺維持 28px。 */
-.shop-x::after{ content:""; position:absolute; top:-8px; left:-8px; width:44px; height:44px; }
+.shop-x::after{
+  content:""; position:absolute; top:50%; left:50%;
+  width:44px; height:44px; transform:translate(-50%, -50%);
+}
 .shop-img{
   width:100%; height:120px; object-fit:cover;
   border-radius:8px; background:var(--c-accent-soft); cursor:zoom-in;

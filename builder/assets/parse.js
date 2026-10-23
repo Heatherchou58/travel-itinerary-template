@@ -11,7 +11,9 @@ const SHEETS = {
   flight:"航班",
   pack:  "打包清單",
   phrase:"常用片語",
-  sos:   "緊急資訊"
+  sos:   "緊急資訊",
+  shop:  "購物清單",
+  card:  "信用卡"
 };
 
 const TYPE_MAP = {
@@ -365,8 +367,11 @@ export function parseGrids(book){
   });
 
   /* ── 打包清單 → 行前分頁 ─────────────── */
+  /* 「分頁」填「資訊」的清單改放資訊分頁。像免稅規定、電子支付這種
+     出發前不用勾、到了當地才要查的東西，擺在行前會把打包清單撐長。 */
   const packT = table(grid(SHEETS.pack), "清單名稱");
   const prepBlocks = [{ type:"weather", days:7 }];
+  const infoLists = [];
   if (packT){
     const byList = new Map();
     packT.rows.forEach(r => {
@@ -374,8 +379,10 @@ export function parseGrids(book){
       const cat = s(r["分類"]) || "項目";
       const item = s(r["項目"]);
       if (!item) return;
-      if (!byList.has(ln)) byList.set(ln, new Map());
-      const g = byList.get(ln);
+      if (!byList.has(ln)) byList.set(ln, { page:"", groups:new Map() });
+      const L = byList.get(ln);
+      if (s(r["分頁"])) L.page = s(r["分頁"]);
+      const g = L.groups;
       if (!g.has(cat)) g.set(cat, []);
       /* 填了「連結」就變成 { text, url }，網站上項目旁會多一顆「開啟」。
          適合「線上填寫 Visit Japan Web」這種待辦，省得現場自己找網址。 */
@@ -383,11 +390,75 @@ export function parseGrids(book){
       g.get(cat).push(url ? { text: item, url: fixUrl(url) } : item);
     });
     let n = 0;
-    for (const [ln, groups] of byList){
-      prepBlocks.push({
+    for (const [ln, L] of byList){
+      const block = {
         type:"checklist", key:`list${n++}`, title: ln,
-        groups: [...groups].map(([name, items]) => ({ name, items }))
-      });
+        groups: [...L.groups].map(([name, items]) => ({ name, items }))
+      };
+      (/資訊/.test(L.page) ? infoLists : prepBlocks).push(block);
+    }
+  }
+
+  /* ── 購物清單與優惠券 → 購物分頁 ─────────── */
+  const shopT = table(grid(SHEETS.shop), "群組");
+  let shopping = null;
+  if (shopT){
+    const byGroup = new Map();
+    shopT.rows.forEach(r => {
+      const name = s(r["項目"]);
+      if (!name) return;
+      const gn = s(r["群組"]) || "其他";
+      if (!byGroup.has(gn)) byGroup.set(gn, []);
+      const it = { name };
+      const who = s(r["誰要的"]); if (who) it.who = who;
+      const img = s(r["圖片"]);   if (img) it.img = img;
+      const url = s(r["連結"]);   if (url) it.url = fixUrl(url);
+      if (img && url)
+        warn(SHEETS.shop, null, `「${name}」同時填了圖片與連結，網站上兩個都會出現。`);
+      byGroup.get(gn).push(it);
+    });
+    if (byGroup.size){
+      const groups = [...byGroup].map(([name, items]) => ({ name, items }));
+      const all = groups.flatMap(g => g.items);
+      /* 說明依實際內容生成：沒有圖就不必講放大，沒有連結就不必講現場生成 */
+      const notes = [];
+      if (all.some(i => i.img)) notes.push("優惠券點圖片就能放大給店員看，離線也打得開。");
+      if (all.some(i => i.url)) notes.push("有些券要現場生成，所以做成直接跳轉的按鈕。");
+      shopping = { type:"shopping", title:"🛍️ 購物清單與優惠券", notes, groups };
+    }
+  }
+
+  /* ── 信用卡 → 資訊分頁 ──────────────────── */
+  const cardT = table(grid(SHEETS.card), "卡別");
+  let cards = null;
+  if (cardT){
+    const checked = [];
+    const items = cardT.rows.map(r => {
+      const name = s(r["卡別"]);
+      if (!name) return null;
+      const c = { name };
+      const rate  = Number(s(r["回饋%"]));
+      const quota = Number(s(r["加碼額度"]).replace(/[,，]/g, ""));
+      if (rate)  c.rate = rate;
+      if (s(r["適用地區"]))   c.regions = s(r["適用地區"]);
+      if (s(r["活動到期日"])) c.until   = toDate(r["活動到期日"]);
+      /* 額度 = 回饋上限 ÷ 加碼%。留空代表沒有上限，網站就不畫進度條，
+         硬畫會讓人以為刷到某個數字就沒了。 */
+      if (quota) c.quota = quota;
+      c.register = s(r["需要登錄"]) === "是";
+      if (s(r["備註"])) c.note = s(r["備註"]);
+      const d = s(r["查證日期"]) ? toDate(r["查證日期"]) : "";
+      if (d) checked.push(d);
+      if (c.until && !/^\d{4}-\d{2}-\d{2}$/.test(c.until))
+        warn(SHEETS.card, null, `「${name}」的活動到期日格式不對（${c.until}），請用 2026-12-31`);
+      return c;
+    }).filter(Boolean);
+    if (items.length){
+      const notes = [];
+      if (checked.length)
+        notes.push(`回饋條件每季變動，以下為 ${checked.sort().pop()} 查證的結果，出發前請再到銀行官網確認。`);
+      notes.push("海外刷卡通常有約 1.5% 手續費，回饋率要高於這個才划算。");
+      cards = { type:"cards", title:"💳 信用卡刷卡攻略", notes, items };
     }
   }
 
@@ -477,9 +548,13 @@ export function parseGrids(book){
     days: [
       { id:"d0", nav:"📝 行前", blocks: prepBlocks },
       ...days,
+      /* 購物排在記帳前面：買東西跟花錢是同一件事的前後腳 */
+      { id:"shop",   nav:"🛍️ 購物", blocks: [shopping].filter(Boolean) },
       { id:"wallet", nav:"💰 記帳", blocks:[{ type:"expenses" }] },
-      { id:"info",   nav:"🆘 資訊",
-        blocks: [phrases.length && { type:"phrases" }, emergency.length && { type:"emergency" }].filter(Boolean) }
+      { id:"info",   nav:"ℹ️ 資訊",
+        blocks: [cards, ...infoLists,
+                 phrases.length && { type:"phrases" },
+                 emergency.length && { type:"emergency" }].filter(Boolean) }
     ].filter(d => d.blocks.length),
     phrases, emergency
   };
