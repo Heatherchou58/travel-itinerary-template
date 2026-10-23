@@ -1,2 +1,5 @@
 node_modules/
 *-source.xlsx
+
+# 加密私人區塊的明文（門鎖密碼、訂單編號）。只能留在本機，絕對不能進 repo
+*-vault.json

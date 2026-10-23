@@ -85,3 +85,19 @@ python tests/offline_test.py
 專案站無法用 `robots.txt`，爬蟲只讀網域根目錄那一份。
 
 Firebase 的 config 寫在前端是設計如此，安全性靠 Firestore Security Rules。規則限定只有登入（匿名）且 `tripId` 在白名單內才能讀寫。
+
+## 九、加密的私人區塊
+
+門鎖密碼、訂單編號只能以**密文**進 TRIP_DATA（`type: "vault"`，放在「資訊」分頁）。明文在 `<行程>/<行程>-vault.json`，已列入 `.gitignore`。
+
+```bash
+node tools/encrypt-vault.mjs fukuoka-2026
+```
+
+| 坑 | 說明 |
+|---|---|
+| 用 builder 重新產生網站，私人區塊會消失 | TRIP_DATA 整段換掉。產生完要再跑一次上面的指令。明文刻意不放進 Excel——Excel 會傳上雲端分享 |
+| 通關密語的正規化規則寫在兩個地方 | `normPass` 在 `tools/encrypt-vault.mjs` 與網站程式各一份（大小寫、空白、連字號不計較），只改一邊就解不開 |
+| 前端只「檢查」密碼擋不住任何人 | repo 是公開的，原始碼誰都讀得到。一定要用密語「加密」，而且密語要夠長——密文永久留在 git 紀錄裡，可以被離線慢慢猜 |
+
+工具每次都會把密文解回來比對，並掃描 index.html 有沒有明文外洩；Excel 與其他檔案要自己注意。

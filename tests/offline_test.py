@@ -22,6 +22,7 @@ import http.server
 import json
 import re
 import shutil
+import subprocess
 import sys
 import tempfile
 import threading
@@ -206,6 +207,41 @@ def key_test_trip(items: list) -> dict:
     return trip
 
 
+# 加密私人區塊的測試資料。密語故意混大小寫與連字號，測的時候再用不同寫法輸入。
+VAULT_PASS = "Test-Pass-2027"
+VAULT_PLAIN = {
+    "passphrase": VAULT_PASS,
+    "title": "🔒 私人資料",
+    "notes": ["測試用的私人區塊"],
+    "sections": [{"title": "測試住宿", "items": [
+        {"label": "門鎖密碼", "value": "SECRET-4821"},
+        {"label": "入住指南", "url": "https://example.com/guide"},
+        {"note": "退房時把鑰匙放回去"}]}],
+}
+VAULT_SECRETS = ["SECRET-4821", "example.com/guide", VAULT_PASS, "testpass2027"]
+
+
+def make_vault_block(tmp: Path) -> dict:
+    """用正式的 tools/encrypt-vault.mjs 加密——順便驗證 Node 加密、瀏覽器解密兩邊對得上。"""
+    src = tmp / "vault-plain.json"
+    src.write_text(json.dumps(VAULT_PLAIN, ensure_ascii=False), encoding="utf-8")
+    try:
+        out = subprocess.run(["node", str(REPO / "tools" / "encrypt-vault.mjs"), "--block", str(src)],
+                             capture_output=True, text=True, encoding="utf-8")
+    finally:
+        src.unlink()
+    if out.returncode != 0:
+        sys.exit("產生私人區塊的測試資料失敗：" + out.stderr)
+    return json.loads(out.stdout)
+
+
+def vault_trip(block: dict) -> dict:
+    trip = json.loads(json.dumps(SETTLE_TRIP))
+    trip["meta"]["tripId"] = "vaulttest"
+    trip["days"][0]["blocks"] = [block, {"type": "expenses"}]
+    return trip
+
+
 def unknown_block_trip() -> dict:
     """未知型別要在畫面上顯示明確錯誤，不可靜默跳過（否則以為行程存到了，其實不見）。"""
     trip = json.loads(json.dumps(SETTLE_TRIP))
@@ -309,7 +345,8 @@ def run(trip: str) -> bool:
                            auto_theme_trip(theme, start, lat))
 
         for name, trip in [("settle", SETTLE_TRIP), ("rate", rate_null_trip()),
-                           ("unknown", unknown_block_trip())]:
+                           ("unknown", unknown_block_trip()),
+                           ("vault", vault_trip(make_vault_block(tmp)))]:
             shutil.copytree(tmp / "site", tmp / name)
             swap_trip_data(tmp / name / "index.html", trip)
 
@@ -743,6 +780,64 @@ def run(trip: str) -> bool:
                     err.count() > 0 and err.is_visible())
             r.check("未知 block：後面的區塊照常渲染（不會整頁中斷）",
                     page.locator("#e-add").count() == 1)
+            ctx.close()
+
+            # 10 ── 加密的私人區塊 ─────────────────────────
+            # 這裡刻意讀磁碟上的檔案而不是 page.content()：要驗的是「送出去的原始碼」
+            # 沒有明文，而 page.content() 是當下的 DOM，解鎖後本來就會有。
+            served = (tmp / "vault" / "index.html").read_text(encoding="utf-8")
+            leaked = [s for s in VAULT_SECRETS if s in served]
+            r.check("私人區塊：原始碼裡沒有明文與密語", not leaked, "、".join(leaked))
+
+            ctx = browser.new_context()
+            page = ctx.new_page()
+            vault_errors = []
+            page.on("pageerror", lambda e: vault_errors.append(str(e)))
+            page.goto(f"http://127.0.0.1:{port}/vault/")
+            page.wait_for_load_state("networkidle")
+            page.wait_for_timeout(600)
+            main = page.locator("#main")
+            r.check("私人區塊：鎖著時有輸入框", page.locator(".vault-pass").count() == 1)
+            r.check("私人區塊：鎖著時畫面上沒有內容", "SECRET-4821" not in main.inner_text())
+
+            page.locator(".vault-pass").fill("wrong pass")
+            page.locator(".vault-form button[type=submit]").click()
+            page.wait_for_function(
+                "document.querySelector('.vault-msg')?.classList.contains('is-err')", timeout=15000)
+            r.check("私人區塊：密語錯誤時說清楚", "通關密語不對" in main.inner_text())
+            r.check("私人區塊：密語錯誤時不顯示內容", "SECRET-4821" not in main.inner_text())
+
+            # 大小寫、空白、連字號都不計較；用 Enter 送出等同手機鍵盤的「前往」
+            page.locator(".vault-pass").fill("TEST pass 2027")
+            page.locator(".vault-pass").press("Enter")
+            page.wait_for_selector("#main .vault-val", timeout=15000)
+            r.check("私人區塊：密語寫法不同（大小寫、空白）也解得開",
+                    "SECRET-4821" in main.inner_text())
+            r.check("私人區塊：網址變成按鈕",
+                    page.locator('#main .vault-sec a[href="https://example.com/guide"]').count() == 1)
+            r.check("私人區塊：備註有顯示", "退房時把鑰匙放回去" in main.inner_text())
+
+            page.reload()
+            page.wait_for_load_state("networkidle")
+            page.wait_for_selector("#main .vault-val", timeout=15000)
+            r.check("私人區塊：勾「記住」後重新整理會自動解開", "SECRET-4821" in main.inner_text())
+
+            page.locator("[data-vault-lock]").click()
+            page.wait_for_selector("#main .vault-pass", timeout=5000)
+            r.check("私人區塊：上鎖後回到輸入畫面", "SECRET-4821" not in main.inner_text())
+            page.reload()
+            page.wait_for_load_state("networkidle")
+            page.wait_for_timeout(1500)
+            r.check("私人區塊：上鎖後重新整理不會自動解開",
+                    page.locator(".vault-pass").count() == 1 and "SECRET-4821" not in main.inner_text())
+
+            # 解密完全在手機本機，不需要網路
+            ctx.set_offline(True)
+            page.locator(".vault-pass").fill(VAULT_PASS)
+            page.locator(".vault-form button[type=submit]").click()
+            page.wait_for_selector("#main .vault-val", timeout=15000)
+            r.check("私人區塊：離線也解得開", "SECRET-4821" in main.inner_text())
+            r.check("私人區塊：沒有 JS 例外", not vault_errors, "; ".join(vault_errors[:2]))
             ctx.close()
 
             browser.close()
