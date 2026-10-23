@@ -207,6 +207,44 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
   background:var(--c-surface); border-radius:var(--r-card); box-shadow:var(--shadow);
   padding:var(--sp-4); margin-bottom:var(--sp-3);
 }
+/* ── 信用卡回饋額度 ───────────────────────
+   每張卡一塊，重點是「還能刷多少」而不是卡片清單本身。 */
+.cc{
+  border:1px solid var(--c-line); border-radius:10px;
+  padding:var(--sp-3); margin-top:var(--sp-3);
+}
+.cc-head{ display:flex; align-items:flex-start; gap:var(--sp-2); }
+.cc-name{ flex:1; font-weight:700; font-size:var(--fs-md); }
+.cc-rate{
+  margin-left:var(--sp-2); padding:1px var(--sp-2); border-radius:var(--r-pill);
+  background:var(--c-accent-soft); color:var(--c-on-accent); font-size:var(--fs-xs);
+}
+.cc-x, .cc-restore{
+  flex:0 0 auto; min-height:44px; padding:0 var(--sp-3);
+  border:1px solid var(--c-line); border-radius:var(--r-pill);
+  background:var(--c-surface); color:var(--c-text-dim);
+  font-family:inherit; font-size:var(--fs-xs); cursor:pointer;
+}
+.cc-restore{ width:100%; margin-top:var(--sp-3); }
+.cc-expired{ color:var(--c-danger); font-weight:700; }
+.cc-field{ display:flex; align-items:center; gap:var(--sp-3); margin-top:var(--sp-3); }
+.cc-field span{ flex:0 0 auto; font-size:var(--fs-sm); color:var(--c-text-dim); }
+.cc-field .input{ flex:1; min-width:0; }
+.cc-bar{
+  height:6px; border-radius:3px; background:var(--c-line);
+  margin-top:var(--sp-3); overflow:hidden;
+}
+.cc-bar i{ display:block; height:100%; background:var(--c-accent); transition:width .2s; }
+.cc-used{ margin-top:var(--sp-2); }
+.cc-left{ margin-top:2px; font-weight:700; color:var(--c-on-accent); }
+.cc-left.cc-full{ color:var(--c-danger); }   /* 額度用完，再刷就沒加碼了 */
+.cc-reg{ margin-top:var(--sp-2); }
+/* 有備註的清單項目：勾選框對齊第一行，備註不要被刪除線劃到 */
+.chk.has-note{ align-items:flex-start; padding:var(--sp-2) 0; }
+.chk-note{ display:block; margin-top:2px; font-size:var(--fs-xs);
+           font-weight:400; color:var(--c-text-dim); }
+.chk input:checked + span .chk-note{ text-decoration:none; }
+
 /* ── 現在進行到哪 ─────────────────────────
    目前項目用主題色標出來，已結束的降低存在感，讓視線自動落到「現在」。
    邊框用 transparent 佔位，套用時才不會整張卡片位移。 */
@@ -623,11 +661,10 @@ const TRIP_DATA = {
                 "國際駕照譯本＋台灣駕照正本（自駕必備）",
                 "確認租車訂單：Toyota Rent a Car 博多取車 / 博多還車",
                 "跟 YUFU-Inn 確認有沒有供早餐、廚房有哪些鍋具（11/16 晚餐與 11/17 早餐要自己張羅）",
-                "✅ 藥院燒肉已訂 11/19 17:30",
-                "✅ 博多 Airbnb 已訂（SHIELD21・11/18–11/20 連住兩晚・入住 16:00／退房 10:00）— 出發前拿到門鎖密碼與入住說明",
-                "出發前查阿蘇噴火警戒等級與阿蘇パノラマライン通行狀況（火口目前 Level 2 封閉）",
+                "拿到博多 Airbnb 的門鎖密碼與入住說明",
+                "出發前查阿蘇噴火警戒等級與阿蘇パノラマライン通行狀況",
                 "出發前確認柳川乘合船時刻（受付只到 14:30）與皿倉山纜車運行（週二公休）",
-                "備妥日圓現金：高千穗牛餐廳不收卡、小倉城與屋台也以現金為主",
+                "備妥日圓現金",
                 "eSIM 或漫遊開通",
                 "下載離線地圖（Google Maps 九州離線區域）",
                 "告知家人行程與住宿"
@@ -2139,6 +2176,124 @@ const TRIP_DATA = {
       "nav": "ℹ️ 資訊",
       "blocks": [
         {
+          "type": "cards",
+          "title": "💳 信用卡刷卡攻略",
+          "notes": [
+            "回饋條件每季變動，以下為 2026-10-23 查證的結果，出發前請再到銀行官網確認。",
+            "海外刷卡通常有約 1.5% 手續費，回饋率要高於這個才划算。"
+          ],
+          "items": [
+            {
+              "name": "中國信託 uniopen 卡",
+              "rate": 11,
+              "regions": "日本、韓國、泰國、新加坡、美洲",
+              "until": "2026-12-31",
+              "quota": 6250,
+              "register": false,
+              "note": "海外實體最高 11% OPENPOINT：一般 2% ＋ 實體 1% ＋ 加碼 8%。\n8% 加碼每月上限 500 點，所以每月海外實體刷到 NT$6,250 就拿滿。\n2026 年起免領券。\n⚠️ 官網的唐吉訶德活動是 2026-07-15～10-31，在你 11/14 出發前就結束了，不要算進預算。"
+            },
+            {
+              "name": "星展 eco 永續卡",
+              "rate": 5,
+              "regions": "日本、韓國、泰國、新加坡、美洲、歐洲",
+              "until": "2026-12-31",
+              "quota": 15000,
+              "register": true,
+              "note": "指定國家實體消費 5%：基礎 1% 無上限 ＋ 加碼 4%。\n加碼每期上限 600 點，約當每期消費 NT$15,000 封頂。\n2026-09-01～12-31 海外實體「餐廳」登錄後最高 10%（單日上限 NT$300、每月 NT$1,000）。\n⚠️ 必須以當地貨幣結帳。結帳時店員問要日幣還台幣，選日幣，選台幣就不算。"
+            },
+            {
+              "name": "台新 Richart 卡",
+              "rate": 3.3,
+              "regions": "海外實體消費",
+              "until": "2027-03-31",
+              "quota": 0,
+              "register": true,
+              "note": "海外實體 3.3% 無上限，沒有登錄名額的問題，是最省心的主力卡。\n需要在 App 裡把回饋模式切換到「玩旅刷」。"
+            },
+            {
+              "name": "國泰世華 CUBE 卡",
+              "rate": 8,
+              "regions": "日系指定通路",
+              "until": "2026-11-30",
+              "quota": 0,
+              "register": true,
+              "note": "「秋日遊」快閃權益：指定日系消費最高 8%，搭配指定商戶專屬優惠券最高 10% 小樹點。\n⚠️ 這是期間限定權益，2026-10-01～11-30，正好涵蓋這趟行程，但要自己在 App 裡切換到「秋日遊」。\n11/30 之後就沒有了，回國前刷的還算得到。"
+            },
+            {
+              "name": "玉山 熊本熊卡",
+              "rate": 8.5,
+              "regions": "日本指定商店",
+              "until": "2026-12-31",
+              "quota": 5882,
+              "register": true,
+              "note": "日本指定商店最高 8.5%，每期加碼上限 500 元；超過上限仍有 2.5% 無上限。\n額度是以加碼部分回推的概估，實際適用店家以活動頁為準。"
+            },
+            {
+              "name": "台北富邦 J 卡",
+              "rate": 3,
+              "regions": "日本",
+              "until": "2026-12-31",
+              "quota": 33333,
+              "register": true,
+              "note": "基本約 3%，加碼需要每季登錄。\n單筆消費須滿 NT$1,000 才計入，每季回饋上限 NT$1,000。"
+            },
+            {
+              "name": "永豐 幣倍卡",
+              "rate": 2,
+              "regions": "海外一般消費",
+              "until": "2026-12-31",
+              "quota": 0,
+              "register": true,
+              "note": "海外一般消費 2% 無上限。精選通路（含 SUICA、PASMO、ICOCA 等交通卡儲值）有加碼。\n需先完成指定設定。"
+            }
+          ]
+        },
+        {
+          "type": "checklist",
+          "key": "shoplist",
+          "title": "🧾 免稅新制與行動支付",
+          "groups": [
+            {
+              "name": "日本免稅 2026-11-01 改制（你整趟都適用新制）",
+              "items": [
+                {
+                  "text": "知道店內要付「含稅價」，不是當場免稅",
+                  "note": "舊制是結帳時直接免稅，新制改成先付含稅價。"
+                },
+                {
+                  "text": "出境時在機場海關完成持出確認",
+                  "note": "沒做這一步就拿不到退稅。購買後 90 天內要完成。"
+                },
+                {
+                  "text": "確認退稅要退到哪張卡",
+                  "note": "退款會退到信用卡或電子支付，所以刷免稅品的那張卡要留意。"
+                },
+                {
+                  "text": "記得門檻是同店同日未稅 5,000 円以上",
+                  "note": "分開結帳可能湊不到門檻。"
+                }
+              ]
+            },
+            {
+              "name": "PayPay：台灣門號註冊不了，要用台灣的電子支付掃碼",
+              "items": [
+                {
+                  "text": "在手機裝好要用的台灣電子支付",
+                  "note": "全支付、街口、玉山 Wallet、台新 Pay+、一卡通 iPASS MONEY、全盈+PAY 都能掃日本的 PayPay QR Code。"
+                },
+                {
+                  "text": "確認你的卡能綁哪一個",
+                  "note": "全支付限國泰卡、街口限台新街口聯名卡、台新 Pay+ 限台新卡；玉山 Wallet 支援綁卡但要先開通電子支付並實名認證。各家說法不一，出發前在 App 裡實際確認。"
+                },
+                {
+                  "text": "App 內把地區切換到日本",
+                  "note": "以當日匯率換算台幣扣款，多數標榜免海外交易手續費。"
+                }
+              ]
+            }
+          ]
+        },
+        {
           "type": "phrases"
         },
         {
@@ -2314,13 +2469,16 @@ const KEY = `trip:${M.tripId}`;
 const load = () => { try{ return JSON.parse(LS.get(KEY)) || {}; }catch{ return {}; } };
 const saved = load();
 const state = {
-  checks: saved.checks || {},
+  checks: saved.checks || {},       // 個人清單（打包、個人購物）：只存本機
+  shopping: saved.shopping || {},   // 購物清單：只存本機
+  cards: saved.cards || {},         // 信用卡額度追蹤：每人刷多少是自己的事，只存本機
   expenses: saved.expenses || [],
   queue: saved.queue || [],
   me: LS.get(`${KEY}:me`) || null
 };
 const persist = () => LS.set(KEY, JSON.stringify({
-  checks: state.checks, expenses: state.expenses, queue: state.queue
+  checks: state.checks, shopping: state.shopping, cards: state.cards,
+  expenses: state.expenses, queue: state.queue
 }));
 
 /* ── 同步狀態顯示 ── */
@@ -2334,6 +2492,14 @@ const linksHTML = (links=[]) => links.map(l =>
 const localSpan = t => t ? `<span class="lang-local">${esc(t)}</span>` : "";
 const notesHTML = n => (n && n.length)
   ? `<div class="note-box">${n.map(x=>esc(x)).join("<br>")}</div>` : "";
+
+/* ── 清單項目與勾選狀態 ──────────────────────
+   項目可以是字串，也可以是 { text, url, note, img }。 */
+const itemText = it => typeof it === "string" ? it : String(it?.text ?? "");
+
+/* 勾選的 key 用「項目文字」而不是陣列索引。購物清單會頻繁增刪，
+   用索引的話在中間插一項，後面所有打勾就整排錯位。 */
+const chkKey = (b, g, it) => `${b.key}:${g.name}:${itemText(it)}`;
 
 /* ── 「現在進行到哪」用的時間換算 ──────────────
    卡片上掛 data-start / data-stay，實際的結束時間由 markNow() 依前後
@@ -2445,24 +2611,71 @@ const RENDERERS = {
   checklist: b => {
     const total = (b.groups||[]).reduce((n,g)=>n+g.items.length,0);
     const done = (b.groups||[]).reduce((n,g)=>
-      n + g.items.filter((_,i)=>state.checks[`${b.key}:${g.name}:${i}`]).length, 0);
+      n + g.items.filter(it => state.checks[chkKey(b,g,it)]).length, 0);
     return `<div class="card" data-chk="${esc(b.key)}">
       <div class="subject">${esc(b.title||"清單")}
         <span class="chk-progress">${done}/${total}</span></div>
       ${(b.groups||[]).map(g => `<div class="chk-group"><h4>${esc(g.name)}</h4>
-        ${g.items.map((it,i)=>{
-          const k = `${b.key}:${g.name}:${i}`;
-          /* 項目可以是字串，也可以是 { text, url }——像「線上填寫 Visit Japan Web」
-             這種待辦，直接把網址帶在旁邊比自己去搜尋快。 */
-          const text = typeof it === "string" ? it : String(it?.text ?? "");
-          const url  = (it && typeof it === "object") ? String(it.url || "") : "";
-          const box  = `<label class="chk"><input type="checkbox" data-k="${esc(k)}"${state.checks[k]?" checked":""}><span>${esc(text)}</span></label>`;
+        ${g.items.map(it=>{
+          const k = chkKey(b, g, it);
+          /* 項目可以是字串，也可以是物件：
+             text 文字、url 旁邊多一顆按鈕、note 補充說明（例如信用卡的登錄條件）*/
+          const o    = (it && typeof it === "object") ? it : {};
+          const text = itemText(it);
+          const url  = String(o.url  || "");
+          const note = String(o.note || "");
+          const label = `<span>${esc(text)}${note ? `<small class="chk-note">${esc(note)}</small>` : ""}</span>`;
+          const box  = `<label class="chk${note ? " has-note" : ""}">` +
+                       `<input type="checkbox" data-k="${esc(k)}"${state.checks[k]?" checked":""}>${label}</label>`;
           /* 連結刻意放在 <label> 外面。放裡面的話點連結會順便把項目打勾。 */
           return url
             ? `<div class="chk-row">${box}<a class="chk-link" href="${esc(url)}" target="_blank" rel="noopener">開啟</a></div>`
             : box;
         }).join("")}</div>`).join("")}
       ${notesHTML(b.notes)}${linksHTML(b.links)}</div>`;
+  },
+
+  /* 信用卡回饋額度追蹤。重點不是「有哪些卡」，而是「這張還能刷多少才到上限」——
+     額度 = 回饋上限 ÷ 加碼%，例如每月上限 500 點、加碼 8% → NT$6,250。
+     已刷金額與登錄狀態只存這台裝置，每個人刷多少是自己的事。 */
+  cards: b => {
+    const all = b.items || [];
+    const shown = all.filter(c => !(state.cards[c.name] || {}).hidden);
+    const hiddenCount = all.length - shown.length;
+    const today = nowAtDestination().date;
+
+    return `<div class="card"><div class="subject">${esc(b.title || "信用卡")}</div>
+      ${notesHTML(b.notes)}
+      ${shown.map(c => {
+        const s      = state.cards[c.name] || {};
+        const spent  = Number(s.spent) || 0;
+        const quota  = Number(c.quota) || 0;
+        const left   = Math.max(0, quota - spent);
+        const pct    = quota ? Math.min(100, Math.round(spent / quota * 100)) : 0;
+        const expired = c.until && c.until < today;
+        return `<div class="cc" data-card="${esc(c.name)}" data-quota="${quota}">
+          <div class="cc-head">
+            <div class="cc-name">${esc(c.name)}${c.rate ? `<span class="cc-rate">${esc(String(c.rate))}%</span>` : ""}</div>
+            <button class="cc-x" data-hide="${esc(c.name)}" type="button">移除</button>
+          </div>
+          ${c.regions ? `<div class="meta">${esc(c.regions)}</div>` : ""}
+          ${c.until ? `<div class="meta${expired ? " cc-expired" : ""}">活動到期日 ${esc(c.until)}${expired ? "　已過期" : ""}</div>` : ""}
+          ${quota ? `
+            <label class="cc-field"><span>出發前已刷</span>
+              <input class="input cc-spent" type="number" inputmode="numeric" min="0"
+                     data-card="${esc(c.name)}" value="${spent || ""}" placeholder="0"></label>
+            <div class="cc-bar"><i style="width:${pct}%"></i></div>
+            <div class="meta cc-used">已計入 ${esc(M.money.home)}$${fmt(spent)}／額度 ${esc(M.money.home)}$${fmt(quota)}</div>
+            <div class="cc-left${left ? "" : " cc-full"}">剩餘 ${esc(M.money.home)}$${fmt(left)}</div>
+          ` : `<div class="meta">這張沒有回饋上限，不用算額度</div>`}
+          ${c.register ? `<label class="chk cc-reg"><input type="checkbox" data-reg="${esc(c.name)}"${s.done ? " checked" : ""}><span>已完成銀行活動登錄</span></label>` : ""}
+          ${c.note ? `<details class="intro"><summary>查看回饋條件與備註</summary>
+            <div class="intro-body">${c.note.split(/\n+/).filter(Boolean).map(p=>`<p>${esc(p)}</p>`).join("")}</div>
+          </details>` : ""}
+        </div>`;
+      }).join("")}
+      ${hiddenCount ? `<button class="cc-restore" data-restore="1" type="button">還原已移除的 ${hiddenCount} 張</button>` : ""}
+    </div>`;
   },
 
   weather: () => `<div class="card"><div class="subject">🌡️ 行程期間天氣</div>
@@ -2942,6 +3155,12 @@ document.getElementById("main").addEventListener("change", e => {
     p.textContent = `${[...all].filter(x=>x.checked).length}/${all.length}`;
     return;
   }
+  if (e.target.dataset.reg){
+    const n = e.target.dataset.reg;
+    state.cards[n] = { ...(state.cards[n] || {}), done: e.target.checked };
+    persist();
+    return;
+  }
   if (e.target.name === "me"){
     state.me = e.target.value;
     LS.set(`${KEY}:me`, state.me);
@@ -2954,7 +3173,40 @@ document.getElementById("main").addEventListener("change", e => {
   }
 });
 
+/* 信用卡的已刷金額：就地更新進度條與剩餘，不重新渲染整頁——
+   重畫的話每打一個字輸入框就會失焦。 */
+document.getElementById("main").addEventListener("input", e => {
+  const el = e.target.closest(".cc-spent");
+  if (!el) return;
+  const box   = el.closest(".cc");
+  const name  = el.dataset.card;
+  const quota = Number(box.dataset.quota) || 0;
+  const spent = Math.max(0, Number(el.value) || 0);
+  state.cards[name] = { ...(state.cards[name] || {}), spent };
+  persist();
+
+  const left = Math.max(0, quota - spent);
+  box.querySelector(".cc-bar i").style.width =
+    (quota ? Math.min(100, Math.round(spent / quota * 100)) : 0) + "%";
+  box.querySelector(".cc-used").textContent =
+    `已計入 ${M.money.home}$${fmt(spent)}／額度 ${M.money.home}$${fmt(quota)}`;
+  const leftEl = box.querySelector(".cc-left");
+  leftEl.textContent = `剩餘 ${M.money.home}$${fmt(left)}`;
+  leftEl.classList.toggle("cc-full", left === 0);
+});
+
 document.getElementById("main").addEventListener("click", e => {
+  /* 移除只隱藏在這台裝置，隨時可以還原——誤觸不該讓一張卡永久消失 */
+  const hide = e.target.closest("[data-hide]");
+  if (hide){
+    const n = hide.dataset.hide;
+    state.cards[n] = { ...(state.cards[n] || {}), hidden: true };
+    persist(); renderDay(current); return;
+  }
+  if (e.target.closest("[data-restore]")){
+    for (const k of Object.keys(state.cards)) delete state.cards[k].hidden;
+    persist(); renderDay(current); return;
+  }
   if (e.target.id === "e-add")  return addExpense();
   if (e.target.id === "e-csv")  return exportDetail();
   if (e.target.id === "e-csv2") return exportSettle();
@@ -3104,6 +3356,24 @@ document.getElementById("app-sub").textContent = M.subtitle || "";
     out.push(`<a class="go" href="${esc(u)}" target="_blank" rel="noopener">🔄 重新產生網站</a>`);
   }
   bar.innerHTML = out.join("");
+})();
+
+/* 勾選 key 從「陣列索引」改成「項目文字」的一次性轉換。
+   不轉的話，升級後所有已經打好的勾會憑空消失。必須在第一次渲染前跑完。
+   旗標存在 checks 裡，不會跟真正的 key 衝突（真 key 一定含兩個冒號）。 */
+(function migrateCheckKeys(){
+  if (state.checks.__keys_v2) return;
+  const out = { __keys_v2: true };
+  for (const day of TRIP_DATA.days || [])
+    for (const b of day.blocks || []){
+      if (b.type !== "checklist") continue;
+      for (const g of b.groups || [])
+        (g.items || []).forEach((it, i) => {
+          if (state.checks[`${b.key}:${g.name}:${i}`]) out[chkKey(b, g, it)] = true;
+        });
+    }
+  state.checks = out;
+  persist();
 })();
 
 buildNav();

@@ -77,7 +77,17 @@ SWAP_TRIP = {
             {"type": "checklist", "key": "pack", "title": "行李",
              "groups": [{"name": "證件", "items": [
                  "護照",
-                 {"text": "線上填寫入境手續", "url": "https://example.com/visa"}]}]},
+                 {"text": "線上填寫入境手續", "url": "https://example.com/visa"},
+                 {"text": "帶附註的項目", "note": "這行是補充說明"}]}]},
+            {"type": "cards", "title": "信用卡", "items": [
+                {"name": "有額度卡", "rate": 11, "regions": "日本",
+                 "until": "2099-12-31", "quota": 5000, "register": True,
+                 "note": "條件第一段\n條件第二段"},
+                {"name": "無上限卡", "rate": 3.3, "regions": "海外",
+                 "until": "2099-12-31", "quota": 0},
+                {"name": "過期卡", "rate": 5, "regions": "日本",
+                 "until": "2020-01-01", "quota": 1000},
+            ]},
             {"type": "expenses"},
         ]},
     ],
@@ -181,6 +191,18 @@ def rate_null_trip() -> dict:
     trip = json.loads(json.dumps(SETTLE_TRIP))
     trip["meta"]["tripId"] = "ratenull"
     trip["meta"]["money"]["rate"] = None
+    return trip
+
+
+def key_test_trip(items: list) -> dict:
+    """只有一張清單的行程，用來驗證勾選 key 的穩定性。
+       tripId 固定，這樣兩個版本會共用同一份 localStorage。"""
+    trip = json.loads(json.dumps(SETTLE_TRIP))
+    trip["meta"]["tripId"] = "keytest"
+    trip["days"][0]["blocks"] = [{
+        "type": "checklist", "key": "k", "title": "清單",
+        "groups": [{"name": "群", "items": items}]
+    }]
     return trip
 
 
@@ -290,6 +312,13 @@ def run(trip: str) -> bool:
                            ("unknown", unknown_block_trip())]:
             shutil.copytree(tmp / "site", tmp / name)
             swap_trip_data(tmp / name / "index.html", trip)
+
+        # 勾選 key 的穩定性：同一個 tripId、同一個 origin，只差在清單中間插了一項。
+        # key 若用陣列索引，插入後打勾會整排往下錯位。
+        for name, items in [("keyA", ["甲", "乙", "丙"]),
+                            ("keyB", ["甲", "新插入的", "乙", "丙"])]:
+            shutil.copytree(tmp / "site", tmp / name)
+            swap_trip_data(tmp / name / "index.html", key_test_trip(items))
 
         port = serve(tmp)
         base, swap = f"http://127.0.0.1:{port}/site/", f"http://127.0.0.1:{port}/swap/"
@@ -440,6 +469,41 @@ def run(trip: str) -> bool:
             r.check("介紹：換行有分成兩段", body.locator("p").count() == 2,
                     f"{body.locator('p').count()} 段")
             r.check("介紹：內容正確", "介紹第一段" in body.inner_text())
+
+            # 信用卡回饋額度（在第二天）
+            page.locator(".nav-item").nth(1).click()
+            page.wait_for_timeout(400)
+            r.check("信用卡：三張都渲染", page.locator(".cc").count() == 3,
+                    f"{page.locator('.cc').count()} 張")
+            r.check("信用卡：沒有額度的不畫進度條",
+                    page.locator('.cc[data-card="無上限卡"] .cc-bar').count() == 0)
+            r.check("信用卡：過期的有標示",
+                    page.locator('.cc[data-card="過期卡"] .cc-expired').count() == 1)
+            r.check("信用卡：未過期的不標",
+                    page.locator('.cc[data-card="有額度卡"] .cc-expired').count() == 0)
+
+            quota_card = page.locator('.cc[data-card="有額度卡"]')
+            inp = quota_card.locator(".cc-spent")
+            inp.click()
+            inp.type("2000", delay=30)
+            page.wait_for_timeout(300)
+            # 整頁重畫的話輸入框會失焦，這是不重畫的全部理由
+            r.check("信用卡：輸入時輸入框不失焦",
+                    page.evaluate("document.activeElement.classList.contains('cc-spent')"))
+            r.check("信用卡：剩餘額度正確（額度 5000 − 已刷 2000）",
+                    "3,000" in quota_card.locator(".cc-left").inner_text(),
+                    quota_card.locator(".cc-left").inner_text())
+            r.check("信用卡：進度條寬度正確",
+                    quota_card.locator(".cc-bar i").evaluate("e => e.style.width") == "40%",
+                    quota_card.locator(".cc-bar i").evaluate("e => e.style.width"))
+            r.check("信用卡：已刷金額不進同步佇列",
+                    "cards" not in page.evaluate(
+                        "(JSON.parse(localStorage.getItem('trip:swaptest-2027')||'{}').queue||[])"
+                        ".map(q => q.type).join(',')"))
+
+            # 清單備註
+            r.check("清單項目的附註有渲染", page.locator(".chk-note").count() == 1,
+                    f"{page.locator('.chk-note').count()} 條")
 
             # 清單項目的連結（在第二天）
             page.locator(".nav-item").nth(1).click()
@@ -606,6 +670,31 @@ def run(trip: str) -> bool:
             r.check("還沒出發：不標目前行程",
                     page.locator("#main .card.is-now, #main .card.is-next").count() == 0)
             r.check("還沒出發：顯示倒數天數", "出發倒數" in page.locator("#wx-now").inner_text())
+            ctx.close()
+
+            # 7d ── 清單中間插入項目，既有的勾選不能錯位 ────────
+            ctx = browser.new_context()
+            page = ctx.new_page()
+            page.goto(f"http://127.0.0.1:{port}/keyA/")
+            page.wait_for_load_state("networkidle")
+            page.wait_for_timeout(500)
+            boxes = page.locator(".chk input")
+            boxes.nth(1).check()          # 勾「乙」
+            page.wait_for_timeout(300)
+            r.check("插入測試：先在舊版勾選「乙」", boxes.nth(1).is_checked())
+
+            # 換成中間多一項的版本（同 tripId，共用 localStorage）
+            page.goto(f"http://127.0.0.1:{port}/keyB/")
+            page.wait_for_load_state("networkidle")
+            page.wait_for_timeout(500)
+            labels = page.locator(".chk")
+            state = {}
+            for i in range(labels.count()):
+                state[labels.nth(i).inner_text().strip()] = \
+                    page.locator(".chk input").nth(i).is_checked()
+            r.check("插入項目後：「乙」仍然是勾選的", state.get("乙") is True, str(state))
+            r.check("插入項目後：新項目沒有被誤勾", state.get("新插入的") is False, str(state))
+            r.check("插入項目後：「丙」沒有被誤勾", state.get("丙") is False, str(state))
             ctx.close()
 
             # 8 ── 匯率查不到（rate = null）時網站不能壞 ───────

@@ -89,7 +89,7 @@ TRIP_DATA      資料層  ── 換旅程時「只改這裡」
 | 服務 | 用途 | 需要金鑰 |
 |---|---|---|
 | [Open-Meteo](https://open-meteo.com/) | 天氣預報（未來 16 天） | 不需要 |
-| Firebase Firestore | 打包清單與記帳的多人同步 | 前端可公開，安全性靠 Security Rules |
+| Firebase Firestore | 記帳的多人同步（清單類一律只存本機）| 前端可公開，安全性靠 Security Rules |
 | Google Sheets API v4 | 讀取線上試算表 | 需要，限制只勾 Sheets API |
 | MyMemory | 自動翻譯當地語 | 不需要 |
 
