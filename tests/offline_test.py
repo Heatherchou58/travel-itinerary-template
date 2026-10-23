@@ -537,14 +537,14 @@ def run(trip: str) -> bool:
                 pg.wait_for_timeout(600)
                 return c, pg
 
-            # 2026-11-17 03:00Z = 東京 12:00，高千穗峽（11:00 起、停留 150 分）進行中
+            # 2026-11-17 03:00Z = 東京 12:00，上色見熊野座神社（10:50 起、停留 145 分）進行中
             ctx, page = at("2026-11-17T03:00:00Z")
             nowc = page.locator("#main .card.is-now")
             r.check("目前行程：剛好標出一張卡片", nowc.count() == 1, f"{nowc.count()} 張")
-            r.check("目前行程：標在高千穗峽上", "高千穗峽" in nowc.inner_text())
+            r.check("目前行程：標在上色見熊野座神社上", "上色見熊野座神社" in nowc.inner_text())
             line = page.locator("#main .card.is-now .now-line").inner_text()
             r.check("目前行程：顯示剩餘時間與離開時刻",
-                    "還有 1 小時 30 分" in line and "13:30" in line, f"「{line}」")
+                    "還有 1 小時 15 分" in line and "13:15" in line, f"「{line}」")
             r.check("已結束的項目有淡化", page.locator("#main .card.is-past").count() >= 2,
                     f"{page.locator('#main .card.is-past').count()} 張")
             r.check("自動跳到今天的分頁",
