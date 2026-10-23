@@ -237,6 +237,9 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
   border:1px solid var(--c-line); background:var(--c-surface);
   color:var(--c-text-dim); font-family:inherit; line-height:1; cursor:pointer;
 }
+/* 可點範圍補到 44px：圓圈本身再放大會擋住券上的條碼與折扣數字，
+   所以只往外擴張熱區，視覺維持 28px。 */
+.shop-x::after{ content:""; position:absolute; top:-8px; left:-8px; width:44px; height:44px; }
 .shop-img{
   width:100%; height:120px; object-fit:cover;
   border-radius:8px; background:var(--c-accent-soft); cursor:zoom-in;
@@ -274,13 +277,13 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
   margin-left:var(--sp-2); padding:1px var(--sp-2); border-radius:var(--r-pill);
   background:var(--c-accent-soft); color:var(--c-on-accent); font-size:var(--fs-xs);
 }
-.cc-x, .cc-restore{
+.cc-x, .cc-restore, .shop-restore{
   flex:0 0 auto; min-height:44px; padding:0 var(--sp-3);
   border:1px solid var(--c-line); border-radius:var(--r-pill);
   background:var(--c-surface); color:var(--c-text-dim);
   font-family:inherit; font-size:var(--fs-xs); cursor:pointer;
 }
-.cc-restore{ width:100%; margin-top:var(--sp-3); }
+.cc-restore, .shop-restore{ width:100%; margin-top:var(--sp-3); }
 .cc-expired{ color:var(--c-danger); font-weight:700; }
 .cc-field{ display:flex; align-items:center; gap:var(--sp-3); margin-top:var(--sp-3); }
 .cc-field span{ flex:0 0 auto; font-size:var(--fs-sm); color:var(--c-text-dim); }
@@ -2966,6 +2969,43 @@ const RENDERERS = {
     </div>`;
   },
 
+  /* 購物清單（優惠券也是它的一個群組，結構一樣）。
+     種子項目來自 Excel，在網站上增刪的存本機，兩邊在 shopGroups() 合併。
+     勾選與輸入全部走 data-sid／data-snote／data-samt，由就地更新的處理器接手。 */
+  shopping: b => {
+    const s = shopBag();
+    return `<div class="card"><div class="subject">${esc(b.title || "購物清單")}</div>
+      ${notesHTML(b.notes)}
+      ${[...shopGroups(b)].map(([name, items]) => {
+        const done = items.filter(it => (s.edits[it.id] || {}).done).length;
+        return `<details class="shop-g" data-group="${esc(name)}" open>
+          <summary><span class="shop-gn">${esc(name)}</span>
+            <span class="shop-n">${done}/${items.length}</span>
+            <button class="shop-gx" data-delgroup="${esc(name)}" type="button">刪除群組</button></summary>
+          <div class="shop-grid">${items.map(it => {
+            const ed = s.edits[it.id] || {};
+            /* 沒有圖片的卡片加 no-img，內容才會讓開左上角那顆 ✕ */
+            return `<div class="shop-i${it.img ? "" : " no-img"}" data-id="${esc(it.id)}">
+              <button class="shop-x" data-del="${esc(it.id)}" type="button" aria-label="刪除${esc(it.name)}">✕</button>
+              ${it.img ? `<img class="shop-img" src="${esc(it.img)}" data-zoom="${esc(it.img)}" alt="${esc(it.name)}" loading="lazy">` : ""}
+              <label class="chk"><input type="checkbox" data-sid="${esc(it.id)}"${ed.done ? " checked" : ""}><span>${esc(it.name)}${it.who ? `<span class="shop-who">${esc(it.who)}</span>` : ""}</span></label>
+              ${it.url ? `<a class="btn shop-link" href="${esc(it.url)}" target="_blank" rel="noopener">開啟優惠券</a>` : ""}
+              <input class="input shop-note" data-snote="${esc(it.id)}" value="${esc(ed.note || "")}" placeholder="數量／備註" autocomplete="off">
+              <input class="input shop-amt" type="number" inputmode="numeric" min="0" data-samt="${esc(it.id)}" value="${esc(String(ed.amount ?? ""))}" placeholder="金額">
+            </div>`;
+          }).join("")}</div>
+          <form class="shop-add" data-addto="${esc(name)}">
+            <input class="input" name="n" placeholder="加一項到「${esc(name)}」" autocomplete="off">
+            <button class="btn" type="submit">新增</button></form>
+        </details>`;
+      }).join("")}
+      ${s.removed.length ? `<button class="shop-restore" data-srestore="1" type="button">還原已移除的 ${s.removed.length} 項</button>` : ""}
+      <form class="shop-addg">
+        <input class="input" name="g" placeholder="新增群組，例如「超市」" autocomplete="off">
+        <button class="btn" type="submit">新增群組</button></form>
+    </div>`;
+  },
+
   weather: () => `<div class="card"><div class="subject">🌡️ 行程期間天氣</div>
     <div class="wx-strip" id="wx-strip">載入中…</div></div>`,
 
@@ -3651,6 +3691,13 @@ document.getElementById("main").addEventListener("click", e => {
   };
   const del = e.target.closest("[data-del]");
   if (del){ forget(del.dataset.del); persist(); renderDay(current); return; }
+
+  /* 誤觸 ✕ 不該讓一張券永久消失。自己新增的刪掉就是刪掉，
+     但種子項目只是記進 removed，清掉就全部回來。 */
+  if (e.target.closest("[data-srestore]")){
+    s.removed.length = 0;
+    persist(); renderDay(current); return;
+  }
 
   const dg = e.target.closest("[data-delgroup]");
   if (dg){
