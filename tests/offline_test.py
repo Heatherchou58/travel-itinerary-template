@@ -550,6 +550,24 @@ def run(trip: str) -> bool:
             r.check("自動跳到今天的分頁",
                     "D4" in page.locator('.nav-item[aria-selected="true"]').inner_text())
             r.check("導覽列標出今天", page.locator(".nav-item.is-today").count() == 1)
+            # 分頁按鈕上的日期
+            tab_txt = page.locator('.nav-item[aria-selected="true"]').inner_text().replace("\n", " / ")
+            r.check("分頁按鈕帶日期與星期", "11/17 二" in tab_txt, f"「{tab_txt}」")
+            r.check("沒有日期的分頁不顯示那一行",
+                    page.locator(".nav-item", has_text="記帳").locator(".nav-sub").count() == 0)
+
+            # 連線狀態是 position:fixed、z-index 比置頂導覽列高，擺在右上角會
+            # 直接蓋住分頁按鈕。另外 top 與 bottom 同時存在會把它撐滿整個視窗高。
+            sb = page.locator(".sync").bounding_box()
+            r.check("連線狀態沒有被撐高", sb["height"] < 60, f"高 {round(sb['height'])}px")
+            covered = []
+            tabs = page.locator(".nav-item")
+            for i in range(tabs.count()):
+                tb = tabs.nth(i).bounding_box()
+                if tb and not (sb["x"] + sb["width"] < tb["x"] or tb["x"] + tb["width"] < sb["x"]
+                               or sb["y"] + sb["height"] < tb["y"] or tb["y"] + tb["height"] < sb["y"]):
+                    covered.append(tabs.nth(i).inner_text().replace("\n", " "))
+            r.check("連線狀態沒有蓋住分頁按鈕", not covered, "、".join(covered))
             # [hidden] 來自 UA 樣式表，會被 .now-line 的 display:inline-flex 蓋掉，
             # 導致每張有時間的卡片都露出一小條空的色塊。只驗 is-now 那張抓不到。
             r.check("其他卡片的標記列真的看不見",

@@ -180,7 +180,9 @@ header .subtitle{ font-size:var(--fs-sm); color:var(--c-text-dim); margin:0 0 va
 }
 .nav-bar::-webkit-scrollbar{ display:none; }
 .nav-item{
-  flex:0 0 auto; padding:var(--sp-2) var(--sp-4); min-height:44px;
+  flex:0 0 auto; display:inline-flex; flex-direction:column;
+  align-items:center; justify-content:center; line-height:1.25;
+  padding:var(--sp-2) var(--sp-4); min-height:44px;
   border:1px solid var(--c-line); border-radius:var(--r-pill);
   background:var(--c-surface); color:var(--c-text-dim);
   font-size:var(--fs-sm); font-family:inherit; font-weight:600;
@@ -224,7 +226,10 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
   font-size:var(--fs-xs); font-weight:700;
 }
 .card.is-next .now-line{ background:var(--c-line); color:var(--c-text); }
-.nav-item.is-today::after{ content:"・今天"; font-size:var(--fs-xs); opacity:.8; }
+/* 「今天」接在日期那一行後面。掛在 .nav-item 上的話，
+   按鈕變成直向排列後它會自己佔掉第三行。 */
+.nav-sub{ font-size:var(--fs-xs); font-weight:400; opacity:.75; }
+.nav-item.is-today .nav-sub::after{ content:"・今天"; }
 
 .time{
   display:inline-block; background:var(--c-accent-soft); color:var(--c-text);
@@ -422,8 +427,12 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 .settle b{ color:var(--c-on-accent); }
 
 /* ── 同步狀態 ─────────────────────────── */
+/* 連線狀態固定在左下角。原本在右上角，但它是 position:fixed、z-index 比
+   置頂的導覽列高，會直接蓋住分頁按鈕——導覽列加上日期那一行之後更明顯。
+   左下角不擋任何可點擊的東西，也還是一眼看得到。 */
 .sync{
-  position:fixed; top:var(--sp-2); right:var(--sp-2); z-index:200;
+  position:fixed; left:var(--sp-2); z-index:200;
+  bottom:calc(var(--sp-2) + env(safe-area-inset-bottom));
   font-size:var(--fs-xs); font-weight:700; padding:var(--sp-1) var(--sp-3);
   border-radius:var(--r-pill); background:var(--c-surface); box-shadow:var(--shadow);
 }
@@ -460,10 +469,12 @@ body{
   padding-top:env(safe-area-inset-top);
   padding-bottom:env(safe-area-inset-bottom);
 }
-.sync{ top:calc(var(--sp-2) + env(safe-area-inset-top)); }
+/* 連線狀態已改到左下角，安全區在它自己的規則裡用 safe-area-inset-bottom
+   處理。這裡若留著 top，fixed 元素同時有 top 與 bottom 會被撐滿整個視窗高。 */
 .nav-bar{ top:env(safe-area-inset-top); }
 .toast{
-  position:fixed; left:50%; bottom:calc(var(--sp-5) + env(safe-area-inset-bottom));
+  /* 抬高一點，才不會壓到左下角的連線狀態 */
+  position:fixed; left:50%; bottom:calc(var(--sp-6) + env(safe-area-inset-bottom));
   transform:translateX(-50%); z-index:300; max-width:calc(var(--w-app) - var(--sp-6));
   background:var(--c-text); color:var(--c-bg); font-size:var(--fs-sm); font-weight:600;
   padding:var(--sp-3) var(--sp-4); border-radius:var(--r-pill); box-shadow:var(--shadow);
@@ -905,8 +916,18 @@ function markNow(){
 }
 
 function buildNav(){
+  /* 分頁上帶日期與星期：排行程時常要確認「這天是幾號、禮拜幾」，
+     不然每切一天都要看一次標題。放第二行，寬度才不會爆掉。
+     沒有日期的分頁（行前、記帳、資訊）不顯示這一行。 */
+  const sub = d => {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(d.date || ""));
+    if (!m) return "";
+    const wk = WEEK[new Date(d.date + "T00:00:00Z").getUTCDay()];
+    return `<span class="nav-sub">${Number(m[2])}/${Number(m[3])} ${wk}</span>`;
+  };
   document.getElementById("nav").innerHTML = TRIP_DATA.days.map(d =>
-    `<button class="nav-item" role="tab" data-day="${esc(d.id)}" aria-selected="false">${esc(d.nav)}</button>`
+    `<button class="nav-item" role="tab" data-day="${esc(d.id)}" aria-selected="false">` +
+      `<span class="nav-main">${esc(d.nav)}</span>${sub(d)}</button>`
   ).join("");
 }
 
