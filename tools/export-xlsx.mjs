@@ -33,8 +33,18 @@ const T = JSON.parse(html.slice(html.indexOf("{", s), e));
 
 const MODE_ZH = { transit: "大眾運輸", driving: "自駕", walking: "步行", bicycling: "單車" };
 const KIND_ZH = { sight: "景點", meal: "餐飲", shop: "購物" };
-const AUTO_PACK_CATS = new Set(["證件與金錢", "電子用品", "藥品與清潔", "其他",
-  "禦寒衣物", "換季衣物（早晚溫差大）", "消暑衣物", "雪地裝備", "雨具"]);
+/* 哪些打包項目是 builder 自動補的——這些不寫回 Excel，重新產生時會再補。
+   以前是整個分類跳過，但現在使用者的項目跟自動的共用同一套分類（同一種
+   東西擺在一起，重複才看得到），整組跳過會把使用者自己的也丟掉，所以改成
+   逐項比對。比對鍵跟 builder 去重用的是同一支 packNorm。 */
+const { BASE_PACK, CLIMATE_PACK, packText, packNorm, mergePack, climateOf } =
+  await import(pathToFileURL(path.join(ROOT, "builder", "assets", "localdata.js")).href);
+const AUTO_PACK = new Set([
+  ...BASE_PACK.flatMap(g => g.items),
+  ...Object.values(CLIMATE_PACK).flatMap(k => k.groups.flatMap(g => g.items)),
+  "轉接頭",                                   // 規格依國家產生，括號拿掉後都是「轉接頭」
+  "駕照與國際駕照", "盥洗包",                  // 舊版自動項目的寫法，舊網站匯出時還認得
+].map(packNorm));
 
 const addMin = (hhmm, m) => {
   const [h, mi] = hhmm.split(":").map(Number);
@@ -211,7 +221,7 @@ for (const day of T.days) {
   }
 }
 
-/* ── 打包清單：只寫使用者自己的分類 ── */
+/* ── 打包清單：只寫使用者自己的項目 ── */
 const pk = wb.getWorksheet("打包清單");
 clear(pk, 5);
 let pr = 5, skipped = 0;
@@ -221,8 +231,8 @@ for (const day of T.days) for (const b of (day.blocks || [])) {
      否則重新產生時會全部掉回行前，把打包清單撐長。 */
   const page = day.id === "info" ? "資訊" : "";
   for (const g of b.groups || []) {
-    if (AUTO_PACK_CATS.has(g.name)) { skipped += g.items.length; continue; }
     for (const it of g.items) {
+      if (AUTO_PACK.has(packNorm(it))) { skipped++; continue; }
       const R = pk.getRow(pr);
       styleFrom(pk, 5, pr, 5);
       R.getCell(1).value = b.title;
@@ -389,6 +399,29 @@ const infoLists = X => (X.days.find(d => d.id === "info")?.blocks || [])
   .filter(b => b.type === "checklist").map(b => b.title);
 ok("資訊分頁的清單沒掉回行前", infoLists(T).join() === infoLists(B).join(),
    "[" + infoLists(T).join() + "] → [" + infoLists(B).join() + "]");
+
+/* 打包清單：Excel 只存使用者自己的項目，讀回來之後用 builder 同一支 mergePack
+   補上自動項目，要跟網站上現在的一模一樣。這一項不過，代表下次重新產生網站，
+   清單會長成別的樣子（重複的又跑回來、分類又散掉）。 */
+const packOf = X => ((X.days.find(d => d.id === "d0") || {}).blocks || []).filter(b => b.type === "checklist")
+  .map(b => b.title + "｜" + b.groups.map(g => g.name + "：" + g.items.map(packText).join("／")).join("；"));
+{
+  const lists = ((B.days.find(d => d.id === "d0") || {}).blocks || []).filter(b => b.type === "checklist");
+  const target = lists.find(b => /行李|打包|裝備/.test(b.title || "")) || lists[lists.length - 1];
+  const kinds = climateOf(Number(String(T.meta.startDate).slice(5, 7)) || 1, T.meta.place.lat);
+  const auto = [
+    ...BASE_PACK.map(g => ({ name: g.name, items: [...g.items] })),
+    ...kinds.flatMap(k => CLIMATE_PACK[k].groups.map(g => ({ name: g.name, items: [...g.items] }))),
+  ];
+  /* 轉接頭規格是 builder 依國家查出來的，TRIP_DATA 沒存國碼——直接沿用網站上那一項 */
+  const plug = packOf(T).join("").match(/轉接頭（[^）]*）/);
+  if (plug) auto.find(g => g.name === "電子產品").items.push(plug[0]);
+  if (target) mergePack(lists, target, auto);
+  const a = packOf(T), b = packOf(B);
+  const at = a.findIndex((x, n) => x !== b[n]);
+  ok("打包清單重新產生後一致", at < 0,
+     at < 0 ? "" : (a[at] || "").slice(0, 60) + " ≠ " + (b[at] || "").slice(0, 60));
+}
 
 if (bad) { console.error("\n往返驗證失敗 " + bad + " 項，這份檔案不要用。"); process.exit(1); }
 console.log("\n往返驗證全部通過：" + OUT);

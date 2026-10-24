@@ -94,38 +94,69 @@ export const TW_FALLBACK = [
 ];
 
 /* ── 季節與氣候的打包建議 ─────────────────
-   通用項目（證件、電子、藥品、盥洗、季節衣物）全部由這裡產生，
-   Excel 的打包清單只放個人專屬物品，避免兩邊重複。
+   通用項目全部由這裡產生，Excel 的打包清單只放這趟專屬的東西。
+
+   分類照「這是什麼」分，不照「誰加的」分：使用者的項目與自動補的
+   共用同一套 5 個分類，builder 會把同名分類併在一起——同一種東西
+   擺在同一區，萬一重複了一眼就看得到。原本自動的叫「證件與金錢」、
+   使用者的叫「這趟專用」，結果「可穿脫的薄外套」和「保暖薄外套」
+   分在兩區，重複了也沒人發現。
+
+   項目可以寫成 { text, dup }：dup 是同義詞，打包清單裡（出發前與
+   行李都算）只要有任何一項含其中一個字，這一項就不自動補。
+   使用者寫「保暖薄外套（阿蘇…）」就不會再多一個「可穿脫的薄外套」。
    ───────────────────────────────────────── */
+export const PACK_CATEGORIES = ["證件與錢", "電子產品", "衣物與鞋", "盥洗與藥品", "隨身雜物"];
+
 export const CLIMATE_PACK = {
-  cold:  { name:"禦寒衣物", items:[
-    "發熱衣、發熱褲","羽絨外套或防風大衣","毛衣或刷毛上衣","毛帽、圍巾、手套",
-    "厚襪子（多帶兩雙）","暖暖包（貼式與手握式）"] },
-  cool:  { name:"換季衣物（早晚溫差大）", items:[
-    "可穿脫的薄外套","長袖與短袖各幾件","輕便圍巾","一件薄長褲"] },
-  hot:   { name:"消暑衣物", items:[
-    "透氣排汗上衣","短褲或薄長褲","遮陽帽","涼感毛巾或小電扇","一件薄外套（冷氣房用）"] },
-  snowy: { name:"雪地裝備", items:[
-    "防水外套與雪靴","鞋底止滑扣","防水手機袋","保溫瓶"] },
-  rainy: { name:"雨具", items:[
-    "輕便雨衣","防水或快乾的鞋","夾鏈袋（收濕衣物）"] }
+  cold:  { label:"禦寒衣物", groups:[
+    { name:"衣物與鞋", items:["發熱衣、發熱褲","羽絨外套或防風大衣","毛衣或刷毛上衣",
+      "毛帽、圍巾、手套","厚襪子（多帶兩雙）"] },
+    { name:"隨身雜物", items:["暖暖包（貼式與手握式）"] } ] },
+  cool:  { label:"早晚溫差大", groups:[
+    { name:"衣物與鞋", items:[{ text:"可穿脫的薄外套", dup:["外套"] },"長袖與短袖各幾件",
+      { text:"輕便圍巾", dup:["圍巾"] },"一件薄長褲"] } ] },
+  hot:   { label:"消暑", groups:[
+    { name:"衣物與鞋", items:["透氣排汗上衣","短褲或薄長褲","遮陽帽",
+      { text:"一件薄外套（冷氣房用）", dup:["外套"] }] },
+    { name:"隨身雜物", items:["涼感毛巾或小電扇"] } ] },
+  snowy: { label:"雪地裝備", groups:[
+    { name:"衣物與鞋", items:["防水外套與雪靴","鞋底止滑扣"] },
+    { name:"隨身雜物", items:["防水手機袋","保溫瓶"] } ] },
+  rainy: { label:"雨具", groups:[
+    { name:"衣物與鞋", items:["輕便雨衣","防水或快乾的鞋"] },
+    { name:"隨身雜物", items:["夾鏈袋（收濕衣物）"] } ] }
 };
 
-/* 各氣候共通、一定會帶的東西 */
+/* 各氣候共通、一定會帶的東西。
+   「護照」不寫效期：效期是出發前要「確認」的事，寫在行李裡等於說兩次。
+   「盥洗包」拿掉：裡面裝的牙刷、洗面乳已經各自列了。 */
 export const BASE_PACK = [
-  { name:"證件與金錢", items:[
-    "護照（效期需滿 6 個月）","護照影本（與正本分開放）","當地貨幣現金",
-    "信用卡（出發前開通海外交易）","旅遊保險保單或投保證明","駕照與國際駕照（需要開車才帶）"] },
-  { name:"電子用品", items:[
+  { name:"證件與錢", items:[
+    "護照","護照影本（與正本分開放）",
+    { text:"當地貨幣現金", dup:["現金"] },
+    "信用卡（出發前開通海外交易）","旅遊保險保單或投保證明",
+    /* 台灣駕照在日本要日文譯本、多數國家要國際駕照，所以寫成兩者擇一 */
+    { text:"駕照正本＋國際駕照或譯本（要開車才帶）", dup:["駕照"] }] },
+  { name:"電子產品", items:[
     "手機與充電線","行動電源（必須隨身，不可託運）","相機／記憶卡／備用電池","耳機"] },
-  { name:"藥品與清潔", items:[
-    "常備藥（感冒、腸胃、止痛）","OK 繃與外傷藥膏","個人處方藥（連同處方箋）",
-    "牙刷、牙膏","洗面乳與保養品","面紙、濕紙巾"] },
-  { name:"其他", items:[
-    "換洗衣物與睡衣","盥洗包","太陽眼鏡","口罩（飛機上與人多的地方）","摺疊傘",
-    "購物袋或折疊袋","衣架或掛衣繩","小型行李秤（買太多時）",
-    "剪刀（建議託運）","指甲剪","保冷袋（買生鮮或伴手禮用）"] }
+  { name:"衣物與鞋", items:[
+    "換洗衣物與睡衣"] },
+  { name:"盥洗與藥品", items:[
+    "牙刷、牙膏","洗面乳與保養品","面紙、濕紙巾","口罩（飛機上與人多的地方）",
+    "常備藥（感冒、腸胃、止痛）","OK 繃與外傷藥膏","個人處方藥（連同處方箋）"] },
+  { name:"隨身雜物", items:[
+    "太陽眼鏡","摺疊傘",
+    { text:"購物袋或折疊袋", dup:["購物袋","折疊袋","空袋"] },
+    "衣架或掛衣繩","小型行李秤（買太多時）","剪刀（建議託運）","指甲剪",
+    { text:"保冷袋（買生鮮或伴手禮用）", dup:["保冷袋"] }] }
 ];
+
+/* 打包項目的比對鍵：括號裡的補充說明與標點不算。builder 去重與
+   export-xlsx 辨認「哪些是自動補的」都用這一支，兩邊才不會認知不同。 */
+export const packText = it => typeof it === "string" ? it : String(it?.text ?? "");
+export const packNorm = it => packText(it).replace(/[（(].*?[)）]/g, "")
+  .replace(/[s、，,。．・/／()（）＋+]/g, "").toLowerCase();
 
 /* 氣候判定：看月份與緯度絕對值，南半球月份對調 */
 export function climateOf(month, lat){
@@ -158,3 +189,41 @@ export const BASE_PHRASES = [
   "有 Wi-Fi 嗎？", "密碼是多少？", "幾點開門？",
   "請幫幫我", "我迷路了", "請叫救護車", "謝謝", "不好意思"
 ];
+
+/* 把自動項目併進使用者的行李清單。builder 產生網站與整理既有網站都用這一支，
+   兩邊的結果才會一模一樣——否則手動整理過的網站，下次重新產生又會長回原樣。
+
+   去重分兩層，lists（出發前與行李兩張清單）都看：
+   ① 文字相同（忽略括號與標點，packNorm）——使用者填過的就不再加
+   ② 同義詞：自動項目帶 dup 的，清單裡任何一項含其中一個字就不加。
+      「保暖薄外套（阿蘇…）」擋掉「可穿脫的薄外套」，「空袋」擋掉「購物袋或折疊袋」，
+      出發前寫了「備妥日圓現金」，行李就不會再多一個「當地貨幣現金」。
+   只有 ① 的時候，意思一樣但字不一樣的就會重複，而且分在兩區看不出來。
+
+   排列：每一區通用的排前面、這趟專屬的排後面（護照永遠在最上面）；
+   各區照 PACK_CATEGORIES 的順序，使用者自訂的分類接在最後。 */
+export function mergePack(lists, target, autoGroups){
+  const texts = lists.flatMap(b => b.groups.flatMap(g => g.items.map(packText)));
+  const existing = new Set(texts.map(packNorm));
+  const byName = new Map();
+  let added = 0, skipped = 0;
+  for (const g of autoGroups){
+    for (const it of g.items){
+      const dup = (it && typeof it === "object" && it.dup) || [];
+      if (existing.has(packNorm(it)) || dup.some(w => texts.some(t => t.includes(w)))){ skipped++; continue; }
+      existing.add(packNorm(it));
+      texts.push(packText(it));       // 後面的自動項目也要看得到它：冷天的圍巾擋掉溫差的圍巾
+      if (!byName.has(g.name)) byName.set(g.name, []);
+      byName.get(g.name).push(packText(it));   // dup 是給產生器用的，不進網站
+      added++;
+    }
+  }
+  for (const [name, items] of byName){
+    const same = target.groups.find(x => x.name === name);
+    if (same) same.items.unshift(...items);
+    else target.groups.push({ name, items });
+  }
+  const rank = n => { const i = PACK_CATEGORIES.indexOf(n); return i < 0 ? PACK_CATEGORIES.length : i; };
+  target.groups.sort((a, b) => rank(a.name) - rank(b.name));   // sort 是穩定的，自訂分類維持原順序
+  return { added, skipped };
+}

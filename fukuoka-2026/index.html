@@ -790,7 +790,7 @@ const TRIP_DATA = {
                   "text": "線上填寫 Visit Japan Web 入境手續",
                   "url": "https://services.digital.go.jp/zh-cmn-hant/visit-japan-web/"
                 },
-                "國際駕照譯本＋台灣駕照正本（自駕必備）",
+                "申請駕照日文譯本（自駕必備）",
                 "備妥日圓現金",
                 "eSIM 或漫遊開通",
                 "下載離線地圖（Google Maps 九州離線區域）",
@@ -805,89 +805,68 @@ const TRIP_DATA = {
           "title": "行李清單",
           "groups": [
             {
-              "name": "個人物品",
+              "name": "證件與錢",
               "items": [
-                "隱形眼鏡與藥水",
-                "眼鏡或備用眼鏡"
-              ]
-            },
-            {
-              "name": "自駕專用",
-              "items": [
-                "車用手機支架",
-                "USB 車充與長線",
-                "零錢包（收費道路與停車場）"
-              ]
-            },
-            {
-              "name": "溫泉專用",
-              "items": [
-                "小毛巾與盥洗小包（由布院、阿蘇兩晚）",
-                "髮圈或浴帽"
-              ]
-            },
-            {
-              "name": "這趟專用",
-              "items": [
-                "保暖薄外套（阿蘇、大觀峰、皿倉山早晚溫差大）",
-                "手套與毛帽（大觀峰清晨看雲海）",
-                "手電筒或頭燈（阿蘇觀星）",
-                "好走的鞋（上色見熊野座神社約 300 階）",
-                "空袋（天神、Outlet 戰利品）"
-              ]
-            },
-            {
-              "name": "證件與金錢",
-              "items": [
-                "護照（效期需滿 6 個月）",
+                "護照",
                 "護照影本（與正本分開放）",
-                "當地貨幣現金",
                 "信用卡（出發前開通海外交易）",
                 "旅遊保險保單或投保證明",
-                "駕照與國際駕照（需要開車才帶）"
+                "零錢包（收費道路與停車場）",
+                "台灣駕照正本＋日文譯本"
               ]
             },
             {
-              "name": "電子用品",
+              "name": "電子產品",
               "items": [
                 "手機與充電線",
                 "行動電源（必須隨身，不可託運）",
                 "相機／記憶卡／備用電池",
                 "耳機",
-                "轉接頭（A / B 型・100V）"
+                "轉接頭（A / B 型・100V）",
+                "車用手機支架",
+                "USB 車充與長線"
               ]
             },
             {
-              "name": "藥品與清潔",
+              "name": "衣物與鞋",
               "items": [
+                "換洗衣物與睡衣",
+                "長袖與短袖各幾件",
+                "輕便圍巾",
+                "一件薄長褲",
+                "保暖薄外套（阿蘇、大觀峰、皿倉山早晚溫差大）",
+                "手套與毛帽（大觀峰清晨看雲海）",
+                "好走的鞋（上色見熊野座神社約 300 階）"
+              ]
+            },
+            {
+              "name": "盥洗與藥品",
+              "items": [
+                "牙刷、牙膏",
+                "洗面乳與保養品",
+                "面紙、濕紙巾",
+                "口罩（飛機上與人多的地方）",
                 "常備藥（感冒、腸胃、止痛）",
                 "OK 繃與外傷藥膏",
                 "個人處方藥（連同處方箋）",
-                "牙刷、牙膏",
-                "洗面乳與保養品",
-                "面紙、濕紙巾"
+                "隱形眼鏡與藥水",
+                "小毛巾與盥洗小包（由布院、阿蘇兩晚）",
+                "髮圈或浴帽"
               ]
             },
             {
-              "name": "其他",
+              "name": "隨身雜物",
               "items": [
-                "換洗衣物與睡衣",
-                "盥洗包",
                 "太陽眼鏡",
-                "口罩（飛機上與人多的地方）",
                 "摺疊傘",
-                "購物袋或折疊袋",
                 "衣架或掛衣繩",
-                "小型行李秤（買太多時）"
-              ]
-            },
-            {
-              "name": "換季衣物（早晚溫差大）",
-              "items": [
-                "可穿脫的薄外套",
-                "長袖與短袖各幾件",
-                "輕便圍巾",
-                "一件薄長褲"
+                "小型行李秤（買太多時）",
+                "剪刀（建議託運）",
+                "指甲剪",
+                "保冷袋（買生鮮或伴手禮用）",
+                "眼鏡或備用眼鏡",
+                "手電筒或頭燈（阿蘇觀星）",
+                "空袋（天神、Outlet 戰利品）"
               ]
             }
           ]
@@ -2953,7 +2932,9 @@ const itemText = it => typeof it === "string" ? it : String(it?.text ?? "");
 
 /* 勾選的 key 用「項目文字」而不是陣列索引。購物清單會頻繁增刪，
    用索引的話在中間插一項，後面所有打勾就整排錯位。 */
-const chkKey = (b, g, it) => `${b.key}:${g.name}:${itemText(it)}`;
+/* 勾選的 key 不含群組名稱：重新分類（把項目搬到別的群組）不該讓打過的勾消失。
+   同一張清單裡文字相同的兩項會共用一個勾——那本來就是同一件東西。 */
+const chkKey = (b, it) => `${b.key}:${itemText(it)}`;
 
 /* ── 購物清單 ────────────────────────────────
    Excel 給的是「種子」，使用者在網站上的增刪改存在 state.shopping。
@@ -3124,13 +3105,13 @@ const RENDERERS = {
   checklist: b => {
     const total = (b.groups||[]).reduce((n,g)=>n+g.items.length,0);
     const done = (b.groups||[]).reduce((n,g)=>
-      n + g.items.filter(it => state.checks[chkKey(b,g,it)]).length, 0);
+      n + g.items.filter(it => state.checks[chkKey(b, it)]).length, 0);
     return `<div class="card" data-chk="${esc(b.key)}">
       <div class="subject">${esc(b.title||"清單")}
         <span class="chk-progress">${done}/${total}</span></div>
       ${(b.groups||[]).map(g => `<div class="chk-group"><h4>${esc(g.name)}</h4>
         ${g.items.map(it=>{
-          const k = chkKey(b, g, it);
+          const k = chkKey(b, it);
           /* 項目可以是字串，也可以是物件：
              text 文字、url 旁邊多一顆按鈕、note 補充說明（例如信用卡的登錄條件）*/
           const o    = (it && typeof it === "object") ? it : {};
@@ -4131,20 +4112,37 @@ document.getElementById("app-sub").textContent = M.subtitle || "";
   bar.innerHTML = out.join("");
 })();
 
-/* 勾選 key 從「陣列索引」改成「項目文字」的一次性轉換。
-   不轉的話，升級後所有已經打好的勾會憑空消失。必須在第一次渲染前跑完。
-   旗標存在 checks 裡，不會跟真正的 key 衝突（真 key 一定含兩個冒號）。 */
+/* 勾選 key 的一次性轉換。不轉的話，升級後已經打好的勾會憑空消失。
+   必須在第一次渲染前跑完。旗標以 __ 開頭，不會跟真正的 key 衝突。
+     v2：「清單:群組:陣列索引」→「清單:群組:項目文字」——中間插一項後面不會錯位
+     v3：「清單:群組:項目文字」→「清單:項目文字」——重新分類不會讓勾消失 */
 (function migrateCheckKeys(){
-  if (state.checks.__keys_v2) return;
-  const out = { __keys_v2: true };
-  for (const day of TRIP_DATA.days || [])
-    for (const b of day.blocks || []){
-      if (b.type !== "checklist") continue;
-      for (const g of b.groups || [])
-        (g.items || []).forEach((it, i) => {
-          if (state.checks[`${b.key}:${g.name}:${i}`]) out[chkKey(b, g, it)] = true;
-        });
-    }
+  const done = { __keys_v2: true, __keys_v3: true };
+  if (!state.checks.__keys_v2){
+    /* 最舊的資料：照 TRIP_DATA 的位置找回項目，直接轉成 v3 */
+    const out = { ...done };
+    for (const day of TRIP_DATA.days || [])
+      for (const b of day.blocks || []){
+        if (b.type !== "checklist") continue;
+        for (const g of b.groups || [])
+          (g.items || []).forEach((it, i) => {
+            if (state.checks[`${b.key}:${g.name}:${i}`]) out[chkKey(b, it)] = true;
+          });
+      }
+    state.checks = out;
+    persist();
+    return;
+  }
+  if (state.checks.__keys_v3) return;
+  /* v2 的 key 是「清單:群組:項目」。清單與群組名稱都不含半形冒號，所以切掉
+     第一、二個冒號之間那段就好；項目文字本身有冒號也留在後面不動。
+     不能照 TRIP_DATA 反查——重新分類之後，舊的群組名稱已經不在裡面了。 */
+  const out = { ...done };
+  for (const [k, v] of Object.entries(state.checks)){
+    if (!v || k.startsWith("__")) continue;
+    const a = k.indexOf(":"), c = k.indexOf(":", a + 1);
+    out[c < 0 ? k : k.slice(0, a + 1) + k.slice(c + 1)] = true;
+  }
   state.checks = out;
   persist();
 })();

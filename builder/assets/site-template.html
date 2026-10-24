@@ -866,7 +866,9 @@ const itemText = it => typeof it === "string" ? it : String(it?.text ?? "");
 
 /* 勾選的 key 用「項目文字」而不是陣列索引。購物清單會頻繁增刪，
    用索引的話在中間插一項，後面所有打勾就整排錯位。 */
-const chkKey = (b, g, it) => `${b.key}:${g.name}:${itemText(it)}`;
+/* 勾選的 key 不含群組名稱：重新分類（把項目搬到別的群組）不該讓打過的勾消失。
+   同一張清單裡文字相同的兩項會共用一個勾——那本來就是同一件東西。 */
+const chkKey = (b, it) => `${b.key}:${itemText(it)}`;
 
 /* ── 購物清單 ────────────────────────────────
    Excel 給的是「種子」，使用者在網站上的增刪改存在 state.shopping。
@@ -1037,13 +1039,13 @@ const RENDERERS = {
   checklist: b => {
     const total = (b.groups||[]).reduce((n,g)=>n+g.items.length,0);
     const done = (b.groups||[]).reduce((n,g)=>
-      n + g.items.filter(it => state.checks[chkKey(b,g,it)]).length, 0);
+      n + g.items.filter(it => state.checks[chkKey(b, it)]).length, 0);
     return `<div class="card" data-chk="${esc(b.key)}">
       <div class="subject">${esc(b.title||"清單")}
         <span class="chk-progress">${done}/${total}</span></div>
       ${(b.groups||[]).map(g => `<div class="chk-group"><h4>${esc(g.name)}</h4>
         ${g.items.map(it=>{
-          const k = chkKey(b, g, it);
+          const k = chkKey(b, it);
           /* 項目可以是字串，也可以是物件：
              text 文字、url 旁邊多一顆按鈕、note 補充說明（例如信用卡的登錄條件）*/
           const o    = (it && typeof it === "object") ? it : {};
@@ -2046,20 +2048,37 @@ document.getElementById("app-sub").textContent = M.subtitle || "";
   bar.innerHTML = out.join("");
 })();
 
-/* 勾選 key 從「陣列索引」改成「項目文字」的一次性轉換。
-   不轉的話，升級後所有已經打好的勾會憑空消失。必須在第一次渲染前跑完。
-   旗標存在 checks 裡，不會跟真正的 key 衝突（真 key 一定含兩個冒號）。 */
+/* 勾選 key 的一次性轉換。不轉的話，升級後已經打好的勾會憑空消失。
+   必須在第一次渲染前跑完。旗標以 __ 開頭，不會跟真正的 key 衝突。
+     v2：「清單:群組:陣列索引」→「清單:群組:項目文字」——中間插一項後面不會錯位
+     v3：「清單:群組:項目文字」→「清單:項目文字」——重新分類不會讓勾消失 */
 (function migrateCheckKeys(){
-  if (state.checks.__keys_v2) return;
-  const out = { __keys_v2: true };
-  for (const day of TRIP_DATA.days || [])
-    for (const b of day.blocks || []){
-      if (b.type !== "checklist" || b.shared) continue;   // 共用清單是新的，沒有舊資料
-      for (const g of b.groups || [])
-        (g.items || []).forEach((it, i) => {
-          if (state.checks[`${b.key}:${g.name}:${i}`]) out[chkKey(b, g, it)] = true;
-        });
-    }
+  const done = { __keys_v2: true, __keys_v3: true };
+  if (!state.checks.__keys_v2){
+    /* 最舊的資料：照 TRIP_DATA 的位置找回項目，直接轉成 v3 */
+    const out = { ...done };
+    for (const day of TRIP_DATA.days || [])
+      for (const b of day.blocks || []){
+        if (b.type !== "checklist") continue;
+        for (const g of b.groups || [])
+          (g.items || []).forEach((it, i) => {
+            if (state.checks[`${b.key}:${g.name}:${i}`]) out[chkKey(b, it)] = true;
+          });
+      }
+    state.checks = out;
+    persist();
+    return;
+  }
+  if (state.checks.__keys_v3) return;
+  /* v2 的 key 是「清單:群組:項目」。清單與群組名稱都不含半形冒號，所以切掉
+     第一、二個冒號之間那段就好；項目文字本身有冒號也留在後面不動。
+     不能照 TRIP_DATA 反查——重新分類之後，舊的群組名稱已經不在裡面了。 */
+  const out = { ...done };
+  for (const [k, v] of Object.entries(state.checks)){
+    if (!v || k.startsWith("__")) continue;
+    const a = k.indexOf(":"), c = k.indexOf(":", a + 1);
+    out[c < 0 ? k : k.slice(0, a + 1) + k.slice(c + 1)] = true;
+  }
   state.checks = out;
   persist();
 })();

@@ -188,7 +188,7 @@ if (doc){
 }
 
 /* 刻意換掉的舊值：最後比對時不算「遺失」 */
-const gone = { 行程: new Set(), 說明: new Set() };
+const gone = { 行程: new Set(), 說明: new Set(), 打包清單: new Set() };
 const replaceText = (ws, r, c, from, to) => {
   const cell = ws.getCell(r, c);
   const old = String(cell.value ?? "");
@@ -299,6 +299,39 @@ if (doc){
     console.log(`✓ 「說明」改寫「說明／備註」與「介紹」兩列，並在第 ${last + 2} 列起加上寫法規則`);
     changed++;
   }
+}
+
+/* ── ⑥ 打包清單：分類改用五大類 ───────────── */
+/* 原本範例用「個人物品」「這趟專用」——照「誰加的」分，結果使用者的「保暖薄外套」
+   跟自動補的「可穿脫的薄外套」分在兩區，重複了看不出來。改成跟 builder 自動補的
+   同一套分類（localdata.js 的 PACK_CATEGORIES），同一種東西擺在一起。 */
+const PACK_SAMPLE = {
+  "隱形眼鏡與藥水": "盥洗與藥品",
+  "眼鏡或備用眼鏡": "隨身雜物",
+  "慣用的枕頭套或眼罩": "隨身雜物",
+  "滑雪手套": "衣物與鞋",
+  "泳衣（飯店有溫泉）": "衣物與鞋",
+};
+{
+  let n = 0;
+  for (let r = 5; r <= src.rowCount; r++){
+    const want = PACK_SAMPLE[String(src.getCell(r, 3).value ?? "")];
+    const cell = src.getCell(r, 2);
+    if (want && cell.value !== want){ gone.打包清單.add(JSON.stringify(cell.value)); cell.value = want; n++; }
+  }
+  const desc = "行李的「分類」請用這五個：證件與錢、電子產品、衣物與鞋、盥洗與藥品、隨身雜物——" +
+    "跟自動補的擺在同一區，萬一重複了一眼就看得到。已經填過的不會重複加，意思相同的也算" +
+    "（例如填了「保暖外套」就不會再補「可穿脫的薄外套」）。「出發前準備」放要做的事，「行李清單」放要帶的東西。";
+  const old = String(src.getCell(2, 1).value ?? "");
+  if (!old.includes("請用這五個")){
+    const from = "已經填過的不會重複加。";
+    if (!old.includes(from)){ console.error("「打包清單」第 2 列找不到要替換的那句"); process.exit(1); }
+    gone.打包清單.add(JSON.stringify(src.getCell(2, 1).value));
+    src.getCell(2, 1).value = old.replace(from, desc);
+    n++;
+  }
+  if (n){ console.log(`✓ 「打包清單」範例改用五大類，第 2 列說明寫上分類規則（${n} 格）`); changed++; }
+  else console.log("－ 「打包清單」已經是五大類");
 }
 
 if (!changed){ console.log("\n沒有需要改的地方。"); process.exit(0); }

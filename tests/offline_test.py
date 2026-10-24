@@ -220,6 +220,18 @@ def key_test_trip(items: list) -> dict:
     return trip
 
 
+def regroup_trip(groups: dict) -> dict:
+    """多個分組的清單，用來驗證「換分組不會讓勾消失」。
+       groups 是 {分組名稱: [項目, …]}；tripId 固定，兩個版本共用同一份 localStorage。"""
+    trip = json.loads(json.dumps(SETTLE_TRIP))
+    trip["meta"]["tripId"] = "regrouptest"
+    trip["days"][0]["blocks"] = [{
+        "type": "checklist", "key": "k", "title": "清單",
+        "groups": [{"name": n, "items": it} for n, it in groups.items()]
+    }]
+    return trip
+
+
 # 卡片上私人資料的測試資料：兩張卡片各掛一段，驗證解開一次會同時顯示、內容不會混在一起。
 # 密語故意混大小寫與連字號，測的時候再用不同寫法輸入。
 VAULT_PASS = "Test-Pass-2027"
@@ -398,6 +410,12 @@ def run(trip: str) -> bool:
                             ("keyB", ["甲", "新插入的", "乙", "丙"])]:
             shutil.copytree(tmp / "site", tmp / name)
             swap_trip_data(tmp / name / "index.html", key_test_trip(items))
+
+        # 換分組：同一個項目從「甲組」搬到「乙組」。key 若含分組名稱，勾就會消失。
+        for name, groups in [("regroupA", {"甲組": ["甲", "乙"], "乙組": ["丙"]}),
+                             ("regroupB", {"甲組": ["甲"], "乙組": ["乙", "丙"]})]:
+            shutil.copytree(tmp / "site", tmp / name)
+            swap_trip_data(tmp / name / "index.html", regroup_trip(groups))
 
         port = serve(tmp)
         base, swap = f"http://127.0.0.1:{port}/site/", f"http://127.0.0.1:{port}/swap/"
@@ -966,6 +984,74 @@ def run(trip: str) -> bool:
             r.check("插入項目後：「乙」仍然是勾選的", state.get("乙") is True, str(state))
             r.check("插入項目後：新項目沒有被誤勾", state.get("新插入的") is False, str(state))
             r.check("插入項目後：「丙」沒有被誤勾", state.get("丙") is False, str(state))
+            ctx.close()
+
+            # 7e ── 換分組不會讓勾消失 ─────────────────────
+            # 打包清單會重新分類（照「這是什麼」分，同一種東西才擺在一起）。
+            # 勾選的 key 若含分組名稱，搬到別組的項目已經打的勾就全沒了。
+            def checked(pg):
+                labels = pg.locator(".chk")
+                return {labels.nth(i).inner_text().strip(): pg.locator(".chk input").nth(i).is_checked()
+                        for i in range(labels.count())}
+
+            ctx = browser.new_context()
+            page = ctx.new_page()
+            page.goto(f"http://127.0.0.1:{port}/regroupA/")
+            page.wait_for_load_state("networkidle")
+            page.wait_for_timeout(500)
+            page.locator(".chk", has_text="乙").locator("input").check()
+            page.wait_for_timeout(300)
+            page.goto(f"http://127.0.0.1:{port}/regroupB/")
+            page.wait_for_load_state("networkidle")
+            page.wait_for_timeout(500)
+            st = checked(page)
+            r.check("換分組：搬到別組的「乙」仍然是勾選的", st.get("乙") is True, str(st))
+            r.check("換分組：其他項目沒有被誤勾", st.get("甲") is False and st.get("丙") is False, str(st))
+            ctx.close()
+
+            # 已經在手機上打過勾的人，存的是舊格式「清單:分組:項目」——升級後要轉成
+            # 「清單:項目」，而且不能照 TRIP_DATA 反查（舊的分組名稱已經不在裡面了）
+            ctx = browser.new_context()
+            page = ctx.new_page()
+            page.goto(f"http://127.0.0.1:{port}/regroupB/")
+            page.wait_for_load_state("networkidle")
+            page.evaluate("""() => localStorage.setItem('trip:regrouptest', JSON.stringify({
+                checks: { __keys_v2: true, 'k:已經不存在的舊分組:丙': true, 'k:甲組:甲': false } }))""")
+            page.reload(wait_until="networkidle")
+            page.wait_for_timeout(500)
+            st = checked(page)
+            r.check("舊格式轉換：舊分組名稱下的勾，轉換後還在", st.get("丙") is True, str(st))
+            r.check("舊格式轉換：沒勾的不會變成勾", st.get("甲") is False, str(st))
+            keys = page.evaluate("Object.keys(JSON.parse(localStorage.getItem('trip:regrouptest')).checks)")
+            r.check("舊格式轉換：存回去的是新格式", "k:丙" in keys and "__keys_v3" in keys
+                    and not any(k.count(":") > 1 for k in keys), str(keys))
+            ctx.close()
+
+            # 真實網站的行李清單：五大類照順序、同一張清單裡沒有重複
+            # （括號裡的補充說明與標點不算，跟 builder 去重的 packNorm 同一套）
+            ctx = browser.new_context()
+            page = ctx.new_page()
+            page.goto(base)
+            page.wait_for_load_state("networkidle")
+            page.get_by_role("tab", name=re.compile("行前")).click()
+            page.wait_for_timeout(500)
+            norm = lambda t: re.sub(r"[\s、，,。．・/／()（）＋+]", "",
+                                    re.sub(r"[（(].*?[)）]", "", t)).lower()
+            lists = page.locator("#main [data-chk]")
+            for i in range(lists.count()):
+                card = lists.nth(i)
+                title = card.locator(".subject").inner_text().splitlines()[0].strip()
+                items = [x.strip() for x in card.locator(".chk").all_inner_texts()]
+                seen, dup = {}, []
+                for t in items:
+                    n = norm(t.splitlines()[0])
+                    if n in seen: dup.append(f"{seen[n]} ／ {t}")
+                    seen[n] = t
+                r.check(f"行李清單沒有重複：{title}", not dup, "；".join(dup) or f"{len(items)} 項")
+            pack = page.locator("#main [data-chk]", has_text="行李清單")
+            heads = [x.strip() for x in pack.locator(".chk-group h4").all_inner_texts()]
+            r.check("行李清單：照五大類排列", heads[:5] == ["證件與錢", "電子產品", "衣物與鞋", "盥洗與藥品", "隨身雜物"],
+                    "／".join(heads))
             ctx.close()
 
             # 8 ── 匯率查不到（rate = null）時網站不能壞 ───────
