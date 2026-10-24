@@ -74,7 +74,7 @@ SWAP_TRIP = {
                         "note": "提醒框會把這一列撐高，線不能斷"},
                        {"name": "Town Hall", "active": False},
                        {"name": "Central", "nameLocal": "Central Station", "active": True}]},
-            {"type": "options", "time": "18:00", "title": "晚餐二選一",
+            {"type": "options", "time": "18:00", "title": "晚餐二選一（也可以兩家都吃）",
              "place": "Darling Harbour",
              "choices": [{"title": "海鮮市場"}, {"title": "牛排館"}]},
             {"type": "lodging", "title": "測試飯店", "address": "1 Test St",
@@ -599,6 +599,11 @@ def run(trip: str) -> bool:
                     st[i + 1].querySelector(".route-dot").getBoundingClientRect().top
                     - s.querySelector(".route-body").lastElementChild.getBoundingClientRect().bottom)); }""")
             r.check("交通卡：站與站之間沒有多餘空白", bool(gaps) and max(gaps) <= 24, f"{gaps} px")
+            opt = page.locator("#main .card", has_text="海鮮市場").locator(".subject")
+            sizes = opt.evaluate("""s => { const n = s.querySelector(".subject-note");
+                return n ? [n.textContent, parseFloat(getComputedStyle(s).fontSize), parseFloat(getComputedStyle(n).fontSize)] : null; }""")
+            r.check("二選一：標題最後的括號補充字比較小",
+                    bool(sizes) and sizes[0] == "（也可以兩家都吃）" and sizes[2] < sizes[1], f"{sizes}")
 
             # 景點介紹：預設收合，點了才展開
             intro = page.locator("details.intro")

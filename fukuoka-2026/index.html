@@ -542,6 +542,7 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 
 /* ── 選項（多選一） ───────────────────── */
 .choice{ border:1px solid var(--c-line); border-radius:10px; padding:var(--sp-3); margin-top:var(--sp-2); }
+.subject-note{ font-size:var(--fs-sm); font-weight:400; color:var(--c-text-dim); }
 .choice .tag{
   display:inline-block; background:var(--c-accent); color:var(--c-on-accent); font-size:var(--fs-xs);
   font-weight:700; padding:1px var(--sp-2); border-radius:5px; margin-bottom:var(--sp-1);
@@ -3080,6 +3081,11 @@ const linksHTML = (links=[]) => links.map(l =>
   `<a class="btn btn-${esc(l.style||"plain")}" href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.label)}</a>`
 ).join("");
 const localSpan = t => t ? `<span class="lang-local">${esc(t)}</span>` : "";
+/* 二選一的標題常在最後帶一段括號補充（「也可以…」「先回住處…」），字小一點，主標題才突出 */
+const subjectHTML = t => {
+  const m = String(t ?? "").match(/^(.+?)(（[^（）]+）)$/);
+  return m ? `${esc(m[1])}<span class="subject-note">${esc(m[2])}</span>` : esc(t);
+};
 const notesHTML = n => (n && n.length)
   ? `<div class="note-box">${n.map(x=>esc(x)).join("<br>")}</div>` : "";
 
@@ -3263,7 +3269,7 @@ const RENDERERS = {
 
   options: b => `<div class="card">
     ${b.time ? `<span class="time">${esc(b.time)}</span>` : ""}${stayTag(b)}
-    <div class="subject">${esc(b.title)}</div>
+    <div class="subject">${subjectHTML(b.title)}</div>
     ${b.place ? `<div class="meta">📍 ${esc(b.place)}${localSpan(b.placeLocal)}</div>` : ""}
     ${(b.choices||[]).map(c => `<div class="choice">
       <span class="tag">${esc(c.label)}</span>
