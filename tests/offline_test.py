@@ -67,9 +67,10 @@ SWAP_TRIP = {
              "intro": "介紹第一段，確認有渲染。\n第二段，確認換行會分段。",
              "links": [{"label": "官網", "url": "https://example.com", "style": "theme"}]},
             {"type": "transit", "time": "13:00", "line": "T1 線", "duration": "約 12 分",
-             "steps": [{"name": "Circular Quay", "active": True},
+             # 當地語跟站名一樣的只顯示一次；不一樣的照常顯示
+             "steps": [{"name": "Circular Quay", "nameLocal": "Circular Quay", "active": True},
                        {"name": "Town Hall", "active": False},
-                       {"name": "Central", "active": True}]},
+                       {"name": "Central", "nameLocal": "Central Station", "active": True}]},
             {"type": "options", "time": "18:00", "title": "晚餐二選一",
              "place": "Darling Harbour",
              "choices": [{"title": "海鮮市場"}, {"title": "牛排館"}]},
@@ -549,6 +550,16 @@ def run(trip: str) -> bool:
                                   ("options 多選一", "海鮮市場"),
                                   ("lodging 住宿", "測試飯店")]:
                 r.check(f"置換 TRIP_DATA：{label} 有渲染", needle in shown)
+
+            ride = page.locator("#main .card", has_text="Circular Quay")
+            ride_text = ride.inner_text()
+            r.check("交通卡：當地語跟站名一樣時只顯示一次", ride_text.count("Circular Quay") == 1,
+                    f"出現 {ride_text.count('Circular Quay')} 次")
+            r.check("交通卡：當地語不同時照常顯示", "Central Station" in ride_text)
+            weights = [int(w) for w in ride.locator(".route-body strong").evaluate_all(
+                "els => els.map(e => getComputedStyle(e).fontWeight)")]
+            r.check("交通卡：經過站比起終點淡", len(weights) == 3 and weights[1] < weights[0] == weights[2],
+                    f"{weights}")
 
             # 景點介紹：預設收合，點了才展開
             intro = page.locator("details.intro")

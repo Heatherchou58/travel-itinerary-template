@@ -497,6 +497,8 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 }
 .route-body{ flex:1; padding-bottom:var(--sp-2); }
 .route-body strong{ font-size:var(--fs-md); }
+/* 經過站：只是讓人數站數用的，淡一點，視線才會落在起終點與轉乘站 */
+.route-dot:not(.on) + .route-body strong{ font-size:var(--fs-sm); font-weight:400; color:var(--c-text-dim); }
 /* 連接線：光點由上往下流 */
 .route-link{ display:flex; gap:var(--sp-3); }
 .route-link .bar{ flex:0 0 18px; display:flex; justify-content:center; }
@@ -1005,7 +1007,7 @@ const RENDERERS = {
       const dot = s.via ? "" : `<div class="route-step">
            <div class="route-dot${s.active ? " on" : ""}"></div>
            <div class="route-body">
-             <strong>${esc(s.name)}</strong>${localSpan(s.nameLocal)}
+             <strong>${esc(s.name)}</strong>${s.nameLocal !== s.name ? localSpan(s.nameLocal) : ""}
              ${s.exit ? `<div class="exit-note">${esc(s.exit)}</div>` : ""}
              ${s.note ? `<div class="note-box warn">⚠️ ${esc(s.note)}</div>` : ""}
            </div></div>`;

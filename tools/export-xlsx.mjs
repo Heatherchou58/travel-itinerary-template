@@ -102,7 +102,7 @@ let row = 5, curMode = T.meta.travelMode, dayNo = 0;
 for (const day of T.days) {
   if (!/^D\d+/.test(day.nav)) continue;
   dayNo++;
-  const items = (day.blocks || []).filter(b => b.type === "stop" || b.type === "lodging" || b.type === "options");
+  const items = (day.blocks || []).filter(b => ["stop", "lodging", "options", "transit"].includes(b.type));
   let first = true, clock = "", prevStay = 0, afterSub = false;
 
   for (const b of items) {
@@ -140,11 +140,17 @@ for (const day of T.days) {
     prevStay = b.stay || 0;
 
     if (b.mode && b.mode !== curMode) { R.getCell(5).value = MODE_ZH[b.mode]; curMode = b.mode; }
-    R.getCell(6).value = b.type === "lodging" ? "住宿" : b.type === "options" ? "二選一" : (KIND_ZH[b.kind] || "景點");
+    R.getCell(6).value = b.type === "lodging" ? "住宿" : b.type === "options" ? "二選一"
+                       : b.type === "transit" ? "交通" : (KIND_ZH[b.kind] || "景點");
     R.getCell(7).value = b.title;
     R.getCell(8).value = b._mt ? "" : (b.titleLocal || "");
     R.getCell(9).value = b.place || b.address || "";
-    R.getCell(10).value = (b.notes || []).join("\n");
+    /* 交通卡的「說明」第一行是路線、第二行是時間（parse.js 的讀法），沒有其他備註 */
+    if (b.type === "transit" && !b.line && b.duration)
+      throw new Error(`${day.nav}「${b.title}」：交通卡有時間卻沒有路線，寫回 Excel 會錯位`);
+    R.getCell(10).value = b.type === "transit"
+      ? [b.line, b.duration].filter(Boolean).join("\n")
+      : (b.notes || []).join("\n");
     R.getCell(11).value = b.intro || "";
 
     /* 自動產生的地圖與路線按鈕不寫回去，重新產生時會再補；但自己指定的地圖連結
@@ -191,6 +197,21 @@ for (const day of T.days) {
         X.getCell(13).value = ck[0].url;
         X.getCell(14).value = ck[0].style;
       }
+      row++; afterSub = true;
+    }
+
+    /* 交通卡的每一站一列：起終點與轉乘站用「→起終點」（圓點會亮），其他用「→經過站」。
+       說明欄以 ⚠ 開頭的 parse.js 當成提醒，否則當成出口說明，所以一站只能有其中一個。 */
+    if (b.type === "transit") for (const st of b.steps || []) {
+      if (st.via) throw new Error(`${day.nav}「${b.title}」：Excel 沒有「中途說明」這種列，via 寫不回去`);
+      if (st.exit && st.note) throw new Error(`${day.nav}「${b.title}」${st.name}：出口說明與提醒只能留一個`);
+      const X = plan.getRow(row);
+      styleFrom(plan, 5, row, PLAN_COLS);
+      X.getCell(1).value = dayNo;
+      X.getCell(6).value = st.active ? "→起終點" : "→經過站";
+      X.getCell(7).value = st.name;
+      X.getCell(8).value = st.nameLocal || "";
+      X.getCell(10).value = st.note ? "⚠️ " + st.note : (st.exit || "");
       row++; afterSub = true;
     }
   }
@@ -372,6 +393,11 @@ const opts = X => (X.days || []).filter(d => /^D\d+/.test(d.nav)).flatMap(d => (
     [c.label, c.title, c.titleLocal || "", c.note || "",
      (c.links || []).filter(l => !/\/maps\/search\//.test(l.url || "")).map(l => l.url)])])));
 ok("二選一一致", opts(T).join("\n") === opts(B).join("\n"), opts(T).length + " 張");
+const rides = X => (X.days || []).filter(d => /^D\d+/.test(d.nav)).flatMap(d => (d.blocks || [])
+  .filter(b => b.type === "transit")
+  .map(b => JSON.stringify([b.time, b.title, b.line || "", b.duration || "", b.stay ?? null,
+    (b.steps || []).map(st => [st.name, st.nameLocal || "", !!st.active, st.exit || "", st.note || ""])])));
+ok("交通卡一致", rides(T).join("\n") === rides(B).join("\n"), rides(T).length + " 張");
 ok("機器翻譯的當地語已留空",
    flat(B).filter((x, n) => a[n]?._mt).every(x => !x.titleLocal));
 

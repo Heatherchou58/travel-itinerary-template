@@ -497,6 +497,8 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 }
 .route-body{ flex:1; padding-bottom:var(--sp-2); }
 .route-body strong{ font-size:var(--fs-md); }
+/* 經過站：只是讓人數站數用的，淡一點，視線才會落在起終點與轉乘站 */
+.route-dot:not(.on) + .route-body strong{ font-size:var(--fs-sm); font-weight:400; color:var(--c-text-dim); }
 /* 連接線：光點由上往下流 */
 .route-link{ display:flex; gap:var(--sp-3); }
 .route-link .bar{ flex:0 0 18px; display:flex; justify-content:center; }
@@ -895,19 +897,56 @@ const TRIP_DATA = {
           "type": "stop",
           "kind": "sight",
           "time": "20:00",
-          "title": "抵達・出關・進市區",
+          "title": "抵達・出關",
           "titleLocal": "福岡空港 到着・入国",
           "place": "福岡機場國際線航廈",
           "notes": [
             "BR102 19:55 落地，入境與提行李約 30–45 分",
-            "免費接駁巴士到國內線航廈（10 分、約 10 分一班）→ 空港線往姪浜方向 3 站到「祇園」，約 8 分",
-            "⚠️ 地鐵「福岡空港站」在國內線航廈地下，國際線走不過去，一定要先搭接駁巴士",
             "⚠️ 飯店受理只到 22:00——先進飯店放行李，再出門吃"
           ],
           "links": [],
-          "stay": 75,
-          "mode": "transit",
-          "fee": "地鐵 ¥260"
+          "stay": 45,
+          "mode": "transit"
+        },
+        {
+          "type": "transit",
+          "time": "20:45",
+          "title": "福岡機場 ➔ 祇園【地鐵】",
+          "line": "空港線（往姪浜方向）・¥260",
+          "duration": "預估乘車 7 分（含接駁巴士，總耗時約 30 分）",
+          "steps": [
+            {
+              "name": "國際線航廈",
+              "nameLocal": "国際線ターミナル",
+              "active": true,
+              "note": "地鐵站在國內線航廈，國際線走不過去——先搭免費接駁巴士（約 10 分、約 10 分一班）"
+            },
+            {
+              "name": "國內線航廈・福岡空港站",
+              "nameLocal": "福岡空港駅",
+              "active": true,
+              "exit": "下接駁巴士後跟著指標到地下的地鐵站"
+            },
+            {
+              "name": "東比惠",
+              "nameLocal": "東比恵",
+              "active": false
+            },
+            {
+              "name": "博多",
+              "nameLocal": "博多",
+              "active": false
+            },
+            {
+              "name": "祇園",
+              "nameLocal": "祇園",
+              "active": true,
+              "exit": "出站走約 2 分到飯店"
+            }
+          ],
+          "links": [],
+          "stay": 30,
+          "mode": "transit"
         },
         {
           "type": "stop",
@@ -3104,7 +3143,7 @@ const RENDERERS = {
       const dot = s.via ? "" : `<div class="route-step">
            <div class="route-dot${s.active ? " on" : ""}"></div>
            <div class="route-body">
-             <strong>${esc(s.name)}</strong>${localSpan(s.nameLocal)}
+             <strong>${esc(s.name)}</strong>${s.nameLocal !== s.name ? localSpan(s.nameLocal) : ""}
              ${s.exit ? `<div class="exit-note">${esc(s.exit)}</div>` : ""}
              ${s.note ? `<div class="note-box warn">⚠️ ${esc(s.note)}</div>` : ""}
            </div></div>`;
