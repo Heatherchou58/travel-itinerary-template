@@ -68,7 +68,7 @@ SWAP_TRIP = {
              "hours": "09:00–17:00、週二休", "fee": "A$43（可刷卡）", "tel": "+61 2 9250 7111",
              "intro": "介紹第一段，確認有渲染。\n第二段，確認換行會分段。",
              "links": [{"label": "官網", "url": "https://example.com", "style": "theme"}]},
-            {"type": "transit", "time": "13:00", "line": "T1 線", "duration": "約 12 分",
+            {"type": "transit", "time": "13:00", "line": "T1 線", "duration": "約 12 分", "stay": 25,
              # 當地語跟站名一樣的只顯示一次；不一樣的照常顯示
              "steps": [{"name": "Circular Quay", "nameLocal": "Circular Quay", "active": True,
                         "note": "提醒框會把這一列撐高，線不能斷"},
@@ -571,6 +571,9 @@ def run(trip: str) -> bool:
                 .map(k => Math.round(k.getBoundingClientRect().bottom - k.nextElementSibling.getBoundingClientRect().top) === 0
                        && parseFloat(getComputedStyle(k, "::before").height) >= k.offsetHeight - 24)""")
             r.check("交通卡：有提醒框的站，線也連到下一站", bool(joined) and all(joined), f"{joined}")
+            tag = ride.locator(".time + .stay")
+            r.check("交通卡：總耗時放在時間旁邊", tag.count() == 1 and "總耗時約 25 分" in tag.inner_text(),
+                    tag.inner_text() if tag.count() else "沒有標籤")
 
             # 景點介紹：預設收合，點了才展開
             intro = page.locator("details.intro")

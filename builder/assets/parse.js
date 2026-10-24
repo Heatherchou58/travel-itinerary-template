@@ -335,7 +335,8 @@ export function parseGrids(book){
     let b;
     if (bt === "transit"){
       b = { type:"transit", time, title: s(r["標題"]) || "交通",
-            line: notes[0] || "", duration: notes[1] || (stay ? `約 ${fmtMinutes(stay)}` : ""),
+            /* 總耗時由網站從 stay 算出來放在時間旁邊，這裡不再自動補「約 X 分」，否則會重複顯示 */
+            line: notes[0] || "", duration: notes[1] || "",
             steps: [], links, stay, mode: curMode };
     } else if (bt === "lodging"){
       b = { type:"lodging", time, title: s(r["標題"]) || "住宿", titleLocal: s(r["當地語"]),

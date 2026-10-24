@@ -1075,8 +1075,9 @@ const RENDERERS = {
     ${b.place ? `<div class="meta">📍 ${esc(b.place)}${localSpan(b.placeLocal)}</div>` : ""}${factsHTML(b)}
     ${notesHTML(b.notes)}${secretHTML(b)}${introHTML(b.intro, b.photo)}${linksHTML(b.links)}</div>`,
 
+  /* 總耗時跟其他卡片的「停留」一樣放在時間旁邊，由 stay 算出來 */
   transit: b => `<div class="card">
-    ${b.time ? `<span class="time">${esc(b.time)}</span>` : ""}
+    ${b.time ? `<span class="time">${esc(b.time)}</span>` : ""}${b.stay ? `<span class="stay">⏱️ 總耗時約 ${fmtStay(b.stay)}</span>` : ""}
     <div class="subject">${esc(b.title)}</div>
     ${b.line ? `<div class="meta">🚇 ${esc(b.line)}</div>` : ""}
     ${b.duration ? `<div class="meta">⏱️ ${esc(b.duration)}</div>` : ""}
