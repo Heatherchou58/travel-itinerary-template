@@ -407,6 +407,26 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 .intro-body{ padding-bottom:var(--sp-2); font-size:var(--fs-sm); line-height:1.8; }
 .intro-body p{ margin:0 0 var(--sp-3); }
 .intro-body p:last-child{ margin-bottom:0; }
+/* 有照片的介紹：收合時「看介紹」那一條鋪一層淡淡的照片，不點開也看得出是什麼地方；
+   展開後淡底收掉，改看最上面那張清楚的照片 */
+.intro.has-photo{ border-top:none; }
+.intro.has-photo summary{
+  position:relative; isolation:isolate; overflow:hidden;
+  min-height:56px; padding:0 var(--sp-3); border-radius:10px;
+}
+.intro.has-photo summary::after{
+  content:""; position:absolute; inset:0; z-index:-1;
+  background:var(--photo) center/cover; opacity:.35;
+}
+.intro.has-photo[open] summary::after{ opacity:0; }
+.intro-photo{
+  display:block; width:100%; aspect-ratio:16/10; object-fit:cover;
+  border-radius:10px; margin:var(--sp-2) 0 var(--sp-1); background:var(--c-line);
+}
+.photo-credit{
+  display:block; margin:0 0 var(--sp-3);
+  font-size:var(--fs-xs); color:var(--c-text-dim); text-decoration:none;
+}
 
 /* ── 按鈕 ─────────────────────────────── */
 .btn{
@@ -764,10 +784,6 @@ const TRIP_DATA = {
                   "url": "https://services.digital.go.jp/zh-cmn-hant/visit-japan-web/"
                 },
                 "國際駕照譯本＋台灣駕照正本（自駕必備）",
-                "確認 ORIX 租車訂單",
-                "跟 YUFU-Inn 確認廚房有沒有鍋具",
-                "出發前查阿蘇噴火警戒等級與阿蘇パノラマライン通行狀況",
-                "出發前確認柳川乘合船時刻（受付只到 14:30）與皿倉山纜車運行（週二公休）",
                 "備妥日圓現金",
                 "eSIM 或漫遊開通",
                 "下載離線地圖（Google Maps 九州離線區域）",
@@ -2065,29 +2081,29 @@ const TRIP_DATA = {
           "type": "stop",
           "kind": "meal",
           "time": "12:00",
-          "title": "麵屋我ガ 天神店",
-          "titleLocal": "麺屋我ガ 天神店",
-          "place": "福岡市中央區天神",
+          "title": "一蘭 本社總本店",
+          "titleLocal": "一蘭 本社総本店",
+          "place": "福岡市博多區中洲5-3-2",
           "notes": [
-            "地鐵大濠公園→天神 4 分・用餐 1hr",
-            "試算表 4.3★ 豚骨拉麵名店",
-            "備案：鐵板燒 天神內臟（博多站 JR 博多城 B1 博多一番街）"
+            "地鐵大濠公園→中洲川端 3 站約 6 分，出站走 1 分・用餐 1hr",
+            "24 小時營業、全年無休",
+            "1 樓是仿屋台氣氛的「一蘭屋台」"
           ],
           "links": [
             {
               "label": "🗺️ 地圖",
-              "url": "https://www.google.com/maps/search/?api=1&query=%E9%BA%BA%E5%B1%8B%E6%88%91%E3%82%AC%20%E5%A4%A9%E7%A5%9E%E5%BA%97%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E4%B8%AD%E5%A4%AE%E5%8D%80%E5%A4%A9%E7%A5%9E",
+              "url": "https://www.google.com/maps/search/?api=1&query=%E4%B8%80%E8%98%AD%20%E6%9C%AC%E7%A4%BE%E7%B7%8F%E6%9C%AC%E5%BA%97%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8D%80%E4%B8%AD%E6%B4%B25-3-2",
               "style": "map"
             },
             {
               "label": "🚆 從上一站",
-              "url": "https://www.google.com/maps/dir/?api=1&origin=%E5%A4%A7%E6%BF%A0%E5%85%AC%E5%9C%92%E3%83%BB%E7%A6%8F%E5%B2%A1%E5%B8%82%E7%BE%8E%E8%A1%93%E9%A4%A8%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E4%B8%AD%E5%A4%AE%E5%8D%80%E5%A4%A7%E6%BF%A0%E5%85%AC%E5%9C%92&destination=%E9%BA%BA%E5%B1%8B%E6%88%91%E3%82%AC%20%E5%A4%A9%E7%A5%9E%E5%BA%97%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E4%B8%AD%E5%A4%AE%E5%8D%80%E5%A4%A9%E7%A5%9E&travelmode=transit",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E5%A4%A7%E6%BF%A0%E5%85%AC%E5%9C%92%E3%83%BB%E7%A6%8F%E5%B2%A1%E5%B8%82%E7%BE%8E%E8%A1%93%E9%A4%A8%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E4%B8%AD%E5%A4%AE%E5%8D%80%E5%A4%A7%E6%BF%A0%E5%85%AC%E5%9C%92&destination=%E4%B8%80%E8%98%AD%20%E6%9C%AC%E7%A4%BE%E7%B7%8F%E6%9C%AC%E5%BA%97%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8D%80%E4%B8%AD%E6%B4%B25-3-2&travelmode=transit",
               "style": "route"
             }
           ],
           "stay": 70,
           "mode": "transit",
-          "intro": "天神一帶的豚骨拉麵新派代表，湯頭濃度拉得很高但不腥，是所謂「濃厚豚骨」這一路的做法。"
+          "intro": "一蘭是從福岡起家的豚骨拉麵連鎖，本社總本店就在中洲、那珂川邊，離中洲川端站一分鐘。\n招牌是一人一格的「味集中カウンター」：用紙本勾選湯頭濃淡、辣醬多寡與麵的硬度，隔板放下來，就只剩自己跟那碗麵。"
         },
         {
           "type": "stop",
@@ -2097,7 +2113,7 @@ const TRIP_DATA = {
           "titleLocal": "天神地下街・ミーナ天神・福岡パルコ",
           "place": "福岡市中央區天神",
           "notes": [
-            "步行・停留 1hr50",
+            "從中洲走到天神約 10 分・停留 1hr40",
             "天神地下街 10:00–20:00／mina 天神 10:00–20:00／PARCO・Loft 10:00–20:30",
             "mina 天神：試算表 4.5★，天神站步行 3 分",
             "Loft 的文具與生活小物是好帶的伴手禮"
@@ -2110,7 +2126,7 @@ const TRIP_DATA = {
             },
             {
               "label": "🚆 從上一站",
-              "url": "https://www.google.com/maps/dir/?api=1&origin=%E9%BA%BA%E5%B1%8B%E6%88%91%E3%82%AC%20%E5%A4%A9%E7%A5%9E%E5%BA%97%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E4%B8%AD%E5%A4%AE%E5%8D%80%E5%A4%A9%E7%A5%9E&destination=%E5%A4%A9%E7%A5%9E%E5%9C%B0%E4%B8%8B%E8%A1%97%E3%83%BB%E3%83%9F%E3%83%BC%E3%83%8A%E5%A4%A9%E7%A5%9E%E3%83%BB%E7%A6%8F%E5%B2%A1%E3%83%91%E3%83%AB%E3%82%B3%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E4%B8%AD%E5%A4%AE%E5%8D%80%E5%A4%A9%E7%A5%9E&travelmode=transit",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E4%B8%80%E8%98%AD%20%E6%9C%AC%E7%A4%BE%E7%B7%8F%E6%9C%AC%E5%BA%97%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8D%80%E4%B8%AD%E6%B4%B25-3-2&destination=%E5%A4%A9%E7%A5%9E%E5%9C%B0%E4%B8%8B%E8%A1%97%E3%83%BB%E3%83%9F%E3%83%BC%E3%83%8A%E5%A4%A9%E7%A5%9E%E3%83%BB%E7%A6%8F%E5%B2%A1%E3%83%91%E3%83%AB%E3%82%B3%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E4%B8%AD%E5%A4%AE%E5%8D%80%E5%A4%A9%E7%A5%9E&travelmode=transit",
               "style": "route"
             }
           ],
@@ -2962,12 +2978,20 @@ const nowSlot   = b => toMin(b.time) === null ? "" : `<div class="now-line" hidd
 /* 景點介紹：預設收合。用原生 <details> 而不是自己寫 JS——免事件綁定、
    鍵盤可操作、離線沒問題，重新渲染也不會壞。
    接受字串（以空行或換行分段）或字串陣列，Excel 給的是前者。 */
-const introHTML = v => {
+/* photo 是 tools/intro-photos.mjs 掛上去的 Wikimedia Commons 自由授權照片。
+   CC BY／BY-SA 要求標示作者與授權，所以照片底下一定附出處，不能拿掉。 */
+const introHTML = (v, photo) => {
   const parts = (Array.isArray(v) ? v : String(v ?? "").split(/\n+/))
     .map(x => String(x ?? "").trim()).filter(Boolean);
   if (!parts.length) return "";
-  return `<details class="intro"><summary>看介紹</summary>
-    <div class="intro-body">${parts.map(p => `<p>${esc(p)}</p>`).join("")}</div>
+  const src  = photo && /^img\/[\w\/.-]+$/.test(photo.src || "") ? photo.src : "";
+  const href = photo && /^https?:\/\//i.test(photo.href || "") ? photo.href : "";
+  const credit = src ? `📷 ${esc(photo.credit || "")}・${esc(photo.license || "")}` : "";
+  const pic = src ? `<img class="intro-photo" src="${esc(src)}" alt="" loading="lazy" decoding="async">${
+    href ? `<a class="photo-credit" href="${esc(href)}" target="_blank" rel="noopener">${credit}</a>`
+         : `<span class="photo-credit">${credit}</span>`}` : "";
+  return `<details class="intro${src ? " has-photo" : ""}"${src ? ` style="--photo:url('${esc(src)}')"` : ""}><summary>看介紹</summary>
+    <div class="intro-body">${pic}${parts.map(p => `<p>${esc(p)}</p>`).join("")}</div>
   </details>`;
 };
 
@@ -3012,7 +3036,7 @@ const RENDERERS = {
     ${nowSlot(b)}${b.time ? `<span class="time">${esc(b.time)}</span>` : ""}${stayTag(b)}
     <div class="subject">${KIND[b.kind] || KIND.sight} ${esc(b.title)}${localSpan(b.titleLocal)}</div>
     ${b.place ? `<div class="meta">📍 ${esc(b.place)}${localSpan(b.placeLocal)}</div>` : ""}
-    ${notesHTML(b.notes)}${secretHTML(b)}${introHTML(b.intro)}${linksHTML(b.links)}</div>`,
+    ${notesHTML(b.notes)}${secretHTML(b)}${introHTML(b.intro, b.photo)}${linksHTML(b.links)}</div>`,
 
   transit: b => `<div class="card">
     ${b.time ? `<span class="time">${esc(b.time)}</span>` : ""}
@@ -4085,18 +4109,20 @@ renderDay((TRIP_DATA.days.find(d => d.date === nowAtDestination().date) || TRIP_
 
 /* 每 30 秒更新一次；從背景切回來時也立刻更新，
    否則放了幾小時再打開會停在舊的標記上。 */
-/* 優惠券圖片要先抓進快取：在店裡結帳時不一定有訊號，而那正是要打開它的時候。
-   放在自己的快取名稱（trip-img），這樣換優惠券就不必改 sw.js、也不用升 VERSION。
+/* 圖片要先抓進快取：優惠券是在店裡結帳時要打開、介紹照片是在山裡要看，那時都不一定有訊號。
+   放在自己的快取名稱（trip-img），這樣換圖片就不必改 sw.js、也不用升 VERSION。
    sw.js 的 cacheFirst 用的是 caches.match()，會搜尋所有快取，所以找得到。 */
-(async function cacheCouponImages(){
+(async function cacheTripImages(){
   if (!("caches" in window)) return;
   const urls = [];
   for (const day of TRIP_DATA.days || [])
-    for (const b of day.blocks || [])
+    for (const b of day.blocks || []){
+      if (b.photo && b.photo.src) urls.push(b.photo.src);
       if (b.type === "shopping")
         for (const g of b.groups || [])
           for (const it of g.items || [])
             if (it && it.img) urls.push(it.img);
+    }
   if (!urls.length) return;
   try{
     const c = await caches.open("trip-img");

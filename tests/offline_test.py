@@ -260,6 +260,21 @@ def vault_trip(vault: dict) -> dict:
     return trip
 
 
+def photo_trip(src: str) -> dict:
+    """一張有照片、一張沒照片的介紹。照片用網站副本裡真的檔案，才驗得到離線快取。"""
+    trip = json.loads(json.dumps(SETTLE_TRIP))
+    trip["meta"]["tripId"] = "phototest"
+    trip["days"][0]["blocks"] = [
+        {"type": "stop", "kind": "sight", "time": "10:00", "title": "有照片的景點",
+         "notes": [], "links": [], "intro": "第一段介紹。\n第二段介紹。",
+         "photo": {"src": src, "credit": "測試作者", "license": "CC BY-SA 4.0",
+                   "href": "https://commons.wikimedia.org/wiki/File:Test.jpg"}},
+        {"type": "stop", "kind": "sight", "time": "11:00", "title": "沒照片的景點",
+         "notes": [], "links": [], "intro": "只有文字的介紹。"},
+        {"type": "expenses"}]
+    return trip
+
+
 def unknown_block_trip() -> dict:
     """未知型別要在畫面上顯示明確錯誤，不可靜默跳過（否則以為行程存到了，其實不見）。"""
     trip = json.loads(json.dumps(SETTLE_TRIP))
@@ -362,9 +377,14 @@ def run(trip: str) -> bool:
             swap_trip_data(tmp / f"auto{i}" / "index.html",
                            auto_theme_trip(theme, start, lat))
 
+        # 介紹照片的測試借用網站裡真的一張照片；行程沒有照片就跳過那一段
+        intro_imgs = sorted((src / "img" / "intro").glob("*.jpg"))
+        photo_src = f"img/intro/{intro_imgs[0].name}" if intro_imgs else ""
+
         for name, trip in [("settle", SETTLE_TRIP), ("rate", rate_null_trip()),
                            ("unknown", unknown_block_trip()),
-                           ("vault", vault_trip(make_vault(tmp)))]:
+                           ("vault", vault_trip(make_vault(tmp))),
+                           ("photo", photo_trip(photo_src))]:
             shutil.copytree(tmp / "site", tmp / name)
             swap_trip_data(tmp / name / "index.html", trip)
 
@@ -999,6 +1019,60 @@ def run(trip: str) -> bool:
             r.check("私人資料：離線也解得開", "ORDER-7731" in hotel.inner_text())
             r.check("私人資料：沒有 JS 例外", not vault_errors, "; ".join(vault_errors[:2]))
             ctx.close()
+
+            # 11 ── 介紹照片 ──────────────────────────────
+            if not photo_src:
+                print("  （這個行程沒有 img/intro 照片，跳過介紹照片的測試）")
+            else:
+                ctx = browser.new_context()
+                page = ctx.new_page()
+                photo_errors = []
+                page.on("pageerror", lambda e: photo_errors.append(str(e)))
+                page.goto(f"http://127.0.0.1:{port}/photo/")
+                page.wait_for_load_state("networkidle")
+                page.wait_for_function("navigator.serviceWorker.controller !== null", timeout=15000)
+                page.reload()
+                page.wait_for_load_state("networkidle")
+                page.wait_for_timeout(800)
+
+                with_photo = page.locator("#main .card", has_text="有照片的景點")
+                without = page.locator("#main .card", has_text="沒照片的景點")
+                bar = with_photo.locator(".intro.has-photo summary")
+                r.check("介紹照片：有照片的卡片才有淡底",
+                        bar.count() == 1 and without.locator(".has-photo").count() == 0)
+                bg = bar.evaluate("s => [getComputedStyle(s, '::after').backgroundImage, getComputedStyle(s, '::after').opacity]")
+                r.check("介紹照片：收合時那一條鋪著照片", photo_src in bg[0] and float(bg[1]) > 0, f"{bg}")
+                pic = with_photo.locator("img.intro-photo")
+                r.check("介紹照片：收合時看不到大照片", not pic.is_visible())
+
+                bar.click()
+                page.wait_for_function(
+                    "document.querySelector('img.intro-photo')?.complete", timeout=10000)
+                r.check("介紹照片：展開後看得到大照片",
+                        pic.is_visible() and pic.evaluate("i => i.naturalWidth") > 0)
+                faded = bar.evaluate("s => getComputedStyle(s, '::after').opacity")
+                r.check("介紹照片：展開後淡底收掉", float(faded) == 0, faded)
+                credit = with_photo.locator(".photo-credit")
+                r.check("介紹照片：照片底下有作者與授權，並連到出處",
+                        "測試作者" in credit.inner_text() and "CC BY-SA 4.0" in credit.inner_text()
+                        and credit.get_attribute("href", timeout=2000).startswith("https://commons.wikimedia.org/"))
+                r.check("介紹照片：沒照片的卡片維持原樣",
+                        without.locator("img").count() == 0 and "只有文字的介紹" in without.locator(".intro-body").text_content())
+
+                cached = page.evaluate(
+                    "async s => !!(await (await caches.open('trip-img')).match(s))", photo_src)
+                r.check("介紹照片：開網站時就先存進 trip-img 快取", cached)
+
+                ctx.set_offline(True)
+                page.reload()
+                page.wait_for_load_state("domcontentloaded")
+                page.wait_for_timeout(800)
+                page.locator("#main .intro.has-photo summary").click()
+                page.wait_for_timeout(800)
+                r.check("介紹照片：離線也看得到",
+                        page.locator("#main img.intro-photo").evaluate("i => i.naturalWidth") > 0)
+                r.check("介紹照片：沒有 JS 例外", not photo_errors, "; ".join(photo_errors[:2]))
+                ctx.close()
 
             browser.close()
 

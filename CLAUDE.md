@@ -102,3 +102,20 @@ node tools/encrypt-vault.mjs fukuoka-2026
 | 前端只「檢查」密碼擋不住任何人 | repo 是公開的，原始碼誰都讀得到。一定要用密語「加密」，而且密語要夠長——密文永久留在 git 紀錄裡，可以被離線慢慢猜 |
 
 工具每次都會把密文解回來比對，並掃描 index.html 有沒有明文外洩；Excel 與其他檔案要自己注意。
+
+## 十、介紹照片
+
+景點的「看介紹」可以帶一張照片：收合時那一條鋪淡淡的照片，展開後最上面是清楚的照片、底下附作者與授權。清單在 `<行程>/intro-photos.json`，壓縮後的檔案在 `<行程>/img/intro/`。
+
+```bash
+node tools/intro-photos.mjs fukuoka-2026                  # 只把照片掛回卡片
+node tools/intro-photos.mjs fukuoka-2026 --src <原圖資料夾>  # 先重新壓縮再掛
+```
+
+| 坑 | 說明 |
+|---|---|
+| 重新產生行程區塊後，照片會消失 | 跟私人資料的 `secret` 一樣，`photo` 欄位不在 Excel 裡，重新產生完要再跑一次（不加 `--src`） |
+| 只能用 Wikimedia Commons 的自由授權照片 | repo 與網站都公開，官網或搜尋引擎找到的照片有版權。工具只接受 CC0／CC BY／CC BY-SA／公有領域 |
+| 作者與授權一定要顯示 | CC BY／BY-SA 的條件。渲染程式把出處印在照片底下，不能拿掉，也不能只存在 TRIP_DATA 不顯示 |
+| 換照片不用升 `sw.js` 的 `VERSION` | 照片跟優惠券一樣放在 `trip-img` 快取，由網頁開啟時預先抓，不在 PRECACHE 裡 |
+| 只放景點 | 餐廳找不到店本身的自由授權照片，放別家的照片會誤導，所以不放 |
