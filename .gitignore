@@ -8,3 +8,6 @@ node_modules/
 # 輸出到 <行程>/img/，進 repo 的是那一份。原圖留在本機就好：
 # 檔名是中文，而且 6.7MB 壓完只剩 2.8MB。
 */優惠券/
+
+# 使用者放在 repo 裡參考用的第三方 skill，不是這個專案的東西（repo 是公開的）
+ui-ux-pro-max-skill-main/
