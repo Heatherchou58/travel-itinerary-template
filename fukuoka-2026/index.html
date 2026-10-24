@@ -735,15 +735,30 @@ html{ font-size:clamp(16px, 4.2vw, 18px); }
     color:var(--c-on-accent); font-size:var(--fs-sm); font-weight:700; text-decoration:none;
   }
   .daymap-open:hover{ text-decoration:underline; }
-  /* 點了某張卡片、地圖只顯示那個點的時候：地圖上方寫出是哪裡，旁邊是回到整條路線的按鈕 */
-  .daymap-bar{ display:flex; align-items:center; gap:var(--sp-2); margin-bottom:var(--sp-2); }
-  /* UA 的 [hidden]{display:none} 會輸給上面的 display:flex，所以要明寫 */
-  .daymap-bar[hidden]{ display:none; }
-  .daymap-place{
-    flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
-    color:var(--c-on-accent); font-size:var(--fs-sm); font-weight:700;
+  /* 地圖上方：「整天路線」＋當天每一點一顆。點名字只看那一點，勾選框決定畫不畫進路線。
+     平板橫放也會到這個寬度，所以高度一樣給 44px */
+  .daymap-pick{ display:flex; flex-wrap:wrap; gap:var(--sp-2); margin-bottom:var(--sp-2); }
+  .dm-chip{
+    display:inline-flex; align-items:center; min-height:44px; max-width:100%; padding:0 var(--sp-3);
+    border:1px solid var(--c-line); border-radius:var(--r-pill); background:var(--c-surface);
+    color:var(--c-text); font-family:inherit; font-size:var(--fs-sm); font-weight:700; cursor:pointer;
   }
-  .daymap-back{ margin:0; flex:0 0 auto; }
+  span.dm-chip{ padding:0; cursor:auto; }
+  .dm-chip label{ display:flex; align-items:center; align-self:stretch; padding:0 var(--sp-1) 0 var(--sp-3); cursor:pointer; }
+  .dm-chip input{ width:18px; height:18px; margin:0; accent-color:var(--c-on-accent); cursor:pointer; }
+  .dm-chip button{
+    align-self:stretch; min-width:0; max-width:14em; padding:0 var(--sp-3) 0 var(--sp-1);
+    border:0; background:none; color:inherit; font:inherit; cursor:pointer;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .dm-chip.is-on, button.dm-chip[aria-pressed="true"]{
+    background:var(--c-accent); border-color:var(--c-accent); color:var(--c-on-accent);
+  }
+  .dm-chip.is-off button{ color:var(--c-text-dim); text-decoration:line-through; }
+  .daymap-empty{
+    margin:0; padding:var(--sp-4); border-radius:var(--r-card);
+    background:var(--c-accent-soft); color:var(--c-text-dim); font-size:var(--fs-sm);
+  }
   /* 有地圖時，景點與住宿卡片點了會切換地圖。用外圈陰影標示，不動左邊框——那是「現在進行到哪」在用的 */
   .app.has-map .card[data-mapq]{ cursor:pointer; }
   .app.has-map .card[data-mapq]:hover{ box-shadow:0 0 0 1px var(--c-accent), var(--shadow); }
@@ -792,7 +807,8 @@ footer a{ color:inherit; }
   </header>
   <nav class="nav-bar" id="nav" role="tablist"></nav>
   <aside id="daymap" aria-label="當天路線地圖">
-    <div class="daymap-bar" hidden><span class="daymap-place"></span><button type="button" class="btn btn-route daymap-back">回到整天路線</button></div>
+    <div class="daymap-pick" role="group" aria-label="地圖要顯示的地點"></div>
+    <p class="daymap-empty" hidden>勾選至少一個地點，地圖才會畫出來。</p>
     <iframe title="當天路線地圖" loading="lazy" allowfullscreen
             referrerpolicy="strict-origin-when-cross-origin"></iframe>
   </aside>
@@ -3396,7 +3412,8 @@ function renderBlock(b){
 
 /* ── 分頁 ── */
 let current = TRIP_DATA.days[0].id;
-let mapFocus = null;   // { day, n }：點了當天第 n 張有地點的卡片，右側地圖只顯示那個點
+let mapFocus = null;   // { day, p }：右側地圖只顯示當天第 p 個點
+const mapSkip = {};    // 每天取消勾選、不畫進路線的點（Set）。換天保留，重新整理就全部恢復
 function renderDay(id){
   if (id !== current) mapFocus = null;   // 換一天就回到整條路線
   current = id;
@@ -3632,95 +3649,124 @@ function paintNow(){
 
 /* ── 電腦版的當日路線地圖 ───────────────────────
    當天的景點與住宿依序串成一條路線（Maps Embed API，最多 20 個途經點）。
-   每一點的位置見 mapQuery()。 */
+   每一點的位置見 mapQuery()。地圖上方列出當天每一點：點名字只看那一點，
+   取消勾選的點不畫進路線——比較「去不去某個景點」路線差多少。 */
 const DESKTOP = matchMedia("(min-width:1024px)");
 function dayMapPoints(day){
-  const pts = [];
+  const pts = [], cardPt = [];   // cardPt[k]：當天第 k 張有地點的卡片是第幾個點
   for (const b of day.blocks || []){
     if (b.type !== "stop" && b.type !== "lodging") continue;
     const q = mapQuery(b);
-    if (q && q !== pts[pts.length - 1]) pts.push(q);   // 入住與住宿常是同一個地方
+    if (!q) continue;                                   // 跟 mapAttrs 一樣，沒地點的卡片不算
+    if (q !== (pts[pts.length - 1] || {}).q) pts.push({ q, title: b.title || q });   // 入住與住宿常是同一個地方
+    cardPt.push(pts.length - 1);
   }
   /* 日本查不到大眾運輸路線（Google 的授權排除日本），搭車的日子改用步行畫——
      要看的是地點的先後與相對位置，不是實際怎麼搭 */
   const mode = (day.blocks || []).some(b => b.mode === "driving") ? "driving" : "walking";
-  return { pts: pts.slice(0, 22), mode };   // 起點＋20 個途經點＋終點
+  return { pts, cardPt, mode };
 }
+const NUM = i => i < 20 ? String.fromCharCode(0x2460 + i) : `${i + 1}.`;   // ①②③…
 function paintDayMap(day){
   const app = document.querySelector(".app");
   const box = document.getElementById("daymap");
-  const { pts, mode } = day && day.date ? dayMapPoints(day) : { pts: [] };
+  const { pts, cardPt, mode } = day && day.date ? dayMapPoints(day) : { pts: [], cardPt: [] };
   const e = encodeURIComponent;
   app.classList.toggle("map-on", !!(M.mapsEmbedKey && DESKTOP.matches));
   const on = !!(M.mapsEmbedKey && pts.length && DESKTOP.matches);
   app.classList.toggle("has-map", on);
+  const skip = (day && mapSkip[day.id]) || new Set();
+  const route = pts.map(p => p.q).filter((_, i) => !skip.has(i)).slice(0, 22);   // 起點＋20 個途經點＋終點
+  const focus = on && mapFocus && mapFocus.day === day.id && pts[mapFocus.p] ? mapFocus.p : null;
 
   /* 同一條路線開到 Google 地圖：可以拖曳、看路況。不用金鑰，所以沒填嵌入金鑰的
-     網站也有。只在電腦寬度出現——手機瀏覽器開 Google 地圖網址最多只認 3 個途經點，
-     一天的路線會被截掉（其他平台最多 9 個）。
+     網站也有；取消勾選的點這裡也不帶。只在電腦寬度出現——手機瀏覽器開 Google 地圖
+     網址最多只認 3 個途經點，一天的路線會被截掉（其他平台最多 9 個）。
      放在 #main 裡：renderDay 每次都會整個換掉 #main，不會留下舊的；
      但視窗寬度改變時只重跑這裡，所以先把舊的拿掉。 */
   const main = document.getElementById("main");
   main.querySelector(".daymap-open")?.remove();
-  if (pts.length && DESKTOP.matches){
-    const via = pts.slice(1, -1).slice(0, 9);
-    const href = pts.length === 1
-      ? `https://www.google.com/maps/search/?api=1&query=${e(pts[0])}`
+  if (route.length && DESKTOP.matches){
+    const via = route.slice(1, -1).slice(0, 9);
+    const href = route.length === 1
+      ? `https://www.google.com/maps/search/?api=1&query=${e(route[0])}`
       : `https://www.google.com/maps/dir/?api=1&travelmode=${mode}` +
-        `&origin=${e(pts[0])}&destination=${e(pts[pts.length - 1])}` +
+        `&origin=${e(route[0])}&destination=${e(route[route.length - 1])}` +
         (via.length ? `&waypoints=${via.map(e).join("|")}` : "");
     main.insertAdjacentHTML("afterbegin",
       `<a class="daymap-open" href="${esc(href)}" target="_blank" rel="noopener">在 Google 地圖開啟今天的路線 ↗</a>`);
   }
-  const cards = [...main.querySelectorAll(".card[data-mapq]")];
-  const focused = on && mapFocus && mapFocus.day === day.id ? cards[mapFocus.n] : null;
-  cards.forEach(c => {
-    c.classList.toggle("map-focus", c === focused);
+  main.querySelectorAll(".card[data-mapq]").forEach((c, k) => {
+    c.classList.toggle("map-focus", focus !== null && cardPt[k] === focus);
     /* 有地圖時卡片也能用鍵盤選（Tab 到卡片按 Enter）。手機不加，Tab 順序才不會多出一堆卡片 */
     if (on) c.tabIndex = 0; else c.removeAttribute("tabindex");
   });
-  box.querySelector(".daymap-bar").hidden = !focused;
   if (!on) return;
 
-  const key = e(M.mapsEmbedKey);
-  if (focused) box.querySelector(".daymap-place").textContent = `📍 ${focused.dataset.mapt}`;
-  const src = focused
-    ? `https://www.google.com/maps/embed/v1/place?key=${key}&q=${e(focused.dataset.mapq)}&language=ja&region=jp`
-    : pts.length === 1
-    ? `https://www.google.com/maps/embed/v1/place?key=${key}&q=${e(pts[0])}&language=ja&region=jp`
-    : `https://www.google.com/maps/embed/v1/directions?key=${key}&mode=${mode}&language=ja&region=jp` +
-      `&origin=${e(pts[0])}&destination=${e(pts[pts.length - 1])}` +
-      (pts.length > 2 ? `&waypoints=${pts.slice(1, -1).map(e).join("|")}` : "");
+  /* 地圖上方的地點按鈕。整排重畫，所以先記住鍵盤焦點在哪一顆，畫完放回去 */
+  const pick = box.querySelector(".daymap-pick");
+  const was = pick.contains(document.activeElement) ? { ...document.activeElement.dataset } : null;
+  pick.innerHTML =
+    `<button type="button" class="dm-chip" data-p="all" aria-pressed="${focus === null}">整天路線</button>` +
+    pts.map((p, i) => `<span class="dm-chip${focus === i ? " is-on" : ""}${skip.has(i) ? " is-off" : ""}">` +
+      `<label><input type="checkbox" data-skip="${i}"${skip.has(i) ? "" : " checked"} aria-label="畫進路線：${esc(p.title)}"></label>` +
+      `<button type="button" data-p="${i}" aria-pressed="${focus === i}" title="${esc(p.title)}">${NUM(i)} ${esc(p.title)}</button></span>`
+    ).join("");
+  if (was) pick.querySelector(was.skip !== undefined ? `[data-skip="${was.skip}"]` : `[data-p="${was.p}"]`)?.focus();
+
+  /* 全部取消勾選：沒有東西可畫，收起地圖、改成一行提示 */
+  const show = focus !== null ? [pts[focus].q] : route;
   const frame = box.querySelector("iframe");
+  frame.hidden = !show.length;
+  box.querySelector(".daymap-empty").hidden = !!show.length;
+  if (!show.length) return;
+
+  const key = e(M.mapsEmbedKey);
+  const src = show.length === 1
+    ? `https://www.google.com/maps/embed/v1/place?key=${key}&q=${e(show[0])}&language=ja&region=jp`
+    : `https://www.google.com/maps/embed/v1/directions?key=${key}&mode=${mode}&language=ja&region=jp` +
+      `&origin=${e(show[0])}&destination=${e(show[show.length - 1])}` +
+      (show.length > 2 ? `&waypoints=${show.slice(1, -1).map(e).join("|")}` : "");
   /* 同一天重畫（例如購物清單增刪）網址沒變就不要重設，否則地圖會整個重新載入 */
   if (frame.getAttribute("src") !== src) frame.setAttribute("src", src);
 }
 /* 視窗從手機寬度拉到電腦寬度時補載，反過來就收起 */
 DESKTOP.addEventListener("change", () => paintDayMap(TRIP_DATA.days.find(d => d.id === current)));
 
-/* 點卡片 → 右側地圖只顯示那個點，再點一次同一張就回到整條路線。
-   卡片裡的按鈕、連結、看介紹、私人資料的表單照常運作，不會順便切換地圖；
-   反白選字（例如要複製地址）時也不切換。 */
-function toggleMapFocus(card){
-  const n = [...document.querySelectorAll("#main .card[data-mapq]")].indexOf(card);
-  mapFocus = mapFocus && mapFocus.day === current && mapFocus.n === n ? null : { day: current, n };
+/* 只看第 p 個點；p 為 null 回到路線。點同一個第二次也回到路線 */
+function setMapFocus(p){
+  mapFocus = p === null || (mapFocus && mapFocus.day === current && mapFocus.p === p)
+    ? null : { day: current, p };
   paintDayMap(TRIP_DATA.days.find(d => d.id === current));
+}
+/* 點卡片 = 點上面對應的地點按鈕。卡片裡的按鈕、連結、看介紹、私人資料的表單
+   照常運作，不會順便切換地圖；反白選字（例如要複製地址）時也不切換。 */
+function cardPoint(card){
+  const k = [...document.querySelectorAll("#main .card[data-mapq]")].indexOf(card);
+  return dayMapPoints(TRIP_DATA.days.find(d => d.id === current)).cardPt[k];
 }
 document.getElementById("main").addEventListener("click", ev => {
   if (!document.querySelector(".app.has-map")) return;
   const card = ev.target.closest(".card[data-mapq]");
   if (!card || ev.target.closest("a,button,input,label,select,textarea,form,details")) return;
   if (String(getSelection()).trim()) return;
-  toggleMapFocus(card);
+  setMapFocus(cardPoint(card));
 });
 document.getElementById("main").addEventListener("keydown", ev => {
   if (ev.key !== "Enter" && ev.key !== " ") return;
   if (!ev.target.matches(".app.has-map .card[data-mapq]")) return;
   ev.preventDefault();
-  toggleMapFocus(ev.target);
+  setMapFocus(cardPoint(ev.target));
 });
-document.querySelector("#daymap .daymap-back").addEventListener("click", () => {
-  mapFocus = null;
+const dmPick = document.querySelector("#daymap .daymap-pick");
+dmPick.addEventListener("click", ev => {
+  const b = ev.target.closest("button[data-p]");
+  if (b) setMapFocus(b.dataset.p === "all" ? null : Number(b.dataset.p));
+});
+dmPick.addEventListener("change", ev => {
+  const i = Number(ev.target.dataset.skip);
+  const s = mapSkip[current] = mapSkip[current] || new Set();
+  if (ev.target.checked) s.delete(i); else s.add(i);
   paintDayMap(TRIP_DATA.days.find(d => d.id === current));
 });
 
