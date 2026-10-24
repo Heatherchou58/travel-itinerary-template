@@ -334,6 +334,35 @@ const PACK_SAMPLE = {
   else console.log("－ 「打包清單」已經是五大類");
 }
 
+/* ── ⑦ 基本設定：Google 地圖嵌入金鑰 ─────────── */
+/* 電腦版右側的當日路線地圖要用。接在最後一列後面，不插在中間——
+   export-xlsx 是用「項目」名稱找列，不是用列號，但模板的資料驗證（B7 主題）
+   綁的是固定列號，插在中間會讓它對到別的欄位。 */
+{
+  const ws = wb.getWorksheet("基本設定");
+  const LABEL = "Google 地圖嵌入金鑰";
+  let last = 0, has = false;
+  for (let r = 1; r <= ws.rowCount; r++){
+    const v = String(ws.getCell(r, 1).value ?? "");
+    if (v) last = r;
+    if (v === LABEL) has = true;
+  }
+  if (has){
+    console.log("－ 「基本設定」已經有地圖嵌入金鑰");
+  } else {
+    const r = last + 1;
+    for (let c = 1; c <= 3; c++) ws.getCell(r, c).style = ws.getCell(last, c).style;
+    ws.getRow(r).height = ws.getRow(last).height;
+    ws.getCell(r, 1).value = LABEL;
+    ws.getCell(r, 3).value = "選填。電腦版右側會顯示當天的路線地圖，留空就不顯示。" +
+      "到 Google Cloud 啟用 Maps Embed API（要綁帳單帳戶，但這個 API 不收費），建一把新金鑰並加兩個限制：" +
+      "API 限制只勾 Maps Embed API、網站限制只填自己的網域（例如 heatherchou58.github.io/*）。" +
+      "這把金鑰會公開在網站上，加了限制就沒有風險。";
+    console.log(`✓ 「基本設定」第 ${r} 列加上「${LABEL}」`);
+    changed++;
+  }
+}
+
 if (!changed){ console.log("\n沒有需要改的地方。"); process.exit(0); }
 
 await wb.xlsx.writeFile(FILE);
@@ -356,7 +385,7 @@ console.log("\n── 比對其他工作表 ──");
 let bad = 0;
 for (const name of Object.keys(before)){
   if (rebuilt.has(name)){ console.log(`  ${name}：刻意重建，略過比對`); continue; }
-  if (name === STYLE_FROM || name === "說明" || name === "行程"){
+  if (name === STYLE_FROM || name === "說明" || name === "行程" || name === "基本設定"){
     /* 這幾張是刻意改的，只檢查原本的內容都還在（刻意換掉的那幾格除外） */
     const valueOf = x => x.slice(x.indexOf("=") + 1);
     const expected = x => (gone[name] || new Set()).has(valueOf(x));

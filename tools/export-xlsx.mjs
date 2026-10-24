@@ -78,6 +78,7 @@ setMeta("緯度", ""); setMeta("經度", ""); setMeta("時區", "");
 setMeta("交通方式", MODE_ZH[T.meta.travelMode] || "自駕");
 setMeta("本國幣別", T.meta.money.home);
 setMeta("當地幣別", ""); setMeta("匯率", "");
+setMeta("Google 地圖嵌入金鑰", T.meta.mapsEmbedKey || "");
 
 /* ── 成員 ── */
 const mem = wb.getWorksheet("成員");
@@ -423,6 +424,7 @@ for (const t of ["shopping", "cards"])
 
 const infoLists = X => (X.days.find(d => d.id === "info")?.blocks || [])
   .filter(b => b.type === "checklist").map(b => b.title);
+ok("地圖嵌入金鑰一致", (T.meta.mapsEmbedKey || "") === (B.meta.mapsEmbedKey || ""));
 ok("資訊分頁的清單沒掉回行前", infoLists(T).join() === infoLists(B).join(),
    "[" + infoLists(T).join() + "] → [" + infoLists(B).join() + "]");
 

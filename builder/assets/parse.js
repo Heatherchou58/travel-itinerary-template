@@ -201,7 +201,11 @@ export function parseGrids(book){
     money: { home: (s(kv["本國幣別"]) || "TWD").toUpperCase(),
              local: s(kv["當地幣別"]).toUpperCase(), rate, rateDate: null },
     members: [],
-    categories: ["食","衣","住","行","玩"]
+    categories: ["食","衣","住","行","玩"],
+    /* 電腦版右側的當日路線地圖（Maps Embed API）。這把金鑰會公開在網站上——
+       嵌入地圖本來就是這樣——所以一定要限制成「只能用 Maps Embed API、只能從
+       自己的網域用」。留空就不顯示地圖。 */
+    mapsEmbedKey: s(kv["Google 地圖嵌入金鑰"])
   };
   if (!/^\d{4}-\d{2}-\d{2}$/.test(meta.startDate))
     err(SHEETS.meta, null, `「出發日」格式不對（${meta.startDate}），請用 2026-02-25`);

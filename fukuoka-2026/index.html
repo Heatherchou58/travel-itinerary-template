@@ -698,6 +698,42 @@ html{ font-size:clamp(16px, 4.2vw, 18px); }
   main .card + .card{ margin-top:var(--sp-4); }
 }
 
+/* ── 電腦版的當日路線地圖 ───────────────────────
+   手機不顯示，iframe 也不設網址（不載入）。
+   1024–1279：放在行程上方，跟左欄的標題同一列，高度跟著那一列。
+   1280 以上：變成第三欄，捲行程時固定不動，一邊看卡片一邊對地圖。
+   map-on（網站有金鑰、而且是電腦寬度）決定三欄的寬度，has-map（這一頁有地圖）
+   只決定地圖要不要出現——分開是因為：如果沒地圖的分頁（行前、記帳…）退回兩欄，
+   整個版面會從 1500px 縮回 960px 重新置中，切分頁時左邊的按鈕會橫向跳將近 200px。 */
+#daymap{ display:none; }
+@media (min-width:1024px){
+  .app.has-map #daymap{
+    grid-column:2; grid-row:1;
+    display:flex; flex-direction:column; gap:var(--sp-1);
+    padding-bottom:var(--sp-4);
+  }
+  .app.has-map main{ grid-row:2; }
+  #daymap iframe{
+    flex:1; width:100%; min-height:240px; border:0;
+    border-radius:var(--r-card); background:var(--c-accent-soft);
+  }
+  .daymap-open{
+    display:inline-flex; align-items:center; align-self:flex-start; min-height:44px;
+    color:var(--c-on-accent); font-size:var(--fs-sm); font-weight:700; text-decoration:none;
+  }
+  .daymap-open:hover{ text-decoration:underline; }
+}
+@media (min-width:1280px){
+  /* 行程欄上限 720px 跟下面的超寬規則一致，多的寬度給地圖 */
+  .app.map-on{ max-width:1500px; grid-template-columns:300px minmax(0,720px) minmax(360px,1fr); }
+  .app.has-map #daymap{
+    grid-column:3; grid-row:1 / span 2; align-self:start;
+    position:sticky; top:var(--sp-4); height:calc(100vh - 2 * var(--sp-4));
+    padding-bottom:0;
+  }
+  .app.has-map main{ grid-row:1 / span 2; }
+}
+
 /* 超寬螢幕：只把內容欄加寬，不要拆成兩欄。
    行程是有時間順序的，拆欄之後閱讀動線會從第一欄底部跳到第二欄頂端，很難跟。 */
 @media (min-width:1440px){
@@ -728,6 +764,11 @@ footer a{ color:inherit; }
     <div class="wx-stamp" id="wx-stamp"></div>
   </header>
   <nav class="nav-bar" id="nav" role="tablist"></nav>
+  <aside id="daymap" aria-label="當天路線地圖">
+    <iframe title="當天路線地圖" loading="lazy" allowfullscreen
+            referrerpolicy="strict-origin-when-cross-origin"></iframe>
+    <a class="daymap-open" target="_blank" rel="noopener">在 Google 地圖開啟今天的路線 ↗</a>
+  </aside>
   <main id="main"></main>
   <footer>
     <div id="edit-bar"></div>
@@ -3325,6 +3366,7 @@ function renderDay(id){
   document.getElementById("edit-bar").hidden = id !== "d0";
   paintForecast();
   paintVaults();        // 記住密語的話，卡片上的私人資料在這裡自動解開（解密是非同步的）
+  paintDayMap(day);
   window.scrollTo({ top:0, behavior:"smooth" });
   markNow();           // 捲到頂之後才標記；第一次進站會再捲到目前項目
 }
@@ -3543,6 +3585,57 @@ function paintNow(){
   stamp.textContent = age < 6e5 ? "" :
     `最後更新：${new Date(wx.fetchedAt).toLocaleString("zh-TW",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"})}`;
 }
+
+/* ── 電腦版的當日路線地圖 ───────────────────────
+   當天的景點與住宿依序串成一條路線（Maps Embed API，最多 20 個途經點）。
+   地點字串沿用卡片上「🗺️ 地圖」按鈕的查詢——builder 已經用「當地語標題＋地點」
+   組好，兩邊找到的才會是同一個地方。 */
+const DESKTOP = matchMedia("(min-width:1024px)");
+function dayMapPoints(day){
+  const pts = [];
+  for (const b of day.blocks || []){
+    if (b.type !== "stop" && b.type !== "lodging") continue;
+    const m = (b.links || []).find(l => l.style === "map");
+    let q = "";
+    try { q = m ? (new URL(m.url).searchParams.get("query") || "") : ""; } catch {}
+    /* 自己貼的短網址（maps.app.goo.gl）沒有查詢字串，退回標題＋地點 */
+    if (!q) q = [b.titleLocal || b.title, b.place || b.address].filter(Boolean).join(", ");
+    if (q && q !== pts[pts.length - 1]) pts.push(q);   // 入住與住宿常是同一個地方
+  }
+  /* 日本查不到大眾運輸路線（Google 的授權排除日本），搭車的日子改用步行畫——
+     要看的是地點的先後與相對位置，不是實際怎麼搭 */
+  const mode = (day.blocks || []).some(b => b.mode === "driving") ? "driving" : "walking";
+  return { pts: pts.slice(0, 22), mode };   // 起點＋20 個途經點＋終點
+}
+function paintDayMap(day){
+  const app = document.querySelector(".app");
+  const box = document.getElementById("daymap");
+  const { pts, mode } = day && day.date ? dayMapPoints(day) : { pts: [] };
+  app.classList.toggle("map-on", !!(M.mapsEmbedKey && DESKTOP.matches));
+  const on = !!(M.mapsEmbedKey && pts.length && DESKTOP.matches);
+  app.classList.toggle("has-map", on);
+  if (!on) return;
+
+  const e = encodeURIComponent, key = e(M.mapsEmbedKey);
+  const src = pts.length === 1
+    ? `https://www.google.com/maps/embed/v1/place?key=${key}&q=${e(pts[0])}&language=ja&region=jp`
+    : `https://www.google.com/maps/embed/v1/directions?key=${key}&mode=${mode}&language=ja&region=jp` +
+      `&origin=${e(pts[0])}&destination=${e(pts[pts.length - 1])}` +
+      (pts.length > 2 ? `&waypoints=${pts.slice(1, -1).map(e).join("|")}` : "");
+  const frame = box.querySelector("iframe");
+  /* 同一天重畫（例如購物清單增刪）網址沒變就不要重設，否則地圖會整個重新載入 */
+  if (frame.getAttribute("src") !== src) frame.setAttribute("src", src);
+
+  /* 同一條路線開到 Google 地圖：可以拖曳、看路況。不用金鑰 */
+  const open = box.querySelector(".daymap-open");
+  open.href = pts.length === 1
+    ? `https://www.google.com/maps/search/?api=1&query=${e(pts[0])}`
+    : `https://www.google.com/maps/dir/?api=1&travelmode=${mode}` +
+      `&origin=${e(pts[0])}&destination=${e(pts[pts.length - 1])}` +
+      (pts.length > 2 ? `&waypoints=${pts.slice(1, -1).map(e).join("|")}` : "");
+}
+/* 視窗從手機寬度拉到電腦寬度時補載，反過來就收起 */
+DESKTOP.addEventListener("change", () => paintDayMap(TRIP_DATA.days.find(d => d.id === current)));
 
 function paintForecast(){
   const strip = document.getElementById("wx-strip");

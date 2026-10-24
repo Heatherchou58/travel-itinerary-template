@@ -50,6 +50,8 @@ SWAP_TRIP = {
         "place": {"name": "Sydney", "nameLocal": "Sydney",
                   "lat": -33.8688, "lon": 151.2093, "timezone": "Australia/Sydney"},
         "money": {"home": "TWD", "local": "AUD", "rate": 21.5},
+        # 電腦版右側的當日路線地圖。測試裡會把 Google 的請求攔掉，只驗網址
+        "mapsEmbedKey": "TEST_EMBED_KEY",
         "members": ["A", "B"],
         "categories": ["食", "行"],
     },
@@ -1070,6 +1072,68 @@ def run(trip: str) -> bool:
             heads = [x.strip() for x in pack.locator(".chk-group h4").all_inner_texts()]
             r.check("行李清單：照五大類排列", heads[:5] == ["證件與錢", "電子產品", "衣物與鞋", "盥洗與藥品", "隨身雜物"],
                     "／".join(heads))
+            ctx.close()
+
+            # 7f ── 電腦版的當日路線地圖 ──────────────────
+            # 攔掉 Google 的地圖請求：只驗 iframe 的網址對不對，不真的載入
+            def map_page(width, url=swap):
+                c = browser.new_context(viewport={"width": width, "height": 900})
+                c.route("**/maps/embed/**", lambda rt: rt.abort())
+                pg = c.new_page()
+                errs = []
+                pg.on("pageerror", lambda e: errs.append(str(e)))
+                pg.goto(url)
+                pg.wait_for_load_state("networkidle")
+                pg.wait_for_timeout(500)
+                return c, pg, errs
+
+            from urllib.parse import urlparse, parse_qs
+            ctx, page, errs = map_page(1400)
+            dm = page.locator("#daymap")
+            src = page.locator("#daymap iframe").get_attribute("src") or ""
+            qs = parse_qs(urlparse(src).query)
+            r.check("地圖（寬 1400）：看得到", dm.is_visible())
+            r.check("地圖：用 Embed API 的路線模式", src.startswith("https://www.google.com/maps/embed/v1/directions?"), src[:70])
+            r.check("地圖：帶金鑰", qs.get("key") == ["TEST_EMBED_KEY"])
+            # 第一天：雪梨歌劇院（沒有地圖連結，退回當地語標題＋地點）→ 測試飯店
+            r.check("地圖：起點是當天第一站", qs.get("origin") == ["Sydney Opera House, Bennelong Point"], str(qs.get("origin")))
+            r.check("地圖：終點是當天最後一站（住宿）", qs.get("destination") == ["測試飯店, 1 Test St"], str(qs.get("destination")))
+            r.check("地圖：當天有開車就畫開車路線", qs.get("mode") == ["driving"], str(qs.get("mode")))
+            mb, db = page.locator("main").bounding_box(), dm.bounding_box()
+            r.check("地圖（寬 1400）：在行程右邊的第三欄", db["x"] > mb["x"] + mb["width"] - 1,
+                    f"地圖 x={round(db['x'])}、行程右緣 {round(mb['x'] + mb['width'])}")
+            href = page.locator(".daymap-open").get_attribute("href") or ""
+            r.check("地圖：「在 Google 地圖開啟」是同一條路線",
+                    "maps/dir/?api=1" in href and "travelmode=driving" in href and "Sydney" in href, href[:80])
+            # 沒有景點的分頁不畫。但版面寬度不能跟著變：退回兩欄會整個重新置中，
+            # 切分頁時左邊的按鈕橫向跳將近 200px
+            nav_x = page.locator(".nav-bar").bounding_box()["x"]
+            page.locator(".nav-item").nth(1).click()
+            page.wait_for_timeout(400)
+            r.check("地圖：沒有景點的那天不顯示", not dm.is_visible())
+            nav_x2 = page.locator(".nav-bar").bounding_box()["x"]
+            r.check("地圖：切到沒地圖的分頁，左欄不會移動", abs(nav_x2 - nav_x) < 1,
+                    f"{round(nav_x)} → {round(nav_x2)}")
+            r.check("地圖：沒有 JS 例外", not errs, "；".join(errs))
+            ctx.close()
+
+            ctx, page, errs = map_page(1100)
+            mb, db = page.locator("main").bounding_box(), page.locator("#daymap").bounding_box()
+            r.check("地圖（寬 1100）：放在行程上方", db and db["y"] + db["height"] <= mb["y"] + 1,
+                    f"地圖底 {round(db['y'] + db['height']) if db else '—'}、行程頂 {round(mb['y'])}")
+            ctx.close()
+
+            ctx, page, errs = map_page(400)
+            r.check("地圖（手機）：不顯示", not page.locator("#daymap").is_visible())
+            r.check("地圖（手機）：iframe 沒有設網址，不會載入",
+                    page.locator("#daymap iframe").get_attribute("src") is None)
+            ctx.close()
+
+            # 沒填金鑰的網站（目前真正的九州網站）：電腦寬度也不顯示、不出錯
+            ctx, page, errs = map_page(1400, base)
+            r.check("地圖：沒有金鑰就不顯示", not page.locator("#daymap").is_visible()
+                    and page.locator(".app.has-map").count() == 0)
+            r.check("地圖：沒有金鑰也沒有 JS 例外", not errs, "；".join(errs))
             ctx.close()
 
             # 8 ── 匯率查不到（rate = null）時網站不能壞 ───────
