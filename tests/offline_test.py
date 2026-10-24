@@ -574,6 +574,13 @@ def run(trip: str) -> bool:
             tag = ride.locator(".time + .stay")
             r.check("交通卡：總耗時放在時間旁邊", tag.count() == 1 and "總耗時約 25 分" in tag.inner_text(),
                     tag.inner_text() if tag.count() else "沒有標籤")
+            # 上一站最後一行字到下一站圓點的距離。以前站與站之間會另外插一段 34px 的連接線，
+            # 站點自己也畫線之後就變成一塊空白
+            gaps = ride.locator(".route").evaluate("""r => { const st = [...r.querySelectorAll(".route-step")];
+                return st.slice(0, -1).map((s, i) => Math.round(
+                    st[i + 1].querySelector(".route-dot").getBoundingClientRect().top
+                    - s.querySelector(".route-body").lastElementChild.getBoundingClientRect().bottom)); }""")
+            r.check("交通卡：站與站之間沒有多餘空白", bool(gaps) and max(gaps) <= 24, f"{gaps} px")
 
             # 景點介紹：預設收合，點了才展開
             intro = page.locator("details.intro")

@@ -479,12 +479,23 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 /* ── 交通路線 ─────────────────────────── */
 .route{ margin-top:var(--sp-3); padding-left:2px; }
 .route-step{ display:flex; gap:var(--sp-3); align-items:flex-start; position:relative; }
-/* 站與站之間的線只畫在 .route-link 裡；這一站有出口說明或提醒框時整列會被撐高，
-   圓點下面就空一截。所以從圓點底下一路畫到這一列的底部，接上下一段。
+/* 站與站之間的線由站點自己畫：從圓點底下一路畫到下一站的圓點（bottom -5px＝下一站圓點的上緣），
+   這一站有出口說明或提醒框時線跟著拉長，不會斷，也不用另外插一段連接線（那會多出一塊空白）。
    left 7px＝圓點欄 18px 的正中間減掉線寬的一半；top 23px＝圓點上緣 5px＋圓點 18px。 */
 .route-step:not(:last-child)::before{
-  content:""; position:absolute; left:7px; top:23px; bottom:0; width:4px;
+  content:""; position:absolute; left:7px; top:23px; bottom:-5px; width:4px;
   background:var(--c-line);
+}
+/* 光點沿著這條線由上往下流 */
+.route-step:not(:last-child)::after{
+  content:""; position:absolute; left:7px; width:4px; height:12px; border-radius:2px;
+  background:var(--c-accent); animation:flow-step 1.8s linear infinite;
+}
+@keyframes flow-step{
+  from{ top:23px; opacity:0; }
+  15% { opacity:.85; }
+  85% { opacity:.85; }
+  to  { top:calc(100% - 7px); opacity:0; }
 }
 .route-dot{
   position:relative; flex:0 0 14px; width:14px; height:14px; margin-top:5px;
@@ -502,7 +513,8 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
   70%  { transform:scale(2.6); opacity:0; }
   100% { transform:scale(1);   opacity:0; }
 }
-.route-body{ flex:1; padding-bottom:var(--sp-2); }
+.route-body{ flex:1; padding-bottom:var(--sp-3); }
+.route-step:last-child .route-body{ padding-bottom:0; }
 .route-body strong{ font-size:var(--fs-md); }
 /* 經過站：只是讓人數站數用的，淡一點，視線才會落在起終點與轉乘站 */
 .route-dot:not(.on) + .route-body strong{ font-size:var(--fs-sm); font-weight:400; color:var(--c-text-dim); }
@@ -1081,7 +1093,7 @@ const RENDERERS = {
     <div class="subject">${esc(b.title)}</div>
     ${b.line ? `<div class="meta">🚇 ${esc(b.line)}</div>` : ""}
     ${b.duration ? `<div class="meta">⏱️ ${esc(b.duration)}</div>` : ""}
-    <div class="route">${(b.steps||[]).map((s, i, all) => {
+    <div class="route">${(b.steps||[]).map(s => {
       const dot = s.via ? "" : `<div class="route-step">
            <div class="route-dot${s.active ? " on" : ""}"></div>
            <div class="route-body">
@@ -1090,11 +1102,8 @@ const RENDERERS = {
              ${s.note ? `<div class="note-box warn">⚠️ ${esc(s.note)}</div>` : ""}
            </div></div>`;
       if (s.via) return `<div class="route-link"><div class="bar"></div><div class="via">${esc(s.via)}</div></div>`;
-      // 站與站之間自動補一條流動的連接線
-      const next = all[i + 1];
-      const line = (next && !next.via)
-        ? `<div class="route-link"><div class="bar"></div><div class="via"></div></div>` : "";
-      return dot + line;
+      // 站與站之間的線由 .route-step::before 畫到下一站，不另外插連接線
+      return dot;
     }).join("")}</div>
     ${notesHTML(b.notes)}${linksHTML(b.links)}</div>`,
 
