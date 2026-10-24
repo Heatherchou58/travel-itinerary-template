@@ -404,10 +404,14 @@ export function parseGrids(book){
   let shopping = null;
   if (shopT){
     const byGroup = new Map();
+    const coupons = new Set();
     shopT.rows.forEach(r => {
       const name = s(r["項目"]);
       if (!name) return;
       const gn = s(r["群組"]) || "其他";
+      /* 「類型」填券的群組不給數量與金額欄位——券是用掉的，不是買到的。
+         跟打包清單的「分頁」一樣，整組看同一個值，填在哪一列都算。 */
+      if (/券/.test(s(r["類型"]))) coupons.add(gn);
       if (!byGroup.has(gn)) byGroup.set(gn, []);
       const it = { name };
       const who = s(r["誰要的"]); if (who) it.who = who;
@@ -418,7 +422,8 @@ export function parseGrids(book){
       byGroup.get(gn).push(it);
     });
     if (byGroup.size){
-      const groups = [...byGroup].map(([name, items]) => ({ name, items }));
+      const groups = [...byGroup].map(([name, items]) =>
+        coupons.has(name) ? { name, coupon: true, items } : { name, items });
       const all = groups.flatMap(g => g.items);
       /* 說明依實際內容生成：沒有圖就不必講放大，沒有連結就不必講現場生成 */
       const notes = [];

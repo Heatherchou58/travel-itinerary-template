@@ -247,6 +247,8 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
   width:100%; height:120px; object-fit:cover;
   border-radius:8px; background:var(--c-accent-soft); cursor:zoom-in;
 }
+/* 券沒有勾選框，名稱直接當文字。高度對齊 .chk，同一列的卡片才不會參差 */
+.shop-name{ display:flex; align-items:center; min-height:44px; font-size:var(--fs-sm); line-height:1.4; }
 .shop-who{ display:block; font-size:var(--fs-xs); font-weight:400; color:var(--c-text-dim); }
 .shop-note, .shop-amt{ font-size:var(--fs-xs); padding:6px var(--sp-2); min-height:36px; }
 .shop-link{ margin:0; width:100%; text-align:center; }
@@ -2340,6 +2342,7 @@ const TRIP_DATA = {
           "groups": [
             {
               "name": "折價券",
+              "coupon": true,
               "items": [
                 {
                   "name": "唐吉訶德 Donki",
@@ -2506,13 +2509,58 @@ const TRIP_DATA = {
               "quota": 0,
               "register": true,
               "note": "海外一般消費 2% 無上限。精選通路（含 SUICA、PASMO、ICOCA 等交通卡儲值）有加碼。\n需先完成指定設定。"
+            },
+            {
+              "name": "PayPay × 玉山 Wallet 綁台外幣帳戶",
+              "rate": 11.5,
+              "regions": "日本 PayPay 商店",
+              "until": "2026-12-31",
+              "quota": 868,
+              "register": false,
+              "note": "2026-10-24 查證。回饋最高的組合，但上限也最低——每月歸戶上限 500 日圓，以 11.5% 計約 4,350 日圓就滿，而且每月活動總預算等值新臺幣 60 萬元，額滿即止。\n綁的是玉山台、外幣帳戶，不是信用卡，所以拿不到任何刷卡回饋。\n另免 1.5% 跨國手續費，所以廣告上寫 13%。"
+            },
+            {
+              "name": "PayPay × 台新 Pay+ 綁 Richart",
+              "rate": 3.8,
+              "regions": "日本 PayPay 商店",
+              "until": "2027-03-31",
+              "quota": 0,
+              "register": true,
+              "note": "2026-10-24 查證。要先在 Richart Life App 切換「Pay著刷」權益。\n實質沒有額度問題：加碼以每期帳單的永久信用額度加計 NT$30 萬為限。大筆消費用這個最划算。\n⚠️ 台新這檔活動的官方新聞稿寫「即日起至 2026 年 6 月 30 日」，但 Richart 的「Pay著刷」權益本身列到 2027-03-31。兩者對不上，出發前要在 App 裡確認還有沒有。\n另免 1.5% 海外手續費，所以廣告上寫 5.3%。"
+            },
+            {
+              "name": "PayPay × 玉山 Wallet 綁熊本熊卡",
+              "rate": 3.5,
+              "regions": "日本 PayPay 商店",
+              "until": "2026-12-31",
+              "quota": 2857,
+              "register": false,
+              "note": "2026-10-24 查證，玉山官方活動頁。不限新舊戶。\n每歸戶每季回饋上限 100 元，以 3.5% 計約刷 NT$2,857 就滿。\n⚠️ 這 3.5% 不與熊本熊卡的日本一般消費 2.5%、指定日本商店加碼疊加——走 Wallet 掃 PayPay 就拿不到那些，大筆消費直接刷卡反而比較好。\n另免 1.5% 國外交易服務費，所以廣告上寫 5%。"
+            },
+            {
+              "name": "PayPay × 全支付 綁國泰世華卡",
+              "rate": 3.5,
+              "regions": "日本 PayPay 商店",
+              "until": "2026-12-31",
+              "quota": 4000,
+              "register": false,
+              "note": "2026-10-24 查證。全支付是唯一（除玉山外）支援綁信用卡的，但限國泰世華。\n筆筆 3.5%：單筆上限 35 全點、每月上限 140 全點。\n單筆滿 NT$3,000 另享 4%（單筆上限 120 全點），指定帳戶或信用卡再加碼 5%。\n當月註冊新戶另有 5%（當月上限 100 全點）。\n另免 1.5% 海外手續費。"
+            },
+            {
+              "name": "PayPay × 街口 綁街口或銀行帳戶",
+              "rate": 2,
+              "regions": "日本 PayPay 商店",
+              "until": "2026-12-31",
+              "quota": 0,
+              "register": false,
+              "note": "2026-10-24 查證。回饋最低，但**上限最高**——精選通路每月 1 萬街口幣，以 2% 計要刷到 NT$50 萬才會滿，實務上用不完。買貴的東西時這個反而最穩。\n一般消費 1% ＋ 精選加碼 1%，另免 1.5% 海外手續費，所以廣告上寫 3.5%。\n⚠️ 以 TWQR 形式消費不算精選通路，只有 1%。\n街口只能綁街口帳戶或銀行帳戶，綁不了信用卡——台新街口聯名卡是拿來儲值街口帳戶的，不是直接綁卡。"
             }
           ]
         },
         {
           "type": "checklist",
           "key": "shoplist",
-          "title": "🧾 免稅新制與行動支付",
+          "title": "🧾 日本免稅新制",
           "groups": [
             {
               "name": "日本免稅 2026-11-01 改制（你整趟都適用新制）",
@@ -2532,23 +2580,6 @@ const TRIP_DATA = {
                 {
                   "text": "記得門檻是同店同日未稅 5,000 円以上",
                   "note": "分開結帳可能湊不到門檻。"
-                }
-              ]
-            },
-            {
-              "name": "PayPay：台灣門號註冊不了，要用台灣的電子支付掃碼",
-              "items": [
-                {
-                  "text": "在手機裝好要用的台灣電子支付",
-                  "note": "全支付、街口、玉山 Wallet、台新 Pay+、一卡通 iPASS MONEY、全盈+PAY 都能掃日本的 PayPay QR Code。"
-                },
-                {
-                  "text": "確認你的卡能綁哪一個",
-                  "note": "全支付限國泰卡、街口限台新街口聯名卡、台新 Pay+ 限台新卡；玉山 Wallet 支援綁卡但要先開通電子支付並實名認證。各家說法不一，出發前在 App 裡實際確認。"
-                },
-                {
-                  "text": "App 內把地區切換到日本",
-                  "note": "以當日匯率換算台幣扣款，多數標榜免海外交易手續費。"
                 }
               ]
             }
@@ -2987,13 +3018,17 @@ const RENDERERS = {
      勾選與輸入全部走 data-sid／data-snote／data-samt，由就地更新的處理器接手。 */
   shopping: b => {
     const s = shopBag();
+    /* 券是「用掉」不是「買到」，所以不給數量與金額。旗標在群組層級，
+       自己在網站上加進這一組的項目也一樣不給，同一組才不會長得不一樣。 */
+    const coupon = new Set((b.groups || []).filter(g => g.coupon).map(g => g.name));
     return `<div class="card"><div class="subject">${esc(b.title || "購物清單")}</div>
       ${notesHTML(b.notes)}
       ${[...shopGroups(b)].map(([name, items]) => {
         const done = items.filter(it => (s.edits[it.id] || {}).done).length;
+        const isCoupon = coupon.has(name);
         return `<details class="shop-g" data-group="${esc(name)}" open>
           <summary><span class="shop-gn">${esc(name)}</span>
-            <span class="shop-n">${done}/${items.length}</span>
+            <span class="shop-n">${isCoupon ? `共 ${items.length} 張` : `${done}/${items.length}`}</span>
             <button class="shop-gx" data-delgroup="${esc(name)}" type="button">刪除群組</button></summary>
           <div class="shop-grid">${items.map(it => {
             const ed = s.edits[it.id] || {};
@@ -3001,10 +3036,12 @@ const RENDERERS = {
             return `<div class="shop-i${it.img ? "" : " no-img"}" data-id="${esc(it.id)}">
               <button class="shop-x" data-del="${esc(it.id)}" type="button" aria-label="刪除${esc(it.name)}">✕</button>
               ${it.img ? `<img class="shop-img" src="${esc(it.img)}" data-zoom="${esc(it.img)}" alt="${esc(it.name)}" loading="lazy">` : ""}
-              <label class="chk"><input type="checkbox" data-sid="${esc(it.id)}"${ed.done ? " checked" : ""}><span>${esc(it.name)}${it.who ? `<span class="shop-who">${esc(it.who)}</span>` : ""}</span></label>
+              ${isCoupon
+                ? `<div class="shop-name">${esc(it.name)}</div>`
+                : `<label class="chk"><input type="checkbox" data-sid="${esc(it.id)}"${ed.done ? " checked" : ""}><span>${esc(it.name)}${it.who ? `<span class="shop-who">${esc(it.who)}</span>` : ""}</span></label>`}
               ${it.url ? `<a class="btn shop-link" href="${esc(it.url)}" target="_blank" rel="noopener">開啟優惠券</a>` : ""}
-              <input class="input shop-note" data-snote="${esc(it.id)}" value="${esc(ed.note || "")}" placeholder="數量／備註" autocomplete="off">
-              <input class="input shop-amt" type="number" inputmode="numeric" min="0" data-samt="${esc(it.id)}" value="${esc(String(ed.amount ?? ""))}" placeholder="金額">
+              ${isCoupon ? "" : `<input class="input shop-note" data-snote="${esc(it.id)}" value="${esc(ed.note || "")}" placeholder="數量／備註" autocomplete="off">
+              <input class="input shop-amt" type="number" inputmode="numeric" min="0" data-samt="${esc(it.id)}" value="${esc(String(ed.amount ?? ""))}" placeholder="金額">`}
             </div>`;
           }).join("")}</div>
           <form class="shop-add" data-addto="${esc(name)}">

@@ -18,15 +18,17 @@ const STYLE_FROM = "打包清單";
 const SHOP = {
   name: "購物清單",
   desc: "想買的東西與優惠券。「圖片」填 img/ 底下的檔名，產生的網站上點圖就會放大給店員看，"
-      + "離線也打得開；要現場生成的券改填「連結」，會變成一顆跳轉按鈕。整張留空就不會有購物分頁。",
-  headers: ["群組", "項目", "誰要的", "圖片", "連結"],
-  widths: [18, 26, 14, 28, 52],
+      + "離線也打得開；要現場生成的券改填「連結」，會變成一顆跳轉按鈕。"
+      + "「類型」填「券」的那一組不會有數量與金額欄位——券是用掉的，不是買到的；"
+      + "整組看同一個值，填在哪一列都算。整張留空就不會有購物分頁。",
+  headers: ["群組", "類型", "項目", "誰要的", "圖片", "連結"],
+  widths: [18, 10, 26, 14, 28, 52],
   /* 填入的欄位要上奶油色底，跟其他工作表一致 */
-  fillFrom: [1, 1, 1, 1, 1],
+  fillFrom: [1, 1, 1, 1, 1, 1],
   rows: [
-    ["折價券", "鶴羽藥妝", "", "img/tsuruha.jpg", ""],
-    ["折價券", "唐吉訶德 Donki", "", "", "https://japanportal.donki-global.com/coupon/cp001_zhtw.html"],
-    ["藥妝店", "資生堂吸油面紙", "媽媽", "", ""],
+    ["折價券", "券", "鶴羽藥妝", "", "img/tsuruha.jpg", ""],
+    ["折價券", "券", "唐吉訶德 Donki", "", "", "https://japanportal.donki-global.com/coupon/cp001_zhtw.html"],
+    ["藥妝店", "", "資生堂吸油面紙", "媽媽", "", ""],
   ],
 };
 
@@ -94,6 +96,8 @@ const S = {
 };
 
 let changed = 0;
+/* 刻意重建的工作表，最後比對時不當成誤傷 */
+const rebuilt = new Set();
 
 /* ── ① 打包清單加「分頁」欄 ─────────────────── */
 const packHeaders = [];
@@ -112,7 +116,20 @@ if (!packHeaders.includes("分頁")){
 
 /* ── ② 兩張新工作表 ─────────────────────── */
 for (const spec of [SHOP, CARD]){
-  if (wb.getWorksheet(spec.name)){ console.log(`－ 「${spec.name}」已存在`); continue; }
+  const old = wb.getWorksheet(spec.name);
+  if (old){
+    /* 標頭對得上就不動。對不上代表欄位改過了——這兩張表是這支腳本自己
+       建的、只有範例資料，直接重建比插欄安全。 */
+    const have = [];
+    for (let c = 1; c <= old.columnCount; c++) have.push(String(old.getCell(4, c).value ?? ""));
+    if (have.join("|") === spec.headers.join("|")){
+      console.log(`－ 「${spec.name}」已存在且欄位相同`);
+      continue;
+    }
+    console.log(`  「${spec.name}」欄位變了：${have.join("／")} → ${spec.headers.join("／")}，重建`);
+    wb.removeWorksheet(old.id);
+    rebuilt.add(spec.name);
+  }
   const ws = wb.addWorksheet(spec.name);
   ws.getRow(1).height = src.getRow(1).height;
   ws.getRow(2).height = src.getRow(2).height;
@@ -191,6 +208,7 @@ for (const ws of wb2.worksheets){
 console.log("\n── 比對其他工作表 ──");
 let bad = 0;
 for (const name of Object.keys(before)){
+  if (rebuilt.has(name)){ console.log(`  ${name}：刻意重建，略過比對`); continue; }
   if (name === STYLE_FROM || name === "說明"){
     /* 這兩張是刻意改的，只檢查原本的內容都還在 */
     const missing = before[name].filter(x => !after[name].includes(x));

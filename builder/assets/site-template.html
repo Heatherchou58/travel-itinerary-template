@@ -247,6 +247,8 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
   width:100%; height:120px; object-fit:cover;
   border-radius:8px; background:var(--c-accent-soft); cursor:zoom-in;
 }
+/* 券沒有勾選框，名稱直接當文字。高度對齊 .chk，同一列的卡片才不會參差 */
+.shop-name{ display:flex; align-items:center; min-height:44px; font-size:var(--fs-sm); line-height:1.4; }
 .shop-who{ display:block; font-size:var(--fs-xs); font-weight:400; color:var(--c-text-dim); }
 .shop-note, .shop-amt{ font-size:var(--fs-xs); padding:6px var(--sp-2); min-height:36px; }
 .shop-link{ margin:0; width:100%; text-align:center; }
@@ -1047,13 +1049,17 @@ const RENDERERS = {
      勾選與輸入全部走 data-sid／data-snote／data-samt，由就地更新的處理器接手。 */
   shopping: b => {
     const s = shopBag();
+    /* 券是「用掉」不是「買到」，所以不給數量與金額。旗標在群組層級，
+       自己在網站上加進這一組的項目也一樣不給，同一組才不會長得不一樣。 */
+    const coupon = new Set((b.groups || []).filter(g => g.coupon).map(g => g.name));
     return `<div class="card"><div class="subject">${esc(b.title || "購物清單")}</div>
       ${notesHTML(b.notes)}
       ${[...shopGroups(b)].map(([name, items]) => {
         const done = items.filter(it => (s.edits[it.id] || {}).done).length;
+        const isCoupon = coupon.has(name);
         return `<details class="shop-g" data-group="${esc(name)}" open>
           <summary><span class="shop-gn">${esc(name)}</span>
-            <span class="shop-n">${done}/${items.length}</span>
+            <span class="shop-n">${isCoupon ? `共 ${items.length} 張` : `${done}/${items.length}`}</span>
             <button class="shop-gx" data-delgroup="${esc(name)}" type="button">刪除群組</button></summary>
           <div class="shop-grid">${items.map(it => {
             const ed = s.edits[it.id] || {};
@@ -1061,10 +1067,12 @@ const RENDERERS = {
             return `<div class="shop-i${it.img ? "" : " no-img"}" data-id="${esc(it.id)}">
               <button class="shop-x" data-del="${esc(it.id)}" type="button" aria-label="刪除${esc(it.name)}">✕</button>
               ${it.img ? `<img class="shop-img" src="${esc(it.img)}" data-zoom="${esc(it.img)}" alt="${esc(it.name)}" loading="lazy">` : ""}
-              <label class="chk"><input type="checkbox" data-sid="${esc(it.id)}"${ed.done ? " checked" : ""}><span>${esc(it.name)}${it.who ? `<span class="shop-who">${esc(it.who)}</span>` : ""}</span></label>
+              ${isCoupon
+                ? `<div class="shop-name">${esc(it.name)}</div>`
+                : `<label class="chk"><input type="checkbox" data-sid="${esc(it.id)}"${ed.done ? " checked" : ""}><span>${esc(it.name)}${it.who ? `<span class="shop-who">${esc(it.who)}</span>` : ""}</span></label>`}
               ${it.url ? `<a class="btn shop-link" href="${esc(it.url)}" target="_blank" rel="noopener">開啟優惠券</a>` : ""}
-              <input class="input shop-note" data-snote="${esc(it.id)}" value="${esc(ed.note || "")}" placeholder="數量／備註" autocomplete="off">
-              <input class="input shop-amt" type="number" inputmode="numeric" min="0" data-samt="${esc(it.id)}" value="${esc(String(ed.amount ?? ""))}" placeholder="金額">
+              ${isCoupon ? "" : `<input class="input shop-note" data-snote="${esc(it.id)}" value="${esc(ed.note || "")}" placeholder="數量／備註" autocomplete="off">
+              <input class="input shop-amt" type="number" inputmode="numeric" min="0" data-samt="${esc(it.id)}" value="${esc(String(ed.amount ?? ""))}" placeholder="金額">`}
             </div>`;
           }).join("")}</div>
           <form class="shop-add" data-addto="${esc(name)}">

@@ -241,7 +241,7 @@ const blocksOf = type => T.days.flatMap(d => d.blocks || []).filter(b => b.type 
 
 const sh = wb.getWorksheet("購物清單");
 if (sh) {
-  const st = grabStyle(sh, 5);
+  const st = grabStyle(sh, 6);
   clear(sh, 5);
   let sr = 5;
   for (const b of blocksOf("shopping"))
@@ -249,10 +249,12 @@ if (sh) {
       const R = sh.getRow(sr);
       putStyle(sh, sr, st);
       R.getCell(1).value = g.name;
-      R.getCell(2).value = it.name || "";
-      R.getCell(3).value = it.who || "";
-      R.getCell(4).value = it.img || "";
-      R.getCell(5).value = it.url || "";
+      /* 券不給數量與金額欄位，旗標在群組層級，所以整組每一列都寫 */
+      R.getCell(2).value = g.coupon ? "券" : "";
+      R.getCell(3).value = it.name || "";
+      R.getCell(4).value = it.who || "";
+      R.getCell(5).value = it.img || "";
+      R.getCell(6).value = it.url || "";
       sr++;
     }
 }
@@ -357,7 +359,8 @@ ok("機器翻譯的當地語已留空",
 
 const blockOf = (X, t) => X.days.flatMap(d => d.blocks || []).find(b => b.type === t);
 const shopRows = X => (blockOf(X, "shopping")?.groups || [])
-  .flatMap(g => g.items.map(i => [g.name, i.name, i.who || "", i.img || "", i.url || ""].join("/")));
+  .flatMap(g => g.items.map(i =>
+    [g.name, g.coupon ? "券" : "", i.name, i.who || "", i.img || "", i.url || ""].join("/")));
 ok("購物清單一致", shopRows(T).join("|") === shopRows(B).join("|"),
    shopRows(T).length + " 項 → " + shopRows(B).length + " 項");
 

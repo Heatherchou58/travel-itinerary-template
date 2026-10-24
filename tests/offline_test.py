@@ -91,7 +91,8 @@ SWAP_TRIP = {
             ]},
             {"type": "shopping", "title": "購物", "notes": ["購物說明"],
              "groups": [
-                 {"name": "折價券", "items": [
+                 # coupon 的群組不給數量與金額欄位——券是用掉的，不是買到的
+                 {"name": "折價券", "coupon": True, "items": [
                      {"name": "有圖的券", "img": "img/swap-coupon.png"},
                      {"name": "要現場生成的券", "url": "https://example.com/coupon"}]},
                  {"name": "藥妝店", "items": [
@@ -567,13 +568,32 @@ def run(trip: str) -> bool:
             r.check("購物：誰要的有顯示",
                     "媽媽" in page.locator('.shop-i[data-id="藥妝店:托買的東西"]').inner_text())
 
-            coupon = page.locator('.shop-i[data-id="折價券:有圖的券"]')
-            coupon.locator("input[type=checkbox]").check()
+            # 券是用掉、不是買到，所以整組都不該有數量與金額
+            r.check("購物：券的群組沒有數量與金額欄位",
+                    page.locator('.shop-g[data-group="折價券"] .shop-note').count() == 0
+                    and page.locator('.shop-g[data-group="折價券"] .shop-amt').count() == 0,
+                    f"{page.locator('.shop-g[data-group=\"折價券\"] .shop-note').count()} 個備註／"
+                    f"{page.locator('.shop-g[data-group=\"折價券\"] .shop-amt').count()} 個金額")
+            r.check("購物：商品的群組有數量與金額欄位",
+                    page.locator('.shop-g[data-group="藥妝店"] .shop-note').count() == 1
+                    and page.locator('.shop-g[data-group="藥妝店"] .shop-amt').count() == 1)
+            # 券不是待辦事項，是拿出來給店員看的東西，所以也不給勾選框
+            r.check("購物：券沒有勾選框",
+                    page.locator('.shop-g[data-group="折價券"] input[type=checkbox]').count() == 0,
+                    f"{page.locator('.shop-g[data-group=\"折價券\"] input[type=checkbox]').count()} 個")
+            r.check("購物：券的群組標題顯示張數不是進度",
+                    page.locator('.shop-g[data-group="折價券"] .shop-n').inner_text() == "共 2 張",
+                    page.locator('.shop-g[data-group="折價券"] .shop-n').inner_text())
+            r.check("購物：券的名稱還是看得到",
+                    "有圖的券" in page.locator('.shop-i[data-id="折價券:有圖的券"]').inner_text())
+
+            item = page.locator('.shop-i[data-id="藥妝店:托買的東西"]')
+            item.locator("input[type=checkbox]").check()
             page.wait_for_timeout(300)
             r.check("購物：勾選後群組計數就地更新",
-                    page.locator('.shop-g[data-group="折價券"] .shop-n').inner_text() == "1/2",
-                    page.locator('.shop-g[data-group="折價券"] .shop-n').inner_text())
-            amt = coupon.locator(".shop-amt")
+                    page.locator('.shop-g[data-group="藥妝店"] .shop-n').inner_text() == "1/1",
+                    page.locator('.shop-g[data-group="藥妝店"] .shop-n').inner_text())
+            amt = item.locator(".shop-amt")
             amt.click()
             amt.type("1600", delay=30)
             page.wait_for_timeout(300)
@@ -588,11 +608,11 @@ def run(trip: str) -> bool:
             page.wait_for_timeout(1200)
             page.locator(".nav-item").nth(1).click()
             page.wait_for_timeout(400)
-            coupon = page.locator('.shop-i[data-id="折價券:有圖的券"]')
-            r.check("購物：重新整理後勾選與金額都還在",
-                    coupon.locator("input[type=checkbox]").is_checked()
-                    and coupon.locator(".shop-amt").input_value() == "1600",
-                    coupon.locator(".shop-amt").input_value())
+            r.check("購物：重新整理後商品的勾選還在",
+                    page.locator('.shop-i[data-id="藥妝店:托買的東西"] input[type=checkbox]').is_checked())
+            r.check("購物：重新整理後商品的金額還在",
+                    page.locator('.shop-i[data-id="藥妝店:托買的東西"] .shop-amt').input_value() == "1600",
+                    page.locator('.shop-i[data-id="藥妝店:托買的東西"] .shop-amt').input_value())
 
             # ✕ 的熱區。圓圈只有 28px（放大會擋住券上的條碼），
             # 靠 ::after 補到 44px——所以要量實際可點範圍，不是元素尺寸。
