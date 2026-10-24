@@ -187,6 +187,120 @@ if (doc){
   }
 }
 
+/* 刻意換掉的舊值：最後比對時不算「遺失」 */
+const gone = { 行程: new Set(), 說明: new Set() };
+const replaceText = (ws, r, c, from, to) => {
+  const cell = ws.getCell(r, c);
+  const old = String(cell.value ?? "");
+  if (old.includes(to)) return false;
+  if (!old.includes(from)) { console.error(`「${ws.name}」${r},${c} 找不到：${from.slice(0, 30)}`); process.exit(1); }
+  gone[ws.name].add(JSON.stringify(cell.value));
+  cell.value = old.replace(from, to);
+  return true;
+};
+
+/* ── ④ 行程：交通(分)、營業時間、費用、電話 ─────── */
+const PLAN_COLS = [
+  { name: "交通(分)", like: 3, width: 10 },   // 數字，樣式抄「停留(分)」
+  { name: "營業時間", like: 9, width: 30 },   // 文字，樣式抄「地點」
+  { name: "費用",     like: 9, width: 22 },
+  { name: "電話",     like: 9, width: 18 },
+];
+const plan = wb.getWorksheet("行程");
+if (plan){
+  const have = [];
+  for (let c = 1; c <= plan.columnCount; c++) have.push(String(plan.getCell(4, c).value ?? ""));
+  if (have.includes(PLAN_COLS[0].name)){
+    console.log("－ 「行程」已經有交通(分) 等欄位");
+  } else {
+    /* 接在最後面（第 15 欄起）。時間欄的公式只引用 $A/$C/$D，插在中間雖然也
+       碰不到，但匯出工具是照欄號寫的，「說明」裡也寫死了「連結樣式（第 14 欄）」。 */
+    const first = have.length + 1;
+    const head = plan.getCell(4, have.length).style;
+    PLAN_COLS.forEach((col, i) => {
+      const c = first + i;
+      plan.getCell(4, c).value = col.name;
+      plan.getCell(4, c).style = head;
+      for (let r = 5; r <= plan.rowCount; r++) plan.getCell(r, c).style = plan.getCell(r, col.like).style;
+      plan.getColumn(c).width = col.width;
+    });
+    const last = first + PLAN_COLS.length - 1;
+    const L = n => String.fromCharCode(64 + n);
+
+    /* 換天底色原本只蓋到 M 欄，新欄位要是白的，表格會一半有色一半沒有。
+       規則公式一字不改，只多套到 N 起（順便補上原本就漏掉的 N 欄）。 */
+    const cfs = plan.conditionalFormattings || [];
+    let pr = Math.max(0, ...cfs.flatMap(x => x.rules.map(r => r.priority || 0)));
+    const rules = cfs.filter(x => /^A5:/.test(x.ref)).flatMap(x => x.rules)
+      .map(r => ({ ...JSON.parse(JSON.stringify(r)), priority: ++pr }));
+    plan.addConditionalFormatting({ ref: `N5:${L(last)}400`, rules });
+
+    replaceText(plan, 2, 1,
+      "「停留(分)」填這個項目要花多久（交通就是移動時間），",
+      "「停留(分)」填這一列總共佔掉多久——開車或走過去的時間也算進去，「時間」欄靠它往下推。" +
+      "其中花在路上的另外填在「交通(分)」，網站會自己扣掉，卡片上才分得出車程與停留。");
+    console.log(`✓ 「行程」加上 ${PLAN_COLS.map(c => c.name).join("、")}（第 ${first}–${last} 欄），換天底色延伸到 ${L(last)} 欄`);
+    changed++;
+  }
+}
+
+/* ── ⑤ 說明：說明欄該寫什麼 ───────────────── */
+const RULES_TITLE = "說明／備註 的寫法";
+if (doc){
+  let has = false, introRow = -1, last = 0;
+  for (let r = 1; r <= doc.rowCount; r++){
+    const v = String(doc.getCell(r, 2).value ?? "");
+    if (v === RULES_TITLE) has = true;
+    if (v === "說明／備註") introRow = r;
+    if (doc.getCell(r, 2).value || doc.getCell(r, 3).value) last = r;
+  }
+  if (has){
+    console.log("－ 「說明」已經有說明欄的規則");
+  } else if (introRow < 0){
+    console.error("「說明」裡找不到「說明／備註」那一列"); process.exit(1);
+  } else {
+    /* 原本這一列自己就叫人把「交通時間、停留多久、開放時間」寫進說明——重複的根源 */
+    replaceText(doc, introRow, 3, "當下要知道的操作資訊：交通時間、停留多久、開放時間、要先預約。",
+      "站在門口才需要看的：會卡住的事、要先做的事、備案。卡片上已經有的不要再寫（見最下方「說明／備註 的寫法」）。");
+    replaceText(doc, introRow + 1, 3, "這地方是什麼、為什麼值得看。",
+      "這地方是什麼、為什麼值得看——在家讀完就不用再看的放這裡。");
+
+    const titleStyle = doc.getCell(introRow - 1, 2).style;
+    const labelStyle = doc.getCell(introRow, 2).style;
+    const textStyle  = doc.getCell(introRow, 3).style;
+    const rowH = doc.getRow(introRow).height;
+    const SECTIONS = [
+      [RULES_TITLE, null],
+      ["判斷方法", "站在門口才需要看 → 說明。在家讀完就不用再看 → 介紹。"],
+      ["一、卡片上有的不要寫", "時間、停留、交通、地點、營業時間、費用、電話都有自己的欄位，網站會顯示。說明裡再寫一次就是重複。"],
+      ["二、一行一件事", "不要用「・」把營業時間、電話、停車擠成一行。照這個順序寫：怎麼去（路線）→ 時間限制 → 要先做的 → ⚠️ 會卡住的 → 備案。"],
+      ["三、⚠️ 只給會出事的", "不知道就會白跑一趟、趕不上、進不去，才用 ⚠️。「山頂風大帶外套」是提醒，不用 ⚠️。其他 emoji 不要放在行首。"],
+      ["四、不寫資料來源", "不要寫「試算表上的」「重複推薦 2 次」。評分想留就直接寫 4.5★。"],
+      [null, null],
+      ["新欄位怎麼填", null],
+      ["交通(分)", "停留(分) 裡花在路上的分鐘數。停留(分) 照舊填總時間，網站自己扣：停留 230、交通 80 → 卡片顯示「🚗 車程 1 小時 20 分」「⏳ 停留 2 小時 30 分」。車程、步行、搭車看「交通方式」欄。"],
+      ["營業時間", "一格寫完，多個設施用「／」分開，例：天神地下街 10:00–20:00／PARCO 10:00–20:30。住宿填 Check-in 與退房時間。"],
+      ["費用", "門票、停車、要付的錢，含付款方式，例：¥500（現金）。"],
+      ["電話", "只填號碼，網站上點了就能直接撥。"],
+    ];
+    let r = last + 2;
+    for (const [label, text] of SECTIONS){
+      if (label !== null || text !== null){
+        doc.getCell(r, 2).value = label;
+        doc.getCell(r, 2).style = text === null ? titleStyle : labelStyle;
+        if (text !== null){
+          doc.getCell(r, 3).value = text;
+          doc.getCell(r, 3).style = textStyle;
+          doc.getRow(r).height = rowH;
+        }
+      }
+      r++;
+    }
+    console.log(`✓ 「說明」改寫「說明／備註」與「介紹」兩列，並在第 ${last + 2} 列起加上寫法規則`);
+    changed++;
+  }
+}
+
 if (!changed){ console.log("\n沒有需要改的地方。"); process.exit(0); }
 
 await wb.xlsx.writeFile(FILE);
@@ -209,13 +323,15 @@ console.log("\n── 比對其他工作表 ──");
 let bad = 0;
 for (const name of Object.keys(before)){
   if (rebuilt.has(name)){ console.log(`  ${name}：刻意重建，略過比對`); continue; }
-  if (name === STYLE_FROM || name === "說明"){
-    /* 這兩張是刻意改的，只檢查原本的內容都還在 */
-    const missing = before[name].filter(x => !after[name].includes(x));
+  if (name === STYLE_FROM || name === "說明" || name === "行程"){
+    /* 這幾張是刻意改的，只檢查原本的內容都還在（刻意換掉的那幾格除外） */
+    const valueOf = x => x.slice(x.indexOf("=") + 1);
+    const expected = x => (gone[name] || new Set()).has(valueOf(x));
+    const missing = before[name].filter(x => !after[name].includes(x) && !expected(x));
     if (name === "說明"){
       /* 說明插了列，行號會位移，改成比對「值的集合」 */
       const val = s => s.replace(/^\d+,/, "");
-      const b = before[name].map(val), a = new Set(after[name].map(val));
+      const b = before[name].filter(x => !expected(x)).map(val), a = new Set(after[name].map(val));
       const lost = b.filter(x => !a.has(x));
       console.log(`  說明：原有 ${b.length} 格，遺失 ${lost.length} 格`, lost.slice(0, 3));
       if (lost.length) bad++;

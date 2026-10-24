@@ -84,6 +84,8 @@ const formula = plan.getRow(8).getCell(4).value?.formula;
 if (!formula) throw new Error("取不到時間公式");
 clear(plan, 5);
 
+/* 行程表的欄數：1–14 是原本的，15–18 是交通(分)、營業時間、費用、電話 */
+const PLAN_COLS = 18;
 const overrides = [];
 let row = 5, curMode = T.meta.travelMode, dayNo = 0;
 
@@ -95,7 +97,7 @@ for (const day of T.days) {
 
   for (const b of items) {
     const R = plan.getRow(row);
-    styleFrom(plan, 5, row, 14);
+    styleFrom(plan, 5, row, PLAN_COLS);
     R.getCell(1).value = dayNo;
     if (first) R.getCell(2).value = day.nav.replace(/^D\d+\s*/, "");
     R.getCell(3).value = b.stay ?? "";
@@ -144,11 +146,15 @@ for (const day of T.days) {
       R.getCell(13).value = keep[0].url;
       R.getCell(14).value = keep[0].style;
     }
+    R.getCell(15).value = b.travel ?? "";
+    R.getCell(16).value = b.hours || "";
+    R.getCell(17).value = b.fee || "";
+    R.getCell(18).value = b.tel || "";
     row++; first = false;
 
     for (const extra of keep.slice(1)) {
       const X = plan.getRow(row);
-      styleFrom(plan, 5, row, 14);
+      styleFrom(plan, 5, row, PLAN_COLS);
       X.getCell(1).value = dayNo;
       X.getCell(6).value = "→連結";
       X.getCell(12).value = extra.label;
@@ -164,7 +170,7 @@ for (const day of T.days) {
       const ck = (c.links || []).filter(l => l.style !== "route" && !autoMap(l));
       if (ck.length > 1) throw new Error(`${day.nav}「${c.title}」：二選一的選項只能保留一個連結`);
       const X = plan.getRow(row);
-      styleFrom(plan, 5, row, 14);
+      styleFrom(plan, 5, row, PLAN_COLS);
       X.getCell(1).value = dayNo;
       X.getCell(6).value = "→選項";
       X.getCell(7).value = c.title;
@@ -333,7 +339,8 @@ ok("重新解析沒有錯誤", errors.length === 0,
 const a = flat(T), b2 = flat(B);
 ok("景點／住宿數量一致", a.length === b2.length, a.length + " → " + b2.length);
 
-for (const f of ["title", "type", "kind", "stay", "mode", "time", "intro", "notes"]) {
+for (const f of ["title", "type", "kind", "stay", "mode", "time", "intro", "notes",
+                 "travel", "hours", "fee", "tel"]) {
   const diff = [];
   for (let n = 0; n < Math.min(a.length, b2.length); n++) {
     const x = JSON.stringify(a[n][f] ?? (f === "notes" ? [] : ""));

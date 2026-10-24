@@ -61,6 +61,9 @@ SWAP_TRIP = {
             {"type": "stop", "kind": "sight", "time": "11:30",
              "title": "雪梨歌劇院", "titleLocal": "Sydney Opera House",
              "place": "Bennelong Point", "stay": 90, "notes": ["測試備註"],
+             # 停留(分) 是含交通的總時間：90 − 20 → 卡片上停留 1 小時 10 分
+             "travel": 20, "mode": "walking",
+             "hours": "09:00–17:00、週二休", "fee": "A$43（可刷卡）", "tel": "+61 2 9250 7111",
              "intro": "介紹第一段，確認有渲染。\n第二段，確認換行會分段。",
              "links": [{"label": "官網", "url": "https://example.com", "style": "theme"}]},
             {"type": "transit", "time": "13:00", "line": "T1 線", "duration": "約 12 分",
@@ -71,7 +74,8 @@ SWAP_TRIP = {
              "place": "Darling Harbour",
              "choices": [{"title": "海鮮市場"}, {"title": "牛排館"}]},
             {"type": "lodging", "title": "測試飯店", "address": "1 Test St",
-             "notes": ["含早餐"]},
+             "notes": ["含早餐"], "stay": 15, "travel": 15, "mode": "driving",
+             "hours": "Check-in 15:00／退房 10:00"},
         ]},
         {"id": "d2", "nav": "D2 回程", "date": "2027-07-02", "title": "Day 2 - 回家", "blocks": [
             {"type": "weather"},
@@ -544,6 +548,28 @@ def run(trip: str) -> bool:
             r.check("介紹：換行有分成兩段", body.locator("p").count() == 2,
                     f"{body.locator('p').count()} 段")
             r.check("介紹：內容正確", "介紹第一段" in body.inner_text())
+
+            # 交通、營業時間、費用、電話：各自一列，不塞在說明裡
+            opera = page.locator("#main .card", has_text="雪梨歌劇院")
+            otext = opera.inner_text()
+            r.check("交通：顯示步行與分鐘數", "步行 20 分" in otext, otext.splitlines()[0])
+            # 停留(分) 含交通，卡片要扣掉——不扣的話門司港會顯示停留 3 小時 50 分
+            r.check("交通：停留扣掉交通（90 − 20）", "停留 1 小時 10 分" in otext)
+            r.check("交通：沒有把總時間當成停留", "停留 1 小時 30 分" not in otext)
+            r.check("營業時間：獨立一列", "09:00–17:00、週二休" in otext)
+            r.check("費用：獨立一列", "A$43（可刷卡）" in otext)
+            tel = opera.locator("a.tel")
+            r.check("電話：是可以點的連結", tel.count() == 1)
+            r.check("電話：撥號只留數字與 +", tel.get_attribute("href") == "tel:+61292507111",
+                    tel.get_attribute("href"))
+            tb = tel.bounding_box()
+            r.check("電話：觸控目標 ≥ 44px", tb and round(tb["height"]) >= 44,
+                    f"{round(tb['height']) if tb else '—'}px 高")
+            hotel = page.locator("#main .card.lodge", has_text="測試飯店")
+            htext = hotel.inner_text()
+            r.check("住宿：也顯示交通", "車程 15 分" in htext)
+            r.check("住宿：交通等於總時間時不顯示停留", "停留" not in htext)
+            r.check("住宿：營業時間（入住退房）獨立一列", "Check-in 15:00／退房 10:00" in htext)
 
             # 信用卡回饋額度（在第二天）
             page.locator(".nav-item").nth(1).click()

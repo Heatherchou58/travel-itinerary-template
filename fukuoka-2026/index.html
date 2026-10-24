@@ -386,6 +386,11 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 .subject{ font-size:var(--fs-lg); font-weight:700; margin-bottom:var(--sp-1); }
 .lang-local{ font-size:var(--fs-sm); color:var(--c-text-dim); font-weight:400; margin-left:var(--sp-1); }
 .meta{ font-size:var(--fs-sm); color:var(--c-text-dim); margin-bottom:var(--sp-1); }
+/* 電話點了就撥，在店門口不用再抄號碼。觸控目標照樣 44px */
+.meta a.tel{
+  display:inline-flex; align-items:center; min-height:44px;
+  color:var(--c-on-accent); font-weight:700; text-decoration:none;
+}
 .note-box{
   background:var(--c-accent-soft); border-radius:10px;
   padding:var(--sp-3); margin-top:var(--sp-3); font-size:var(--fs-sm); line-height:1.7;
@@ -3012,7 +3017,22 @@ const fmtStay = n => {
   const hh = Math.floor(n / 60), r = n % 60;
   return r ? `${hh} 小時 ${r} 分` : `${hh} 小時`;
 };
-const stayTag = b => b.stay ? `<span class="stay">⏳ 停留 ${fmtStay(b.stay)}</span>` : "";
+/* 「停留(分)」是這一列總共佔掉的時間，開車過去的時間也算在裡面——時間欄的公式
+   靠它往下推，所以不能拆。卡片上要扣掉「交通(分)」才是真的停留：不扣的話，
+   門司港會顯示「停留 3 小時 50 分」，其中 1 小時 20 分其實在開車。 */
+const MODE_TAG = { driving:"🚗 車程", walking:"🚶 步行", transit:"🚇 搭車", bicycling:"🚲 騎車" };
+const travelTag = b => b.travel
+  ? `<span class="stay">${MODE_TAG[b.mode] || "交通"} ${fmtStay(b.travel)}</span>` : "";
+const stayTag = b => {
+  const v = (b.stay || 0) - (b.travel || 0);
+  return v > 0 ? `<span class="stay">⏳ 停留 ${fmtStay(v)}</span>` : "";
+};
+/* 營業時間、費用、電話各自一列，不塞進說明欄：格式才會統一，電話也才能點了就撥 */
+const telHref = t => String(t).replace(/[^\d+]/g, "");
+const factsHTML = b =>
+  (b.hours ? `<div class="meta">🕘 ${esc(b.hours)}</div>` : "") +
+  (b.fee   ? `<div class="meta">💴 ${esc(b.fee)}</div>` : "") +
+  (b.tel   ? `<div class="meta"><a class="tel" href="tel:${esc(telHref(b.tel))}">☎ ${esc(b.tel)}</a></div>` : "");
 
 const RENDERERS = {
   flight: b => `<div class="card flight">
@@ -3035,9 +3055,9 @@ const RENDERERS = {
     </div></div>`,
 
   stop: b => `<div class="card"${slotAttrs(b)}>
-    ${nowSlot(b)}${b.time ? `<span class="time">${esc(b.time)}</span>` : ""}${stayTag(b)}
+    ${nowSlot(b)}${b.time ? `<span class="time">${esc(b.time)}</span>` : ""}${travelTag(b)}${stayTag(b)}
     <div class="subject">${KIND[b.kind] || KIND.sight} ${esc(b.title)}${localSpan(b.titleLocal)}</div>
-    ${b.place ? `<div class="meta">📍 ${esc(b.place)}${localSpan(b.placeLocal)}</div>` : ""}
+    ${b.place ? `<div class="meta">📍 ${esc(b.place)}${localSpan(b.placeLocal)}</div>` : ""}${factsHTML(b)}
     ${notesHTML(b.notes)}${secretHTML(b)}${introHTML(b.intro, b.photo)}${linksHTML(b.links)}</div>`,
 
   transit: b => `<div class="card">
@@ -3063,9 +3083,9 @@ const RENDERERS = {
     ${notesHTML(b.notes)}${linksHTML(b.links)}</div>`,
 
   lodging: b => `<div class="card lodge"${slotAttrs(b)}>
-    ${nowSlot(b)}<div><span class="ttag">🏨 住宿</span>${b.time ? `<span class="time">${esc(b.time)}</span>` : ""}${stayTag(b)}</div>
+    ${nowSlot(b)}<div><span class="ttag">🏨 住宿</span>${b.time ? `<span class="time">${esc(b.time)}</span>` : ""}${travelTag(b)}${stayTag(b)}</div>
     <div class="subject">${esc(b.title)}${localSpan(b.titleLocal)}</div>
-    ${b.address ? `<div class="meta">📍 ${esc(b.address)}</div>` : ""}
+    ${b.address ? `<div class="meta">📍 ${esc(b.address)}</div>` : ""}${factsHTML(b)}
     ${(b.notes && b.notes.length)
       ? `<div class="info">${b.notes.map(n => `<div>${esc(n)}</div>`).join("")}</div>` : ""}
     ${secretHTML(b)}${linksHTML(b.links)}</div>`,
