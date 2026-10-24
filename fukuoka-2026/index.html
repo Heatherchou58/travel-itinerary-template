@@ -709,7 +709,7 @@ html{ font-size:clamp(16px, 4.2vw, 18px); }
 @media (min-width:1024px){
   .app.has-map #daymap{
     grid-column:2; grid-row:1;
-    display:flex; flex-direction:column; gap:var(--sp-1);
+    display:flex; flex-direction:column;
     padding-bottom:var(--sp-4);
   }
   .app.has-map main{ grid-row:2; }
@@ -717,8 +717,9 @@ html{ font-size:clamp(16px, 4.2vw, 18px); }
     flex:1; width:100%; min-height:240px; border:0;
     border-radius:var(--r-card); background:var(--c-accent-soft);
   }
+  /* 開啟路線的按鈕放在當天行程最上面，有沒有嵌入地圖都在同一個位置 */
   .daymap-open{
-    display:inline-flex; align-items:center; align-self:flex-start; min-height:44px;
+    display:inline-flex; align-items:center; min-height:44px; margin-bottom:var(--sp-2);
     color:var(--c-on-accent); font-size:var(--fs-sm); font-weight:700; text-decoration:none;
   }
   .daymap-open:hover{ text-decoration:underline; }
@@ -767,7 +768,6 @@ footer a{ color:inherit; }
   <aside id="daymap" aria-label="當天路線地圖">
     <iframe title="當天路線地圖" loading="lazy" allowfullscreen
             referrerpolicy="strict-origin-when-cross-origin"></iframe>
-    <a class="daymap-open" target="_blank" rel="noopener">在 Google 地圖開啟今天的路線 ↗</a>
   </aside>
   <main id="main"></main>
   <footer>
@@ -3611,12 +3611,31 @@ function paintDayMap(day){
   const app = document.querySelector(".app");
   const box = document.getElementById("daymap");
   const { pts, mode } = day && day.date ? dayMapPoints(day) : { pts: [] };
+  const e = encodeURIComponent;
   app.classList.toggle("map-on", !!(M.mapsEmbedKey && DESKTOP.matches));
   const on = !!(M.mapsEmbedKey && pts.length && DESKTOP.matches);
   app.classList.toggle("has-map", on);
+
+  /* 同一條路線開到 Google 地圖：可以拖曳、看路況。不用金鑰，所以沒填嵌入金鑰的
+     網站也有。只在電腦寬度出現——手機瀏覽器開 Google 地圖網址最多只認 3 個途經點，
+     一天的路線會被截掉（其他平台最多 9 個）。
+     放在 #main 裡：renderDay 每次都會整個換掉 #main，不會留下舊的；
+     但視窗寬度改變時只重跑這裡，所以先把舊的拿掉。 */
+  const main = document.getElementById("main");
+  main.querySelector(".daymap-open")?.remove();
+  if (pts.length && DESKTOP.matches){
+    const via = pts.slice(1, -1).slice(0, 9);
+    const href = pts.length === 1
+      ? `https://www.google.com/maps/search/?api=1&query=${e(pts[0])}`
+      : `https://www.google.com/maps/dir/?api=1&travelmode=${mode}` +
+        `&origin=${e(pts[0])}&destination=${e(pts[pts.length - 1])}` +
+        (via.length ? `&waypoints=${via.map(e).join("|")}` : "");
+    main.insertAdjacentHTML("afterbegin",
+      `<a class="daymap-open" href="${esc(href)}" target="_blank" rel="noopener">在 Google 地圖開啟今天的路線 ↗</a>`);
+  }
   if (!on) return;
 
-  const e = encodeURIComponent, key = e(M.mapsEmbedKey);
+  const key = e(M.mapsEmbedKey);
   const src = pts.length === 1
     ? `https://www.google.com/maps/embed/v1/place?key=${key}&q=${e(pts[0])}&language=ja&region=jp`
     : `https://www.google.com/maps/embed/v1/directions?key=${key}&mode=${mode}&language=ja&region=jp` +
@@ -3625,14 +3644,6 @@ function paintDayMap(day){
   const frame = box.querySelector("iframe");
   /* 同一天重畫（例如購物清單增刪）網址沒變就不要重設，否則地圖會整個重新載入 */
   if (frame.getAttribute("src") !== src) frame.setAttribute("src", src);
-
-  /* 同一條路線開到 Google 地圖：可以拖曳、看路況。不用金鑰 */
-  const open = box.querySelector(".daymap-open");
-  open.href = pts.length === 1
-    ? `https://www.google.com/maps/search/?api=1&query=${e(pts[0])}`
-    : `https://www.google.com/maps/dir/?api=1&travelmode=${mode}` +
-      `&origin=${e(pts[0])}&destination=${e(pts[pts.length - 1])}` +
-      (pts.length > 2 ? `&waypoints=${pts.slice(1, -1).map(e).join("|")}` : "");
 }
 /* 視窗從手機寬度拉到電腦寬度時補載，反過來就收起 */
 DESKTOP.addEventListener("change", () => paintDayMap(TRIP_DATA.days.find(d => d.id === current)));

@@ -154,4 +154,5 @@ node tools/intro-photos.mjs fukuoka-2026 --src <原圖資料夾>  # 先重新壓
 | 不用金鑰的嵌入只能畫兩站 | `maps.google.com/maps?output=embed&saddr=&daddr=` 用 `+to:` 串多站會退成一張世界地圖。整天路線只能用 Maps Embed API（`meta.mapsEmbedKey`） |
 | 嵌入金鑰會公開在網站上 | 嵌入地圖本來就是這樣。一定要限制成「只能用 Maps Embed API＋只能從自己的網域」——**不能拿測 Routes API 那種沒限制的金鑰來用** |
 | `map-on` 與 `has-map` 要分開 | `map-on` 決定三欄寬度（網站有金鑰＋電腦寬度），`has-map` 只決定這一頁的地圖要不要出現。如果沒地圖的分頁退回兩欄，版面會從 1500px 縮回 960px 重新置中，切分頁時左欄橫向跳將近 200px |
+| 「在 Google 地圖開啟」只給電腦版 | 這顆不用金鑰，所以沒填嵌入金鑰也會出現。但手機瀏覽器開 Google 地圖網址**最多只認 3 個途經點**（其他平台 9 個），一天的路線會被截掉 |
 | 搭車的日子畫成步行 | 日本的大眾運輸 Google 查不到（授權排除日本），要看的是地點先後與相對位置 |

@@ -1127,12 +1127,33 @@ def run(trip: str) -> bool:
             r.check("地圖（手機）：不顯示", not page.locator("#daymap").is_visible())
             r.check("地圖（手機）：iframe 沒有設網址，不會載入",
                     page.locator("#daymap iframe").get_attribute("src") is None)
+            # 手機瀏覽器開 Google 地圖網址最多只認 3 個途經點，一天的路線會被截掉
+            r.check("開啟路線按鈕（手機）：不出現", page.locator(".daymap-open").count() == 0)
             ctx.close()
 
-            # 沒填金鑰的網站（目前真正的九州網站）：電腦寬度也不顯示、不出錯
+            # 沒填金鑰的網站（目前真正的九州網站）：地圖不顯示，但開啟路線的按鈕要有——
+            # 它用的是不需要金鑰的 Google 地圖網址
             ctx, page, errs = map_page(1400, base)
             r.check("地圖：沒有金鑰就不顯示", not page.locator("#daymap").is_visible()
                     and page.locator(".app.has-map").count() == 0)
+            page.locator(".nav-item", has_text="D2").first.click()
+            page.wait_for_timeout(400)
+            btn = page.locator(".daymap-open")
+            href = btn.get_attribute("href") if btn.count() else ""
+            r.check("開啟路線按鈕：沒有金鑰也出現", btn.count() == 1 and btn.is_visible())
+            r.check("開啟路線按鈕：是整天的路線（起點、終點、途經點、交通方式）",
+                    "maps/dir/?api=1" in href and "travelmode=driving" in href
+                    and "origin=" in href and "destination=" in href and "waypoints=" in href, href[:90])
+            first = page.locator("#main .card").first.bounding_box()
+            bb = btn.bounding_box()
+            r.check("開啟路線按鈕：在當天第一張卡片上方", bb["y"] + bb["height"] <= first["y"] + 1,
+                    f"按鈕底 {round(bb['y'] + bb['height'])}、第一張卡片頂 {round(first['y'])}")
+            # 按鈕是插在 #main 裡的：切來切去不能越積越多
+            page.locator(".nav-item", has_text="D3").first.click(); page.wait_for_timeout(300)
+            page.locator(".nav-item", has_text="D2").first.click(); page.wait_for_timeout(300)
+            r.check("開啟路線按鈕：切分頁不會重複出現", page.locator(".daymap-open").count() == 1)
+            page.locator(".nav-item", has_text="行前").first.click(); page.wait_for_timeout(300)
+            r.check("開啟路線按鈕：沒有景點的分頁不出現", page.locator(".daymap-open").count() == 0)
             r.check("地圖：沒有金鑰也沒有 JS 例外", not errs, "；".join(errs))
             ctx.close()
 
