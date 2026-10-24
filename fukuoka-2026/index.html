@@ -218,7 +218,8 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 .shop-g summary::-webkit-details-marker{ display:none; }
 .shop-g summary::before{ content:"▸"; display:inline-block; transition:transform .15s; }
 .shop-g[open] summary::before{ transform:rotate(90deg); }
-.shop-gn{ flex:1; }
+/* 群組名是這一區的標題，字級與字重比照 .wx-date，否則 15px 的橘褐色讀起來偏細 */
+.shop-gn{ flex:1; font-size:var(--fs-md); font-weight:800; }
 .shop-n{ font-weight:400; color:var(--c-text-dim); }
 .shop-gx{
   min-height:44px; padding:0 var(--sp-2); border:none; background:none;

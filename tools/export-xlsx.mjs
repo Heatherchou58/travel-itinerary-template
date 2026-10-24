@@ -22,7 +22,8 @@ const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const TRIP = process.argv[2] || "fukuoka-2026";
 const SITE = path.join(ROOT, TRIP, "index.html");
 const TPL  = path.join(ROOT, "builder", "travel-template.xlsx");
-const OUT  = process.argv[3] || path.join(ROOT, TRIP + "-source.xlsx");
+/* 原始試算表跟產出的網站放一起，不要掉到 repo 根目錄 */
+const OUT  = process.argv[3] || path.join(ROOT, TRIP, TRIP + "-source.xlsx");
 
 const html = fs.readFileSync(SITE, "utf8");
 const s = html.indexOf("const TRIP_DATA = ");
