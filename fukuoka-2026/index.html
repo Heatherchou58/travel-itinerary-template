@@ -45,7 +45,10 @@
   --r-card:14px;
   --r-pill:20px;
   --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:24px; --sp-6:32px;
-  --fs-xs:.75rem; --fs-sm:.85rem; --fs-md:1rem; --fs-lg:1.15rem; --fs-xl:1.5rem;
+  /* 字級只有這七階，不要再寫死 rem——原本散落的 .9／1.1／1.3／1.35／1.4
+     各自只差 0.05rem，擺在一起看就是「有大有小」而沒有理由。 */
+  --fs-xs:.75rem; --fs-sm:.85rem; --fs-md:1rem; --fs-lg:1.15rem;
+  --fs-xl:1.35rem; --fs-2xl:1.5rem; --fs-3xl:2.4rem;
   --shadow:0 2px 8px rgba(0,0,0,.06);
 }
 [data-theme="snow"]  { --c-accent:#74B9FF; --c-pop:#B85C00; --c-on-accent:#0F4670; --c-accent-soft:#E8F4FF; --c-bg:#F5F2ED;
@@ -134,7 +137,7 @@ body::after{
 
 /* ── Header ───────────────────────────── */
 header{ text-align:center; padding:var(--sp-5) var(--sp-4) var(--sp-3); }
-header h1{ font-size:var(--fs-xl); margin:0 0 var(--sp-1); letter-spacing:.5px; }
+header h1{ font-size:var(--fs-2xl); margin:0 0 var(--sp-1); letter-spacing:.5px; }
 header .subtitle{ font-size:var(--fs-sm); color:var(--c-text-dim); margin:0 0 var(--sp-4); }
 
 /* ── 目前天氣條 ───────────────────────── */
@@ -150,13 +153,14 @@ header .subtitle{ font-size:var(--fs-sm); color:var(--c-text-dim); margin:0 0 va
 .wx-date span{ font-size:var(--fs-xs); font-weight:400; color:var(--c-text-dim); margin-left:var(--sp-2); }
 .wx-time{ font-size:var(--fs-sm); color:var(--c-text-dim); white-space:nowrap; }
 .wx-main{ display:flex; align-items:center; gap:var(--sp-4); }
+/* emoji 不走字級 token：它是圖不是字，要跟旁邊的數字做視覺對齊而不是字級對齊 */
 .wx-emoji{ font-size:2.6rem; line-height:1; flex:0 0 auto; }
-.wx-temp{ font-size:2.4rem; font-weight:800; line-height:1; letter-spacing:-2px; }
+.wx-temp{ font-size:var(--fs-3xl); font-weight:800; line-height:1; letter-spacing:-2px; }
 .wx-desc{ font-size:var(--fs-sm); color:var(--c-text-dim); margin-top:3px; }
 .wx-hl{ margin-left:auto; text-align:right; white-space:nowrap; }
 .wx-hl .cap{ font-size:var(--fs-xs); color:var(--c-text-dim); }
-.wx-hl .hi{ font-size:1.3rem; font-weight:800; line-height:1.15; }
-.wx-hl .lo{ font-size:1.1rem; color:var(--c-text-dim); line-height:1.15; }
+.wx-hl .hi{ font-size:var(--fs-xl); font-weight:800; line-height:1.15; }
+.wx-hl .lo{ font-size:var(--fs-lg); color:var(--c-text-dim); line-height:1.15; }
 /* 數據列：標籤與數值同一行，高度只有原本的一半 */
 .wx-grid{
   display:flex; margin-top:var(--sp-3); background:var(--c-accent-soft);
@@ -185,7 +189,7 @@ header .subtitle{ font-size:var(--fs-sm); color:var(--c-text-dim); margin:0 0 va
   padding:var(--sp-2) var(--sp-4); min-height:44px;
   border:1px solid var(--c-line); border-radius:var(--r-pill);
   background:var(--c-surface); color:var(--c-text-dim);
-  font-size:var(--fs-sm); font-family:inherit; font-weight:600;
+  font-size:var(--fs-sm); font-family:inherit; font-weight:700;
   cursor:pointer; white-space:nowrap; transition:background .15s,color .15s;
 }
 .nav-item[aria-selected="true"]{ background:var(--c-accent); border-color:var(--c-accent); color:var(--c-on-accent); }
@@ -202,7 +206,7 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
   border-radius:6px; margin-bottom:var(--sp-2); margin-right:var(--sp-2);
 }
 .info{ margin-top:var(--sp-3); padding-top:var(--sp-3); border-top:1px dashed var(--c-line); font-size:var(--fs-sm); }
-.info div{ padding:2px 0; }
+.info div{ padding:var(--sp-1) 0; }
 .card{
   background:var(--c-surface); border-radius:var(--r-card); box-shadow:var(--shadow);
   padding:var(--sp-4); margin-bottom:var(--sp-3);
@@ -249,7 +253,11 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
   border-radius:8px; background:var(--c-accent-soft); cursor:zoom-in;
 }
 /* 券沒有勾選框，名稱直接當文字。高度對齊 .chk，同一列的卡片才不會參差 */
-.shop-name{ display:flex; align-items:center; min-height:44px; font-size:var(--fs-sm); line-height:1.4; }
+/* 店名要一眼認出是哪一家，所以加粗；群組標題再高一階（--fs-md/800）維持層級 */
+.shop-name{
+  display:flex; align-items:center; min-height:44px;
+  font-size:var(--fs-sm); font-weight:700; line-height:1.4;
+}
 .shop-who{ display:block; font-size:var(--fs-xs); font-weight:400; color:var(--c-text-dim); }
 .shop-note, .shop-amt{ font-size:var(--fs-xs); padding:6px var(--sp-2); min-height:36px; }
 .shop-link{ margin:0; width:100%; text-align:center; }
@@ -429,7 +437,7 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 .fl-air{ font-weight:700; color:var(--c-text); letter-spacing:.3px; }
 .fl-air b{ color:var(--c-on-accent); margin-left:var(--sp-2); font-weight:800; }
 .fl-body{ display:grid; grid-template-columns:auto minmax(48px,1fr) auto; align-items:center; gap:var(--sp-3); }
-.fl-side .t{ font-size:1.4rem; font-weight:800; line-height:1.05; letter-spacing:-.5px; }
+.fl-side .t{ font-size:var(--fs-xl); font-weight:800; line-height:1.05; letter-spacing:-.5px; }
 .fl-side .p{ font-size:var(--fs-sm); font-weight:700; letter-spacing:1.5px; color:var(--c-on-accent); }
 .fl-side .g{ font-size:var(--fs-xs); color:var(--c-text-dim); white-space:nowrap; }
 .fl-side.end{ text-align:right; }
@@ -440,7 +448,7 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 }
 .fl-mid span{
   position:relative; background:var(--c-surface); padding:0 var(--sp-2);
-  font-size:.9rem; color:var(--c-accent);
+  font-size:var(--fs-sm); color:var(--c-accent);
 }
 
 /* ── 交通路線 ─────────────────────────── */
@@ -498,7 +506,7 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 .chk-group:first-of-type{ margin-top:var(--sp-2); }
 .chk-group h4{ margin:0 0 var(--sp-2); font-size:var(--fs-sm); color:var(--c-on-accent); }
 .chk{
-  display:flex; align-items:center; gap:10px;
+  display:flex; align-items:center; gap:var(--sp-3);
   min-height:44px; padding:0; cursor:pointer; font-size:var(--fs-sm); line-height:1.4;
 }
 .chk input{ width:18px; height:18px; accent-color:var(--c-accent); flex:0 0 auto; }
@@ -522,7 +530,7 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
   flex:0 0 76px; text-align:center; background:var(--c-accent-soft);
   border-radius:10px; padding:var(--sp-2) var(--sp-1); font-size:var(--fs-xs);
 }
-.wx-day .e{ font-size:1.4rem; line-height:1.3; }
+.wx-day .e{ font-size:var(--fs-xl); line-height:1.3; }
 .wx-day .hi{ font-weight:800; }
 .wx-day .lo{ color:var(--c-text-dim); }
 
@@ -611,7 +619,7 @@ body{
   /* 抬高一點，才不會壓到左下角的連線狀態 */
   position:fixed; left:50%; bottom:calc(var(--sp-6) + env(safe-area-inset-bottom));
   transform:translateX(-50%); z-index:300; max-width:calc(var(--w-app) - var(--sp-6));
-  background:var(--c-text); color:var(--c-bg); font-size:var(--fs-sm); font-weight:600;
+  background:var(--c-text); color:var(--c-bg); font-size:var(--fs-sm); font-weight:700;
   padding:var(--sp-3) var(--sp-4); border-radius:var(--r-pill); box-shadow:var(--shadow);
   opacity:0; pointer-events:none; transition:opacity .25s;
 }
@@ -641,7 +649,7 @@ html{ font-size:clamp(16px, 4.2vw, 18px); }
     column-gap:var(--sp-6);
   }
   header{ grid-column:1; grid-row:1; text-align:left; padding:0 0 var(--sp-4); }
-  header h1{ font-size:1.35rem; }
+  header h1{ font-size:var(--fs-xl); }
   .nav-bar{
     grid-column:1; grid-row:2; align-self:start;
     position:sticky; top:var(--sp-4);
@@ -1082,7 +1090,13 @@ const TRIP_DATA = {
           ],
           "stay": 230,
           "mode": "driving",
-          "intro": "明治到大正年間，門司港是日本屈指可數的國際貿易港，街區完整保留了當時的洋式建築——舊門司三井俱樂部、舊大阪商船、舊門司稅關等，多數可以入內參觀。\n隔著關門海峽對岸就是本州的下關，兩地之間有渡輪與海底人行隧道。\n燒咖哩是門司港的名物：咖哩飯鋪上起司與生蛋送進烤箱烤出焦香，戰後由當地洋食店發想出來，現在整區有三十幾家各自不同的版本。"
+          "intro": "明治到大正年間，門司港是日本屈指可數的國際貿易港，街區完整保留了當時的洋式建築——舊門司三井俱樂部、舊大阪商船、舊門司稅關等，多數可以入內參觀。\n隔著關門海峽對岸就是本州的下關，兩地之間有渡輪與海底人行隧道。\n燒咖哩是門司港的名物：咖哩飯鋪上起司與生蛋送進烤箱烤出焦香，戰後由當地洋食店發想出來，現在整區有三十幾家各自不同的版本。",
+          "photo": {
+            "src": "img/intro/mojiko-retro.jpg",
+            "credit": "そらみみ (Soramimi)",
+            "license": "CC BY-SA 4.0",
+            "href": "https://commons.wikimedia.org/wiki/File:Former_Moji_Customs_and_Mojiko_Retro_Area.JPG"
+          }
         },
         {
           "type": "stop",
@@ -1140,7 +1154,13 @@ const TRIP_DATA = {
           ],
           "stay": 160,
           "mode": "driving",
-          "intro": "標高 622 公尺，山頂一次望盡北九州工業地帶、洞海灣與關門海峽，被選為「新日本三大夜景」，常被形容成「百億美元的夜景」。從山麓到展望台要先搭纜車再換斜行電梯，兩段都是看風景的一部分。"
+          "intro": "標高 622 公尺，山頂一次望盡北九州工業地帶、洞海灣與關門海峽，被選為「新日本三大夜景」，常被形容成「百億美元的夜景」。從山麓到展望台要先搭纜車再換斜行電梯，兩段都是看風景的一部分。",
+          "photo": {
+            "src": "img/intro/sarakurayama.jpg",
+            "credit": "Suicasmo",
+            "license": "CC BY-SA 4.0",
+            "href": "https://commons.wikimedia.org/wiki/File:Night_Views_from_Mount_Sarakura_20170527-1.jpg"
+          }
         },
         {
           "type": "stop",
@@ -1263,7 +1283,13 @@ const TRIP_DATA = {
           ],
           "stay": 30,
           "mode": "driving",
-          "intro": "大正時代沿神嶽川形成的市場，被稱為「北九州的廚房」，以狹窄的木造店鋪與架在河面上的建築結構聞名。\n2022 年接連兩場大火燒毀了相當大的部分，市場目前仍在重建中。新的商業設施「旦過市場いちばん館」預計 2027 年春季才部分開幕，所以現在看到的是重建過程中的樣貌，攤位位置與營業狀況都還在變動。"
+          "intro": "大正時代沿神嶽川形成的市場，被稱為「北九州的廚房」，以狹窄的木造店鋪與架在河面上的建築結構聞名。\n2022 年接連兩場大火燒毀了相當大的部分，市場目前仍在重建中。新的商業設施「旦過市場いちばん館」預計 2027 年春季才部分開幕，所以現在看到的是重建過程中的樣貌，攤位位置與營業狀況都還在變動。",
+          "photo": {
+            "src": "img/intro/tanga-market.jpg",
+            "credit": "Suicasmo",
+            "license": "CC BY-SA 4.0",
+            "href": "https://commons.wikimedia.org/wiki/File:Tanga_Market_20170224.jpg"
+          }
         },
         {
           "type": "stop",
@@ -1291,7 +1317,13 @@ const TRIP_DATA = {
           ],
           "stay": 60,
           "mode": "driving",
-          "intro": "細川忠興於 1602 年築成，天守最上層往外突出一圈、沒有屋簷的「唐造」是它最特別的地方，全國少見。\n現在的天守是 1959 年重建的，內部整修成體驗型展示。城旁的小倉城庭園是復原的江戶時代書院庭園，可另購共通券。"
+          "intro": "細川忠興於 1602 年築成，天守最上層往外突出一圈、沒有屋簷的「唐造」是它最特別的地方，全國少見。\n現在的天守是 1959 年重建的，內部整修成體驗型展示。城旁的小倉城庭園是復原的江戶時代書院庭園，可另購共通券。",
+          "photo": {
+            "src": "img/intro/kokura-castle.jpg",
+            "credit": "そらみみ (Soramimi)",
+            "license": "CC BY-SA 4.0",
+            "href": "https://commons.wikimedia.org/wiki/File:Tenshu_of_Kokura_Castle_20150509-1.JPG"
+          }
         },
         {
           "type": "stop",
@@ -1320,7 +1352,13 @@ const TRIP_DATA = {
           ],
           "stay": 155,
           "mode": "driving",
-          "intro": "深耶馬溪的代表性景點。火山熔岩被溪水長期切割出一片奇岩，從展望台一處就能同時望見群猿山、鳶巢山、夫婦岩、仙人岩等八座岩峰，因此叫「一目八景」。\n紅葉見頃大約在十月下旬到十一月下旬，是這裡一年中最美也最塞車的時候。"
+          "intro": "深耶馬溪的代表性景點。火山熔岩被溪水長期切割出一片奇岩，從展望台一處就能同時望見群猿山、鳶巢山、夫婦岩、仙人岩等八座岩峰，因此叫「一目八景」。\n紅葉見頃大約在十月下旬到十一月下旬，是這裡一年中最美也最塞車的時候。",
+          "photo": {
+            "src": "img/intro/hitome-hakkei.jpg",
+            "credit": "そらみみ",
+            "license": "CC BY-SA 4.0",
+            "href": "https://commons.wikimedia.org/wiki/File:Hitome-Hakkei_in_Shin-Yabakei_Valley_from_observation_deck_20141117-4.JPG"
+          }
         },
         {
           "type": "stop",
@@ -1382,7 +1420,13 @@ const TRIP_DATA = {
           ],
           "stay": 105,
           "mode": "driving",
-          "intro": "由布院車站通往金鱗湖的主要街道，兩側是土產店、咖啡館與小型美術館。它不是保存下來的老街，而是戰後隨著溫泉觀光一路發展起來的商店街，所以新舊店面混在一起。"
+          "intro": "由布院車站通往金鱗湖的主要街道，兩側是土產店、咖啡館與小型美術館。它不是保存下來的老街，而是戰後隨著溫泉觀光一路發展起來的商店街，所以新舊店面混在一起。",
+          "photo": {
+            "src": "img/intro/yunotsubo.jpg",
+            "credit": "そらみみ",
+            "license": "CC BY-SA 4.0",
+            "href": "https://commons.wikimedia.org/wiki/File:Mount_Yufudake_from_Yunotsubo_Street.JPG"
+          }
         },
         {
           "type": "stop",
@@ -1482,7 +1526,13 @@ const TRIP_DATA = {
           ],
           "stay": 45,
           "mode": "driving",
-          "intro": "湖底同時湧出溫泉與冷泉，水溫全年高於氣溫，所以秋冬清晨常起一層湖霧——那正是這座湖最有名的畫面。\n名字來自明治時期的儒學家毛利空桑，他看見夕陽下魚鱗反光而命名。繞湖一圈步行十幾分鐘。"
+          "intro": "湖底同時湧出溫泉與冷泉，水溫全年高於氣溫，所以秋冬清晨常起一層湖霧——那正是這座湖最有名的畫面。\n名字來自明治時期的儒學家毛利空桑，他看見夕陽下魚鱗反光而命名。繞湖一圈步行十幾分鐘。",
+          "photo": {
+            "src": "img/intro/kinrinko.jpg",
+            "credit": "Ivan P",
+            "license": "CC0",
+            "href": "https://commons.wikimedia.org/wiki/File:Lake_Kinrin_in_Yufuin,_Oita_-_October_2026_(04).jpg"
+          }
         },
         {
           "type": "stop",
@@ -1536,7 +1586,13 @@ const TRIP_DATA = {
           ],
           "stay": 140,
           "mode": "driving",
-          "intro": "阿蘇中岳西側的草原，本身是一座直徑約一公里的舊火口遺跡，中央低窪處積水成池。四周環繞阿蘇五岳，草地上常有放牧的馬。\n即使中岳火口因火山活動封閉，草千里一帶通常仍可正常前往。"
+          "intro": "阿蘇中岳西側的草原，本身是一座直徑約一公里的舊火口遺跡，中央低窪處積水成池。四周環繞阿蘇五岳，草地上常有放牧的馬。\n即使中岳火口因火山活動封閉，草千里一帶通常仍可正常前往。",
+          "photo": {
+            "src": "img/intro/kusasenri.jpg",
+            "credit": "Raita Futo from Tokyo, Japan",
+            "license": "CC BY 2.0",
+            "href": "https://commons.wikimedia.org/wiki/File:Aso_Kusasenri_horses_(52133462269).jpg"
+          }
         },
         {
           "type": "stop",
@@ -1565,7 +1621,13 @@ const TRIP_DATA = {
           ],
           "stay": 145,
           "mode": "driving",
-          "intro": "杉林間的石階參道，兩側排著近百座覆滿青苔的石燈籠，是這裡最具代表性的畫面。\n本殿後方再往上走二十到三十分鐘是「穿戶岩」——一塊中央被貫穿出十公尺以上大洞的巨岩，傳說是鬼八法師一腳踢穿的，被當作必勝與合格祈願的神體。\n動畫電影《螢火之森》與《夏目友人帳》都在這裡取景。"
+          "intro": "杉林間的石階參道，兩側排著近百座覆滿青苔的石燈籠，是這裡最具代表性的畫面。\n本殿後方再往上走二十到三十分鐘是「穿戶岩」——一塊中央被貫穿出十公尺以上大洞的巨岩，傳說是鬼八法師一腳踢穿的，被當作必勝與合格祈願的神體。\n動畫電影《螢火之森》與《夏目友人帳》都在這裡取景。",
+          "photo": {
+            "src": "img/intro/kamishikimi.jpg",
+            "credit": "Ann Lee",
+            "license": "CC BY-SA 2.0",
+            "href": "https://commons.wikimedia.org/wiki/File:%E4%B8%8A%E8%89%B2%E8%A6%8B%E7%86%8A%E9%87%8E%E5%BA%A7%E7%A5%9E%E7%A4%BE_(34654775934).jpg"
+          }
         },
         {
           "type": "stop",
@@ -1623,7 +1685,13 @@ const TRIP_DATA = {
           ],
           "stay": 75,
           "mode": "driving",
-          "intro": "阿蘇火山噴發的火碎流冷卻後形成柱狀節理，再被五瀨川長期切割成 V 字形峽谷，兩側峭壁高達八十到一百公尺。\n真名井瀑布從崖頂直落水面，是日本瀑布百選之一。步道上的御橋一帶是俯瞰瀑布與整段柱狀節理最漂亮的角度，也是明信片上最常見的那一張。\n玉垂の滝是從岩壁縫隙整排滲出的湧泉，水量終年不變。"
+          "intro": "阿蘇火山噴發的火碎流冷卻後形成柱狀節理，再被五瀨川長期切割成 V 字形峽谷，兩側峭壁高達八十到一百公尺。\n真名井瀑布從崖頂直落水面，是日本瀑布百選之一。步道上的御橋一帶是俯瞰瀑布與整段柱狀節理最漂亮的角度，也是明信片上最常見的那一張。\n玉垂の滝是從岩壁縫隙整排滲出的湧泉，水量終年不變。",
+          "photo": {
+            "src": "img/intro/takachiho.jpg",
+            "credit": "The Modern Polymath",
+            "license": "CC BY-SA 4.0",
+            "href": "https://commons.wikimedia.org/wiki/File:Manai_Falls_at_Takachiho_Gorge.jpg"
+          }
         },
         {
           "type": "lodging",
@@ -1722,7 +1790,13 @@ const TRIP_DATA = {
           ],
           "stay": 65,
           "mode": "driving",
-          "intro": "阿蘇外輪山北側的最高展望點，一次望盡阿蘇五岳與整座阿蘇谷。五岳的稜線橫躺著像一尊仰臥的佛像，被稱為「阿蘇涅槃像」。\n名字是旅行作家德富蘇峰取的。秋冬放射冷卻的清晨，阿蘇谷會整個被雲海填滿，只有日出前後那一兩個小時看得到。"
+          "intro": "阿蘇外輪山北側的最高展望點，一次望盡阿蘇五岳與整座阿蘇谷。五岳的稜線橫躺著像一尊仰臥的佛像，被稱為「阿蘇涅槃像」。\n名字是旅行作家德富蘇峰取的。秋冬放射冷卻的清晨，阿蘇谷會整個被雲海填滿，只有日出前後那一兩個小時看得到。",
+          "photo": {
+            "src": "img/intro/daikanbo.jpg",
+            "credit": "STA3816",
+            "license": "CC BY-SA 3.0",
+            "href": "https://commons.wikimedia.org/wiki/File:A_view_of_the_five_mountains_of_Aso_from_Daikanbo_viewpoint.jpg"
+          }
         },
         {
           "type": "stop",
@@ -1752,7 +1826,13 @@ const TRIP_DATA = {
           ],
           "stay": 200,
           "mode": "driving",
-          "intro": "柳川是立花家的城下町，為了防洪與灌溉開鑿了縱橫交錯的水路，總長數百公里，因此被稱為「水鄉」。\n遊船由船夫撐篙前進，沿途要穿過好幾座低矮的石橋，船夫會提醒低頭，一路還會唱民謠。"
+          "intro": "柳川是立花家的城下町，為了防洪與灌溉開鑿了縱橫交錯的水路，總長數百公里，因此被稱為「水鄉」。\n遊船由船夫撐篙前進，沿途要穿過好幾座低矮的石橋，船夫會提醒低頭，一路還會唱民謠。",
+          "photo": {
+            "src": "img/intro/yanagawa.jpg",
+            "credit": "Hiroaki Kaneko",
+            "license": "CC BY-SA 3.0",
+            "href": "https://commons.wikimedia.org/wiki/File:%E6%99%A9%E7%A7%8B%E3%81%AE%E5%B7%9D%E4%B8%8B%E3%82%8A(Yanagawa_in_autumn)_27_Nov,_2015_-_panoramio.jpg"
+          }
         },
         {
           "type": "stop",
@@ -1813,7 +1893,13 @@ const TRIP_DATA = {
           ],
           "stay": 200,
           "mode": "driving",
-          "intro": "供奉學問之神菅原道真，是全國約一萬兩千座天滿宮的總本宮。道真於 903 年歿於大宰府，傳說載運遺體的牛車走到此處便不肯再前進，於是就地埋葬並建社。\n本殿前的「飛梅」相傳是從京都一夜飛來的梅樹，每年開花比周圍的梅樹早。\n本殿近年進行了一百二十四年來首次大規模改修，期間在前方設置由建築師藤本壯介設計、屋頂種滿植物的臨時「仮殿」。"
+          "intro": "供奉學問之神菅原道真，是全國約一萬兩千座天滿宮的總本宮。道真於 903 年歿於大宰府，傳說載運遺體的牛車走到此處便不肯再前進，於是就地埋葬並建社。\n本殿前的「飛梅」相傳是從京都一夜飛來的梅樹，每年開花比周圍的梅樹早。\n本殿近年進行了一百二十四年來首次大規模改修，期間在前方設置由建築師藤本壯介設計、屋頂種滿植物的臨時「仮殿」。",
+          "photo": {
+            "src": "img/intro/dazaifu.jpg",
+            "credit": "Jakub Hałun",
+            "license": "CC BY-SA 4.0",
+            "href": "https://commons.wikimedia.org/wiki/File:20100719_Dazaifu_Tenmangu_Shrine_3328.jpg"
+          }
         },
         {
           "type": "stop",
@@ -1967,7 +2053,13 @@ const TRIP_DATA = {
           ],
           "stay": 150,
           "mode": "transit",
-          "intro": "大濠公園的池子原本是福岡城的外濠，1929 年整建成仿杭州西湖的環池公園，中央以三座小島與石橋串連。\n福岡市美術館由前川國男設計、1979 年開館，2019 年大規模改修後重開，常設展同時擺得下古美術與草間彌生、安迪沃荷。"
+          "intro": "大濠公園的池子原本是福岡城的外濠，1929 年整建成仿杭州西湖的環池公園，中央以三座小島與石橋串連。\n福岡市美術館由前川國男設計、1979 年開館，2019 年大規模改修後重開，常設展同時擺得下古美術與草間彌生、安迪沃荷。",
+          "photo": {
+            "src": "img/intro/ohori-park.jpg",
+            "credit": "Hirho",
+            "license": "CC BY 4.0",
+            "href": "https://commons.wikimedia.org/wiki/File:%C5%8Chori_Park_The_western_shore_of_Matsushima_%C5%8Chori-k%C5%8Den_Ch%C5%AB%C5%8D-ku_Fukuoka_20260529_155012.jpg"
+          }
         },
         {
           "type": "stop",
@@ -2024,7 +2116,13 @@ const TRIP_DATA = {
           ],
           "stay": 110,
           "mode": "transit",
-          "intro": "南北長約六百公尺、十二個街區的地下商店街。整體以十九世紀歐洲風格統一設計，石板地、鑄鐵裝飾與天花板紋樣都在規範之內，連店家招牌的樣式都受限制，所以走起來不像一般地下街那麼雜亂。\n它同時是串連天神各百貨與地鐵站的通道，下雨天完全不用撐傘。"
+          "intro": "南北長約六百公尺、十二個街區的地下商店街。整體以十九世紀歐洲風格統一設計，石板地、鑄鐵裝飾與天花板紋樣都在規範之內，連店家招牌的樣式都受限制，所以走起來不像一般地下街那麼雜亂。\n它同時是串連天神各百貨與地鐵站的通道，下雨天完全不用撐傘。",
+          "photo": {
+            "src": "img/intro/tenjin-chikagai.jpg",
+            "credit": "JKT-c",
+            "license": "CC BY 3.0",
+            "href": "https://commons.wikimedia.org/wiki/File:Tenjin_Chikagai(Tenjin_Underground_City)_-_02.JPG"
+          }
         },
         {
           "type": "stop",
@@ -2110,7 +2208,13 @@ const TRIP_DATA = {
           ],
           "stay": 55,
           "mode": "transit",
-          "intro": "1996 年開幕，以一條貫穿中庭的人工運河為核心的複合商場，由美國建築師 Jon Jerde 設計——曲面牆體與大膽的色塊分割是他的招牌手法，在當時的日本相當少見。"
+          "intro": "1996 年開幕，以一條貫穿中庭的人工運河為核心的複合商場，由美國建築師 Jon Jerde 設計——曲面牆體與大膽的色塊分割是他的招牌手法，在當時的日本相當少見。",
+          "photo": {
+            "src": "img/intro/canal-city.jpg",
+            "credit": "FlyingToaster",
+            "license": "CC BY 3.0",
+            "href": "https://commons.wikimedia.org/wiki/File:Canal_city_hakata_fukuoka3.jpg"
+          }
         },
         {
           "type": "stop",
@@ -2261,7 +2365,13 @@ const TRIP_DATA = {
           ],
           "stay": 40,
           "mode": "transit",
-          "intro": "博多站的伴手禮集中在博多デイトス一樓的「マイング」，明太子、和菓子到九州各縣的名產都買得到。\n明太子是戰後由中洲「ふくや」的創業者川原俊夫，參考韓國鱈魚卵的泡菜醃法改良出來的。他刻意不申請專利、把做法公開，福岡各家業者才跟著做起來；1975 年山陽新幹線開到博多之後，明太子才紅遍全日本。\n明月堂「博多通りもん」（博多通饅頭）的名字，則來自每年 5 月博多どんたく祭典上沿街遊行的人。"
+          "intro": "博多站的伴手禮集中在博多デイトス一樓的「マイング」，明太子、和菓子到九州各縣的名產都買得到。\n明太子是戰後由中洲「ふくや」的創業者川原俊夫，參考韓國鱈魚卵的泡菜醃法改良出來的。他刻意不申請專利、把做法公開，福岡各家業者才跟著做起來；1975 年山陽新幹線開到博多之後，明太子才紅遍全日本。\n明月堂「博多通りもん」（博多通饅頭）的名字，則來自每年 5 月博多どんたく祭典上沿街遊行的人。",
+          "photo": {
+            "src": "img/intro/hakata-station.jpg",
+            "credit": "ぱちょぴ",
+            "license": "CC BY-SA 3.0",
+            "href": "https://commons.wikimedia.org/wiki/File:JR_Hakata_City_2011_Jan.jpg"
+          }
         },
         {
           "type": "stop",
