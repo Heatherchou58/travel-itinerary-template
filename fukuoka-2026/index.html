@@ -723,6 +723,20 @@ html{ font-size:clamp(16px, 4.2vw, 18px); }
     color:var(--c-on-accent); font-size:var(--fs-sm); font-weight:700; text-decoration:none;
   }
   .daymap-open:hover{ text-decoration:underline; }
+  /* 點了某張卡片、地圖只顯示那個點的時候：地圖上方寫出是哪裡，旁邊是回到整條路線的按鈕 */
+  .daymap-bar{ display:flex; align-items:center; gap:var(--sp-2); margin-bottom:var(--sp-2); }
+  /* UA 的 [hidden]{display:none} 會輸給上面的 display:flex，所以要明寫 */
+  .daymap-bar[hidden]{ display:none; }
+  .daymap-place{
+    flex:1; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+    color:var(--c-on-accent); font-size:var(--fs-sm); font-weight:700;
+  }
+  .daymap-back{ margin:0; flex:0 0 auto; }
+  /* 有地圖時，景點與住宿卡片點了會切換地圖。用外圈陰影標示，不動左邊框——那是「現在進行到哪」在用的 */
+  .app.has-map .card[data-mapq]{ cursor:pointer; }
+  .app.has-map .card[data-mapq]:hover{ box-shadow:0 0 0 1px var(--c-accent), var(--shadow); }
+  .app.has-map .card.map-focus{ box-shadow:0 0 0 2px var(--c-accent), var(--shadow); }
+  .app.has-map .card[data-mapq]:focus-visible{ outline:2px solid var(--c-accent); outline-offset:2px; }
 }
 @media (min-width:1280px){
   /* 行程欄上限 720px 跟下面的超寬規則一致，多的寬度給地圖 */
@@ -766,6 +780,7 @@ footer a{ color:inherit; }
   </header>
   <nav class="nav-bar" id="nav" role="tablist"></nav>
   <aside id="daymap" aria-label="當天路線地圖">
+    <div class="daymap-bar" hidden><span class="daymap-place"></span><button type="button" class="btn btn-route daymap-back">回到整天路線</button></div>
     <iframe title="當天路線地圖" loading="lazy" allowfullscreen
             referrerpolicy="strict-origin-when-cross-origin"></iframe>
   </aside>
@@ -3094,6 +3109,20 @@ const slotAttrs = b => toMin(b.time) === null ? ""
   : ` data-start="${toMin(b.time)}" data-stay="${Number(b.stay) || 0}"`;
 const nowSlot   = b => toMin(b.time) === null ? "" : `<div class="now-line" hidden></div>`;
 
+/* 卡片在地圖上的位置：沿用「🗺️ 地圖」按鈕的查詢——builder 已經用「當地語標題＋地點」
+   組好，右側地圖與按鈕找到的才會是同一個地方。自己貼的短網址（maps.app.goo.gl）
+   沒有查詢字串，退回標題＋地點 */
+function mapQuery(b){
+  const m = (b.links || []).find(l => l.style === "map");
+  let q = "";
+  try { q = m ? (new URL(m.url).searchParams.get("query") || "") : ""; } catch {}
+  return q || [b.titleLocal || b.title, b.place || b.address].filter(Boolean).join(", ");
+}
+const mapAttrs = b => {
+  const q = mapQuery(b);
+  return q ? ` data-mapq="${esc(q)}" data-mapt="${esc(b.title || q)}"` : "";
+};
+
 /* 景點介紹：預設收合。用原生 <details> 而不是自己寫 JS——免事件綁定、
    鍵盤可操作、離線沒問題，重新渲染也不會壞。
    接受字串（以空行或換行分段）或字串陣列，Excel 給的是前者。 */
@@ -3167,7 +3196,7 @@ const RENDERERS = {
       </div>
     </div></div>`,
 
-  stop: b => `<div class="card"${slotAttrs(b)}>
+  stop: b => `<div class="card"${slotAttrs(b)}${mapAttrs(b)}>
     ${nowSlot(b)}${b.time ? `<span class="time">${esc(b.time)}</span>` : ""}${travelTag(b)}${stayTag(b)}
     <div class="subject">${KIND[b.kind] || KIND.sight} ${esc(b.title)}${localSpan(b.titleLocal)}</div>
     ${b.place ? `<div class="meta">📍 ${esc(b.place)}${localSpan(b.placeLocal)}</div>` : ""}${factsHTML(b)}
@@ -3195,7 +3224,7 @@ const RENDERERS = {
     }).join("")}</div>
     ${notesHTML(b.notes)}${linksHTML(b.links)}</div>`,
 
-  lodging: b => `<div class="card lodge"${slotAttrs(b)}>
+  lodging: b => `<div class="card lodge"${slotAttrs(b)}${mapAttrs(b)}>
     ${nowSlot(b)}<div><span class="ttag">🏨 住宿</span>${b.time ? `<span class="time">${esc(b.time)}</span>` : ""}${travelTag(b)}${stayTag(b)}</div>
     <div class="subject">${esc(b.title)}${localSpan(b.titleLocal)}</div>
     ${b.address ? `<div class="meta">📍 ${esc(b.address)}</div>` : ""}${factsHTML(b)}
@@ -3355,7 +3384,9 @@ function renderBlock(b){
 
 /* ── 分頁 ── */
 let current = TRIP_DATA.days[0].id;
+let mapFocus = null;   // { day, n }：點了當天第 n 張有地點的卡片，右側地圖只顯示那個點
 function renderDay(id){
+  if (id !== current) mapFocus = null;   // 換一天就回到整條路線
   current = id;
   const day = TRIP_DATA.days.find(d => d.id === id);
   document.getElementById("main").innerHTML = day.blocks.map(renderBlock).join("");
@@ -3589,18 +3620,13 @@ function paintNow(){
 
 /* ── 電腦版的當日路線地圖 ───────────────────────
    當天的景點與住宿依序串成一條路線（Maps Embed API，最多 20 個途經點）。
-   地點字串沿用卡片上「🗺️ 地圖」按鈕的查詢——builder 已經用「當地語標題＋地點」
-   組好，兩邊找到的才會是同一個地方。 */
+   每一點的位置見 mapQuery()。 */
 const DESKTOP = matchMedia("(min-width:1024px)");
 function dayMapPoints(day){
   const pts = [];
   for (const b of day.blocks || []){
     if (b.type !== "stop" && b.type !== "lodging") continue;
-    const m = (b.links || []).find(l => l.style === "map");
-    let q = "";
-    try { q = m ? (new URL(m.url).searchParams.get("query") || "") : ""; } catch {}
-    /* 自己貼的短網址（maps.app.goo.gl）沒有查詢字串，退回標題＋地點 */
-    if (!q) q = [b.titleLocal || b.title, b.place || b.address].filter(Boolean).join(", ");
+    const q = mapQuery(b);
     if (q && q !== pts[pts.length - 1]) pts.push(q);   // 入住與住宿常是同一個地方
   }
   /* 日本查不到大眾運輸路線（Google 的授權排除日本），搭車的日子改用步行畫——
@@ -3634,10 +3660,21 @@ function paintDayMap(day){
     main.insertAdjacentHTML("afterbegin",
       `<a class="daymap-open" href="${esc(href)}" target="_blank" rel="noopener">在 Google 地圖開啟今天的路線 ↗</a>`);
   }
+  const cards = [...main.querySelectorAll(".card[data-mapq]")];
+  const focused = on && mapFocus && mapFocus.day === day.id ? cards[mapFocus.n] : null;
+  cards.forEach(c => {
+    c.classList.toggle("map-focus", c === focused);
+    /* 有地圖時卡片也能用鍵盤選（Tab 到卡片按 Enter）。手機不加，Tab 順序才不會多出一堆卡片 */
+    if (on) c.tabIndex = 0; else c.removeAttribute("tabindex");
+  });
+  box.querySelector(".daymap-bar").hidden = !focused;
   if (!on) return;
 
   const key = e(M.mapsEmbedKey);
-  const src = pts.length === 1
+  if (focused) box.querySelector(".daymap-place").textContent = `📍 ${focused.dataset.mapt}`;
+  const src = focused
+    ? `https://www.google.com/maps/embed/v1/place?key=${key}&q=${e(focused.dataset.mapq)}&language=ja&region=jp`
+    : pts.length === 1
     ? `https://www.google.com/maps/embed/v1/place?key=${key}&q=${e(pts[0])}&language=ja&region=jp`
     : `https://www.google.com/maps/embed/v1/directions?key=${key}&mode=${mode}&language=ja&region=jp` +
       `&origin=${e(pts[0])}&destination=${e(pts[pts.length - 1])}` +
@@ -3648,6 +3685,32 @@ function paintDayMap(day){
 }
 /* 視窗從手機寬度拉到電腦寬度時補載，反過來就收起 */
 DESKTOP.addEventListener("change", () => paintDayMap(TRIP_DATA.days.find(d => d.id === current)));
+
+/* 點卡片 → 右側地圖只顯示那個點，再點一次同一張就回到整條路線。
+   卡片裡的按鈕、連結、看介紹、私人資料的表單照常運作，不會順便切換地圖；
+   反白選字（例如要複製地址）時也不切換。 */
+function toggleMapFocus(card){
+  const n = [...document.querySelectorAll("#main .card[data-mapq]")].indexOf(card);
+  mapFocus = mapFocus && mapFocus.day === current && mapFocus.n === n ? null : { day: current, n };
+  paintDayMap(TRIP_DATA.days.find(d => d.id === current));
+}
+document.getElementById("main").addEventListener("click", ev => {
+  if (!document.querySelector(".app.has-map")) return;
+  const card = ev.target.closest(".card[data-mapq]");
+  if (!card || ev.target.closest("a,button,input,label,select,textarea,form,details")) return;
+  if (String(getSelection()).trim()) return;
+  toggleMapFocus(card);
+});
+document.getElementById("main").addEventListener("keydown", ev => {
+  if (ev.key !== "Enter" && ev.key !== " ") return;
+  if (!ev.target.matches(".app.has-map .card[data-mapq]")) return;
+  ev.preventDefault();
+  toggleMapFocus(ev.target);
+});
+document.querySelector("#daymap .daymap-back").addEventListener("click", () => {
+  mapFocus = null;
+  paintDayMap(TRIP_DATA.days.find(d => d.id === current));
+});
 
 function paintForecast(){
   const strip = document.getElementById("wx-strip");

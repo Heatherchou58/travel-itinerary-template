@@ -1107,6 +1107,43 @@ def run(trip: str) -> bool:
             href = page.locator(".daymap-open").get_attribute("href") or ""
             r.check("地圖：「在 Google 地圖開啟」是同一條路線",
                     "maps/dir/?api=1" in href and "travelmode=driving" in href and "Sydney" in href, href[:80])
+
+            # 點卡片 → 地圖只顯示那個點；按「回到整天路線」或再點一次同一張就回到整條路線
+            frame = page.locator("#daymap iframe")
+            bar = page.locator(".daymap-bar")
+            def map_q():
+                u = frame.get_attribute("src") or ""
+                return u.split("/embed/v1/")[1].split("?")[0] if "/embed/v1/" in u else "",                        parse_qs(urlparse(u).query).get("q", [""])[0]
+            opera = page.locator("#main .card[data-mapq]").nth(0)
+            hotel = page.locator("#main .card[data-mapq]").nth(1)
+            r.check("點卡片：還沒點之前不顯示地點標示", not bar.is_visible())
+            opera.locator(".subject").click(); page.wait_for_timeout(200)
+            r.check("點卡片：地圖換成那個點", map_q() == ("place", "Sydney Opera House, Bennelong Point"), str(map_q()))
+            r.check("點卡片：被點的卡片框起來，其他的沒有",
+                    "map-focus" in (opera.get_attribute("class") or "") and page.locator(".card.map-focus").count() == 1)
+            r.check("點卡片：地圖上方寫出地點、有回到整天路線的按鈕",
+                    bar.is_visible() and "雪梨歌劇院" in bar.inner_text() and page.locator(".daymap-back").is_visible(),
+                    bar.inner_text() if bar.count() else "")
+            page.locator(".daymap-back").click(); page.wait_for_timeout(200)
+            r.check("回到整天路線：地圖回到路線、標示收起來",
+                    map_q()[0] == "directions" and not bar.is_visible() and page.locator(".card.map-focus").count() == 0,
+                    str(map_q()))
+            # 卡片裡的連結照常開新分頁，不會順便切換地圖（攔下預設動作，免得真的開出去）
+            page.evaluate("""() => { const a = document.querySelector('#main .card[data-mapq] a.btn');
+                                     a.addEventListener('click', e => e.preventDefault(), { once: true }); a.click(); }""")
+            page.wait_for_timeout(200)
+            r.check("點卡片：點卡片裡的按鈕不會切換地圖", map_q()[0] == "directions", str(map_q()))
+            # 鍵盤：Tab 到卡片按 Enter
+            hotel.focus(); page.keyboard.press("Enter"); page.wait_for_timeout(200)
+            r.check("點卡片：用鍵盤也能選（Enter）", map_q() == ("place", "測試飯店, 1 Test St"), str(map_q()))
+            hotel.locator(".subject").click(); page.wait_for_timeout(200)
+            r.check("點卡片：再點一次同一張就回到整條路線", map_q()[0] == "directions" and not bar.is_visible(), str(map_q()))
+            # 換一天再回來：回到整條路線
+            opera.locator(".subject").click(); page.wait_for_timeout(200)
+            page.locator(".nav-item").nth(1).click(); page.wait_for_timeout(300)
+            page.locator(".nav-item").nth(0).click(); page.wait_for_timeout(300)
+            r.check("點卡片：換一天再回來就回到整條路線",
+                    map_q()[0] == "directions" and page.locator(".card.map-focus").count() == 0, str(map_q()))
             # 沒有景點的分頁不畫。但版面寬度不能跟著變：退回兩欄會整個重新置中，
             # 切分頁時左邊的按鈕橫向跳將近 200px
             nav_x = page.locator(".nav-bar").bounding_box()["x"]
@@ -1129,6 +1166,10 @@ def run(trip: str) -> bool:
             r.check("地圖（手機）：不顯示", not page.locator("#daymap").is_visible())
             r.check("地圖（手機）：iframe 沒有設網址，不會載入",
                     page.locator("#daymap iframe").get_attribute("src") is None)
+            page.locator("#main .card[data-mapq] .subject").first.click(); page.wait_for_timeout(200)
+            r.check("地圖（手機）：點卡片不會載入地圖、卡片不能用 Tab 選",
+                    page.locator("#daymap iframe").get_attribute("src") is None
+                    and page.locator("#main .card[tabindex]").count() == 0)
             # 手機瀏覽器開 Google 地圖網址最多只認 3 個途經點，一天的路線會被截掉
             r.check("開啟路線按鈕（手機）：不出現", page.locator(".daymap-open").count() == 0)
             ctx.close()
