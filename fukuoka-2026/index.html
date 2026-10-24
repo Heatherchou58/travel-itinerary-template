@@ -478,7 +478,14 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 
 /* ── 交通路線 ─────────────────────────── */
 .route{ margin-top:var(--sp-3); padding-left:2px; }
-.route-step{ display:flex; gap:var(--sp-3); align-items:flex-start; }
+.route-step{ display:flex; gap:var(--sp-3); align-items:flex-start; position:relative; }
+/* 站與站之間的線只畫在 .route-link 裡；這一站有出口說明或提醒框時整列會被撐高，
+   圓點下面就空一截。所以從圓點底下一路畫到這一列的底部，接上下一段。
+   left 7px＝圓點欄 18px 的正中間減掉線寬的一半；top 23px＝圓點上緣 5px＋圓點 18px。 */
+.route-step:not(:last-child)::before{
+  content:""; position:absolute; left:7px; top:23px; bottom:0; width:4px;
+  background:var(--c-line);
+}
 .route-dot{
   position:relative; flex:0 0 14px; width:14px; height:14px; margin-top:5px;
   border-radius:50%; background:var(--c-line); border:2px solid var(--c-surface);
@@ -925,17 +932,7 @@ const TRIP_DATA = {
               "name": "國內線航廈・福岡空港站",
               "nameLocal": "福岡空港駅",
               "active": true,
-              "exit": "下接駁巴士後跟著指標到地下的地鐵站"
-            },
-            {
-              "name": "東比惠",
-              "nameLocal": "東比恵",
-              "active": false
-            },
-            {
-              "name": "博多",
-              "nameLocal": "博多",
-              "active": false
+              "exit": "起點站，每班車都往博多方向，第 3 站「祇園」下車"
             },
             {
               "name": "祇園",

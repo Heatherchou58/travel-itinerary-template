@@ -68,7 +68,8 @@ SWAP_TRIP = {
              "links": [{"label": "官網", "url": "https://example.com", "style": "theme"}]},
             {"type": "transit", "time": "13:00", "line": "T1 線", "duration": "約 12 分",
              # 當地語跟站名一樣的只顯示一次；不一樣的照常顯示
-             "steps": [{"name": "Circular Quay", "nameLocal": "Circular Quay", "active": True},
+             "steps": [{"name": "Circular Quay", "nameLocal": "Circular Quay", "active": True,
+                        "note": "提醒框會把這一列撐高，線不能斷"},
                        {"name": "Town Hall", "active": False},
                        {"name": "Central", "nameLocal": "Central Station", "active": True}]},
             {"type": "options", "time": "18:00", "title": "晚餐二選一",
@@ -560,6 +561,12 @@ def run(trip: str) -> bool:
                 "els => els.map(e => getComputedStyle(e).fontWeight)")]
             r.check("交通卡：經過站比起終點淡", len(weights) == 3 and weights[1] < weights[0] == weights[2],
                     f"{weights}")
+            # 每一站（最後一站除外）圓點下面的線要畫到這一列底部，並且緊接著下一段
+            joined = ride.locator(".route").evaluate("""r => [...r.children].slice(0, -1)
+                .filter(k => k.classList.contains("route-step"))
+                .map(k => Math.round(k.getBoundingClientRect().bottom - k.nextElementSibling.getBoundingClientRect().top) === 0
+                       && parseFloat(getComputedStyle(k, "::before").height) >= k.offsetHeight - 24)""")
+            r.check("交通卡：有提醒框的站，線也連到下一站", bool(joined) and all(joined), f"{joined}")
 
             # 景點介紹：預設收合，點了才展開
             intro = page.locator("details.intro")
