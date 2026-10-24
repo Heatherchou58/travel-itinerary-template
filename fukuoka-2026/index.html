@@ -919,14 +919,15 @@ const TRIP_DATA = {
           "titleLocal": "福岡空港 到着・入国",
           "place": "福岡機場國際線航廈",
           "notes": [
-            "BR102 19:55 落地・入境與提行李約 30–45 分",
-            "🚨 飯店受理只到 22:00 — 先進飯店放行李，再出門吃",
-            "⚠️ 地鐵「福岡空港站」在國內線航廈地下，國際線走不過去，一定要先換航廈",
-            "🚇 最直接：免費接駁巴士→國內線（10 分、約 10 分一班）→ 空港線往姪浜方向坐 3 站到「祇園」，飯店就在這站・約 8 分、¥260"
+            "BR102 19:55 落地，入境與提行李約 30–45 分",
+            "免費接駁巴士到國內線航廈（10 分、約 10 分一班）→ 空港線往姪浜方向 3 站到「祇園」，約 8 分",
+            "⚠️ 地鐵「福岡空港站」在國內線航廈地下，國際線走不過去，一定要先搭接駁巴士",
+            "⚠️ 飯店受理只到 22:00——先進飯店放行李，再出門吃"
           ],
           "links": [],
           "stay": 75,
-          "mode": "transit"
+          "mode": "transit",
+          "fee": "地鐵 ¥260"
         },
         {
           "type": "stop",
@@ -936,7 +937,8 @@ const TRIP_DATA = {
           "titleLocal": "ホテル オリゴ 博多 祇園",
           "place": "福岡市博多區祇園町 2-31",
           "notes": [
-            "無人飯店・自助入住；飯店在大樓 2–6 樓，入口不太好找，照地圖走"
+            "無人飯店，自助入住",
+            "飯店在大樓 2–6 樓，入口不好找，照地圖走"
           ],
           "links": [
             {
@@ -998,8 +1000,6 @@ const TRIP_DATA = {
           "titleLocal": "ホテル オリゴ 博多 祇園",
           "address": "福岡市博多區祇園（地鐵空港線 祇園站）",
           "notes": [
-            "🚨 退房 11:00",
-            "¥35,280 含稅（約 NT$1,760／人）",
             "明早 08:00 要取車開始自駕"
           ],
           "links": [
@@ -1017,7 +1017,9 @@ const TRIP_DATA = {
           "stay": null,
           "mode": "transit",
           "secret": "origo",
-          "secretHint": "預訂號碼與驗證碼"
+          "secretHint": "預訂號碼與驗證碼",
+          "hours": "退房 11:00",
+          "fee": "¥35,280 含稅（約 NT$1,760／人）"
         }
       ]
     },
@@ -1034,10 +1036,8 @@ const TRIP_DATA = {
           "titleLocal": "ミニヨン 博多駅店",
           "place": "JR 博多站構內",
           "notes": [
-            "退房後帶行李從祇園走到博多站約 10 分・停留 30 分",
-            "7:00–23:00、無休",
-            "試算表 4.6★「博多車站必吃之一，小小的可頌內餡超級豐富」",
-            "量秤計價的迷你可頌，回轉快，排隊也不太久"
+            "退房後帶行李從祇園走到博多站",
+            "排隊回轉快，不太久"
           ],
           "links": [
             {
@@ -1053,7 +1053,9 @@ const TRIP_DATA = {
           ],
           "stay": 45,
           "mode": "walking",
-          "intro": "開在 JR 博多站構內的迷你可頌專賣店（店名全稱 il FORNO del MIGNON），從早上七點烤到晚上十一點。幾乎只賣一種小可頌，秤重計價，原味之外還有巧克力、番薯等內餡，奶油香在通道上就聞得到，是博多站最常見的排隊風景之一。"
+          "intro": "開在 JR 博多站構內的迷你可頌專賣店（店名全稱 il FORNO del MIGNON），從早上七點烤到晚上十一點。幾乎只賣一種小可頌，秤重計價，原味之外還有巧克力、番薯等內餡，奶油香在通道上就聞得到，是博多站最常見的排隊風景之一。",
+          "travel": 10,
+          "hours": "7:00–23:00、無休"
         },
         {
           "type": "stop",
@@ -1063,10 +1065,9 @@ const TRIP_DATA = {
           "titleLocal": "オリックスレンタカー 博多駅博多口店",
           "place": "福岡市博多區・博多站博多口",
           "notes": [
-            "步行前往・手續約 30 分（已開通快速取車，會再快一點）",
-            "🚗 WS CLASS Campaign Limited・大型廂型車・禁菸・大人 4 人",
+            "手續約 30 分（已開通快速取車，會再快一點）",
+            "預約：WS CLASS Campaign Limited・大型廂型車・禁菸・大人 4 人",
             "已加保事故免責險與租車安心優惠制度",
-            "¥43,714 含稅・於店鋪付款",
             "⚠️ 博多口是車站西側，別跑到筑紫口"
           ],
           "links": [
@@ -1085,7 +1086,8 @@ const TRIP_DATA = {
           "mode": "walking",
           "intro": "這趟開的是大型廂型車，四個人加行李空間很夠，但九州的山區道路彎多路窄——耶馬溪的縣道、やまなみハイウェイ、高千穗一帶的國道 325／265 都是，觀光地的停車格也偏小，進出要多留意。\n日本靠左行駛、方向盤在右邊。收費道路與停車場常只收現金或零錢，記得備一點。",
           "secret": "orix",
-          "secretHint": "預約號碼"
+          "secretHint": "預約號碼",
+          "fee": "¥43,714 含稅，於店鋪付款"
         },
         {
           "type": "stop",
@@ -1095,9 +1097,8 @@ const TRIP_DATA = {
           "titleLocal": "門司港レトロ",
           "place": "北九州市門司區",
           "notes": [
-            "自駕約 1 小時 20 分・停留 2.5hr",
-            "🍽 午餐：BEAR FRUITS 門司港本店 燒咖哩（11:00–22:00、週日至 23:00）",
-            "舊門司三井俱樂部等設施 09:00–17:00，排上午才進得去"
+            "行程排在上午，洋館才進得去",
+            "午餐：BEAR FRUITS 門司港本店 燒咖哩（11:00–22:00、週日至 23:00）"
           ],
           "links": [
             {
@@ -1119,7 +1120,9 @@ const TRIP_DATA = {
             "credit": "そらみみ (Soramimi)",
             "license": "CC BY-SA 4.0",
             "href": "https://commons.wikimedia.org/wiki/File:Former_Moji_Customs_and_Mojiko_Retro_Area.JPG"
-          }
+          },
+          "travel": 80,
+          "hours": "舊門司三井俱樂部等洋館 09:00–17:00"
         },
         {
           "type": "stop",
@@ -1129,10 +1132,7 @@ const TRIP_DATA = {
           "titleLocal": "ジ アウトレット北九州",
           "place": "北九州市八幡東區",
           "notes": [
-            "自駕約 40 分・停留 2hr45",
-            "營業 10:00–20:00（餐廳至 21:00）",
-            "開在舊 Space World 原址，全程室內，下雨也走得完",
-            "試算表的 Workman Plus（平價戶外服飾）也在這一帶"
+            "Workman Plus（平價戶外服飾）也在這一帶"
           ],
           "links": [
             {
@@ -1148,7 +1148,9 @@ const TRIP_DATA = {
           ],
           "stay": 205,
           "mode": "driving",
-          "intro": "開在已歇業的 Space World 遊樂園原址，是九州規模數一數二的 outlet。同一塊基地還連著 AEON MALL 與多個體驗型設施，全程在室內。"
+          "intro": "開在已歇業的 Space World 遊樂園原址，是九州規模數一數二的 outlet。同一塊基地還連著 AEON MALL 與多個體驗型設施，全程在室內。",
+          "travel": 40,
+          "hours": "10:00–20:00（餐廳至 21:00）"
         },
         {
           "type": "stop",
@@ -1158,9 +1160,8 @@ const TRIP_DATA = {
           "titleLocal": "皿倉山",
           "place": "北九州市八幡東區",
           "notes": [
-            "自駕僅約 10 分（纜車站就在 Outlet 旁）・停留 2.5hr",
-            "☀️ 11/15 日落 17:16，16:25 前上到山頂才接得到夕陽轉夜景",
-            "纜車 11–3 月 10:00–20:00、上行末班 19:20、週二公休（今天週日正常）",
+            "纜車站就在 Outlet 旁",
+            "11/15 日落 17:16，16:25 前上到山頂才接得到夕陽轉夜景",
             "山頂風大，外套帶著"
           ],
           "links": [
@@ -1183,7 +1184,9 @@ const TRIP_DATA = {
             "credit": "Suicasmo",
             "license": "CC BY-SA 4.0",
             "href": "https://commons.wikimedia.org/wiki/File:Night_Views_from_Mount_Sarakura_20170527-1.jpg"
-          }
+          },
+          "travel": 10,
+          "hours": "纜車 11–3 月 10:00–20:00、上行末班 19:20、週二公休（今天週日正常）"
         },
         {
           "type": "stop",
@@ -1193,8 +1196,6 @@ const TRIP_DATA = {
           "titleLocal": "鉄なべ 本店",
           "place": "北九州市小倉北區魚町",
           "notes": [
-            "自駕約 25 分・停留 1.5hr",
-            "小倉名物「鉄なべ餃子」：一口大小、連鑄鐵鍋上桌，底部焦脆",
             "備案：旦過周邊的燒肉與居酒屋，步行範圍內"
           ],
           "links": [
@@ -1211,7 +1212,8 @@ const TRIP_DATA = {
           ],
           "stay": 120,
           "mode": "driving",
-          "intro": "小倉是北九州的中心，餐飲集中在小倉車站南口到旦過一帶，步行範圍內。\n鐵鍋餃子是戰後從滿州引揚者帶回的吃法，用小鑄鐵鍋直接端上桌，餃子始終保持滾燙。小倉同時也是「燒烏龍麵」的發祥地。"
+          "intro": "小倉是北九州的中心，餐飲集中在小倉車站南口到旦過一帶，步行範圍內。\n鐵鍋餃子是戰後從滿州引揚者帶回的吃法，用小鑄鐵鍋直接端上桌，餃子始終保持滾燙。小倉同時也是「燒烏龍麵」的發祥地。",
+          "travel": 25
         },
         {
           "type": "lodging",
@@ -1220,11 +1222,8 @@ const TRIP_DATA = {
           "titleLocal": "ホテルリリーフ小倉 アネックス",
           "address": "北九州市小倉北區紺屋町 12-16",
           "notes": [
-            "Check-in 15:00／退房 10:00",
-            "☎ +81 93-521-5006",
             "2 間客房・各 20㎡・禁菸・2 張小型雙人床",
-            "含早餐・免費 Wi-Fi",
-            "¥15,204 含稅（約 NT$759／人）"
+            "含早餐、免費 Wi-Fi"
           ],
           "links": [
             {
@@ -1246,7 +1245,10 @@ const TRIP_DATA = {
           "stay": null,
           "mode": "driving",
           "secret": "relief",
-          "secretHint": "訂單編號"
+          "secretHint": "訂單編號",
+          "hours": "Check-in 15:00／退房 10:00",
+          "fee": "¥15,204 含稅（約 NT$759／人）",
+          "tel": "+81 93-521-5006"
         }
       ]
     },
@@ -1288,9 +1290,8 @@ const TRIP_DATA = {
           "titleLocal": "旦過市場",
           "place": "北九州市小倉北區魚町",
           "notes": [
-            "步行・停留 30 分",
-            "⚠️ 市場 8:00 開，但食堂多 10:00 才開 — 這個時段只能逛不能吃",
-            "真的想再吃一點：資さんうどん 魚町店就在隔壁，24 小時營業，名物是肉肉うどん與ぼた餅"
+            "⚠️ 這個時段食堂多半還沒開，只能逛不能吃",
+            "備案：隔壁的資さんうどん 魚町店 24 小時營業，名物是肉肉うどん與ぼた餅"
           ],
           "links": [
             {
@@ -1299,20 +1300,21 @@ const TRIP_DATA = {
               "style": "map"
             },
             {
-              "label": "🚗 從上一站",
-              "url": "https://www.google.com/maps/dir/?api=1&origin=%E3%83%9B%E3%83%86%E3%83%AB%20%E6%9C%9D%E9%A3%9F%2C%20HOTEL%20RELIEF%20Kokura%20ANNEX&destination=%E6%97%A6%E9%81%8E%E5%B8%82%E5%A0%B4%2C%20%E5%8C%97%E4%B9%9D%E5%B7%9E%E5%B8%82%E5%B0%8F%E5%80%89%E5%8C%97%E5%8D%80%E9%AD%9A%E7%94%BA&travelmode=driving",
+              "label": "🚶 從上一站",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E3%83%9B%E3%83%86%E3%83%AB%20%E6%9C%9D%E9%A3%9F%2C%20HOTEL%20RELIEF%20Kokura%20ANNEX&destination=%E6%97%A6%E9%81%8E%E5%B8%82%E5%A0%B4%2C%20%E5%8C%97%E4%B9%9D%E5%B7%9E%E5%B8%82%E5%B0%8F%E5%80%89%E5%8C%97%E5%8D%80%E9%AD%9A%E7%94%BA&travelmode=walking",
               "style": "route"
             }
           ],
           "stay": 30,
-          "mode": "driving",
+          "mode": "walking",
           "intro": "大正時代沿神嶽川形成的市場，被稱為「北九州的廚房」，以狹窄的木造店鋪與架在河面上的建築結構聞名。\n2022 年接連兩場大火燒毀了相當大的部分，市場目前仍在重建中。新的商業設施「旦過市場いちばん館」預計 2027 年春季才部分開幕，所以現在看到的是重建過程中的樣貌，攤位位置與營業狀況都還在變動。",
           "photo": {
             "src": "img/intro/tanga-market.jpg",
             "credit": "Suicasmo",
             "license": "CC BY-SA 4.0",
             "href": "https://commons.wikimedia.org/wiki/File:Tanga_Market_20170224.jpg"
-          }
+          },
+          "hours": "市場 8:00 起，食堂多半 10:00 起"
         },
         {
           "type": "stop",
@@ -1322,9 +1324,7 @@ const TRIP_DATA = {
           "titleLocal": "小倉城",
           "place": "北九州市小倉北區城內",
           "notes": [
-            "步行約 10 分・停留 50 分",
-            "11–3 月 9:00–19:00（最終入城 18:30）、無休、¥500（現金）",
-            "9:00 一開門就進去"
+            "一開門就進去"
           ],
           "links": [
             {
@@ -1333,20 +1333,23 @@ const TRIP_DATA = {
               "style": "map"
             },
             {
-              "label": "🚗 從上一站",
-              "url": "https://www.google.com/maps/dir/?api=1&origin=%E6%97%A6%E9%81%8E%E5%B8%82%E5%A0%B4%2C%20%E5%8C%97%E4%B9%9D%E5%B7%9E%E5%B8%82%E5%B0%8F%E5%80%89%E5%8C%97%E5%8D%80%E9%AD%9A%E7%94%BA&destination=%E5%B0%8F%E5%80%89%E5%9F%8E%2C%20%E5%8C%97%E4%B9%9D%E5%B7%9E%E5%B8%82%E5%B0%8F%E5%80%89%E5%8C%97%E5%8D%80%E5%9F%8E%E5%85%A7&travelmode=driving",
+              "label": "🚶 從上一站",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E6%97%A6%E9%81%8E%E5%B8%82%E5%A0%B4%2C%20%E5%8C%97%E4%B9%9D%E5%B7%9E%E5%B8%82%E5%B0%8F%E5%80%89%E5%8C%97%E5%8D%80%E9%AD%9A%E7%94%BA&destination=%E5%B0%8F%E5%80%89%E5%9F%8E%2C%20%E5%8C%97%E4%B9%9D%E5%B7%9E%E5%B8%82%E5%B0%8F%E5%80%89%E5%8C%97%E5%8D%80%E5%9F%8E%E5%85%A7&travelmode=walking",
               "style": "route"
             }
           ],
           "stay": 60,
-          "mode": "driving",
+          "mode": "walking",
           "intro": "細川忠興於 1602 年築成，天守最上層往外突出一圈、沒有屋簷的「唐造」是它最特別的地方，全國少見。\n現在的天守是 1959 年重建的，內部整修成體驗型展示。城旁的小倉城庭園是復原的江戶時代書院庭園，可另購共通券。",
           "photo": {
             "src": "img/intro/kokura-castle.jpg",
             "credit": "そらみみ (Soramimi)",
             "license": "CC BY-SA 4.0",
             "href": "https://commons.wikimedia.org/wiki/File:Tenshu_of_Kokura_Castle_20150509-1.JPG"
-          }
+          },
+          "travel": 10,
+          "hours": "11–3 月 9:00–19:00（最終入城 18:30）、無休",
+          "fee": "¥500（現金）"
         },
         {
           "type": "stop",
@@ -1356,10 +1359,9 @@ const TRIP_DATA = {
           "titleLocal": "深耶馬渓 一目八景",
           "place": "大分縣中津市",
           "notes": [
-            "自駕約 1 小時 15 分（山區道路較多）・停留 1hr20",
-            "🍁 紅葉見頃 10 月下旬–11 月下旬，今天正中旺季",
-            "上午來光線順（下午逆光），停車場 250 台免費",
-            "⚠️ 旺季玖珠 IC 下來平常 20 分、可能塞到 60 分，預留彈性"
+            "山區道路較多",
+            "上午來光線順，下午逆光",
+            "⚠️ 紅葉旺季玖珠 IC 下來平常 20 分、可能塞到 60 分，預留彈性"
           ],
           "links": [
             {
@@ -1381,7 +1383,9 @@ const TRIP_DATA = {
             "credit": "そらみみ",
             "license": "CC BY-SA 4.0",
             "href": "https://commons.wikimedia.org/wiki/File:Hitome-Hakkei_in_Shin-Yabakei_Valley_from_observation_deck_20141117-4.JPG"
-          }
+          },
+          "travel": 75,
+          "fee": "停車免費（250 台）"
         },
         {
           "type": "stop",
@@ -1391,11 +1395,9 @@ const TRIP_DATA = {
           "titleLocal": "由布まぶし 心 由布院駅前支店",
           "place": "大分縣由布市湯布院町川北5-3 2F",
           "notes": [
-            "自駕約 1 小時 10 分・排隊＋用餐約 1.5hr",
-            "試算表 4.7★「湯布院必吃，推薦豐厚牛，牛肉極嫩」",
-            "11:00–16:00（LO 15:30）、17:30–21:00、不定休、售完為止",
             "13:45 左右到，已過午餐尖峰，排隊約 45 分",
-            "☎ 0977-84-5825　吃法同鰻魚三吃：原味→佐料→高湯茶泡飯"
+            "點豐後牛，肉質極嫩",
+            "吃法同鰻魚三吃：原味 → 佐料 → 高湯茶泡飯"
           ],
           "links": [
             {
@@ -1411,7 +1413,10 @@ const TRIP_DATA = {
           ],
           "stay": 160,
           "mode": "driving",
-          "intro": "「まぶし」是把切絲的肉鋪滿在飯上的吃法，源自名古屋的鰻魚ひつまぶし，這裡換成大分的豐後牛或地雞。\n豐後牛是大分縣的和牛品牌，源自明治時期的畜產改良，以脂肪融點低、入口即化著稱。"
+          "intro": "「まぶし」是把切絲的肉鋪滿在飯上的吃法，源自名古屋的鰻魚ひつまぶし，這裡換成大分的豐後牛或地雞。\n豐後牛是大分縣的和牛品牌，源自明治時期的畜產改良，以脂肪融點低、入口即化著稱。",
+          "travel": 70,
+          "hours": "11:00–16:00（LO 15:30）、17:30–21:00、不定休、售完為止",
+          "tel": "0977-84-5825"
         },
         {
           "type": "stop",
@@ -1421,10 +1426,9 @@ const TRIP_DATA = {
           "titleLocal": "湯の坪街道",
           "place": "由布市湯布院町",
           "notes": [
-            "步行・停留 1hr45（含停車）",
-            "⚠️ 商店約 09:30–17:00，17 點一到陸續關門，先吃最想吃的",
-            "🍽 今晚晚餐就是這些小吃＋超市採買",
-            "🍡 試算表上的湯布院 6 家甜點全在這條街：",
+            "⚠️ 17 點一到陸續關門，先吃最想吃的",
+            "今晚晚餐就是這些小吃＋超市採買",
+            "湯布院 6 家甜點全在這條街：",
             "・金賞可樂餅 4.3★／鞠智銅鑼燒 4.5★（要點現做的）／吉吾炸雞 4.4★",
             "・telato 抹茶義式冰淇淋 4.6★（五倍抹茶）／Milch 半熟起司蛋糕 4.6★",
             "・日本茶 5toku 4.4★（抹茶拿鐵）"
@@ -1436,20 +1440,21 @@ const TRIP_DATA = {
               "style": "map"
             },
             {
-              "label": "🚗 從上一站",
-              "url": "https://www.google.com/maps/dir/?api=1&origin=%E7%94%B1%E5%B8%83%E3%81%BE%E3%81%B6%E3%81%97%20%E5%BF%83%20%E7%94%B1%E5%B8%83%E9%99%A2%E9%A7%85%E5%89%8D%E6%94%AF%E5%BA%97%2C%20%E5%A4%A7%E5%88%86%E7%B8%A3%E7%94%B1%E5%B8%83%E5%B8%82%E6%B9%AF%E5%B8%83%E9%99%A2%E7%94%BA%E5%B7%9D%E5%8C%975-3%202F&destination=%E6%B9%AF%E3%81%AE%E5%9D%AA%E8%A1%97%E9%81%93%2C%20%E7%94%B1%E5%B8%83%E5%B8%82%E6%B9%AF%E5%B8%83%E9%99%A2%E7%94%BA&travelmode=driving",
+              "label": "🚶 從上一站",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E7%94%B1%E5%B8%83%E3%81%BE%E3%81%B6%E3%81%97%20%E5%BF%83%20%E7%94%B1%E5%B8%83%E9%99%A2%E9%A7%85%E5%89%8D%E6%94%AF%E5%BA%97%2C%20%E5%A4%A7%E5%88%86%E7%B8%A3%E7%94%B1%E5%B8%83%E5%B8%82%E6%B9%AF%E5%B8%83%E9%99%A2%E7%94%BA%E5%B7%9D%E5%8C%975-3%202F&destination=%E6%B9%AF%E3%81%AE%E5%9D%AA%E8%A1%97%E9%81%93%2C%20%E7%94%B1%E5%B8%83%E5%B8%82%E6%B9%AF%E5%B8%83%E9%99%A2%E7%94%BA&travelmode=walking",
               "style": "route"
             }
           ],
           "stay": 105,
-          "mode": "driving",
+          "mode": "walking",
           "intro": "由布院車站通往金鱗湖的主要街道，兩側是土產店、咖啡館與小型美術館。它不是保存下來的老街，而是戰後隨著溫泉觀光一路發展起來的商店街，所以新舊店面混在一起。",
           "photo": {
             "src": "img/intro/yunotsubo.jpg",
             "credit": "そらみみ",
             "license": "CC BY-SA 4.0",
             "href": "https://commons.wikimedia.org/wiki/File:Mount_Yufudake_from_Yunotsubo_Street.JPG"
-          }
+          },
+          "hours": "商店約 09:30–17:00"
         },
         {
           "type": "stop",
@@ -1459,11 +1464,9 @@ const TRIP_DATA = {
           "titleLocal": "マルミヤストア 湯布院店",
           "place": "大分縣由布市湯布院町川上3090-8",
           "notes": [
-            "自駕約 5 分・停留 50 分",
-            "10:00–20:00・☎ 0977-85-8182・有停車場",
-            "🥩 生鮮區買得到豐後牛，有廚房的話可以自己煎",
-            "連明早的早餐一起買，由布院入夜後附近很難補貨",
-            "另一個選擇：イオン湯布院店（湯布院町川上2924-1）"
+            "有停車場",
+            "連明早的早餐一起買",
+            "備案：イオン湯布院店（湯布院町川上2924-1）"
           ],
           "links": [
             {
@@ -1479,7 +1482,10 @@ const TRIP_DATA = {
           ],
           "stay": 50,
           "mode": "driving",
-          "intro": "マルミヤストア 是大分在地的超市連鎖。由布院是觀光町，白天人擠人、入夜後街上幾乎全關，所以「超市＋附廚房的住宿」在這裡反而很實用——當地超市的生鮮區買得到豐後牛與大分的冠地雞，價格是餐廳的零頭。"
+          "intro": "マルミヤストア 是大分在地的超市連鎖。由布院是觀光町，白天人擠人、入夜後街上幾乎全關，所以「超市＋附廚房的住宿」在這裡反而很實用——當地超市的生鮮區買得到豐後牛與大分的冠地雞，價格是餐廳的零頭。",
+          "travel": 5,
+          "hours": "10:00–20:00",
+          "tel": "0977-85-8182"
         },
         {
           "type": "lodging",
@@ -1488,10 +1494,8 @@ const TRIP_DATA = {
           "titleLocal": "由布の宿 YUFU-Inn 藤 松",
           "address": "大分縣由布市湯布院町川上3732-1（由布院站步行 2 分）",
           "notes": [
-            "Check-in 15:00／退房 10:00",
-            "♨️ 附私人露天風呂",
+            "附私人露天風呂",
             "65㎡・1 張日式床墊＋3 張雙人床・免費 Wi-Fi",
-            "¥29,248 含稅（約 NT$1,459／人）",
             "不含餐"
           ],
           "links": [
@@ -1514,7 +1518,9 @@ const TRIP_DATA = {
           "stay": null,
           "mode": "driving",
           "secret": "yufuinn",
-          "secretHint": "訂單編號"
+          "secretHint": "訂單編號",
+          "hours": "Check-in 15:00／退房 10:00",
+          "fee": "¥29,248 含稅（約 NT$1,459／人）"
         }
       ]
     },
@@ -1530,11 +1536,7 @@ const TRIP_DATA = {
           "title": "金鱗湖晨景",
           "titleLocal": "金鱗湖",
           "place": "由布市湯布院町",
-          "notes": [
-            "步行・停留 45 分",
-            "清晨湖面最美，秋冬有機會看到湖霧 — 只有早起看得到",
-            "24hr 開放"
-          ],
+          "notes": [],
           "links": [
             {
               "label": "🗺️ 地圖",
@@ -1542,20 +1544,21 @@ const TRIP_DATA = {
               "style": "map"
             },
             {
-              "label": "🚗 從住處",
-              "url": "https://www.google.com/maps/dir/?api=1&origin=%E7%94%B1%E5%B8%83%E3%81%AE%E5%AE%BF%20YUFU-Inn%20%E8%97%A4%20%E6%9D%BE%2C%20%E5%A4%A7%E5%88%86%E7%B8%A3%E7%94%B1%E5%B8%83%E5%B8%82%E6%B9%AF%E5%B8%83%E9%99%A2%E7%94%BA%E5%B7%9D%E4%B8%8A3732-1%EF%BC%88%E7%94%B1%E5%B8%83%E9%99%A2%E7%AB%99%E6%AD%A5%E8%A1%8C%202%20%E5%88%86%EF%BC%89&destination=%E9%87%91%E9%B1%97%E6%B9%96%2C%20%E7%94%B1%E5%B8%83%E5%B8%82%E6%B9%AF%E5%B8%83%E9%99%A2%E7%94%BA&travelmode=driving",
+              "label": "🚶 從住處",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E7%94%B1%E5%B8%83%E3%81%AE%E5%AE%BF%20YUFU-Inn%20%E8%97%A4%20%E6%9D%BE%2C%20%E5%A4%A7%E5%88%86%E7%B8%A3%E7%94%B1%E5%B8%83%E5%B8%82%E6%B9%AF%E5%B8%83%E9%99%A2%E7%94%BA%E5%B7%9D%E4%B8%8A3732-1%EF%BC%88%E7%94%B1%E5%B8%83%E9%99%A2%E7%AB%99%E6%AD%A5%E8%A1%8C%202%20%E5%88%86%EF%BC%89&destination=%E9%87%91%E9%B1%97%E6%B9%96%2C%20%E7%94%B1%E5%B8%83%E5%B8%82%E6%B9%AF%E5%B8%83%E9%99%A2%E7%94%BA&travelmode=walking",
               "style": "route"
             }
           ],
           "stay": 45,
-          "mode": "driving",
+          "mode": "walking",
           "intro": "湖底同時湧出溫泉與冷泉，水溫全年高於氣溫，所以秋冬清晨常起一層湖霧——那正是這座湖最有名的畫面。\n名字來自明治時期的儒學家毛利空桑，他看見夕陽下魚鱗反光而命名。繞湖一圈步行十幾分鐘。",
           "photo": {
             "src": "img/intro/kinrinko.jpg",
             "credit": "Ivan P",
             "license": "CC0",
             "href": "https://commons.wikimedia.org/wiki/File:Lake_Kinrin_in_Yufuin,_Oita_-_October_2026_(04).jpg"
-          }
+          },
+          "hours": "24 小時開放"
         },
         {
           "type": "stop",
@@ -1590,10 +1593,9 @@ const TRIP_DATA = {
           "titleLocal": "草千里ヶ浜",
           "place": "熊本縣阿蘇市",
           "notes": [
-            "やまなみハイウェイ＋阿蘇パノラマライン 約 1 小時 45 分・停留 35 分",
-            "阿蘇經典大草原景觀，位在火口 1km 規制圈外，通常正常開放",
+            "走やまなみハイウェイ＋阿蘇パノラマライン",
             "⚠️ 中岳火口目前噴火警戒 Level 2，火口見學與接駁巴士停駛，阿蘇山公園道路封閉",
-            "⚠️ 若 パノラマライン 也封閉，改走国道 265 直下高森，草千里就跳過"
+            "⚠️ 若パノラマライン也封閉，改走国道 265 直下高森，草千里就跳過"
           ],
           "links": [
             {
@@ -1615,7 +1617,8 @@ const TRIP_DATA = {
             "credit": "Raita Futo from Tokyo, Japan",
             "license": "CC BY 2.0",
             "href": "https://commons.wikimedia.org/wiki/File:Aso_Kusasenri_horses_(52133462269).jpg"
-          }
+          },
+          "travel": 105
         },
         {
           "type": "stop",
@@ -1625,10 +1628,9 @@ const TRIP_DATA = {
           "titleLocal": "上色見熊野座神社",
           "place": "熊本縣高森町",
           "notes": [
-            "自駕約 50 分・停留 1hr35",
-            "☀️ 排中午是刻意的：正午光線穿過杉林最有氛圍，傍晚石階陡又沒照明",
-            "24hr 開放、免費，石階約 300 階，穿好走的鞋",
-            "走到最上面的穿戶岩：從拜殿起往返約 20–30 分，時間留得很夠，慢慢拍"
+            "排中午是刻意的：正午光線穿過杉林最有氛圍，傍晚石階陡又沒照明",
+            "石階約 300 階，穿好走的鞋",
+            "穿戶岩來回的時間留得很夠，慢慢拍"
           ],
           "links": [
             {
@@ -1650,7 +1652,10 @@ const TRIP_DATA = {
             "credit": "Ann Lee",
             "license": "CC BY-SA 2.0",
             "href": "https://commons.wikimedia.org/wiki/File:%E4%B8%8A%E8%89%B2%E8%A6%8B%E7%86%8A%E9%87%8E%E5%BA%A7%E7%A5%9E%E7%A4%BE_(34654775934).jpg"
-          }
+          },
+          "travel": 50,
+          "hours": "24 小時開放",
+          "fee": "免費"
         },
         {
           "type": "stop",
@@ -1660,10 +1665,7 @@ const TRIP_DATA = {
           "titleLocal": "千穂の家 元祖流しそうめん",
           "place": "宮崎縣高千穗町・高千穗峽入口",
           "notes": [
-            "自駕約 30 分・用餐 1hr",
-            "10:00–16:00、通年營業",
-            "元祖流水素麵 ¥700／山女鹽烤 ¥800，用玉垂瀑布的湧泉",
-            "想吃正式高千穗牛的話：高千穂牛レストラン 和（11:00–14:30、牛排 LO 14:00、不收卡）在町中心，車程 5 分"
+            "備案：高千穂牛レストラン 和（11:00–14:30、牛排 LO 14:00、不收卡），在町中心、車程 5 分"
           ],
           "links": [
             {
@@ -1679,7 +1681,10 @@ const TRIP_DATA = {
           ],
           "stay": 90,
           "mode": "driving",
-          "intro": "店名的「千穗」就是高千穗。流水素麵據說是昭和三〇年代在這裡想出來的吃法——把高千穗峽玉垂瀑布的湧泉引進竹管，素麵順水流下來現撈現吃。\n高千穗牛是宮崎牛當中限定產地的品牌，宮崎牛在全國和牛能力共進會多次奪得首位。"
+          "intro": "店名的「千穗」就是高千穗。流水素麵據說是昭和三〇年代在這裡想出來的吃法——把高千穗峽玉垂瀑布的湧泉引進竹管，素麵順水流下來現撈現吃。\n高千穗牛是宮崎牛當中限定產地的品牌，宮崎牛在全國和牛能力共進會多次奪得首位。",
+          "travel": 30,
+          "hours": "10:00–16:00、通年營業",
+          "fee": "流水素麵 ¥700／山女鹽烤 ¥800"
         },
         {
           "type": "stop",
@@ -1689,9 +1694,7 @@ const TRIP_DATA = {
           "titleLocal": "高千穂峡 遊歩道",
           "place": "宮崎縣高千穗町",
           "notes": [
-            "步行・停留 1hr15",
-            "御塩井→真名井瀑布展望台→御橋→玉垂の滝，單程約 600m，來回含拍照約 1hr",
-            "散策自由、不收費、沒有時間限制",
+            "御塩井 → 真名井瀑布展望台 → 御橋 → 玉垂の滝，單程約 600m，來回含拍照約 1 小時",
             "停車：第 1 御塩井駐車場"
           ],
           "links": [
@@ -1701,20 +1704,22 @@ const TRIP_DATA = {
               "style": "map"
             },
             {
-              "label": "🚗 從上一站",
-              "url": "https://www.google.com/maps/dir/?api=1&origin=%E5%8D%83%E7%A9%82%E3%81%AE%E5%AE%B6%20%E5%85%83%E7%A5%96%E6%B5%81%E3%81%97%E3%81%9D%E3%81%86%E3%82%81%E3%82%93%2C%20%E5%AE%AE%E5%B4%8E%E7%B8%A3%E9%AB%98%E5%8D%83%E7%A9%97%E7%94%BA%E3%83%BB%E9%AB%98%E5%8D%83%E7%A9%97%E5%B3%BD%E5%85%A5%E5%8F%A3&destination=%E9%AB%98%E5%8D%83%E7%A9%82%E5%B3%A1%20%E9%81%8A%E6%AD%A9%E9%81%93%2C%20%E5%AE%AE%E5%B4%8E%E7%B8%A3%E9%AB%98%E5%8D%83%E7%A9%97%E7%94%BA&travelmode=driving",
+              "label": "🚶 從上一站",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E5%8D%83%E7%A9%82%E3%81%AE%E5%AE%B6%20%E5%85%83%E7%A5%96%E6%B5%81%E3%81%97%E3%81%9D%E3%81%86%E3%82%81%E3%82%93%2C%20%E5%AE%AE%E5%B4%8E%E7%B8%A3%E9%AB%98%E5%8D%83%E7%A9%97%E7%94%BA%E3%83%BB%E9%AB%98%E5%8D%83%E7%A9%97%E5%B3%BD%E5%85%A5%E5%8F%A3&destination=%E9%AB%98%E5%8D%83%E7%A9%82%E5%B3%A1%20%E9%81%8A%E6%AD%A9%E9%81%93%2C%20%E5%AE%AE%E5%B4%8E%E7%B8%A3%E9%AB%98%E5%8D%83%E7%A9%97%E7%94%BA&travelmode=walking",
               "style": "route"
             }
           ],
           "stay": 75,
-          "mode": "driving",
+          "mode": "walking",
           "intro": "阿蘇火山噴發的火碎流冷卻後形成柱狀節理，再被五瀨川長期切割成 V 字形峽谷，兩側峭壁高達八十到一百公尺。\n真名井瀑布從崖頂直落水面，是日本瀑布百選之一。步道上的御橋一帶是俯瞰瀑布與整段柱狀節理最漂亮的角度，也是明信片上最常見的那一張。\n玉垂の滝是從岩壁縫隙整排滲出的湧泉，水量終年不變。",
           "photo": {
             "src": "img/intro/takachiho.jpg",
             "credit": "The Modern Polymath",
             "license": "CC BY-SA 4.0",
             "href": "https://commons.wikimedia.org/wiki/File:Manai_Falls_at_Takachiho_Gorge.jpg"
-          }
+          },
+          "hours": "散策自由、沒有時間限制",
+          "fee": "免費"
         },
         {
           "type": "lodging",
@@ -1723,12 +1728,10 @@ const TRIP_DATA = {
           "titleLocal": "亀の井ホテル 阿蘇",
           "address": "熊本縣阿蘇市",
           "notes": [
-            "自駕約 1 小時 20 分・17:20 Check-in（受理 15:00 起／退房 10:00）",
-            "☎ +81 967-34-0811",
+            "預計 17:20 到",
             "山景・40㎡・禁菸・6 張日式床墊",
             "含晚餐與早餐：ASO BOLD KITCHEN 日西式自助餐，晚餐限時 90 分",
             "有大浴場；3 間家族湯屋另外收費",
-            "¥55,836 含稅（約 NT$2,786／人）",
             "阿蘇光害少，天氣好可以出去看星星"
           ],
           "links": [
@@ -1751,7 +1754,11 @@ const TRIP_DATA = {
           "stay": null,
           "mode": "driving",
           "secret": "kamenoi",
-          "secretHint": "訂單編號"
+          "secretHint": "訂單編號",
+          "travel": 80,
+          "hours": "Check-in 15:00 起／退房 10:00",
+          "fee": "¥55,836 含稅（約 NT$2,786／人）",
+          "tel": "+81 967-34-0811"
         }
       ]
     },
@@ -1793,9 +1800,7 @@ const TRIP_DATA = {
           "titleLocal": "大観峰",
           "place": "熊本縣阿蘇市",
           "notes": [
-            "自駕約 25 分・停留 40 分",
-            "☁️ 這趟唯一看雲海的機會：9 月下旬–12 月、無風的清晨，日出約 06:55",
-            "展望所 24hr 開放、売店 8:30–17:00",
+            "日出約 06:55，這趟唯一看雲海的機會",
             "出發前查阿蘇市觀光協會的「大觀峰雲海即時攝影機」",
             "標高高、風強，外套手套帶著"
           ],
@@ -1819,7 +1824,9 @@ const TRIP_DATA = {
             "credit": "STA3816",
             "license": "CC BY-SA 3.0",
             "href": "https://commons.wikimedia.org/wiki/File:A_view_of_the_five_mountains_of_Aso_from_Daikanbo_viewpoint.jpg"
-          }
+          },
+          "travel": 25,
+          "hours": "展望所 24 小時開放、売店 8:30–17:00"
         },
         {
           "type": "stop",
@@ -1829,11 +1836,10 @@ const TRIP_DATA = {
           "titleLocal": "柳川 川下り",
           "place": "福岡縣柳川市",
           "notes": [
-            "ミルクロード→菊池→植木 IC→九州道→みやま柳川 IC 約 1 小時 50 分",
-            "10:25 到乘船場・10:45 上船・船程約 70 分",
-            "⚠️ 乘合船受付只到 14:30（柳川観光開発 9:00–14:40），之後只剩包船",
+            "走ミルクロード → 菊池 → 植木 IC → 九州道 → みやま柳川 IC",
+            "10:25 到乘船場、10:45 上船，船程約 70 分",
             "こたつ舟（暖桌船）12/1 才開始，11 月沒有，船上會冷",
-            "☎ 柳川観光開発 0944-72-6177"
+            "⚠️ 乘合船受付只到 14:30，之後只剩包船"
           ],
           "links": [
             {
@@ -1855,7 +1861,10 @@ const TRIP_DATA = {
             "credit": "Hiroaki Kaneko",
             "license": "CC BY-SA 3.0",
             "href": "https://commons.wikimedia.org/wiki/File:%E6%99%A9%E7%A7%8B%E3%81%AE%E5%B7%9D%E4%B8%8B%E3%82%8A(Yanagawa_in_autumn)_27_Nov,_2015_-_panoramio.jpg"
-          }
+          },
+          "travel": 110,
+          "hours": "柳川観光開発 9:00–14:40（乘合船受付至 14:30）",
+          "tel": "0944-72-6177"
         },
         {
           "type": "stop",
@@ -1865,10 +1874,7 @@ const TRIP_DATA = {
           "titleLocal": "柳川 若松屋 うなぎせいろ蒸し",
           "place": "福岡縣柳川市沖端町",
           "notes": [
-            "步行約 10 分・用餐 1hr25",
-            "11:00–14:30／17:00–19:15",
-            "柳川名物うなぎせいろ蒸し，跟關東的蒲燒完全不同",
-            "備案：元祖本吉屋（1681 年創業・10:30–20:00・週一休）"
+            "備案：元祖本吉屋（1681 年創業、10:30–20:00、週一休）"
           ],
           "links": [
             {
@@ -1877,14 +1883,16 @@ const TRIP_DATA = {
               "style": "map"
             },
             {
-              "label": "🚗 從上一站",
-              "url": "https://www.google.com/maps/dir/?api=1&origin=%E6%9F%B3%E5%B7%9D%20%E5%B7%9D%E4%B8%8B%E3%82%8A%2C%20%E7%A6%8F%E5%B2%A1%E7%B8%A3%E6%9F%B3%E5%B7%9D%E5%B8%82&destination=%E6%9F%B3%E5%B7%9D%20%E8%8B%A5%E6%9D%BE%E5%B1%8B%20%E3%81%86%E3%81%AA%E3%81%8E%E3%81%9B%E3%81%84%E3%82%8D%E8%92%B8%E3%81%97%2C%20%E7%A6%8F%E5%B2%A1%E7%B8%A3%E6%9F%B3%E5%B7%9D%E5%B8%82%E6%B2%96%E7%AB%AF%E7%94%BA&travelmode=driving",
+              "label": "🚶 從上一站",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E6%9F%B3%E5%B7%9D%20%E5%B7%9D%E4%B8%8B%E3%82%8A%2C%20%E7%A6%8F%E5%B2%A1%E7%B8%A3%E6%9F%B3%E5%B7%9D%E5%B8%82&destination=%E6%9F%B3%E5%B7%9D%20%E8%8B%A5%E6%9D%BE%E5%B1%8B%20%E3%81%86%E3%81%AA%E3%81%8E%E3%81%9B%E3%81%84%E3%82%8D%E8%92%B8%E3%81%97%2C%20%E7%A6%8F%E5%B2%A1%E7%B8%A3%E6%9F%B3%E5%B7%9D%E5%B8%82%E6%B2%96%E7%AB%AF%E7%94%BA&travelmode=walking",
               "style": "route"
             }
           ],
           "stay": 95,
-          "mode": "driving",
-          "intro": "せいろ蒸し是柳川獨有的吃法：先把醬汁拌進飯裡，鋪上蒲燒鰻與蛋絲，再連蒸籠一起蒸透，端上桌時整籠還冒著蒸氣，飯粒每一顆都吸飽醬汁。\n這種吃法據說是江戶時代為了讓外帶的鰻魚飯重新變熱而發展出來的。"
+          "mode": "walking",
+          "intro": "せいろ蒸し是柳川獨有的吃法：先把醬汁拌進飯裡，鋪上蒲燒鰻與蛋絲，再連蒸籠一起蒸透，端上桌時整籠還冒著蒸氣，飯粒每一顆都吸飽醬汁。\n這種吃法據說是江戶時代為了讓外帶的鰻魚飯重新變熱而發展出來的。",
+          "travel": 10,
+          "hours": "11:00–14:30／17:00–19:15"
         },
         {
           "type": "stop",
@@ -1894,13 +1902,11 @@ const TRIP_DATA = {
           "titleLocal": "太宰府天満宮",
           "place": "福岡縣太宰府市",
           "notes": [
-            "自駕約 50 分・停留 2.5hr",
-            "本殿 06:30–18:30；參道店家多半 17:00–18:00 就關",
-            "🍡 試算表上的太宰府 4 家：",
+            "參道推薦 4 家：",
             "・天山 太宰府本店 10:00–17:00（太宰府布丁 4.3★）",
-            "・⚠️ 草莓大福 4.8★ 是 11 月下旬–3 月限定，11/18 可能還沒開賣",
+            "・草莓大福 4.8★ 是 11 月下旬–3 月限定，11/18 可能還沒開賣",
             "・安武 梅枝餅 4.1★／かさの家 9:00–18:00（梅枝餅）",
-            "・太宰府一蘭 4.0★ — 就是那個五行碗"
+            "・太宰府一蘭 4.0★——就是那個五行碗"
           ],
           "links": [
             {
@@ -1922,7 +1928,9 @@ const TRIP_DATA = {
             "credit": "Jakub Hałun",
             "license": "CC BY-SA 4.0",
             "href": "https://commons.wikimedia.org/wiki/File:20100719_Dazaifu_Tenmangu_Shrine_3328.jpg"
-          }
+          },
+          "travel": 50,
+          "hours": "本殿 06:30–18:30；參道店家多半 17:00–18:00 就關"
         },
         {
           "type": "stop",
@@ -1932,9 +1940,9 @@ const TRIP_DATA = {
           "titleLocal": "オリックスレンタカー 博多駅博多口店 返却",
           "place": "福岡市博多區・博多站博多口",
           "notes": [
-            "自駕約 40 分・手續約 30 分，結束自駕行程",
-            "🚨 租期到 19:00 — 預計 18:00 到，只有 1 小時緩衝，太宰府延誤寧可少逛",
-            "還車前先加滿油，把車上東西清乾淨"
+            "手續約 30 分，結束自駕行程",
+            "還車前先加滿油，把車上東西清乾淨",
+            "⚠️ 預計 18:00 還完，離租期只剩 1 小時緩衝——太宰府延誤寧可少逛"
           ],
           "links": [
             {
@@ -1949,7 +1957,9 @@ const TRIP_DATA = {
             }
           ],
           "stay": 70,
-          "mode": "driving"
+          "mode": "driving",
+          "travel": 40,
+          "hours": "租期到 19:00"
         },
         {
           "type": "stop",
@@ -1959,9 +1969,8 @@ const TRIP_DATA = {
           "titleLocal": "博多もつ鍋 いちたか 博多駅前通り店",
           "place": "福岡市博多區祇園町8-13 2F",
           "notes": [
-            "先回住處放行李約 30 分・18:30 用餐 1.5hr",
-            "17:00–23:30、不定休・☎ +81 92-627-7007",
-            "備案：前田屋（試算表 3.5★「蔬菜最多的一餐，口味偏重」）"
+            "先回住處放行李，18:30 開始用餐",
+            "備案：前田屋（3.5★，蔬菜最多的一餐，口味偏重）"
           ],
           "links": [
             {
@@ -1977,7 +1986,10 @@ const TRIP_DATA = {
           ],
           "stay": 120,
           "mode": "transit",
-          "intro": "牛腸鍋在戰後由博多發跡，以味噌或醬油湯底燉牛腸，配大量韭菜與高麗菜，最後下強棒麵收尾。\n原本是屠宰業者把不值錢的內臟拿來煮的吃法，1990 年代一波風潮之後才變成福岡的代表料理。"
+          "intro": "牛腸鍋在戰後由博多發跡，以味噌或醬油湯底燉牛腸，配大量韭菜與高麗菜，最後下強棒麵收尾。\n原本是屠宰業者把不值錢的內臟拿來煮的吃法，1990 年代一波風潮之後才變成福岡的代表料理。",
+          "travel": 30,
+          "hours": "17:00–23:30、不定休",
+          "tel": "+81 92-627-7007"
         },
         {
           "type": "lodging",
@@ -1986,10 +1998,9 @@ const TRIP_DATA = {
           "titleLocal": "SHIELD21",
           "address": "福岡市博多區（博多站步行 6 分）",
           "notes": [
-            "入住 16:00・11/18、11/19 連住兩晚",
+            "11/18、11/19 連住兩晚",
             "整套出租・2 間臥室・最多 9 人",
-            "博多站步行 6 分",
-            "⚠️ 房間在 2 樓、大樓沒有電梯，行李要自己搬上去"
+            "房間在 2 樓、大樓沒有電梯，行李要自己搬上去"
           ],
           "links": [
             {
@@ -2011,7 +2022,8 @@ const TRIP_DATA = {
           "stay": null,
           "mode": "transit",
           "secret": "shield21",
-          "secretHint": "房號、門鎖密碼與入住指南"
+          "secretHint": "房號、門鎖密碼與入住指南",
+          "hours": "入住 16:00"
         }
       ]
     },
@@ -2028,10 +2040,9 @@ const TRIP_DATA = {
           "titleLocal": "ダコメッカ",
           "place": "福岡市博多區博多站前4-14-1",
           "notes": [
-            "博多站步行 4 分・停留 1hr",
-            "試算表：「博多人氣麵包店，早餐盤超划算推薦」重複推薦 2 次",
-            "amam dacotan 的系列店，招牌是ダコメッカドッグ，內用 25 席",
-            "☎ 092-477-1050　⚠️ 營業時間出發前再確認，早上會排隊"
+            "早餐盤很划算",
+            "早上會排隊",
+            "營業時間出發前再確認"
           ],
           "links": [
             {
@@ -2040,14 +2051,16 @@ const TRIP_DATA = {
               "style": "map"
             },
             {
-              "label": "🚆 從住處",
-              "url": "https://www.google.com/maps/dir/?api=1&origin=SHIELD21%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8D%80%EF%BC%88%E5%8D%9A%E5%A4%9A%E7%AB%99%E6%AD%A5%E8%A1%8C%206%20%E5%88%86%EF%BC%89&destination=%E3%83%80%E3%82%B3%E3%83%A1%E3%83%83%E3%82%AB%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8D%80%E5%8D%9A%E5%A4%9A%E7%AB%99%E5%89%8D4-14-1&travelmode=transit",
+              "label": "🚶 從住處",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=SHIELD21%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8D%80%EF%BC%88%E5%8D%9A%E5%A4%9A%E7%AB%99%E6%AD%A5%E8%A1%8C%206%20%E5%88%86%EF%BC%89&destination=%E3%83%80%E3%82%B3%E3%83%A1%E3%83%83%E3%82%AB%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8D%80%E5%8D%9A%E5%A4%9A%E7%AB%99%E5%89%8D4-14-1&travelmode=walking",
               "style": "route"
             }
           ],
           "stay": 60,
-          "mode": "transit",
-          "intro": "amam dacotan 系列的博多店，以炭烤與重口味的惣菜麵包出名，烤箱直出的麵包整天分批上架。福岡近年是全日本麵包店密度最高的城市之一，Pain Stock、Full Full、MIGNON 都在步行可及的範圍。"
+          "mode": "walking",
+          "intro": "amam dacotan 系列的博多店，以炭烤與重口味的惣菜麵包出名，烤箱直出的麵包整天分批上架。福岡近年是全日本麵包店密度最高的城市之一，Pain Stock、Full Full、MIGNON 都在步行可及的範圍。",
+          "travel": 4,
+          "tel": "092-477-1050"
         },
         {
           "type": "stop",
@@ -2057,10 +2070,9 @@ const TRIP_DATA = {
           "titleLocal": "大濠公園・福岡市美術館",
           "place": "福岡市中央區大濠公園",
           "notes": [
-            "地鐵博多→大濠公園 11 分・停留 2hr15",
-            "美術館 09:30–17:30、⚠️ 週一休館 — 今天週四正常",
+            "地鐵博多 → 大濠公園",
             "美術館就在公園裡，兩個一起走剛好",
-            "公園是周長 2km 的池畔步道，旁邊接福岡城跡（舞鶴公園）"
+            "池畔步道一圈 2km，旁邊接福岡城跡（舞鶴公園）"
           ],
           "links": [
             {
@@ -2082,7 +2094,9 @@ const TRIP_DATA = {
             "credit": "Hirho",
             "license": "CC BY 4.0",
             "href": "https://commons.wikimedia.org/wiki/File:%C5%8Chori_Park_The_western_shore_of_Matsushima_%C5%8Chori-k%C5%8Den_Ch%C5%AB%C5%8D-ku_Fukuoka_20260529_155012.jpg"
-          }
+          },
+          "travel": 11,
+          "hours": "美術館 09:30–17:30、週一休館（今天週四正常）"
         },
         {
           "type": "stop",
@@ -2092,8 +2106,7 @@ const TRIP_DATA = {
           "titleLocal": "一蘭 本社総本店",
           "place": "福岡市博多區中洲5-3-2",
           "notes": [
-            "地鐵大濠公園→中洲川端 3 站約 6 分，出站走 1 分・用餐 1hr",
-            "24 小時營業、全年無休",
+            "地鐵大濠公園 → 中洲川端 3 站，出站走 1 分",
             "1 樓是仿屋台氣氛的「一蘭屋台」"
           ],
           "links": [
@@ -2110,7 +2123,9 @@ const TRIP_DATA = {
           ],
           "stay": 70,
           "mode": "transit",
-          "intro": "一蘭是從福岡起家的豚骨拉麵連鎖，本社總本店就在中洲、那珂川邊，離中洲川端站一分鐘。\n招牌是一人一格的「味集中カウンター」：用紙本勾選湯頭濃淡、辣醬多寡與麵的硬度，隔板放下來，就只剩自己跟那碗麵。"
+          "intro": "一蘭是從福岡起家的豚骨拉麵連鎖，本社總本店就在中洲、那珂川邊，離中洲川端站一分鐘。\n招牌是一人一格的「味集中カウンター」：用紙本勾選湯頭濃淡、辣醬多寡與麵的硬度，隔板放下來，就只剩自己跟那碗麵。",
+          "travel": 7,
+          "hours": "24 小時營業、全年無休"
         },
         {
           "type": "stop",
@@ -2120,9 +2135,7 @@ const TRIP_DATA = {
           "titleLocal": "天神地下街・ミーナ天神・福岡パルコ",
           "place": "福岡市中央區天神",
           "notes": [
-            "從中洲走到天神約 10 分・停留 1hr40",
-            "天神地下街 10:00–20:00／mina 天神 10:00–20:00／PARCO・Loft 10:00–20:30",
-            "mina 天神：試算表 4.5★，天神站步行 3 分",
+            "mina 天神 4.5★，天神站步行 3 分",
             "Loft 的文具與生活小物是好帶的伴手禮"
           ],
           "links": [
@@ -2132,20 +2145,22 @@ const TRIP_DATA = {
               "style": "map"
             },
             {
-              "label": "🚆 從上一站",
-              "url": "https://www.google.com/maps/dir/?api=1&origin=%E4%B8%80%E8%98%AD%20%E6%9C%AC%E7%A4%BE%E7%B7%8F%E6%9C%AC%E5%BA%97%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8D%80%E4%B8%AD%E6%B4%B25-3-2&destination=%E5%A4%A9%E7%A5%9E%E5%9C%B0%E4%B8%8B%E8%A1%97%E3%83%BB%E3%83%9F%E3%83%BC%E3%83%8A%E5%A4%A9%E7%A5%9E%E3%83%BB%E7%A6%8F%E5%B2%A1%E3%83%91%E3%83%AB%E3%82%B3%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E4%B8%AD%E5%A4%AE%E5%8D%80%E5%A4%A9%E7%A5%9E&travelmode=transit",
+              "label": "🚶 從上一站",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E4%B8%80%E8%98%AD%20%E6%9C%AC%E7%A4%BE%E7%B7%8F%E6%9C%AC%E5%BA%97%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8D%80%E4%B8%AD%E6%B4%B25-3-2&destination=%E5%A4%A9%E7%A5%9E%E5%9C%B0%E4%B8%8B%E8%A1%97%E3%83%BB%E3%83%9F%E3%83%BC%E3%83%8A%E5%A4%A9%E7%A5%9E%E3%83%BB%E7%A6%8F%E5%B2%A1%E3%83%91%E3%83%AB%E3%82%B3%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E4%B8%AD%E5%A4%AE%E5%8D%80%E5%A4%A9%E7%A5%9E&travelmode=walking",
               "style": "route"
             }
           ],
           "stay": 110,
-          "mode": "transit",
+          "mode": "walking",
           "intro": "南北長約六百公尺、十二個街區的地下商店街。整體以十九世紀歐洲風格統一設計，石板地、鑄鐵裝飾與天花板紋樣都在規範之內，連店家招牌的樣式都受限制，所以走起來不像一般地下街那麼雜亂。\n它同時是串連天神各百貨與地鐵站的通道，下雨天完全不用撐傘。",
           "photo": {
             "src": "img/intro/tenjin-chikagai.jpg",
             "credit": "JKT-c",
             "license": "CC BY 3.0",
             "href": "https://commons.wikimedia.org/wiki/File:Tenjin_Chikagai(Tenjin_Underground_City)_-_02.JPG"
-          }
+          },
+          "travel": 10,
+          "hours": "天神地下街 10:00–20:00／mina 天神 10:00–20:00／PARCO・Loft 10:00–20:30"
         },
         {
           "type": "stop",
@@ -2155,9 +2170,8 @@ const TRIP_DATA = {
           "titleLocal": "アイムドーナツ? 天神南店",
           "place": "福岡市中央區・天神南站周邊",
           "notes": [
-            "步行・停留 25 分",
-            "試算表：生甜甜圈名店，推薦八女茶口味、檸檬糖霜，重複推薦 2 次",
-            "同樣是 amam dacotan 系列，常要排隊"
+            "推薦八女茶口味、檸檬糖霜",
+            "常要排隊"
           ],
           "links": [
             {
@@ -2166,13 +2180,13 @@ const TRIP_DATA = {
               "style": "map"
             },
             {
-              "label": "🚆 從上一站",
-              "url": "https://www.google.com/maps/dir/?api=1&origin=%E5%A4%A9%E7%A5%9E%E5%9C%B0%E4%B8%8B%E8%A1%97%E3%83%BB%E3%83%9F%E3%83%BC%E3%83%8A%E5%A4%A9%E7%A5%9E%E3%83%BB%E7%A6%8F%E5%B2%A1%E3%83%91%E3%83%AB%E3%82%B3%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E4%B8%AD%E5%A4%AE%E5%8D%80%E5%A4%A9%E7%A5%9E&destination=%E3%82%A2%E3%82%A4%E3%83%A0%E3%83%89%E3%83%BC%E3%83%8A%E3%83%84%3F%20%E5%A4%A9%E7%A5%9E%E5%8D%97%E5%BA%97%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E4%B8%AD%E5%A4%AE%E5%8D%80%E3%83%BB%E5%A4%A9%E7%A5%9E%E5%8D%97%E7%AB%99%E5%91%A8%E9%82%8A&travelmode=transit",
+              "label": "🚶 從上一站",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E5%A4%A9%E7%A5%9E%E5%9C%B0%E4%B8%8B%E8%A1%97%E3%83%BB%E3%83%9F%E3%83%BC%E3%83%8A%E5%A4%A9%E7%A5%9E%E3%83%BB%E7%A6%8F%E5%B2%A1%E3%83%91%E3%83%AB%E3%82%B3%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E4%B8%AD%E5%A4%AE%E5%8D%80%E5%A4%A9%E7%A5%9E&destination=%E3%82%A2%E3%82%A4%E3%83%A0%E3%83%89%E3%83%BC%E3%83%8A%E3%83%84%3F%20%E5%A4%A9%E7%A5%9E%E5%8D%97%E5%BA%97%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E4%B8%AD%E5%A4%AE%E5%8D%80%E3%83%BB%E5%A4%A9%E7%A5%9E%E5%8D%97%E7%AB%99%E5%91%A8%E9%82%8A&travelmode=walking",
               "style": "route"
             }
           ],
           "stay": 25,
-          "mode": "transit",
+          "mode": "walking",
           "intro": "「生甜甜圈」這個類型的起點，由 amam dacotan 的平子良太做出來。麵團含水量極高，炸完外皮薄脆、裡面接近生吐司的口感，放涼就變了，所以要現場吃。"
         },
         {
@@ -2183,9 +2197,9 @@ const TRIP_DATA = {
           "titleLocal": "福岡アンパンマンこどもミュージアム in モール",
           "place": "福岡市博多區下川端町3-1 博多リバレインモール 5F",
           "notes": [
-            "地鐵天神→中洲川端 2 分・停留 30 分",
-            "只逛 5F 免費的商店街（拍照、買周邊），不進館",
-            "博物館本體在 6F：10:00–17:00、最終入場 16:00、1 歲以上 ¥2,000–2,200"
+            "地鐵天神 → 中洲川端",
+            "只逛 5F 的商店街（拍照、買周邊），不進館",
+            "備案：想進館的話，6F 博物館 10:00–17:00（最終入場 16:00）、1 歲以上 ¥2,000–2,200"
           ],
           "links": [
             {
@@ -2201,7 +2215,9 @@ const TRIP_DATA = {
           ],
           "stay": 45,
           "mode": "transit",
-          "intro": "館區占博多リバレインモール 五、六樓。六樓是售票的 museum，五樓則是不用門票的麵包超人商店街，有麵包工房、果醬爺爺的麵包店與各式周邊。"
+          "intro": "館區占博多リバレインモール 五、六樓。六樓是售票的 museum，五樓則是不用門票的麵包超人商店街，有麵包工房、果醬爺爺的麵包店與各式周邊。",
+          "travel": 2,
+          "fee": "5F 商店街免費"
         },
         {
           "type": "stop",
@@ -2211,10 +2227,8 @@ const TRIP_DATA = {
           "titleLocal": "キャナルシティ博多",
           "place": "福岡市博多區住吉",
           "notes": [
-            "步行約 10 分・停留 45 分",
-            "10:00–21:00",
-            "試算表：GOOD MARKET KYUSHU（東館 2F）4.2★ — 八女抹茶罐裝羊羹",
-            "🥖 東館隔壁就是 THE FULL FULL HAKATA（10:00–19:00、週二休）— 買明太子法棍當明天早餐，試算表重複推薦 2 次",
+            "GOOD MARKET KYUSHU（東館 2F）4.2★：八女抹茶罐裝羊羹",
+            "東館隔壁的 THE FULL FULL HAKATA（10:00–19:00、週二休）買明太子法棍當明天早餐",
             "中庭每隔一段時間有噴水秀"
           ],
           "links": [
@@ -2224,20 +2238,22 @@ const TRIP_DATA = {
               "style": "map"
             },
             {
-              "label": "🚆 從上一站",
-              "url": "https://www.google.com/maps/dir/?api=1&origin=%E7%A6%8F%E5%B2%A1%E3%82%A2%E3%83%B3%E3%83%91%E3%83%B3%E3%83%9E%E3%83%B3%E3%81%93%E3%81%A9%E3%82%82%E3%83%9F%E3%83%A5%E3%83%BC%E3%82%B8%E3%82%A2%E3%83%A0%20in%20%E3%83%A2%E3%83%BC%E3%83%AB%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8D%80%E4%B8%8B%E5%B7%9D%E7%AB%AF%E7%94%BA3-1%20%E5%8D%9A%E5%A4%9A%E3%83%AA%E3%83%90%E3%83%AC%E3%82%A4%E3%83%B3%E3%83%A2%E3%83%BC%E3%83%AB%205F&destination=%E3%82%AD%E3%83%A3%E3%83%8A%E3%83%AB%E3%82%B7%E3%83%86%E3%82%A3%E5%8D%9A%E5%A4%9A%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8D%80%E4%BD%8F%E5%90%89&travelmode=transit",
+              "label": "🚶 從上一站",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E7%A6%8F%E5%B2%A1%E3%82%A2%E3%83%B3%E3%83%91%E3%83%B3%E3%83%9E%E3%83%B3%E3%81%93%E3%81%A9%E3%82%82%E3%83%9F%E3%83%A5%E3%83%BC%E3%82%B8%E3%82%A2%E3%83%A0%20in%20%E3%83%A2%E3%83%BC%E3%83%AB%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8D%80%E4%B8%8B%E5%B7%9D%E7%AB%AF%E7%94%BA3-1%20%E5%8D%9A%E5%A4%9A%E3%83%AA%E3%83%90%E3%83%AC%E3%82%A4%E3%83%B3%E3%83%A2%E3%83%BC%E3%83%AB%205F&destination=%E3%82%AD%E3%83%A3%E3%83%8A%E3%83%AB%E3%82%B7%E3%83%86%E3%82%A3%E5%8D%9A%E5%A4%9A%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8D%80%E4%BD%8F%E5%90%89&travelmode=walking",
               "style": "route"
             }
           ],
           "stay": 55,
-          "mode": "transit",
+          "mode": "walking",
           "intro": "1996 年開幕，以一條貫穿中庭的人工運河為核心的複合商場，由美國建築師 Jon Jerde 設計——曲面牆體與大膽的色塊分割是他的招牌手法，在當時的日本相當少見。",
           "photo": {
             "src": "img/intro/canal-city.jpg",
             "credit": "FlyingToaster",
             "license": "CC BY 3.0",
             "href": "https://commons.wikimedia.org/wiki/File:Canal_city_hakata_fukuoka3.jpg"
-          }
+          },
+          "travel": 10,
+          "hours": "10:00–21:00"
         },
         {
           "type": "stop",
@@ -2247,8 +2263,7 @@ const TRIP_DATA = {
           "titleLocal": "薬院 焼肉",
           "place": "福岡市中央區藥院",
           "notes": [
-            "🎫 已預訂 17:30・地鐵／步行約 20 分・用餐 2hr",
-            "試算表 4.2★「福岡人氣燒肉，CP 值還可以但要自己烤」",
+            "4.2★，CP 值還可以但要自己烤",
             "順路：NO COFFEE（藥院極簡風咖啡，推薦竹炭拿鐵）"
           ],
           "links": [
@@ -2265,7 +2280,8 @@ const TRIP_DATA = {
           ],
           "stay": 145,
           "mode": "transit",
-          "intro": "藥院是天神南邊一站的住宅區，近年聚集了不少小型個人店——咖啡、燒肉、居酒屋，價位比天神實在，是福岡人自己吃飯的地方。"
+          "intro": "藥院是天神南邊一站的住宅區，近年聚集了不少小型個人店——咖啡、燒肉、居酒屋，價位比天神實在，是福岡人自己吃飯的地方。",
+          "travel": 20
         },
         {
           "type": "stop",
@@ -2275,10 +2291,9 @@ const TRIP_DATA = {
           "titleLocal": "中洲屋台",
           "place": "福岡市博多區中洲",
           "notes": [
-            "地鐵藥院→中洲川端 約 12 分・停留 1hr45",
-            "18:00–00:00 左右",
+            "地鐵藥院 → 中洲川端",
             "九州最後一晚，剛吃完燒肉就當小酌一攤",
-            "座位少，常需要與陌生人併桌；現金為主"
+            "座位少，常需要與陌生人併桌"
           ],
           "links": [
             {
@@ -2294,7 +2309,10 @@ const TRIP_DATA = {
           ],
           "stay": 120,
           "mode": "transit",
-          "intro": "屋台是福岡最具代表性的夜間風景，那珂川沿岸的中洲是最密集的一段，入夜後沿河一整排亮起燈籠。\n福岡的屋台數量曾長期萎縮，市府在 2013 年立法規範後才止跌，並開始公開招募新業者。品項以拉麵、關東煮與燒鳥為主。"
+          "intro": "屋台是福岡最具代表性的夜間風景，那珂川沿岸的中洲是最密集的一段，入夜後沿河一整排亮起燈籠。\n福岡的屋台數量曾長期萎縮，市府在 2013 年立法規範後才止跌，並開始公開招募新業者。品項以拉麵、關東煮與燒鳥為主。",
+          "travel": 12,
+          "hours": "18:00–00:00 左右",
+          "fee": "現金為主"
         },
         {
           "type": "lodging",
@@ -2340,8 +2358,8 @@ const TRIP_DATA = {
           "titleLocal": "朝食・チェックアウト",
           "place": "博多站附近",
           "notes": [
-            "🥖 早餐吃昨天在 Full Full 買的明太子法棍，回烤一下更好吃",
-            "退房 10:00：鑰匙放回密碼盒、關上並把號碼轉亂",
+            "明太子法棍回烤一下更好吃",
+            "退房：鑰匙放回密碼盒、關上並把號碼轉亂",
             "確認託運行李重量"
           ],
           "links": [
@@ -2358,7 +2376,8 @@ const TRIP_DATA = {
           ],
           "stay": 45,
           "mode": "transit",
-          "intro": "Full Full 的本店在福岡東區松崎，主打國產小麥，博多這家開在 Canal City 旁。招牌明太法國麵包是全店賣得最好的品項：法國麵包裡抹上特製的辣味明太子奶油，烤到外皮酥脆，一天要分批出爐五十次以上，出爐不久常常就賣完。"
+          "intro": "Full Full 的本店在福岡東區松崎，主打國產小麥，博多這家開在 Canal City 旁。招牌明太法國麵包是全店賣得最好的品項：法國麵包裡抹上特製的辣味明太子奶油，烤到外皮酥脆，一天要分批出爐五十次以上，出爐不久常常就賣完。",
+          "hours": "退房 10:00"
         },
         {
           "type": "stop",
@@ -2368,11 +2387,9 @@ const TRIP_DATA = {
           "titleLocal": "博多駅 お土産",
           "place": "JR 博多城・博多站地下街",
           "notes": [
-            "步行・停留 40 分",
-            "🍮 試算表上的伴手禮，最後一天買最好拿：",
+            "伴手禮最後一天買最好拿：",
             "・MIGNON 可頌 4.6★（小可頌內餡豐富）／LeClerc 可麗露 4.2★",
-            "・治一郎布丁 4.1★／PRESS BUTTER SAND／明月堂 博多通饅頭／鈴懸 本店",
-            "百貨 10:00 才開，但站內與地下街的伴手禮區 8 點多就有在賣"
+            "・治一郎布丁 4.1★／PRESS BUTTER SAND／明月堂 博多通饅頭／鈴懸 本店"
           ],
           "links": [
             {
@@ -2381,20 +2398,21 @@ const TRIP_DATA = {
               "style": "map"
             },
             {
-              "label": "🚆 從上一站",
-              "url": "https://www.google.com/maps/dir/?api=1&origin=%E6%9C%9D%E9%A3%9F%E3%83%BB%E3%83%81%E3%82%A7%E3%83%83%E3%82%AF%E3%82%A2%E3%82%A6%E3%83%88%2C%20%E5%8D%9A%E5%A4%9A%E7%AB%99%E9%99%84%E8%BF%91&destination=%E5%8D%9A%E5%A4%9A%E9%A7%85%20%E3%81%8A%E5%9C%9F%E7%94%A3%2C%20JR%20%E5%8D%9A%E5%A4%9A%E5%9F%8E%E3%83%BB%E5%8D%9A%E5%A4%9A%E7%AB%99%E5%9C%B0%E4%B8%8B%E8%A1%97&travelmode=transit",
+              "label": "🚶 從上一站",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E6%9C%9D%E9%A3%9F%E3%83%BB%E3%83%81%E3%82%A7%E3%83%83%E3%82%AF%E3%82%A2%E3%82%A6%E3%83%88%2C%20%E5%8D%9A%E5%A4%9A%E7%AB%99%E9%99%84%E8%BF%91&destination=%E5%8D%9A%E5%A4%9A%E9%A7%85%20%E3%81%8A%E5%9C%9F%E7%94%A3%2C%20JR%20%E5%8D%9A%E5%A4%9A%E5%9F%8E%E3%83%BB%E5%8D%9A%E5%A4%9A%E7%AB%99%E5%9C%B0%E4%B8%8B%E8%A1%97&travelmode=walking",
               "style": "route"
             }
           ],
           "stay": 40,
-          "mode": "transit",
+          "mode": "walking",
           "intro": "博多站的伴手禮集中在博多デイトス一樓的「マイング」，明太子、和菓子到九州各縣的名產都買得到。\n明太子是戰後由中洲「ふくや」的創業者川原俊夫，參考韓國鱈魚卵的泡菜醃法改良出來的。他刻意不申請專利、把做法公開，福岡各家業者才跟著做起來；1975 年山陽新幹線開到博多之後，明太子才紅遍全日本。\n明月堂「博多通りもん」（博多通饅頭）的名字，則來自每年 5 月博多どんたく祭典上沿街遊行的人。",
           "photo": {
             "src": "img/intro/hakata-station.jpg",
             "credit": "ぱちょぴ",
             "license": "CC BY-SA 3.0",
             "href": "https://commons.wikimedia.org/wiki/File:JR_Hakata_City_2011_Jan.jpg"
-          }
+          },
+          "hours": "百貨 10:00 起；站內與地下街的伴手禮區 8 點多就有在賣"
         },
         {
           "type": "stop",
@@ -2404,7 +2422,7 @@ const TRIP_DATA = {
           "titleLocal": "福岡空港",
           "place": "福岡機場國際線航廈",
           "notes": [
-            "地鐵博多→福岡空港 5 分、¥260・整段抓 35 分",
+            "地鐵博多 → 福岡空港（5 分）",
             "⚠️ 地鐵到的是國內線，要再轉免費接駁巴士 10–15 分到國際線航廈"
           ],
           "links": [
@@ -2420,7 +2438,9 @@ const TRIP_DATA = {
             }
           ],
           "stay": 35,
-          "mode": "transit"
+          "mode": "transit",
+          "travel": 35,
+          "fee": "地鐵 ¥260"
         },
         {
           "type": "stop",
@@ -2430,7 +2450,6 @@ const TRIP_DATA = {
           "titleLocal": "チェックイン",
           "place": "福岡機場國際線航廈",
           "notes": [
-            "12:15 起飛，起飛前 2.5 小時開櫃",
             "退稅與最後採買"
           ],
           "links": [
@@ -2446,7 +2465,8 @@ const TRIP_DATA = {
             }
           ],
           "stay": null,
-          "mode": "transit"
+          "mode": "transit",
+          "hours": "起飛前 2.5 小時開櫃"
         },
         {
           "type": "flight",
@@ -3020,7 +3040,8 @@ const fmtStay = n => {
 /* 「停留(分)」是這一列總共佔掉的時間，開車過去的時間也算在裡面——時間欄的公式
    靠它往下推，所以不能拆。卡片上要扣掉「交通(分)」才是真的停留：不扣的話，
    門司港會顯示「停留 3 小時 50 分」，其中 1 小時 20 分其實在開車。 */
-const MODE_TAG = { driving:"🚗 車程", walking:"🚶 步行", transit:"🚇 搭車", bicycling:"🚲 騎車" };
+/* 圖示要跟 builder 產生的「從上一站」按鈕一致（builder/index.html 的 MODE_ICON） */
+const MODE_TAG = { driving:"🚗 車程", walking:"🚶 步行", transit:"🚆 搭車", bicycling:"🚲 騎車" };
 const travelTag = b => b.travel
   ? `<span class="stay">${MODE_TAG[b.mode] || "交通"} ${fmtStay(b.travel)}</span>` : "";
 const stayTag = b => {

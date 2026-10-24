@@ -953,7 +953,8 @@ const fmtStay = n => {
 /* 「停留(分)」是這一列總共佔掉的時間，開車過去的時間也算在裡面——時間欄的公式
    靠它往下推，所以不能拆。卡片上要扣掉「交通(分)」才是真的停留：不扣的話，
    門司港會顯示「停留 3 小時 50 分」，其中 1 小時 20 分其實在開車。 */
-const MODE_TAG = { driving:"🚗 車程", walking:"🚶 步行", transit:"🚇 搭車", bicycling:"🚲 騎車" };
+/* 圖示要跟 builder 產生的「從上一站」按鈕一致（builder/index.html 的 MODE_ICON） */
+const MODE_TAG = { driving:"🚗 車程", walking:"🚶 步行", transit:"🚆 搭車", bicycling:"🚲 騎車" };
 const travelTag = b => b.travel
   ? `<span class="stay">${MODE_TAG[b.mode] || "交通"} ${fmtStay(b.travel)}</span>` : "";
 const stayTag = b => {
