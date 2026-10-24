@@ -325,6 +325,8 @@ def disable_firebase(path: Path) -> None:
                      "const FIREBASE_CONFIG = null;", html)
     if "const FIREBASE_CONFIG = null;" not in patched:
         sys.exit("準備測試副本失敗：找不到 FIREBASE_CONFIG，不敢繼續（可能會寫到真的雲端）")
+    # 地圖嵌入金鑰也清掉：測試不拿真的金鑰去連 Google，「沒有金鑰」的情境也用這份副本測
+    patched = re.sub(r'"mapsEmbedKey": "[^"]*"', '"mapsEmbedKey": ""', patched)
     path.write_text(patched, encoding="utf-8")
     if re.search(r"AIza[A-Za-z0-9_-]{20,}", patched):
         sys.exit("準備測試副本失敗：副本裡仍有 API 金鑰殘留")
@@ -1131,7 +1133,7 @@ def run(trip: str) -> bool:
             r.check("開啟路線按鈕（手機）：不出現", page.locator(".daymap-open").count() == 0)
             ctx.close()
 
-            # 沒填金鑰的網站（目前真正的九州網站）：地圖不顯示，但開啟路線的按鈕要有——
+            # 沒填金鑰的網站（九州網站的副本，金鑰在準備副本時清掉了）：地圖不顯示，但開啟路線的按鈕要有——
             # 它用的是不需要金鑰的 Google 地圖網址
             ctx, page, errs = map_page(1400, base)
             r.check("地圖：沒有金鑰就不顯示", not page.locator("#daymap").is_visible()
