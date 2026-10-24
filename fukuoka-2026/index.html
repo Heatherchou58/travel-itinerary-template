@@ -3767,6 +3767,7 @@ dmPick.addEventListener("change", ev => {
   const i = Number(ev.target.dataset.skip);
   const s = mapSkip[current] = mapSkip[current] || new Set();
   if (ev.target.checked) s.delete(i); else s.add(i);
+  mapFocus = null;   // 改勾選就是要看路線怎麼變：正在只看某一點的話，切回路線
   paintDayMap(TRIP_DATA.days.find(d => d.id === current));
 });
 

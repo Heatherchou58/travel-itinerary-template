@@ -1172,6 +1172,12 @@ def run(trip: str) -> bool:
                     "is-off" in (page.locator(".daymap-pick span.dm-chip").nth(0).get_attribute("class") or ""))
             chips.nth(1).click(); page.wait_for_timeout(200)
             r.check("勾選：取消的點點名字照樣能看", map_q() == ("place", OPERA), str(map_q()))
+            # 正在只看某一點時改勾選：切回路線，才看得到路線的變化
+            box(0).check(); page.wait_for_timeout(200)
+            r.check("勾選：只看某一點時改勾選，地圖切回路線",
+                    pressed(0) and map_q()[0] == "directions" and page.locator(".card.map-focus").count() == 0,
+                    str(map_q()))
+            box(0).uncheck(); page.wait_for_timeout(200)
             chips.nth(0).click(); box(1).uncheck(); page.wait_for_timeout(200)
             r.check("勾選：全部取消就收起地圖、顯示提示",
                     not frame.is_visible() and page.locator(".daymap-empty").is_visible()
