@@ -86,9 +86,9 @@ python tests/offline_test.py
 
 Firebase 的 config 寫在前端是設計如此，安全性靠 Firestore Security Rules。規則限定只有登入（匿名）且 `tripId` 在白名單內才能讀寫。
 
-## 九、加密的私人區塊
+## 九、卡片上的私人資料
 
-門鎖密碼、訂單編號只能以**密文**進 TRIP_DATA（`type: "vault"`，放在「資訊」分頁）。明文在 `<行程>/<行程>-vault.json`，已列入 `.gitignore`。
+門鎖密碼、訂單編號只能以**密文**進 TRIP_DATA：整包密文在 `TRIP_DATA.vault`，卡片上只帶 `secret` 鍵與按鈕提示 `secretHint`。明文在 `<行程>/<行程>-vault.json`（已列入 `.gitignore`），每一段用 `day` ＋ `card`（卡片標題）對到一張卡片。
 
 ```bash
 node tools/encrypt-vault.mjs fukuoka-2026
@@ -96,7 +96,8 @@ node tools/encrypt-vault.mjs fukuoka-2026
 
 | 坑 | 說明 |
 |---|---|
-| 用 builder 重新產生網站，私人區塊會消失 | TRIP_DATA 整段換掉。產生完要再跑一次上面的指令。明文刻意不放進 Excel——Excel 會傳上雲端分享 |
+| 重新產生行程區塊後，卡片上的私人資料會消失 | builder 重新產生網站、或任何重寫行程區塊的步驟，都會把 `secret` 鍵洗掉。產生完要再跑一次上面的指令。明文刻意不放進 Excel——Excel 會傳上雲端分享 |
+| 卡片改了標題，私人資料就對不上 | 工具用標題比對卡片，對不到會直接報錯；改標題時要一起改明文檔的 `card` |
 | 通關密語的正規化規則寫在兩個地方 | `normPass` 在 `tools/encrypt-vault.mjs` 與網站程式各一份（大小寫、空白、連字號不計較），只改一邊就解不開 |
 | 前端只「檢查」密碼擋不住任何人 | repo 是公開的，原始碼誰都讀得到。一定要用密語「加密」，而且密語要夠長——密文永久留在 git 紀錄裡，可以被離線慢慢猜 |
 

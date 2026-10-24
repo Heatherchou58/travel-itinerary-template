@@ -129,7 +129,10 @@ for (const day of T.days) {
     R.getCell(10).value = (b.notes || []).join("\n");
     R.getCell(11).value = b.intro || "";
 
-    const keep = (b.links || []).filter(l => l.style !== "map" && l.style !== "route");
+    /* 自動產生的地圖與路線按鈕不寫回去，重新產生時會再補；但自己指定的地圖連結
+       （例如 maps.app.goo.gl 短網址）要留著，否則重新產生時會被換回自動查的版本。 */
+    const autoMap = l => l.style === "map" && /\/maps\/search\//.test(l.url || "");
+    const keep = (b.links || []).filter(l => l.style !== "route" && !autoMap(l));
     if (keep[0]) {
       R.getCell(12).value = keep[0].label;
       R.getCell(13).value = keep[0].url;
@@ -314,6 +317,9 @@ ok("航班一致", flights(T).join() === flights(B).join());
 
 const booking = X => flat(X).flatMap(x => (x.links || []).filter(l => l.style === "booking").length);
 ok("訂房連結保留", booking(T).join() === booking(B).join());
+const customMap = X => flat(X).flatMap(x => (x.links || [])
+  .filter(l => l.style === "map" && !/\/maps\/search\//.test(l.url || "")).map(l => l.url));
+ok("自訂地圖連結保留", customMap(T).join() === customMap(B).join());
 ok("機器翻譯的當地語已留空",
    flat(B).filter((x, n) => a[n]?._mt).every(x => !x.titleLocal));
 

@@ -972,7 +972,9 @@ const TRIP_DATA = {
             }
           ],
           "stay": null,
-          "mode": "transit"
+          "mode": "transit",
+          "secret": "origo",
+          "secretHint": "預訂號碼與驗證碼"
         }
       ]
     },
@@ -1038,7 +1040,9 @@ const TRIP_DATA = {
           ],
           "stay": 45,
           "mode": "walking",
-          "intro": "這趟開的是大型廂型車，四個人加行李空間很夠，但九州的山區道路彎多路窄——耶馬溪的縣道、やまなみハイウェイ、高千穗一帶的國道 325／265 都是，觀光地的停車格也偏小，進出要多留意。\n日本靠左行駛、方向盤在右邊。收費道路與停車場常只收現金或零錢，記得備一點。"
+          "intro": "這趟開的是大型廂型車，四個人加行李空間很夠，但九州的山區道路彎多路窄——耶馬溪的縣道、やまなみハイウェイ、高千穗一帶的國道 325／265 都是，觀光地的停車格也偏小，進出要多留意。\n日本靠左行駛、方向盤在右邊。收費道路與停車場常只收現金或零錢，記得備一點。",
+          "secret": "orix",
+          "secretHint": "預約號碼"
         },
         {
           "type": "stop",
@@ -1185,7 +1189,9 @@ const TRIP_DATA = {
             }
           ],
           "stay": null,
-          "mode": "driving"
+          "mode": "driving",
+          "secret": "relief",
+          "secretHint": "訂單編號"
         }
       ]
     },
@@ -1202,7 +1208,6 @@ const TRIP_DATA = {
           "titleLocal": "ホテル 朝食",
           "place": "HOTEL RELIEF Kokura ANNEX",
           "notes": [
-            "停留 45 分",
             "吃完先退房，把行李搬上車再出門"
           ],
           "links": [
@@ -1428,7 +1433,9 @@ const TRIP_DATA = {
             }
           ],
           "stay": null,
-          "mode": "driving"
+          "mode": "driving",
+          "secret": "yufuinn",
+          "secretHint": "訂單編號"
         }
       ]
     },
@@ -1473,7 +1480,6 @@ const TRIP_DATA = {
           "titleLocal": "由布院 朝食",
           "place": "由布院",
           "notes": [
-            "停留 45 分",
             "吃前一晚超市買的，或到由布院站前覓食"
           ],
           "links": [
@@ -1640,7 +1646,9 @@ const TRIP_DATA = {
             }
           ],
           "stay": null,
-          "mode": "driving"
+          "mode": "driving",
+          "secret": "kamenoi",
+          "secretHint": "訂單編號"
         }
       ]
     },
@@ -1657,7 +1665,6 @@ const TRIP_DATA = {
           "titleLocal": "ホテル 朝食",
           "place": "阿蘇市",
           "notes": [
-            "停留 30 分",
             "自助餐趕第一輪，07:30 要出發才接得上柳川的船"
           ],
           "links": [
@@ -1881,7 +1888,9 @@ const TRIP_DATA = {
             }
           ],
           "stay": null,
-          "mode": "transit"
+          "mode": "transit",
+          "secret": "shield21",
+          "secretHint": "房號、門鎖密碼與入住指南"
         }
       ]
     },
@@ -2192,7 +2201,6 @@ const TRIP_DATA = {
           "titleLocal": "朝食・チェックアウト",
           "place": "博多站附近",
           "notes": [
-            "停留 45 分",
             "🥖 早餐吃昨天在 Full Full 買的明太子法棍，回烤一下更好吃",
             "退房 10:00：鑰匙放回密碼盒、關上並把號碼轉亂",
             "確認託運行李重量"
@@ -2419,20 +2427,6 @@ const TRIP_DATA = {
       "id": "info",
       "nav": "ℹ️ 資訊",
       "blocks": [
-        {
-          "type": "vault",
-          "key": "vault",
-          "title": "🔒 私人資料",
-          "notes": [
-            "門鎖密碼與訂單編號。輸入通關密語才會在這台手機上解開，離線也能用。",
-            "通關密語不在網站上，請跟同行的人拿。"
-          ],
-          "v": 1,
-          "iterations": 600000,
-          "salt": "S+aQKiiQbaRKE+qgf5n5Qg==",
-          "iv": "wk7Gq7Qi4KCpejIk",
-          "data": "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"
-        },
         {
           "type": "cards",
           "title": "💳 信用卡刷卡攻略",
@@ -2688,7 +2682,14 @@ const TRIP_DATA = {
       "value": "0800-085-095",
       "tel": true
     }
-  ]
+  ],
+  "vault": {
+    "v": 2,
+    "iterations": 600000,
+    "salt": "ISV8l7Tzx72B2txWTKEYXA==",
+    "iv": "69tFlyRA4Xih2W49",
+    "data": "BCj4WIi+UavNqJNivf7jJjRcCTjSs8/08zHQttGotRAttaexir+BVHXM0kKsKJs3KUHZa+i7H5+yn+FkWddjUQPf3Fo+Ulhp//8+cKi6x9nznRcJ+pLPZWhqCXzIhIU0seVUBAyrqanR56U4wqgGWASS2Hr7kYJ/AQP82g6Twi221DIR8j/vxDvi4NHLMzI/j2U41Gzfxxz/Od+MXg9qMoR9/zAOHsaDaFe1qhXxJEhbq1PXctEQy37dt6ktUGLk1K6VJrzvblztAY8qwLnYQdqj47XQllKm/UCjbg0T4JMKKA+tO+RNyiN5OvErbsY7oLmyEKO9QyckeCs2RiYMUqgrSmVn3speJf0OF9k6ybwodsy5RcuwjTQOmlfGt0doEfy8Z363CBrmPolYQtTtdLa1qR4Shg8uQ79fO1Hlhma1VwMK9T7KL31YGzjsxqdrfhzWqANZcWt2noj0bUm6Z2LoEE0gKKi1TnWYa/KdgkA3GDg1sTullRr8fRvtIa+x6PnWct0MPFhc8Ulqj+kXAWX6rtUPWXISMtqpkO455qcPfQ36EjO+ZXAUurzxesb/Onny23ZDqpvt6gzCB2YJnwPTjlk6fwP6Buqw3VoE3hh4VWvCKYfK5DVa9VEEqEpfpJgbgM0oVt/DLEvxb4iGfFJ9mClPG4N5RfnyGBp9+JaYcCFs1zpBfg2gRG0BmgZIW+mLRveq0gY5k1kEJPkkJR6hB3NeqOpZBpE1/bdnwd/XE/Vor/JfYI2p+jgcV9un3BTGJatksJQFkdvTzvWBb3no++rzXly+t0Qfhe1JE3+xJVUZvWb0RqD+9aN6Pgvpd+cboo9c1RdJDJ+xvINOBSzuXo9TRLCm1wAYtUG6Y0aKlK0ocIJ3X3Bd6ZqTsXW5bDxpLlSb569aq39sIKfDwrV7bUGiFs8QlotIlulQFW96CNnLV70VIvoJgpgELMkp6sRBbykzLoBCjqsb/yZGbUbRF4Og1NVsJvoQodV0jds2KTML2KLYWjxz7uXVMvq5VTFPbqSYnZJwzOv9HKh3+IY5CD1y03MYjPdZoluzXmzkIA9vrgp73l7kmBh6IIu/o/DZ3lxzrRKAPtLrC3DnE5gvjw/o4Eb1jfDR0zbOz9bfkmjqGDS8uKG5Q3LDMGF2Dkc5keUAzzvFcQPYjgE69D+r77/9P117OJTY9qS3AQuwqWV3mOk/lYVaXnWVkv9Ip9BJM56gZJBbL+Xv3ivXAcss6vPDSmY6lz298jHZoXDGBbvXLkyyhCz9K6gUdZzvONoD74lkyKMekLofEnyVgmmJRlyAjDtsAeyIEwz4XarbUM6B5Cc4twXXoVBOTOmGjiug1e22Hd1LBySMt5ufuZQP3jTDHYDxqCw/WrryHhJ+DMTRd/gde45dsSyYD+aKvuZbOpdFAT+bPopnc4CTQcui6jHRjAI="
+  }
 };
 
 /* Firebase：填入設定即啟用多人同步；留 null 則為單機模式 */
