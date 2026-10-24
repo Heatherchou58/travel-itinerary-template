@@ -920,44 +920,53 @@ const TRIP_DATA = {
           "mode": "transit"
         },
         {
-          "type": "stop",
-          "kind": "meal",
+          "type": "options",
           "time": "21:35",
-          "title": "博多一双 祇園店",
-          "titleLocal": "博多一双 祇園店",
-          "place": "福岡市博多區祇園町 3-2",
-          "notes": [
-            "飯店走路約 2 分・停留 1hr25",
-            "11:00–24:00、不定休，湯頭賣完就收",
-            "備案：Shin-Shin 博多站 KITTE 店（試算表 4.5★，走路約 10 分）／一蘭本社總本店（中洲，24 小時）"
-          ],
-          "links": [
+          "title": "晚餐二選一（也可以拉麵吃完再去吃烤串）",
+          "place": "福岡市博多區祇園",
+          "placeLocal": "",
+          "choices": [
             {
-              "label": "🗺️ 地圖",
-              "url": "https://www.google.com/maps/search/?api=1&query=%E5%8D%9A%E5%A4%9A%E4%B8%80%E5%8F%8C%20%E7%A5%87%E5%9C%92%E5%BA%97%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8D%80%E7%A5%87%E5%9C%92%E7%94%BA%203-2",
-              "style": "map"
+              "label": "A",
+              "title": "博多一双 祇園店",
+              "titleLocal": "博多一双 祇園店",
+              "note": "11:00–24:00、不定休，湯頭賣完就收",
+              "links": [
+                {
+                  "label": "🗺️ 地圖",
+                  "url": "https://maps.app.goo.gl/cH752sJsgj16o8vWA",
+                  "style": "map"
+                }
+              ]
             },
             {
-              "label": "🚆 從上一站",
-              "url": "https://www.google.com/maps/dir/?api=1&origin=%E3%83%9B%E3%83%86%E3%83%AB%20%E3%82%AA%E3%83%AA%E3%82%B4%20%E5%8D%9A%E5%A4%9A%20%E7%A5%87%E5%9C%92%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8D%80%E7%A5%87%E5%9C%92%E7%94%BA%202-31&destination=%E5%8D%9A%E5%A4%9A%E4%B8%80%E5%8F%8C%20%E7%A5%87%E5%9C%92%E5%BA%97%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8D%80%E7%A5%87%E5%9C%92%E7%94%BA%203-2&travelmode=transit",
-              "style": "route"
+              "label": "B",
+              "title": "かわ屋 祇園店",
+              "titleLocal": "かわ屋 祇園店",
+              "note": "雞皮串・祇園町 2-8・營業時間出發前確認（☎ 092-281-3100）",
+              "links": [
+                {
+                  "label": "🗺️ 地圖",
+                  "url": "https://maps.app.goo.gl/VqYukmcKnrzvFxcw5",
+                  "style": "map"
+                }
+              ]
             }
           ],
+          "links": [],
           "stay": 85,
-          "mode": "transit",
-          "intro": "博多站東口起家、常大排長龍的豚骨拉麵店，祇園店是第三家分店。湯頭表面浮著一層細泡，屬於福岡人說的「泡系」豚骨，味道濃郁。\n博多的代表性食物是豚骨拉麵、牛腸鍋與屋台。一蘭與一風堂都是從福岡起家的，本店就在市區。"
+          "mode": "transit"
         },
         {
           "type": "lodging",
           "time": "23:00",
           "title": "HOTEL ORIGO HAKATA - Gion -",
           "titleLocal": "ホテル オリゴ 博多 祇園",
-          "address": "福岡市博多區祇園町 2-31（祇園站 5 號出口步行 2 分）",
+          "address": "福岡市博多區祇園（地鐵空港線 祇園站）",
           "notes": [
-            "退房 ~11:00",
-            "【促銷方案】優惠入住・不含餐",
-            "舒適單房 ×1・大人 4 名",
-            "¥35,280 含稅（約 NT$1,760／人）"
+            "🚨 退房 11:00",
+            "¥35,280 含稅（約 NT$1,760／人）",
+            "明早 08:00 要取車開始自駕"
           ],
           "links": [
             {
@@ -967,7 +976,7 @@ const TRIP_DATA = {
             },
             {
               "label": "🚆 從上一站",
-              "url": "https://www.google.com/maps/dir/?api=1&origin=%E5%8D%9A%E5%A4%9A%E4%B8%80%E5%8F%8C%20%E7%A5%87%E5%9C%92%E5%BA%97%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8D%80%E7%A5%87%E5%9C%92%E7%94%BA%203-2&destination=%E3%83%9B%E3%83%86%E3%83%AB%20%E3%82%AA%E3%83%AA%E3%82%B4%20%E5%8D%9A%E5%A4%9A%20%E7%A5%87%E5%9C%92%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8D%80%E7%A5%87%E5%9C%92%E7%94%BA%202-31%EF%BC%88%E7%A5%87%E5%9C%92%E7%AB%99%205%20%E8%99%9F%E5%87%BA%E5%8F%A3%E6%AD%A5%E8%A1%8C%202%20%E5%88%86%EF%BC%89&travelmode=transit",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E3%83%9B%E3%83%86%E3%83%AB%20%E3%82%AA%E3%83%AA%E3%82%B4%20%E5%8D%9A%E5%A4%9A%20%E7%A5%87%E5%9C%92%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8D%80%E7%A5%87%E5%9C%92%E7%94%BA%202-31&destination=%E3%83%9B%E3%83%86%E3%83%AB%20%E3%82%AA%E3%83%AA%E3%82%B4%20%E5%8D%9A%E5%A4%9A%20%E7%A5%87%E5%9C%92%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8D%80%E7%A5%87%E5%9C%92%EF%BC%88%E5%9C%B0%E9%90%B5%E7%A9%BA%E6%B8%AF%E7%B7%9A%20%E7%A5%87%E5%9C%92%E7%AB%99%EF%BC%89&travelmode=transit",
               "style": "route"
             }
           ],
@@ -1004,7 +1013,7 @@ const TRIP_DATA = {
             },
             {
               "label": "🚶 從住處",
-              "url": "https://www.google.com/maps/dir/?api=1&origin=%E3%83%9B%E3%83%86%E3%83%AB%20%E3%82%AA%E3%83%AA%E3%82%B4%20%E5%8D%9A%E5%A4%9A%20%E7%A5%87%E5%9C%92%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8D%80%E7%A5%87%E5%9C%92%E7%94%BA%202-31%EF%BC%88%E7%A5%87%E5%9C%92%E7%AB%99%205%20%E8%99%9F%E5%87%BA%E5%8F%A3%E6%AD%A5%E8%A1%8C%202%20%E5%88%86%EF%BC%89&destination=%E3%83%9F%E3%83%8B%E3%83%A8%E3%83%B3%20%E5%8D%9A%E5%A4%9A%E9%A7%85%E5%BA%97%2C%20JR%20%E5%8D%9A%E5%A4%9A%E7%AB%99%E6%A7%8B%E5%85%A7&travelmode=walking",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E3%83%9B%E3%83%86%E3%83%AB%20%E3%82%AA%E3%83%AA%E3%82%B4%20%E5%8D%9A%E5%A4%9A%20%E7%A5%87%E5%9C%92%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8D%80%E7%A5%87%E5%9C%92%EF%BC%88%E5%9C%B0%E9%90%B5%E7%A9%BA%E6%B8%AF%E7%B7%9A%20%E7%A5%87%E5%9C%92%E7%AB%99%EF%BC%89&destination=%E3%83%9F%E3%83%8B%E3%83%A8%E3%83%B3%20%E5%8D%9A%E5%A4%9A%E9%A7%85%E5%BA%97%2C%20JR%20%E5%8D%9A%E5%A4%9A%E7%AB%99%E6%A7%8B%E5%85%A7&travelmode=walking",
               "style": "route"
             }
           ],

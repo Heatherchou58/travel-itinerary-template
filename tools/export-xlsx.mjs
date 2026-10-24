@@ -89,8 +89,8 @@ let row = 5, curMode = T.meta.travelMode, dayNo = 0;
 for (const day of T.days) {
   if (!/^D\d+/.test(day.nav)) continue;
   dayNo++;
-  const items = (day.blocks || []).filter(b => b.type === "stop" || b.type === "lodging");
-  let first = true, clock = "", prevStay = 0;
+  const items = (day.blocks || []).filter(b => b.type === "stop" || b.type === "lodging" || b.type === "options");
+  let first = true, clock = "", prevStay = 0, afterSub = false;
 
   for (const b of items) {
     const R = plan.getRow(row);
@@ -105,6 +105,11 @@ for (const day of T.days) {
     if (first) {
       R.getCell(4).value = b.time || "";
       clock = b.time || "";
+    } else if (afterSub) {
+      /* 時間公式只看上一列。上一列是「→選項」「→連結」這種沒有時間的附屬列時，
+         在 Excel 或 Google 試算表重新計算會變成空白，所以這一列直接填實際時間。 */
+      R.getCell(4).value = b.time || "";
+      clock = b.time || (clock ? addMin(clock, prevStay) : "");
     } else {
       const expect = clock ? addMin(clock, prevStay) : "";
       if (expect && expect === (b.time || "")) {
@@ -122,7 +127,7 @@ for (const day of T.days) {
     prevStay = b.stay || 0;
 
     if (b.mode && b.mode !== curMode) { R.getCell(5).value = MODE_ZH[b.mode]; curMode = b.mode; }
-    R.getCell(6).value = b.type === "lodging" ? "住宿" : (KIND_ZH[b.kind] || "景點");
+    R.getCell(6).value = b.type === "lodging" ? "住宿" : b.type === "options" ? "二選一" : (KIND_ZH[b.kind] || "景點");
     R.getCell(7).value = b.title;
     R.getCell(8).value = b._mt ? "" : (b.titleLocal || "");
     R.getCell(9).value = b.place || b.address || "";
@@ -149,6 +154,27 @@ for (const day of T.days) {
       X.getCell(13).value = extra.url;
       X.getCell(14).value = extra.style;
       row++;
+    }
+    afterSub = keep.length > 1;
+
+    /* 二選一的每個選項一列「→選項」。parse.js 把「→連結」接到二選一本身而不是選項上，
+       所以每個選項只能帶一個連結（就寫在「→選項」那一列）。 */
+    if (b.type === "options") for (const c of b.choices || []) {
+      const ck = (c.links || []).filter(l => l.style !== "route" && !autoMap(l));
+      if (ck.length > 1) throw new Error(`${day.nav}「${c.title}」：二選一的選項只能保留一個連結`);
+      const X = plan.getRow(row);
+      styleFrom(plan, 5, row, 14);
+      X.getCell(1).value = dayNo;
+      X.getCell(6).value = "→選項";
+      X.getCell(7).value = c.title;
+      X.getCell(8).value = c._mt ? "" : (c.titleLocal || "");
+      X.getCell(10).value = c.note || "";
+      if (ck[0]) {
+        X.getCell(12).value = ck[0].label;
+        X.getCell(13).value = ck[0].url;
+        X.getCell(14).value = ck[0].style;
+      }
+      row++; afterSub = true;
     }
   }
 }
@@ -320,6 +346,12 @@ ok("訂房連結保留", booking(T).join() === booking(B).join());
 const customMap = X => flat(X).flatMap(x => (x.links || [])
   .filter(l => l.style === "map" && !/\/maps\/search\//.test(l.url || "")).map(l => l.url));
 ok("自訂地圖連結保留", customMap(T).join() === customMap(B).join());
+const opts = X => (X.days || []).filter(d => /^D\d+/.test(d.nav)).flatMap(d => (d.blocks || [])
+  .filter(b => b.type === "options")
+  .map(b => JSON.stringify([b.time, b.title, b.place || "", b.stay ?? null, (b.choices || []).map(c =>
+    [c.label, c.title, c.titleLocal || "", c.note || "",
+     (c.links || []).filter(l => !/\/maps\/search\//.test(l.url || "")).map(l => l.url)])])));
+ok("二選一一致", opts(T).join("\n") === opts(B).join("\n"), opts(T).length + " 張");
 ok("機器翻譯的當地語已留空",
    flat(B).filter((x, n) => a[n]?._mt).every(x => !x.titleLocal));
 
