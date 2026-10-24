@@ -1941,34 +1941,52 @@ const TRIP_DATA = {
           "hours": "租期到 19:00"
         },
         {
-          "type": "stop",
-          "kind": "meal",
+          "type": "options",
           "time": "18:00",
-          "title": "博多牛腸鍋 いちたか",
-          "titleLocal": "博多もつ鍋 いちたか 博多駅前通り店",
-          "place": "福岡市博多區祇園町8-13 2F",
-          "notes": [
-            "先回住處放行李，18:30 開始用餐",
-            "備案：前田屋（3.5★，蔬菜最多的一餐，口味偏重）"
-          ],
-          "links": [
+          "title": "晚餐二選一（先回住處放行李）",
+          "place": "福岡市博多區・中央區",
+          "placeLocal": "",
+          "choices": [
             {
-              "label": "🗺️ 地圖",
-              "url": "https://www.google.com/maps/search/?api=1&query=%E5%8D%9A%E5%A4%9A%E3%82%82%E3%81%A4%E9%8D%8B%20%E3%81%84%E3%81%A1%E3%81%9F%E3%81%8B%20%E5%8D%9A%E5%A4%9A%E9%A7%85%E5%89%8D%E9%80%9A%E3%82%8A%E5%BA%97%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8D%80%E7%A5%87%E5%9C%92%E7%94%BA8-13%202F",
-              "style": "map"
+              "label": "A",
+              "title": "人形町今半 JR博多シティ店",
+              "titleLocal": "人形町今半 JR博多シティ店",
+              "note": "黑毛和牛壽喜燒・JR 博多城 9F，博多站直通・17:00–22:00（L.O. 20:30）・晚餐約 ¥10,000–15,000／人，建議先訂位",
+              "links": [
+                {
+                  "label": "🗺️ 地圖",
+                  "url": "https://www.google.com/maps/search/?api=1&query=%E4%BA%BA%E5%BD%A2%E7%94%BA%E4%BB%8A%E5%8D%8A%20JR%E5%8D%9A%E5%A4%9A%E3%82%B7%E3%83%86%E3%82%A3%E5%BA%97%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8D%80%E5%8D%9A%E5%A4%9A%E9%A7%85%E4%B8%AD%E5%A4%AE%E8%A1%971-1",
+                  "style": "map"
+                },
+                {
+                  "label": "📅 訂位",
+                  "url": "https://www.tablecheck.com/ja/imahanhakata",
+                  "style": "booking"
+                }
+              ]
             },
             {
-              "label": "🚆 從上一站",
-              "url": "https://www.google.com/maps/dir/?api=1&origin=%E3%82%AA%E3%83%AA%E3%83%83%E3%82%AF%E3%82%B9%E3%83%AC%E3%83%B3%E3%82%BF%E3%82%AB%E3%83%BC%20%E5%8D%9A%E5%A4%9A%E9%A7%85%E5%8D%9A%E5%A4%9A%E5%8F%A3%E5%BA%97%20%E8%BF%94%E5%8D%B4%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8D%80%E3%83%BB%E5%8D%9A%E5%A4%9A%E7%AB%99%E5%8D%9A%E5%A4%9A%E5%8F%A3&destination=%E5%8D%9A%E5%A4%9A%E3%82%82%E3%81%A4%E9%8D%8B%20%E3%81%84%E3%81%A1%E3%81%9F%E3%81%8B%20%E5%8D%9A%E5%A4%9A%E9%A7%85%E5%89%8D%E9%80%9A%E3%82%8A%E5%BA%97%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8D%80%E7%A5%87%E5%9C%92%E7%94%BA8-13%202F&travelmode=transit",
-              "style": "route"
+              "label": "B",
+              "title": "天安（天婦羅）",
+              "titleLocal": "天安",
+              "note": "天婦羅老店・地鐵博多→赤坂 4 站約 7 分，6 號出口走 3 分・18:00–22:00（L.O. 21:30）・只有 26 席，建議先訂位",
+              "links": [
+                {
+                  "label": "🗺️ 地圖",
+                  "url": "https://www.google.com/maps/search/?api=1&query=%E5%A4%A9%E5%AE%89%20%E5%A4%A9%E3%81%B7%E3%82%89%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E4%B8%AD%E5%A4%AE%E5%8D%80%E8%88%9E%E9%B6%B43-1-1",
+                  "style": "map"
+                },
+                {
+                  "label": "📅 訂位",
+                  "url": "https://www.hotpepper.jp/strJ003916963/",
+                  "style": "booking"
+                }
+              ]
             }
           ],
+          "links": [],
           "stay": 120,
-          "mode": "transit",
-          "intro": "牛腸鍋在戰後由博多發跡，以味噌或醬油湯底燉牛腸，配大量韭菜與高麗菜，最後下強棒麵收尾。\n原本是屠宰業者把不值錢的內臟拿來煮的吃法，1990 年代一波風潮之後才變成福岡的代表料理。",
-          "travel": 30,
-          "hours": "17:00–23:30、不定休",
-          "tel": "+81 92-627-7007"
+          "mode": "transit"
         },
         {
           "type": "lodging",
@@ -1994,7 +2012,7 @@ const TRIP_DATA = {
             },
             {
               "label": "🚆 從上一站",
-              "url": "https://www.google.com/maps/dir/?api=1&origin=%E5%8D%9A%E5%A4%9A%E3%82%82%E3%81%A4%E9%8D%8B%20%E3%81%84%E3%81%A1%E3%81%9F%E3%81%8B%20%E5%8D%9A%E5%A4%9A%E9%A7%85%E5%89%8D%E9%80%9A%E3%82%8A%E5%BA%97%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8D%80%E7%A5%87%E5%9C%92%E7%94%BA8-13%202F&destination=SHIELD21%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8D%80%EF%BC%88%E5%8D%9A%E5%A4%9A%E7%AB%99%E6%AD%A5%E8%A1%8C%206%20%E5%88%86%EF%BC%89&travelmode=transit",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E3%82%AA%E3%83%AA%E3%83%83%E3%82%AF%E3%82%B9%E3%83%AC%E3%83%B3%E3%82%BF%E3%82%AB%E3%83%BC%20%E5%8D%9A%E5%A4%9A%E9%A7%85%E5%8D%9A%E5%A4%9A%E5%8F%A3%E5%BA%97%20%E8%BF%94%E5%8D%B4%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8D%80%E3%83%BB%E5%8D%9A%E5%A4%9A%E7%AB%99%E5%8D%9A%E5%A4%9A%E5%8F%A3&destination=SHIELD21%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8D%80%EF%BC%88%E5%8D%9A%E5%A4%9A%E7%AB%99%E6%AD%A5%E8%A1%8C%206%20%E5%88%86%EF%BC%89&travelmode=transit",
               "style": "route"
             }
           ],
