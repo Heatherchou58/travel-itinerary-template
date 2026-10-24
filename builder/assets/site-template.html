@@ -1578,7 +1578,7 @@ function paintDayMap(day){
   const pick = box.querySelector(".daymap-pick");
   const was = pick.contains(document.activeElement) ? { ...document.activeElement.dataset } : null;
   pick.innerHTML =
-    `<button type="button" class="dm-chip" data-p="all" aria-pressed="${focus === null}">整天路線</button>` +
+    `<button type="button" class="dm-chip" data-p="all" aria-pressed="${focus === null && !skip.size}">整天路線</button>` +
     pts.map((p, i) => `<span class="dm-chip${focus === i ? " is-on" : ""}${skip.has(i) ? " is-off" : ""}">` +
       `<label><input type="checkbox" data-skip="${i}"${skip.has(i) ? "" : " checked"} aria-label="畫進路線：${esc(p.title)}"></label>` +
       `<button type="button" data-p="${i}" aria-pressed="${focus === i}" title="${esc(p.title)}">${NUM(i)} ${esc(p.title)}</button></span>`
@@ -1632,7 +1632,10 @@ document.getElementById("main").addEventListener("keydown", ev => {
 const dmPick = document.querySelector("#daymap .daymap-pick");
 dmPick.addEventListener("click", ev => {
   const b = ev.target.closest("button[data-p]");
-  if (b) setMapFocus(b.dataset.p === "all" ? null : Number(b.dataset.p));
+  if (!b) return;
+  if (b.dataset.p !== "all") return setMapFocus(Number(b.dataset.p));
+  delete mapSkip[current];   // 「整天」就是全部：取消的勾選一起恢復
+  setMapFocus(null);
 });
 dmPick.addEventListener("change", ev => {
   const i = Number(ev.target.dataset.skip);

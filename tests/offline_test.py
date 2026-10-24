@@ -1178,7 +1178,8 @@ def run(trip: str) -> bool:
                     pressed(0) and map_q()[0] == "directions" and page.locator(".card.map-focus").count() == 0,
                     str(map_q()))
             box(0).uncheck(); page.wait_for_timeout(200)
-            chips.nth(0).click(); box(1).uncheck(); page.wait_for_timeout(200)
+            r.check("勾選：有點被取消時，「整天路線」不亮", not pressed(0))
+            box(1).uncheck(); page.wait_for_timeout(200)
             r.check("勾選：全部取消就收起地圖、顯示提示",
                     not frame.is_visible() and page.locator(".daymap-empty").is_visible()
                     and page.locator(".daymap-open").count() == 0)
@@ -1189,12 +1190,13 @@ def run(trip: str) -> bool:
             chips.nth(2).click(); page.wait_for_timeout(200)
             page.locator(".nav-item").nth(1).click(); page.wait_for_timeout(300)
             page.locator(".nav-item").nth(0).click(); page.wait_for_timeout(300)
-            r.check("換一天再回來：回到整天路線、取消的勾選還在",
-                    pressed(0) and page.locator(".card.map-focus").count() == 0
+            r.check("換一天再回來：不再只看某一點、取消的勾選還在",
+                    not pressed(1) and not pressed(2) and page.locator(".card.map-focus").count() == 0
                     and not box(0).is_checked() and box(1).is_checked(), str(map_q()))
-            box(0).check(); page.wait_for_timeout(200)
-            r.check("換一天再回來：全部勾回來就是原本的路線",
-                    map_q()[0] == "directions" and "Opera" in open_href(), str(map_q()))
+            chips.nth(0).click(); page.wait_for_timeout(200)
+            r.check("整天路線：取消的點全部勾回來，畫完整路線",
+                    box(0).is_checked() and box(1).is_checked() and pressed(0)
+                    and map_q()[0] == "directions" and "Opera" in open_href(), str(map_q()))
             # 沒有景點的分頁不畫。但版面寬度不能跟著變：退回兩欄會整個重新置中，
             # 切分頁時左邊的按鈕橫向跳將近 200px
             nav_x = page.locator(".nav-bar").bounding_box()["x"]
