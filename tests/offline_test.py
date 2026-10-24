@@ -295,6 +295,23 @@ def photo_trip(src: str) -> dict:
     return trip
 
 
+def transit_trip() -> dict:
+    """沒開車的一天：三站＋住宿，交通方式有搭車也有步行。
+    Google 的大眾運輸一次只能查兩點之間，所以整天只標地點、點某一站才看那一段怎麼搭。"""
+    trip = json.loads(json.dumps(SWAP_TRIP))
+    trip["meta"]["tripId"] = "transittest"
+    stop = lambda title, place, mode=None: {"type": "stop", "kind": "sight", "time": "10:00",
+                                            "title": title, "place": place, "notes": [], "links": [],
+                                            **({"mode": mode} if mode else {})}
+    trip["days"][0]["blocks"] = [
+        stop("甲站", "A 區"),
+        stop("乙站", "B 區", "transit"),
+        stop("丙站", "C 區", "walking"),
+        {"type": "lodging", "title": "丁旅館", "address": "D 區", "notes": [], "mode": "transit"},
+    ]
+    return trip
+
+
 def unknown_block_trip() -> dict:
     """未知型別要在畫面上顯示明確錯誤，不可靜默跳過（否則以為行程存到了，其實不見）。"""
     trip = json.loads(json.dumps(SETTLE_TRIP))
@@ -406,7 +423,8 @@ def run(trip: str) -> bool:
         for name, trip in [("settle", SETTLE_TRIP), ("rate", rate_null_trip()),
                            ("unknown", unknown_block_trip()),
                            ("vault", vault_trip(make_vault(tmp))),
-                           ("photo", photo_trip(photo_src))]:
+                           ("photo", photo_trip(photo_src)),
+                           ("transit", transit_trip())]:
             shutil.copytree(tmp / "site", tmp / name)
             swap_trip_data(tmp / name / "index.html", trip)
 
@@ -1136,7 +1154,7 @@ def run(trip: str) -> bool:
                     "／".join(chips.all_inner_texts()))
             r.check("地點按鈕：一開始選的是整天路線", pressed(0) and not pressed(1))
             chips.nth(1).click(); page.wait_for_timeout(200)
-            r.check("地點按鈕：點名字，地圖只顯示那一點", map_q() == ("place", OPERA), str(map_q()))
+            r.check("地點按鈕：開車的日子點名字，地圖只標那一點", map_q() == ("place", OPERA), str(map_q()))
             r.check("地點按鈕：被點的那顆亮起來，對應的卡片也框起來",
                     pressed(1) and not pressed(0) and "map-focus" in (opera.get_attribute("class") or "")
                     and page.locator(".card.map-focus").count() == 1)
@@ -1225,6 +1243,42 @@ def run(trip: str) -> bool:
                     and page.locator("#main .card[tabindex]").count() == 0)
             # 手機瀏覽器開 Google 地圖網址最多只認 3 個途經點，一天的路線會被截掉
             r.check("開啟路線按鈕（手機）：不出現", page.locator(".daymap-open").count() == 0)
+            ctx.close()
+
+            # 沒開車的日子：整天用大眾運輸只標地點（Google 加了途經點就畫不出線），
+            # 點某一站看「從上一站怎麼去」，交通方式用那張卡片的
+            ctx, page, errs = map_page(1400, f"http://127.0.0.1:{port}/transit/")
+            frame = page.locator("#daymap iframe")
+            def leg():
+                u = frame.get_attribute("src") or ""
+                q = parse_qs(urlparse(u).query)
+                kind = u.split("/embed/v1/")[1].split("?")[0] if "/embed/v1/" in u else ""
+                one = lambda k: q.get(k, [""])[0]
+                return kind, one("mode"), one("origin") or one("q"), one("destination"), one("waypoints")
+            link = page.locator(".daymap-open")
+            lq = lambda: parse_qs(urlparse(link.get_attribute("href") or "").query)
+            chips = page.locator(".daymap-pick button[data-p]")
+            A, B, C, D = "甲站, A 區", "乙站, B 區", "丙站, C 區", "丁旅館, D 區"
+            r.check("搭車日：整天用大眾運輸、只標各點", leg() == ("directions", "transit", A, D, f"{B}|{C}"), str(leg()))
+            r.check("搭車日：整天的 Google 地圖連結用步行（大眾運輸不能加途經點）",
+                    lq().get("travelmode") == ["walking"] and "今天的路線" in link.inner_text())
+            chips.nth(1).click(); page.wait_for_timeout(200)
+            r.check("搭車日：點第一站只標位置（沒有上一站）", leg()[:3] == ("place", "", A), str(leg()))
+            chips.nth(2).click(); page.wait_for_timeout(200)
+            r.check("搭車日：點某一站看從上一站怎麼搭", leg() == ("directions", "transit", A, B, ""), str(leg()))
+            r.check("搭車日：連結改成開這一段、用大眾運輸",
+                    "這一段" in link.inner_text() and lq().get("travelmode") == ["transit"]
+                    and lq().get("origin") == [A] and lq().get("destination") == [B] and "waypoints" not in lq(),
+                    link.get_attribute("href")[:90])
+            chips.nth(3).click(); page.wait_for_timeout(200)
+            r.check("搭車日：交通方式跟著卡片（走過去的那段用步行）", leg() == ("directions", "walking", B, C, ""), str(leg()))
+            page.locator('.daymap-pick input[data-skip="2"]').uncheck()   # 不去丙站
+            chips.nth(4).click(); page.wait_for_timeout(200)
+            r.check("搭車日：上一站被取消就從再上一站出發", leg() == ("directions", "transit", B, D, ""), str(leg()))
+            chips.nth(0).click(); page.wait_for_timeout(200)
+            r.check("搭車日：按整天路線回到只標各點、連結回到今天的路線",
+                    leg()[:2] == ("directions", "transit") and "今天的路線" in link.inner_text())
+            r.check("搭車日：沒有 JS 例外", not errs, "；".join(errs))
             ctx.close()
 
             # 沒填金鑰的網站（九州網站的副本，金鑰在準備副本時清掉了）：地圖不顯示，但開啟路線的按鈕要有——
