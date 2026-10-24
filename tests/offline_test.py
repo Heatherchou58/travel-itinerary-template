@@ -876,6 +876,47 @@ def run(trip: str) -> bool:
             r.check("還沒出發：顯示倒數天數", "出發倒數" in page.locator("#wx-now").inner_text())
             ctx.close()
 
+            # 7ca ── 編輯入口只留在行前 ─────────────────────────
+            # 「編輯行程」「重新產生網站」是出發前才用的東西。旅途中打開
+            # 當天的分頁，頁尾擺著「重新產生網站」只是噪音，誤觸還會跳出去。
+            # 必須用真實站：SWAP_TRIP 沒有 d0，也沒有 sheetUrl／builderUrl。
+            ctx = browser.new_context()
+            page = ctx.new_page()
+            page.goto(f"http://127.0.0.1:{port}/site/")
+            page.wait_for_load_state("networkidle")
+            page.wait_for_timeout(600)
+
+            bar = page.locator("#edit-bar")
+            tabs = page.locator(".nav-item")
+            prep = [i for i in range(tabs.count())
+                    if tabs.nth(i).inner_text().startswith("📝")]
+            r.check("編輯列：行程有行前分頁", len(prep) == 1, f"{len(prep)} 個")
+            tabs.nth(prep[0]).click()
+            page.wait_for_timeout(300)
+            # 一律用 is_visible()，不要用 getBoundingClientRect()：#edit-bar 是
+            # display:flex，被 UA 的 [hidden] 蓋掉與否用高度看不出來。
+            r.check("編輯列：行前看得到", bar.is_visible())
+            r.check("編輯列：兩顆按鈕都在", bar.locator("a").count() == 2,
+                    bar.inner_text().replace("\n", " / "))
+
+            other = [i for i in range(tabs.count()) if i != prep[0]]
+            still = []
+            for i in other:
+                tabs.nth(i).click()
+                page.wait_for_timeout(200)
+                if bar.is_visible():
+                    still.append(tabs.nth(i).inner_text().replace("\n", " "))
+            r.check("編輯列：其他分頁都看不到", not still,
+                    f"{len(other)} 個分頁" + (f"，還看得到：{still}" if still else "，全部隱藏"))
+            # 這一項擋的是「[hidden] 輸給 display:flex」的回歸——少了
+            # #edit-bar[hidden]{display:none}，屬性有下去但畫面照樣看得到。
+            r.check("編輯列：是靠 hidden 屬性藏的",
+                    page.locator("#edit-bar[hidden]").count() == 1)
+            # footer 還掛著 Open-Meteo 的 CC BY 授權標示，不能跟著一起藏掉
+            r.check("編輯列：footer 的授權標示沒被一起藏掉",
+                    "Open-Meteo" in page.locator("footer").inner_text())
+            ctx.close()
+
             # 7d ── 清單中間插入項目，既有的勾選不能錯位 ────────
             ctx = browser.new_context()
             page = ctx.new_page()

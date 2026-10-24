@@ -70,6 +70,10 @@ python tests/offline_test.py
 
 判斷 `<details>` 內容是否可見也不要用 `getBoundingClientRect()`，收合狀態下它仍會回報高度。用 `checkVisibility()` 或 Playwright 的 `is_visible()`。
 
+**自己設了 `display` 的元素，用 `hidden` 屬性藏不掉。** 瀏覽器預設的 `[hidden]{display:none}` 優先序輸給任何自訂的 `display`，所以要補一條 `選擇器[hidden]{ display:none }`。
+
+這個坑踩過兩次：`.now-line{display:inline-flex}`（「現在進行到哪」的標記藏不起來）、`#edit-bar{display:flex}`（編輯入口在每個分頁都出現）。兩次都是看截圖才發現——測試若只查 `count()` 會過，因為元素確實在 DOM 裡、`hidden` 屬性也確實設上去了。查可見性要用 `is_visible()`。
+
 ## 七、改 Excel 模板
 
 用 **ExcelJS**，不要用 SheetJS（會把星際平面的 emoji 解碼錯誤）。

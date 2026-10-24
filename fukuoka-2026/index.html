@@ -691,6 +691,8 @@ html{ font-size:clamp(16px, 4.2vw, 18px); }
 }
 
 #edit-bar{ display:flex; gap:var(--sp-2); justify-content:center; flex-wrap:wrap; margin-bottom:var(--sp-4); }
+/* UA 的 [hidden]{display:none} 會輸給上面的 display:flex，所以要明寫 */
+#edit-bar[hidden]{ display:none; }
 #edit-bar a{
   display:inline-block; padding:10px var(--sp-4); min-height:44px; line-height:22px;
   border:1px solid var(--c-line); border-radius:var(--r-pill); background:var(--c-surface);
@@ -3226,6 +3228,10 @@ function renderDay(id){
   document.getElementById("main").innerHTML = day.blocks.map(renderBlock).join("");
   document.querySelectorAll(".nav-item").forEach(b =>
     b.setAttribute("aria-selected", String(b.dataset.day === id)));
+  /* 編輯入口只留在行前：其他分頁是旅途中當下要看的東西，
+     不該混進「回去改試算表、重新產生網站」這種出發前才做的事。
+     （Open-Meteo 的授權標示留在 footer，所有分頁都要有。）*/
+  document.getElementById("edit-bar").hidden = id !== "d0";
   paintForecast();
   paintVaults();        // 記住密語的話，卡片上的私人資料在這裡自動解開（解密是非同步的）
   window.scrollTo({ top:0, behavior:"smooth" });
