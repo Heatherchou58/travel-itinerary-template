@@ -1076,6 +1076,17 @@ def run(trip: str) -> bool:
             r.check("目前項目的高亮邊框是 4px", w == "4px", f"實際 {w}")
             ctx.close()
 
+            # 東京 11:00：已經從草千里出發、還沒到上色見熊野座神社（10:50 出發、交通 50 分）
+            ctx, page = at("2026-11-17T02:00:00Z")
+            nowc = page.locator("#main .card.is-now")
+            line = nowc.locator(".now-line").inner_text() if nowc.count() else ""
+            r.check("在路上：標「前往中」與預計抵達時刻",
+                    nowc.count() == 1 and "上色見熊野座神社" in nowc.inner_text() and "前往中" in line and "11:40" in line,
+                    f"「{line}」")
+            r.check("在路上：卡片左上角還是出發時間（這張卡片開始的時間）",
+                    nowc.count() == 1 and nowc.locator(".time").inner_text() == "10:50")
+            ctx.close()
+
             # 東京 06:00：當天第一項（金鱗湖 07:00）還沒開始，應標成「接下來」
             # 而不是什麼都不標——早上起床打開 app 就是這個情境。
             ctx, page = at("2026-11-16T21:00:00Z")
@@ -1397,8 +1408,15 @@ def run(trip: str) -> bool:
             r.check("地圖（手機）：點卡片不會載入地圖、卡片不能用 Tab 選",
                     page.locator("#daymap iframe").get_attribute("src") is None
                     and page.locator("#main .card[tabindex]").count() == 0)
-            # 手機瀏覽器開 Google 地圖網址最多只認 3 個途經點，一天的路線會被截掉
-            r.check("開啟路線按鈕（手機）：不出現", page.locator(".daymap-open").count() == 0)
+            # 手機也要有開啟路線的按鈕（地圖本身只在電腦版）。手機上多半用 Google 地圖 App 開
+            mobile_btn = page.locator(".daymap-open")
+            mhref = mobile_btn.get_attribute("href") if mobile_btn.count() else ""
+            r.check("開啟路線按鈕（手機）：也看得到、是整天的路線",
+                    mobile_btn.count() == 1 and mobile_btn.is_visible()
+                    and "maps/dir/?api=1" in mhref and "origin=" in mhref and "destination=" in mhref, mhref[:80])
+            r.check("開啟路線按鈕（手機）：在當天第一張卡片上方、點擊範圍 ≥ 44px",
+                    mobile_btn.count() == 1 and mobile_btn.bounding_box()["height"] >= 44
+                    and mobile_btn.bounding_box()["y"] < page.locator("#main .card").first.bounding_box()["y"])
             ctx.close()
 
             # 沒開車的日子：整天用大眾運輸只標地點（Google 加了途經點就畫不出線），

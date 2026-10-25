@@ -822,6 +822,12 @@ html{ font-size:clamp(16px, 4.2vw, 18px); }
    map-on（網站有金鑰、而且是電腦寬度）決定三欄的寬度，has-map（這一頁有地圖）
    只決定地圖要不要出現——分開是因為：如果沒地圖的分頁（行前、記帳…）退回兩欄，
    整個版面會從 1500px 縮回 960px 重新置中，切分頁時左邊的按鈕會橫向跳將近 200px。 */
+/* 開啟路線的按鈕放在當天行程最上面：手機、電腦都有，有沒有嵌入地圖都在同一個位置 */
+.daymap-open{
+  display:inline-flex; align-items:center; min-height:44px; margin-bottom:var(--sp-2);
+  color:var(--c-on-accent); font-size:var(--fs-sm); font-weight:700; text-decoration:none;
+}
+.daymap-open:hover{ text-decoration:underline; }
 #daymap{ display:none; }
 @media (min-width:1024px){
   .app.has-map #daymap{
@@ -834,12 +840,6 @@ html{ font-size:clamp(16px, 4.2vw, 18px); }
     flex:1; width:100%; min-height:240px; border:0;
     border-radius:var(--r-card); background:var(--c-accent-soft);
   }
-  /* 開啟路線的按鈕放在當天行程最上面，有沒有嵌入地圖都在同一個位置 */
-  .daymap-open{
-    display:inline-flex; align-items:center; min-height:44px; margin-bottom:var(--sp-2);
-    color:var(--c-on-accent); font-size:var(--fs-sm); font-weight:700; text-decoration:none;
-  }
-  .daymap-open:hover{ text-decoration:underline; }
   /* 地圖上方：「全選」＋每一點一顆（前一晚的住宿排第一）。點名字只看那一點，勾選框決定畫不畫進路線。
      做得比一般按鈕小：一天十個地點時，44px 高的按鈕會把地圖擠到剩 250px。
      名字只露出前幾個字，完整名稱在 title（滑鼠移上去）與按鈕文字裡（讀螢幕軟體讀得到） */
@@ -1350,7 +1350,7 @@ const toHHMM = n => `${String(Math.floor(n / 60) % 24).padStart(2,"0")}:${String
 const fmtMin = n => n >= 60 ? `${Math.floor(n / 60)} 小時${n % 60 ? ` ${n % 60} 分` : ""}` : `${n} 分`;
 /* 沒有時間的項目不參與判斷 */
 const slotAttrs = b => toMin(b.time) === null ? ""
-  : ` data-start="${toMin(b.time)}" data-stay="${Number(b.stay) || 0}"`;
+  : ` data-start="${toMin(b.time)}" data-stay="${Number(b.stay) || 0}" data-travel="${Number(b.travel) || 0}"`;
 const nowSlot   = b => toMin(b.time) === null ? "" : `<div class="now-line" hidden></div>`;
 
 /* 卡片在地圖上的位置：沿用「🗺️ 地圖」按鈕的查詢——builder 已經用「當地語標題＋地點」
@@ -1693,8 +1693,8 @@ function markNow(){
   /* 結束時間：有填停留就用它，沒填就接到下一個項目的開始時間，
      最後一項沒得接就給 2 小時。否則住宿這種沒填停留的會立刻變「已結束」。 */
   const ends = cards.map((c, i) => {
-    const s = +c.dataset.start, stay = +(c.dataset.stay || 0);
-    let e = stay > 0 ? s + stay : (cards[i + 1] ? +cards[i + 1].dataset.start : s + 120);
+    const s = +c.dataset.start, stay = +(c.dataset.stay || 0), go = +(c.dataset.travel || 0);
+    let e = stay > 0 ? s + stay : (cards[i + 1] ? +cards[i + 1].dataset.start : s + go + 120);
     return e > s ? e : s + 60;
   });
 
@@ -1702,7 +1702,7 @@ function markNow(){
   cards.forEach((c, i) => {
     const s = +c.dataset.start;
     if (n.minutes >= ends[i]) c.classList.add("is-past");
-    else if (n.minutes >= s)  { if (!cur) cur = { card: c, end: ends[i] }; }
+    else if (n.minutes >= s)  { if (!cur) cur = { card: c, end: ends[i], arrive: s + +(c.dataset.travel || 0) }; }
     else if (!next)           next = { card: c, start: s };
   });
 
@@ -1711,7 +1711,9 @@ function markNow(){
     const l = card.querySelector(".now-line");
     if (l){ l.textContent = text; l.hidden = false; }
   };
-  if (cur)       show(cur.card, "is-now",  `現在 · 還有 ${fmtMin(cur.end - n.minutes)}（預計 ${toHHMM(cur.end)} 離開）`);
+  /* 卡片的時間是「出發」（這一列從離開上一站開始），前段是在路上：還沒到就標「前往中」 */
+  if (cur && n.minutes < cur.arrive) show(cur.card, "is-now", `前往中 · 預計 ${toHHMM(cur.arrive)} 抵達`);
+  else if (cur)  show(cur.card, "is-now",  `現在 · 還有 ${fmtMin(cur.end - n.minutes)}（預計 ${toHHMM(cur.end)} 離開）`);
   else if (next) show(next.card, "is-next", `接下來 · ${fmtMin(next.start - n.minutes)}後開始（${toHHMM(next.start)}）`);
 
   /* 開啟網站時捲到目前位置。只做第一次，之後自己切分頁就不要再被拉走。 */
@@ -1994,15 +1996,15 @@ function paintDayMap(day){
   }
 
   /* 同一條路線開到 Google 地圖：可以拖曳、看路況。不用金鑰，所以沒填嵌入金鑰的
-     網站也有；取消勾選的點這裡也不帶。只在電腦寬度出現——手機瀏覽器開 Google 地圖
-     網址最多只認 3 個途經點，一天的路線會被截掉（其他平台最多 9 個）。
+     網站也有；取消勾選的點這裡也不帶。手機也有：手機上通常是用 Google 地圖 App 開，
+     途經點上限跟電腦一樣是 9 個；沒裝 App、用手機瀏覽器開的話只認前 3 個（Google 的限制）。
      Google 地圖的大眾運輸也不能加途經點（會說無法規劃），所以沒開車的日子整天用步行開；
      點了某一站就改開那一段，用大眾運輸，可以直接拿來導航。
      放在 #main 裡：renderDay 每次都會整個換掉 #main，不會留下舊的；
      但視窗寬度改變時只重跑這裡，所以先把舊的拿掉。 */
   const main = document.getElementById("main");
   main.querySelector(".daymap-open")?.remove();
-  if (route.length && DESKTOP.matches){
+  if (route.length){
     const [lp, lm] = leg ? [leg.pts, leg.mode] : [route, mode === "driving" ? "driving" : "walking"];
     const via = lp.slice(1, -1).slice(0, 9);
     const href = lp.length === 1
