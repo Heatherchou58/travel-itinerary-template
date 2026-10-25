@@ -543,6 +543,36 @@ def run(trip: str) -> bool:
             text = raw.decode("utf-8-sig")
             r.check("CSV 中文可正確解碼", "離線測試項目" in text)
             r.check("CSV 換行是 CRLF", "\r\n" in text)
+
+            # 記帳：必填沒填時，錯誤寫在欄位底下、不跳 alert（原本用 alert() 擋住整個畫面）
+            said = []
+            page.on("dialog", lambda d: (said.append(d.message), d.dismiss()))
+            page.locator("#e-item").fill("")
+            page.locator("#e-local").fill("")
+            page.locator("#e-home").fill("")
+            page.locator("#e-add").click()
+            page.wait_for_timeout(300)
+            r.check("記帳：必填沒填不跳 alert", not said, "／".join(said))
+            r.check("記帳：錯誤寫在欄位底下",
+                    page.locator("#e-item-err").is_visible() and "項目" in page.locator("#e-item-err").inner_text())
+            r.check("記帳：沒填的欄位標成 aria-invalid、用 describedby 綁住錯誤",
+                    page.locator("#e-item").get_attribute("aria-invalid") == "true"
+                    and page.locator("#e-item").get_attribute("aria-describedby") == "e-item-err")
+            r.check("記帳：焦點移到第一個沒填的欄位", page.evaluate("document.activeElement.id") == "e-item")
+            # 新增成功要有回饋
+            page.locator("#e-item").fill("復原測試")
+            page.locator("#e-local").fill("500")
+            page.locator("#e-add").click()
+            page.wait_for_timeout(500)
+            r.check("記帳：新增成功有提示", "已記下" in page.locator("#toast").inner_text(),
+                    page.locator("#toast").inner_text())
+            # 誤刪可以復原（記帳是同步的，誤刪會讓所有人的裝置上都少一筆）
+            page.locator(".exp-item", has_text="復原測試").locator(".exp-del").click()
+            page.wait_for_timeout(400)
+            r.check("記帳：刪除後項目消失", page.locator(".exp-item", has_text="復原測試").count() == 0)
+            page.locator("#toast .toast-act").click()
+            page.wait_for_timeout(400)
+            r.check("記帳：按「復原」項目回來", page.locator(".exp-item", has_text="復原測試").count() == 1)
             ctx.close()
 
             # 4 ── 鍵盤操作看得見 focus ──────────────────────
@@ -781,6 +811,12 @@ def run(trip: str) -> bool:
             page.locator('.shop-i[data-id="優惠券:有圖的券"] .shop-x').click()
             page.wait_for_timeout(400)
             r.check("購物：刪除後項目消失", page.locator(".shop-i").count() == 2)
+            # 誤刪可以按「復原」整個拿回來；確認完再刪一次，後面的還原按鈕測試照原本的流程
+            page.locator("#toast .toast-act").click()
+            page.wait_for_timeout(400)
+            r.check("購物：按「復原」項目回來", page.locator(".shop-i").count() == 3)
+            page.locator('.shop-i[data-id="優惠券:有圖的券"] .shop-x').click()
+            page.wait_for_timeout(400)
             r.check("購物：刪除後出現還原按鈕",
                     "1 項" in page.locator(".shop-restore").inner_text(),
                     page.locator(".shop-restore").inner_text())
@@ -855,15 +891,18 @@ def run(trip: str) -> bool:
             except Exception: pass
             r.check("附圖片：重新整理後圖還在", src().startswith("blob:"), src()[:30])
             # 不合格的連結擋下來：javascript: 點了會在網站裡執行程式
-            said = []
-            page.once("dialog", lambda d: (said.append(d.message), d.dismiss()))
+            # 錯誤改成寫在畫面上的提示（原本是 alert）；同時確認沒有任何對話框跳出來——
+            # 這裡填的就是 javascript:alert(1)，有對話框就代表網址被執行了
+            dialogs = []
+            page.on("dialog", lambda d: (dialogs.append(d.message), d.dismiss()))
             form.locator('[name="n"]').fill("壞連結")
             form.locator('[name="u"]').fill("javascript:alert(1)")
             form.locator('button[type="submit"]').click()
             page.wait_for_timeout(500)
-            r.check("附連結：javascript: 這種網址擋下來、不新增",
-                    page.locator(".shop-i", has_text="壞連結").count() == 0 and said and "網址" in said[0],
-                    "／".join(said))
+            said = page.locator("#toast").inner_text()
+            r.check("附連結：javascript: 這種網址擋下來、不新增、提示寫在畫面上",
+                    page.locator(".shop-i", has_text="壞連結").count() == 0 and "網址" in said and not dialogs,
+                    said + ("／對話框：" + "、".join(dialogs) if dialogs else ""))
             # 券的群組加的連結，按鈕寫「開啟優惠券」
             cform = page.locator('.shop-add[data-addto="優惠券"]')
             cform.locator('[name="n"]').fill("自己加的券")
@@ -873,8 +912,13 @@ def run(trip: str) -> bool:
             r.check("附連結：優惠券那組的按鈕寫「開啟優惠券」",
                     page.locator(".shop-i", has_text="自己加的券").locator(".shop-link").inner_text() == "開啟優惠券")
             mine.locator(".shop-x").click()
+            # 圖存在 IndexedDB、刪了回不來，所以等 6 秒「復原」時限過了才真的刪（提示收起來就是過了）
+            page.wait_for_timeout(400)
+            r.check("附圖片：復原時限內圖還留著（按復原拿得回來）", mine.count() == 0 and idb_count() == 1,
+                    f"還剩 {idb_count()} 張")
+            page.wait_for_function("!document.querySelector('#toast')?.classList.contains('show')", timeout=9000)
             page.wait_for_timeout(500)
-            r.check("附圖片：刪掉項目，IndexedDB 裡的圖也一起刪", mine.count() == 0 and idb_count() == 0,
+            r.check("附圖片：復原時限過了，IndexedDB 裡的圖也一起刪", mine.count() == 0 and idb_count() == 0,
                     f"還剩 {idb_count()} 張")
 
             # 已經在清單裡的項目（這裡用 Excel 給的那一項）之後再補圖、換圖、移除圖
@@ -1790,6 +1834,36 @@ def run(trip: str) -> bool:
                 moving |= set(page.evaluate("document.getAnimations().filter(a => a.playState === 'running' && a.effect.getTiming().duration > 1).map(a => a.animationName || 'transition')"))
             r.check("UI 規則：減少動態效果時沒有動畫在跑", not moving, "、".join(sorted(moving)))
             ctx.close()
+
+            # 楓葉飄落（maple）：手機 4–7 片、電腦 8–14 片，週期 18–35 秒，大小 10–24px，透明度 .12–.30。
+            # 一片一個元素，用 getAnimations 數真的在跑的，不是數 DOM
+            LEAF_PROBE = """() => {
+                const leaves = [...document.querySelectorAll('.leaves i')].filter(e => e.checkVisibility());
+                const s = leaves.map(e => getComputedStyle(e));
+                const running = document.getAnimations().filter(a => a.animationName === 'leaf-fall' && a.playState === 'running').length;
+                return { n: leaves.length, running,
+                         dur: s.map(x => parseFloat(x.animationDuration)),
+                         size: s.map(x => parseFloat(x.width)),
+                         op: s.map(x => parseFloat(x.opacity)),
+                         clickThrough: getComputedStyle(document.querySelector('.leaves')).pointerEvents === 'none' };
+            }"""
+            for w, lo, hi in ((375, 4, 7), (1400, 8, 14)):
+                ctx = browser.new_context(viewport={"width": w, "height": 812})
+                page = ctx.new_page()
+                page.goto(base)
+                page.wait_for_load_state("networkidle")
+                if page.evaluate("document.documentElement.dataset.theme") != "maple":
+                    ctx.close(); continue
+                lf = page.evaluate(LEAF_PROBE)
+                r.check(f"楓葉（寬 {w}）：同時 {lo}–{hi} 片，而且都在動",
+                        lo <= lf["n"] <= hi and lf["running"] == lf["n"], f"{lf['n']} 片、{lf['running']} 片在動")
+                r.check(f"楓葉（寬 {w}）：週期 18–35 秒、大小 10–24px、透明度 .12–.30",
+                        all(18 <= d <= 35 for d in lf["dur"]) and all(10 <= z <= 24 for z in lf["size"])
+                        and all(.12 <= o <= .30 for o in lf["op"]),
+                        f"週期 {min(lf['dur'])}–{max(lf['dur'])}s、大小 {min(lf['size'])}–{max(lf['size'])}px、"
+                        f"透明度 {min(lf['op'])}–{max(lf['op'])}")
+                r.check(f"楓葉（寬 {w}）：不接點擊", lf["clickThrough"])
+                ctx.close()
 
             # 深色模式也要過對比。五個主題各一套深色，而且有幾個地方是「光換 token 不夠」的
             # （.btn 的底色是 --c-text，深色下會翻過來）——只改淺色就會在這裡失敗。

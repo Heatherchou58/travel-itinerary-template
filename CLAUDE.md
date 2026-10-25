@@ -174,10 +174,14 @@ node tools/intro-photos.mjs fukuoka-2026 --src <原圖資料夾>  # 先重新壓
 | 觸控目標 ≥ 44×44px、彼此間隔 ≥ 8px | 外觀小的連結（電話、照片出處、頁尾）用上下 padding 撐出點擊範圍、再用等量負 margin 抵掉，版面不變。購物的 ✕ 用 `::after` 撐，測試特別排除它 |
 | 標題層級不跳級 | 頁首 h1 → 卡片標題 `.subject` h2 → 清單群組 h3。`.subject` 自己寫 `margin:0 0 var(--sp-1)` 歸零瀏覽器預設，外觀才跟原本的 `div` 一樣。**加新的卡片型別時 `.subject` 要用 `h2`**；測試用 `.chk-group h3` 讀群組名，改了層級要一起改測試 |
 | 圖片要有替代文字 | 介紹照片的 alt 用景點名稱；放大檢視的那張在開啟時從縮圖複製 alt，對話框另外設 `aria-label` |
-| 分頁是 APG 的 tabs | 每顆 `id="tab-<dayid>"`＋`aria-controls="main"`，`<main>` 是 `role="tabpanel"`＋`aria-labelledby`。只有選取中的那顆 `tabindex=0`（roving），其餘靠方向鍵。**`<main>` 因此不再是 main 地標**，改由 `.skip` 這條「跳到主內容」補 |
+| 分頁是 APG 的 tabs，分三組 | 三個 tablist：`#nav-prep`（準備資訊：行前、資訊）、`#nav-tools`（旅途工具：購物、記帳）、`#nav`（每日行程：有日期的）。分組靠 builder 固定的 id（`shop`／`wallet` 是工具，其餘沒日期的是準備），不靠名稱。每顆 `id="tab-<dayid>"`＋`aria-controls="main"`，`<main>` 是 `role="tabpanel"`＋`aria-labelledby`。**每組各留一個 `tabindex=0`**（有選取中的就是它，沒有就是第一顆）——只讓全站選取中那一顆能 Tab 到的話，另外兩組會整組進不去。方向鍵只在組內走。**`<main>` 因此不再是 main 地標**，改由 `.skip` 補 |
+| 導覽的 DOM 順序就是畫面順序 | 準備 → 工具 → 每日行程，手機與電腦都一樣。規格原本建議電腦版排成「準備 → 行程 → 工具」，但跟手機的順序在 DOM 裡互相矛盾，用 CSS `order` 硬排的話鍵盤 Tab 會跟畫面順序不一致（WCAG 2.4.3）。手機上 `.sidenav` 是 `display:contents`——日期列包在 div 裡的話只能黏在那個 div 的範圍內，拆開才能黏在 `.app` 頂端；電腦版 `.sidenav` 才是整塊黏住的左欄 |
+| 按鈕三階 | 主要 `.btn` 楓葉紅實心（`--c-accent-strong`，新增、送出）；次要 `.btn-plain` 中性外框——地圖、訂房、Naver 也歸這階（原本各用品牌色，Google 藍的地圖鍵每張卡片都有，是整頁最跳離主題的顏色）；強調 `.btn-route` 楓葉紅外框（看路線）、`.btn-theme` 橄欖綠實心。重複出現的項目動作（優惠券的「開啟」）用次要，不然一格一顆紅色 |
+| 刪除一律可以復原 | `toast(訊息, 毫秒, { label, run, expire })`。購物（含整組）與記帳的刪除都給 6 秒「復原」；記帳是同步的，誤刪會讓所有人的裝置都少一筆。自己加的圖存在 IndexedDB、刪了回不來，所以**等 `expire` 才真的刪**——測試「刪掉項目，圖也一起刪」要等提示收起來才檢查。另外購物的 ✕ 是 `data-sdel`、記帳的是 `data-del`：原本兩個都叫 `data-del`，`#main` 上兩個點擊處理器會同時處理，刪記帳會把 id 塞進購物的 `removed`、刪購物會多觸發一次雲端同步 |
+| 錯誤寫在欄位底下，不用 `alert()` | 記帳沒填的欄位：`.f-err` 寫在底下、欄位 `aria-invalid`＋`aria-describedby`、焦點移到第一個。全站已經沒有 `alert()`，其他提示都用 `toast` |
 | 減少動態效果時不能有動畫在跑 | `*` 不會套到 `::before／::after`，偽元素的動畫要另外寫進 reduced-motion 規則，而且選擇器要跟原規則一樣具體 |
 | 動畫要表達因果 | 起終點的脈動光暈是純裝飾，已拿掉；交通卡上表示方向的流動光點保留 |
-| **背景飄落的裝飾是這條規則的例外** | 使用者指定要留。`c024925` 曾照 motion-meaning 把 `body::before／::after` 的 `animation` 拿掉，2026-10-25 又順手刪了留下來的 `@keyframes`，使用者發現楓葉不會動、要求裝回去。**不要再把它當成純裝飾刪掉。** 偏好減少動態的人由 `prefers-reduced-motion` 連圖層一起關掉，所以測試那條仍然會過 |
+| **背景飄落的裝飾是這條規則的例外** | 使用者指定要留。`c024925` 曾照 motion-meaning 把 `body::before／::after` 的 `animation` 拿掉，2026-10-25 又順手刪了留下來的 `@keyframes`，使用者發現楓葉不會動、要求裝回去。**不要再把它當成純裝飾刪掉。** 偏好減少動態的人由 `prefers-reduced-motion` 連圖層一起關掉，所以測試那條仍然會過。**maple 主題改成 `.leaves` 每片一個元素**（手機 7 片、電腦 12 片、週期 19–35 秒、11–24px、透明度 .12–.30，只動 `transform`），舊的貼圖在 maple 關掉、同時只跑一套；其他四個主題仍用 `body::before／::after` 的貼圖。原本的貼圖每 120px 一格三片，手機上同時一百多片、同一層完全同步，而且動 `background-position` 會讓全螢幕圖層每格重繪 |
 | 不用 emoji 當圖示 | 頁首有一份 Phosphor 圖示表（MIT，regular），程式裡用 `ic("名稱")`。資料裡（Excel、builder 產生的按鈕文字、說明、分頁名稱）開頭的 emoji 由 `iconText()` 換成對應圖示，對不到的直接拿掉，所以資料不用改。要加新圖示照圖示表上方註解的步驟。網站標題是使用者自己寫的文字，不換 |
 | 圖示按語意上色 | `ic()` 查 `IC_CAT` 決定類別（吃 food／行 move／住 stay／買 shop／看 see／提醒 warn），CSS 的 `.ic-food` 等給顏色。**實心按鈕、選取中的分頁與標籤裡的圖示要 `color:inherit`**，不然會在深色底上自己上色、看不見 |
 | 線條有兩個 token | `--c-line`（`#E7E1D8`，淡）畫分隔線與結構線：路線、進度條軌道、卡片狀態的左邊框、各種 `border-top／bottom`。`--c-border`（`#8A8278`）只給**控制項**的邊框（輸入框、chip、分頁膠囊、外框按鈕、檔案選擇…），WCAG 1.4.11 要求能識別介面元件的圖形 ≥ 3:1，而 `--c-line` 對白底只有 1.3。**不要把兩個合併**：實測把整組調深之後，交通卡那條 4px 的線會變成一根灰柱，跟站點的圓點搶視線。同一個中灰對淺色底與深色底都夠，所以 `--c-border` 不用分深淺兩套 |
