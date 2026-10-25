@@ -174,3 +174,4 @@ node tools/intro-photos.mjs fukuoka-2026 --src <原圖資料夾>  # 先重新壓
 | 減少動態效果時不能有動畫在跑 | `*` 不會套到 `::before／::after`，偽元素的動畫要另外寫進 reduced-motion 規則，而且選擇器要跟原規則一樣具體 |
 | 動畫要表達因果 | 背景飄落、起終點脈動是純裝飾，已拿掉；只留交通卡上表示方向的流動光點 |
 | 不用 emoji 當圖示 | 頁首有一份 Phosphor 圖示表（MIT，regular），程式裡用 `ic("名稱")`。資料裡（Excel、builder 產生的按鈕文字、說明、分頁名稱）開頭的 emoji 由 `iconText()` 換成對應圖示，對不到的直接拿掉，所以資料不用改。要加新圖示照圖示表上方註解的步驟。網站標題是使用者自己寫的文字，不換 |
+| 輸入框要有看得見的標籤 | 用 `<label class="f-lbl">文字<input class="input" …></label>` 包住，提示文字（placeholder）只能當範例、不能當標籤。輸入框維持 16px、44px 高（小於 16px iPhone 會放大畫面）。電腦版地圖上方的勾選框用 `aria-labelledby` 指到旁邊的地點按鈕。測試在 375px 與 1400px 都會量 |

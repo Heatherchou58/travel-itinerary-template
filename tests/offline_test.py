@@ -1682,7 +1682,7 @@ def run(trip: str) -> bool:
                     const a = c.length > 3 ? c[3] : 1; if (a > 0) layers.push(c); if (a >= 1) break; }
                   let bg = [255, 255, 255]; for (const l of layers.reverse()) bg = over(l, bg); return bg; };
                 const name = e => (e.innerText || e.getAttribute("aria-label") || e.tagName).trim().slice(0, 20);
-                const out = { contrast: [], target: [], spacing: [], alt: [], heading: [], emoji: [], overflow: 0 };
+                const out = { contrast: [], target: [], spacing: [], alt: [], heading: [], emoji: [], label: [], overflow: 0 };
                 for (const e of document.querySelectorAll("body *")){
                   if (!vis(e)) continue;
                   const own = [...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim());
@@ -1709,6 +1709,17 @@ def run(trip: str) -> bool:
                 let last = 0;
                 for (const h of document.querySelectorAll("h1,h2,h3,h4,h5,h6")){ if (!vis(h)) continue;
                   const lv = +h.tagName[1]; if (lv > last + 1) out.heading.push(`${h.tagName} ${h.innerText.slice(0, 12)}`); last = lv; }
+                /* 看得見的標籤：包住它或 for 指向它的 label、或 aria-labelledby 指向看得見的文字。
+                   提示文字（placeholder）與 aria-label 都不算 */
+                for (const el of document.querySelectorAll("input, select, textarea")){
+                  if (el.type === "hidden" || el.type === "file") continue;
+                  const box = (el.type === "checkbox" || el.type === "radio") ? (el.closest("label") || el) : el;
+                  if (!vis(box)) continue;
+                  const named = [...(el.labels || [])].some(l => vis(l) && l.textContent.trim())
+                    || (el.getAttribute("aria-labelledby") || "").split(" ").some(id => {
+                         const n = document.getElementById(id); return n && vis(n) && n.textContent.trim(); });
+                  if (!named) out.label.push(el.name || el.className || el.type);
+                }
                 const tw = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
                 for (let t; (t = tw.nextNode());){ const el = t.parentElement;
                   if (!el || el.closest("#app-title, script, style") || !vis(el)) continue;
@@ -1717,20 +1728,29 @@ def run(trip: str) -> bool:
                 out.overflow = document.documentElement.scrollWidth - document.documentElement.clientWidth;
                 return out;
             }"""
-            fails = {k: [] for k in ["contrast", "target", "spacing", "alt", "heading", "emoji", "overflow"]}
+            fails = {k: [] for k in ["contrast", "target", "spacing", "alt", "heading", "emoji", "label", "focus", "overflow"]}
             tabs = page.locator(".nav-item")
             for i in range(tabs.count()):
                 tab = tabs.nth(i).inner_text().split("\n")[0]
                 tabs.nth(i).click()
                 page.wait_for_timeout(300)
                 page.evaluate("document.querySelectorAll('#main details').forEach(d => d.open = true)")
+                if page.locator("#main .secret-ask").count():   # 私人資料的密語框按了才出現
+                    page.locator("#main .secret-ask").first.click()
+                    page.wait_for_timeout(100)
+                    # 密語框一出現就取得焦點：不能被置頂的分頁列蓋住（focus-not-obscured）
+                    if page.evaluate("document.activeElement.getBoundingClientRect().top < document.querySelector('.nav-bar').getBoundingClientRect().bottom"):
+                        fails["focus"].append(tab)
+                    page.evaluate("window.scrollTo(0, 0)")   # 間距量的是版面，不是捲到一半疊在分頁列下的樣子
                 got = page.evaluate(UX_PROBE)
-                for k in ["contrast", "target", "spacing", "alt", "heading", "emoji"]:
+                for k in ["contrast", "target", "spacing", "alt", "heading", "emoji", "label"]:
                     fails[k] += [f"{tab}：{x}" for x in got[k]]
                 if got["overflow"] > 0: fails["overflow"].append(f"{tab}：{got['overflow']}px")
             for k, label in [("contrast", "文字對比 ≥ 4.5:1（大字 3:1）"), ("target", "觸控目標 ≥ 44×44px"),
                              ("spacing", "觸控目標之間 ≥ 8px"), ("alt", "圖片都有替代文字"),
                              ("heading", "標題層級不跳級"), ("emoji", "介面不用 emoji 當圖示（網站標題除外）"),
+                             ("label", "輸入框都有看得見的標籤（不只提示文字）"),
+                             ("focus", "取得焦點的密語框沒有被置頂分頁列蓋住"),
                              ("overflow", "375px 不會橫向捲動")]:
                 r.check(f"UI 規則：{label}", not fails[k], "；".join(sorted(set(fails[k]))[:4]) or "各分頁都過")
             ctx.close()
@@ -1746,6 +1766,21 @@ def run(trip: str) -> bool:
                 page.wait_for_timeout(300)
                 moving |= set(page.evaluate("document.getAnimations().filter(a => a.playState === 'running' && a.effect.getTiming().duration > 1).map(a => a.animationName || 'transition')"))
             r.check("UI 規則：減少動態效果時沒有動畫在跑", not moving, "、".join(sorted(moving)))
+            ctx.close()
+
+            # 電腦版才有的介面（右側地圖上方的地點列）也要過標籤這條
+            ctx = browser.new_context(viewport={"width": 1400, "height": 900})
+            page = ctx.new_page()
+            page.goto(base)
+            page.wait_for_load_state("networkidle")
+            unlabeled = []
+            tabs = page.locator(".nav-item")
+            for i in range(tabs.count()):
+                tab = tabs.nth(i).inner_text().split("\n")[0]
+                tabs.nth(i).click()
+                page.wait_for_timeout(300)
+                unlabeled += [f"{tab}：{x}" for x in page.evaluate(UX_PROBE)["label"]]
+            r.check("UI 規則：電腦版輸入框也都有看得見的標籤", not unlabeled, "；".join(sorted(set(unlabeled))[:4]) or "各分頁都過")
             ctx.close()
 
             browser.close()

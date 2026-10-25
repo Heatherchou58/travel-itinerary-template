@@ -77,6 +77,8 @@
 *,*::before,*::after{ box-sizing:border-box; }
 html,body{ margin:0; padding:0; }
 html{ touch-action:manipulation; }
+/* 置頂的分頁列約 66px 高：取得焦點或捲到某個元素時預留這段，元素才不會被它蓋住（focus-not-obscured） */
+html{ scroll-padding-top:80px; }
 body{
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",Roboto,sans-serif;
   background:var(--c-bg); color:var(--c-text);
@@ -264,16 +266,18 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
   font-size:var(--fs-sm); font-weight:700; line-height:1.4;
 }
 .shop-who{ display:block; font-size:var(--fs-xs); font-weight:400; color:var(--c-text-dim); }
-.shop-note, .shop-amt{ font-size:var(--fs-xs); padding:6px var(--sp-2); min-height:36px; }
+/* 輸入框都要有看得見的標籤（ui-ux-pro-max input-labels），不能只靠框裡的提示文字。
+   label 直接包住輸入框，點標籤也會把游標帶進去，不用另外編 id。
+   輸入框維持 .input 的 16px、44px 高：小於 16px 時 iPhone 一點就放大畫面（touch-friendly-input） */
+.f-lbl{ display:flex; flex-direction:column; gap:2px; min-width:0; font-size:var(--fs-xs); font-weight:700; color:var(--c-text-dim); }
 .shop-link{ margin:0; width:100%; text-align:center; }
-.shop-add, .shop-addg{ display:flex; gap:var(--sp-2); margin-top:var(--sp-2); }
-.shop-add .input, .shop-addg .input{ flex:1; min-width:0; }
+.shop-add, .shop-addg{ display:flex; align-items:flex-end; gap:var(--sp-2); margin-top:var(--sp-2); }
+.shop-add .f-lbl, .shop-addg .f-lbl, .shop-extra .f-lbl{ flex:1; }
 .shop-add .btn, .shop-addg .btn{ margin-top:0; flex:0 0 auto; }
 .shop-addg{ margin-top:var(--sp-3); }
 /* 新增時可以附一張圖（例如優惠券截圖）或一個連結，選填，放在名稱那一列下面 */
 .shop-add{ flex-wrap:wrap; }
-.shop-extra{ display:flex; gap:var(--sp-2); flex:1 0 100%; }
-.shop-extra .input{ font-size:var(--fs-xs); }
+.shop-extra{ display:flex; align-items:flex-end; gap:var(--sp-2); flex:1 0 100%; }
 .shop-file{
   display:inline-flex; align-items:center; flex:0 0 auto; min-height:44px; padding:0 var(--sp-3);
   border:1px dashed var(--c-line); border-radius:10px; cursor:pointer;
@@ -366,8 +370,8 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
   border:none; background:none; color:var(--c-text-dim);
   font-family:inherit; font-size:var(--fs-xs); text-decoration:underline; cursor:pointer;
 }
-.vault-form{ display:flex; flex-wrap:wrap; align-items:center; gap:0 var(--sp-2); }
-.vault-form .input{ flex:1 1 10em; width:auto; min-width:0; }
+.vault-form{ display:flex; flex-wrap:wrap; align-items:flex-end; gap:0 var(--sp-2); }
+.vault-form .f-lbl{ flex:1 1 10em; }
 .vault-form .btn{ margin:0; }
 .vault-remember{ display:flex; align-items:center; gap:var(--sp-2); flex:1 0 100%;
                  min-height:44px; font-size:var(--fs-sm); color:var(--c-text-dim); }
@@ -3589,23 +3593,23 @@ const RENDERERS = {
                 ? `<div class="shop-name">${esc(it.name)}</div>`
                 : `<label class="chk"><input type="checkbox" data-sid="${esc(it.id)}"${ed.done ? " checked" : ""}><span>${esc(it.name)}${it.who ? `<span class="shop-who">${esc(it.who)}</span>` : ""}</span></label>`}
               ${/^https?:\/\//i.test(it.url) ? `<a class="btn shop-link" href="${esc(it.url)}" target="_blank" rel="noopener">${isCoupon ? "開啟優惠券" : "開啟連結"}</a>` : ""}
-              ${isCoupon ? "" : `<input class="input shop-note" data-snote="${esc(it.id)}" value="${esc(ed.note || "")}" placeholder="數量／備註" autocomplete="off">
-              <input class="input shop-amt" type="number" inputmode="numeric" min="0" data-samt="${esc(it.id)}" value="${esc(String(ed.amount ?? ""))}" placeholder="金額">`}
+              ${isCoupon ? "" : `<label class="f-lbl">數量／備註<input class="input shop-note" data-snote="${esc(it.id)}" value="${esc(ed.note || "")}" autocomplete="off"></label>
+              <label class="f-lbl">金額<input class="input shop-amt" type="number" inputmode="numeric" min="0" data-samt="${esc(it.id)}" value="${esc(String(ed.amount ?? ""))}"></label>`}
               ${it.img || uimg ? "" : `<label class="shop-addimg"><input type="file" accept="image/*" data-simg="${esc(it.id)}" hidden>${ic("camera")}加圖片</label>`}
             </div>`;
           }).join("")}</div>
           <form class="shop-add" data-addto="${esc(name)}">
-            <input class="input" name="n" placeholder="加一項到「${esc(name)}」" autocomplete="off">
+            <label class="f-lbl">加一項到「${esc(name)}」<input class="input" name="n" autocomplete="off"></label>
             <button class="btn" type="submit">新增</button>
             <div class="shop-extra">
               <label class="shop-file"><input type="file" name="f" accept="image/*" hidden>${ic("camera")}<span>附圖片</span></label>
-              <input class="input" name="u" inputmode="url" placeholder="連結（選填）" autocomplete="off" aria-label="連結（選填）">
+              <label class="f-lbl">連結（選填）<input class="input" name="u" inputmode="url" autocomplete="off"></label>
             </div></form>
         </details>`;
       }).join("")}
       ${s.removed.length ? `<button class="shop-restore" data-srestore="1" type="button">還原已移除的 ${s.removed.length} 項</button>` : ""}
       <form class="shop-addg">
-        <input class="input" name="g" placeholder="新增群組，例如「超市」" autocomplete="off">
+        <label class="f-lbl">群組名稱<input class="input" name="g" placeholder="例如「超市」" autocomplete="off"></label>
         <button class="btn" type="submit">新增群組</button></form>
     </div>`;
   },
@@ -4008,8 +4012,8 @@ function paintDayMap(day){
       const name = p.start ? ic("bed") + esc(p.title) : esc(`${NUM(num[i])} ${p.title}`);
       const tip = p.start ? `前一晚住宿：${p.title}` : p.alt ? `二選一：${p.title}` : p.title;
       return `<span class="dm-chip${focus && focus.p === i ? " is-on" : ""}${skip.has(i) ? " is-off" : ""}">` +
-        `<label><input type="checkbox" data-skip="${i}"${skip.has(i) ? "" : " checked"} aria-label="畫進路線：${esc(p.title)}"></label>` +
-        `<button type="button" data-p="${i}" aria-pressed="${!!focus && focus.p === i}" title="${esc(tip)}">${name}</button></span>`;
+        `<label><input type="checkbox" data-skip="${i}"${skip.has(i) ? "" : " checked"} aria-labelledby="dm-p${i}"></label>` +
+        `<button type="button" id="dm-p${i}" data-p="${i}" aria-pressed="${!!focus && focus.p === i}" title="${esc(tip)}">${name}</button></span>`;
     }).join("");
   /* 只勾了一部分：全選框顯示「–」，按下去會全部勾起來 */
   pick.querySelector("[data-all]").indeterminate = !all && skip.size < pts.length;
@@ -4357,8 +4361,8 @@ function askVault(btn){
   const box = btn.closest(".secret");
   box.classList.remove("is-locked");
   box.innerHTML = `<form class="vault-form" autocomplete="off">
-      <input class="input vault-pass" type="password" name="pass" placeholder="通關密語"
-             autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go">
+      <label class="f-lbl">通關密語<input class="input vault-pass" type="password" name="pass" autocomplete="current-password"
+             autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go"></label>
       <button class="btn btn-theme" type="submit">解鎖</button>
       <label class="vault-remember"><input type="checkbox" name="remember" checked>
         <span>在這台裝置記住，下次自動解開</span></label>
