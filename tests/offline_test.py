@@ -826,6 +826,10 @@ def run(trip: str) -> bool:
             page.wait_for_timeout(800)
             mine = page.locator('.shop-g[data-group="藥妝店"] .shop-i', has_text="附圖的東西")
             src = lambda: mine.locator("img.shop-img").get_attribute("src") or ""
+            # 圖是非同步從 IndexedDB 讀出來的，等它補上網址再檢查
+            blob_ready = """() => [...document.querySelectorAll('img[data-uimg]')].some(i => i.src.startsWith('blob:'))"""
+            try: page.wait_for_function(blob_ready, timeout=5000)
+            except Exception: pass
             r.check("附圖片：新增的項目有縮圖（從 IndexedDB 讀出來）", src().startswith("blob:"), src()[:30])
             link = mine.locator(".shop-link")
             r.check("附連結：沒打 https:// 的自動補上、按鈕寫「開啟連結」",
@@ -841,7 +845,8 @@ def run(trip: str) -> bool:
             page.reload(wait_until="domcontentloaded")
             page.wait_for_timeout(1200)
             page.locator(".nav-item").nth(1).click()
-            page.wait_for_timeout(600)
+            try: page.wait_for_function(blob_ready, timeout=5000)
+            except Exception: pass
             r.check("附圖片：重新整理後圖還在", src().startswith("blob:"), src()[:30])
             # 不合格的連結擋下來：javascript: 點了會在網站裡執行程式
             said = []
@@ -1568,10 +1573,28 @@ def run(trip: str) -> bool:
                 bar.click()
                 page.wait_for_function(
                     "document.querySelector('img.intro-photo')?.complete", timeout=10000)
-                r.check("介紹照片：展開後看得到大照片",
+                r.check("介紹照片：展開後看得到照片（鋪在介紹後面）",
                         pic.is_visible() and pic.evaluate("i => i.naturalWidth") > 0)
                 faded = bar.evaluate("s => getComputedStyle(s, '::after').opacity")
                 r.check("介紹照片：展開後淡底收掉", float(faded) == 0, faded)
+                # 照片鋪在介紹後面、刷一層白，文字直接寫在上面。測試第 12 段只看得到背景「顏色」、
+                # 看不到照片，所以這裡用最壞的情況算：照片是純黑，蓋上白色後文字還要過 4.5:1；
+                # 文字也不能壓在最上面還沒刷淡的那段
+                worst = with_photo.locator(".intro-body").evaluate("""b => {
+                  const g = getComputedStyle(b, '::before').backgroundImage;
+                  const a = Math.max(...[...g.matchAll(/rgba\(255, 255, 255, ([0-9.]+)\)/g)].map(m => +m[1]));
+                  const f = v => { v /= 255; return v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; };
+                  const L = c => .2126 * f(c[0]) + .7152 * f(c[1]) + .0722 * f(c[2]);
+                  const p = b.querySelector('p'), fg = getComputedStyle(p).color.match(/[0-9.]+/g).map(Number);
+                  const w = 255 * a, Lb = L([w, w, w]), Lf = L(fg);
+                  return { a, ratio: +((Math.max(Lb, Lf) + .05) / (Math.min(Lb, Lf) + .05)).toFixed(2),
+                           textTop: Math.round(p.getBoundingClientRect().top - b.getBoundingClientRect().top),
+                           clear: parseFloat(getComputedStyle(b).getPropertyValue('--clear')),
+                           textBg: getComputedStyle(p).backgroundColor };
+                }""")
+                r.check("介紹照片：照片當底、刷淡後文字最暗處也過 4.5:1",
+                        worst["ratio"] >= 4.5 and worst["textTop"] >= worst["clear"], str(worst))
+                r.check("介紹照片：文字本身沒有底色", worst["textBg"] == "rgba(0, 0, 0, 0)", worst["textBg"])
                 credit = with_photo.locator(".photo-credit")
                 r.check("介紹照片：照片底下有作者與授權，並連到出處",
                         "測試作者" in credit.inner_text() and "CC BY-SA 4.0" in credit.inner_text()
