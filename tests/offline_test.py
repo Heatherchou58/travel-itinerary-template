@@ -871,6 +871,47 @@ def run(trip: str) -> bool:
             r.check("附圖片：刪掉項目，IndexedDB 裡的圖也一起刪", mine.count() == 0 and idb_count() == 0,
                     f"還剩 {idb_count()} 張")
 
+            # 已經在清單裡的項目（這裡用 Excel 給的那一項）之後再補圖、換圖、移除圖
+            seed = page.locator('.shop-i[data-id="藥妝店:托買的東西"]')
+            r.check("補圖：沒有圖的項目有「加圖片」", seed.locator(".shop-addimg").count() == 1)
+            seed.locator("[data-simg]").set_input_files({"name": "c.png", "mimeType": "image/png", "buffer": PNG})
+            try: page.wait_for_function(blob_ready, timeout=5000)
+            except Exception: pass
+            seed_src = lambda: seed.locator("img.shop-img").get_attribute("src") or "" if seed.locator("img.shop-img").count() else ""
+            r.check("補圖：選了圖就出現在卡片上、「加圖片」收起來",
+                    seed_src().startswith("blob:") and seed.locator(".shop-addimg").count() == 0 and idb_count() == 1,
+                    seed_src()[:30])
+            r.check("補圖：勾選和金額沒有被洗掉",
+                    seed.locator("input[type=checkbox]").is_checked() and seed.locator(".shop-amt").input_value() == "1600")
+            page.reload(wait_until="domcontentloaded")
+            page.wait_for_timeout(1200)
+            page.locator(".nav-item").nth(1).click()
+            try: page.wait_for_function(blob_ready, timeout=5000)
+            except Exception: pass
+            r.check("補圖：重新整理後還在", seed_src().startswith("blob:"), seed_src()[:30])
+            seed.locator("img.shop-img").click()
+            page.wait_for_timeout(300)
+            acts = page.locator("#zoom .zoom-acts")
+            r.check("補圖：放大後可以換一張或移除", acts.locator("[data-zimg]").count() == 1 and acts.locator("[data-zdel]").count() == 1)
+            acts.locator("[data-zimg]").set_input_files({"name": "d.png", "mimeType": "image/png", "buffer": PNG})
+            try: page.wait_for_function(blob_ready, timeout=5000)
+            except Exception: pass
+            r.check("補圖：換一張後放大視窗關掉、卡片上還是有圖",
+                    page.locator("#zoom[open]").count() == 0 and seed_src().startswith("blob:") and idb_count() == 1)
+            seed.locator("img.shop-img").click()
+            page.wait_for_timeout(300)
+            acts.locator("[data-zdel]").click()
+            page.wait_for_timeout(500)
+            r.check("補圖：移除圖片後回到「加圖片」、IndexedDB 也清掉",
+                    seed.locator("img.shop-img").count() == 0 and seed.locator(".shop-addimg").count() == 1 and idb_count() == 0,
+                    f"還剩 {idb_count()} 張")
+            page.locator('.shop-img[src*="img/"]').first.click()
+            page.wait_for_timeout(300)
+            r.check("補圖：Excel 給的圖放大後不能換、不能移除",
+                    page.locator("#zoom .zoom-acts").inner_html().strip() == "")
+            page.keyboard.press("Escape")
+            page.wait_for_timeout(300)
+
             # 點圖放大給店員看
             page.locator(".shop-img").first.click()
             page.wait_for_timeout(400)
@@ -1518,6 +1559,15 @@ def run(trip: str) -> bool:
             r.check("私人資料：網址變成按鈕",
                     door.locator('a[href="https://example.com/guide"]').count() == 1)
             r.check("私人資料：備註有顯示", "密碼盒掛在門把上" in door.inner_text())
+            # 「上鎖」在框的右上角，跟第一筆資料同一列，不另外佔一行
+            geo = hotel.locator(".secret").evaluate("""s => { const b = s.getBoundingClientRect(),
+                l = s.querySelector('.secret-lock').getBoundingClientRect(),
+                first = s.querySelector('.secret-items > *').getBoundingClientRect();
+                return { right: Math.round(b.right - l.right), lockLeft: l.left - b.left, half: b.width / 2,
+                         lockTop: Math.round(l.top - b.top), firstBottom: Math.round(first.bottom - b.top),
+                         belowLast: Math.round(l.bottom - s.querySelector('.secret-items').getBoundingClientRect().bottom) }; }""")
+            r.check("私人資料：「上鎖」在右上角、跟第一筆資料同一列",
+                    geo["lockLeft"] > geo["half"] and geo["lockTop"] < geo["firstBottom"] and geo["belowLast"] <= 0, str(geo))
 
             page.reload()
             page.wait_for_load_state("networkidle")

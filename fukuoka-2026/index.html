@@ -280,6 +280,16 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
   font-size:var(--fs-xs); font-weight:700; color:var(--c-text-dim); white-space:nowrap;
 }
 .shop-file.has{ border-style:solid; border-color:var(--c-accent); background:var(--c-accent-soft); color:var(--c-on-accent); }
+/* 已經加好的項目之後再補圖 */
+.shop-addimg{
+  display:flex; align-items:center; justify-content:center; min-height:44px;
+  border:1px dashed var(--c-line); border-radius:8px; cursor:pointer;
+  font-size:var(--fs-xs); font-weight:700; color:var(--c-text-dim);
+}
+/* 放大檢視裡：自己加的圖可以換一張或拿掉 */
+.zoom-acts{ display:flex; gap:var(--sp-2); padding:var(--sp-2); }
+.zoom-acts:empty{ display:none; }
+.zoom-acts .btn{ flex:1; margin:0; text-align:center; }
 
 /* 放大檢視：給店員看的時候要夠大 */
 #zoom{
@@ -346,8 +356,13 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 .secret-val{ display:block; font-size:var(--fs-md); font-weight:700; word-break:break-all; user-select:all;
              font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
 .secret-note{ margin:var(--sp-2) 0; font-size:var(--fs-sm); color:var(--c-text-dim); }
+/* 解開後：資料在左、「上鎖」在右上角，不另外佔一行。按鈕往右上角的框線推，
+   點擊範圍維持 44px，跟左邊的資料（可能有按鈕）隔 8px */
+.secret:not(.is-locked){ display:flex; align-items:flex-start; gap:var(--sp-2); }
+.secret-items{ flex:1; min-width:0; }
 .secret-lock{
-  display:block; min-height:44px; padding:0; margin-top:var(--sp-1);
+  flex:0 0 auto; min-width:44px; min-height:44px; padding:0 var(--sp-2);
+  margin:calc(-1 * var(--sp-2)) calc(-1 * var(--sp-2)) 0 0;
   border:none; background:none; color:var(--c-text-dim);
   font-family:inherit; font-size:var(--fs-xs); text-decoration:underline; cursor:pointer;
 }
@@ -3194,6 +3209,26 @@ async function paintUserImages(){
     el.src = el.dataset.zoom = userImgURL.get(id);
   }
 }
+/* 項目之後補圖或換圖：存進 IndexedDB、在 edits 記一筆。換圖時舊的網址作廢，重畫時重新讀 */
+function dropUserImage(id){
+  imgDB.del(id).catch(() => {});
+  if (userImgURL.has(id)){ URL.revokeObjectURL(userImgURL.get(id)); userImgURL.delete(id); }
+}
+async function attachUserImage(id, file){
+  const s = shopBag();
+  try{ await imgDB.put(id, await shrinkImage(file)); }
+  catch{ alert("這個瀏覽器存不了圖片"); return; }
+  if (userImgURL.has(id)){ URL.revokeObjectURL(userImgURL.get(id)); userImgURL.delete(id); }
+  s.edits[id] = { ...(s.edits[id] || {}), uimg: true };
+  persist(); renderDay(current);
+}
+function detachUserImage(id){
+  const s = shopBag(), a = s.added.find(x => x.id === id);
+  dropUserImage(id);
+  if (a) delete a.uimg;
+  if (s.edits[id]) delete s.edits[id].uimg;
+  persist(); renderDay(current);
+}
 /* 自己貼的連結只收 http／https：javascript: 這種網址點了會在網站裡執行程式。
    沒打 https:// 的（www.donki.com）幫忙補上。不合格回傳 null */
 function cleanLink(v){
@@ -3461,17 +3496,20 @@ const RENDERERS = {
           <div class="shop-grid">${items.map(it => {
             const ed = s.edits[it.id] || {};
             /* 沒有圖片的卡片加 no-img，內容才會讓開左上角那顆 ✕ */
-            /* 自己加的圖存在 IndexedDB（uimg），網址等 paintUserImages() 讀出來才補上 */
-            return `<div class="shop-i${it.img || it.uimg ? "" : " no-img"}" data-id="${esc(it.id)}">
+            /* 自己加的圖存在 IndexedDB（uimg），網址等 paintUserImages() 讀出來才補上。
+               新增時附的記在項目上，之後才補的記在 edits（Excel 給的項目也能補） */
+            const uimg = it.uimg || ed.uimg;
+            return `<div class="shop-i${it.img || uimg ? "" : " no-img"}" data-id="${esc(it.id)}">
               <button class="shop-x" data-del="${esc(it.id)}" type="button" aria-label="刪除${esc(it.name)}">✕</button>
               ${it.img ? `<img class="shop-img" src="${esc(it.img)}" data-zoom="${esc(it.img)}" alt="${esc(it.name)}" loading="lazy">`
-                : it.uimg ? `<img class="shop-img" data-uimg="${esc(it.id)}" alt="${esc(it.name)}">` : ""}
+                : uimg ? `<img class="shop-img" data-uimg="${esc(it.id)}" alt="${esc(it.name)}">` : ""}
               ${isCoupon
                 ? `<div class="shop-name">${esc(it.name)}</div>`
                 : `<label class="chk"><input type="checkbox" data-sid="${esc(it.id)}"${ed.done ? " checked" : ""}><span>${esc(it.name)}${it.who ? `<span class="shop-who">${esc(it.who)}</span>` : ""}</span></label>`}
               ${/^https?:\/\//i.test(it.url) ? `<a class="btn shop-link" href="${esc(it.url)}" target="_blank" rel="noopener">${isCoupon ? "開啟優惠券" : "開啟連結"}</a>` : ""}
               ${isCoupon ? "" : `<input class="input shop-note" data-snote="${esc(it.id)}" value="${esc(ed.note || "")}" placeholder="數量／備註" autocomplete="off">
               <input class="input shop-amt" type="number" inputmode="numeric" min="0" data-samt="${esc(it.id)}" value="${esc(String(ed.amount ?? ""))}" placeholder="金額">`}
+              ${it.img || uimg ? "" : `<label class="shop-addimg"><input type="file" accept="image/*" data-simg="${esc(it.id)}" hidden>📷 加圖片</label>`}
             </div>`;
           }).join("")}</div>
           <form class="shop-add" data-addto="${esc(name)}">
@@ -4220,7 +4258,7 @@ function secretHTML(b){
   const sec = vaultData && vaultData.sections && vaultData.sections[b.secret];
   return sec
     ? `<div class="secret" data-secret="${key}" data-hint="${hint}">
-        ${(sec.items || []).map(secretItemHTML).join("")}
+        <div class="secret-items">${(sec.items || []).map(secretItemHTML).join("")}</div>
         <button class="secret-lock" data-vault-lock type="button">上鎖</button></div>`
     : `<div class="secret is-locked" data-secret="${key}" data-hint="${hint}">
         <button class="secret-ask" data-vault-ask type="button">🔒 顯示${hint}</button></div>`;
@@ -4374,6 +4412,12 @@ document.getElementById("main").addEventListener("input", e => {
   leftEl.classList.toggle("cc-full", left === 0);
 });
 
+/* 已經加好的項目補一張圖 */
+document.getElementById("main").addEventListener("change", e => {
+  const f = e.target.closest("[data-simg]");
+  if (f && f.files.length) attachUserImage(f.dataset.simg, f.files[0]);
+});
+
 /* 選了圖片，按鈕改成「已選圖片」，才知道有沒有選到 */
 document.getElementById("main").addEventListener("change", e => {
   const f = e.target.closest('.shop-add [name="f"]');
@@ -4391,13 +4435,24 @@ document.getElementById("main").addEventListener("click", e => {
   if (!dlg){
     dlg = document.createElement("dialog");
     dlg.id = "zoom";
-    dlg.innerHTML = `<img alt=""><button type="button" class="zoom-x">關閉</button>`;
+    dlg.innerHTML = `<img alt=""><div class="zoom-acts"></div><button type="button" class="zoom-x">關閉</button>`;
     dlg.addEventListener("click", ev => {
+      const del = ev.target.closest("[data-zdel]");
+      if (del){ dlg.close(); detachUserImage(del.dataset.zdel); return; }
       if (ev.target === dlg || ev.target.closest(".zoom-x")) dlg.close();
+    });
+    dlg.addEventListener("change", ev => {
+      const f = ev.target.closest("[data-zimg]");
+      if (f && f.files.length){ dlg.close(); attachUserImage(f.dataset.zimg, f.files[0]); }
     });
     document.body.appendChild(dlg);
   }
   dlg.querySelector("img").src = img.dataset.zoom;
+  /* 自己加的圖可以在這裡換一張或拿掉；Excel 給的圖不行 */
+  const uid = img.dataset.uimg;
+  dlg.querySelector(".zoom-acts").innerHTML = uid
+    ? `<label class="btn btn-route"><input type="file" accept="image/*" data-zimg="${esc(uid)}" hidden>📷 換一張</label>` +
+      `<button type="button" class="btn btn-route" data-zdel="${esc(uid)}">移除圖片</button>` : "";
   dlg.showModal();
 });
 
@@ -4408,13 +4463,8 @@ document.getElementById("main").addEventListener("click", e => {
     /* 種子項目記進 removed（重新產生網站後才不會跑回來），
        自己加的直接從 added 拿掉。 */
     const i = s.added.findIndex(a => a.id === id);
-    if (i >= 0){
-      if (s.added[i].uimg){
-        imgDB.del(id).catch(() => {});
-        URL.revokeObjectURL(userImgURL.get(id)); userImgURL.delete(id);
-      }
-      s.added.splice(i, 1);
-    }
+    if ((i >= 0 && s.added[i].uimg) || (s.edits[id] || {}).uimg) dropUserImage(id);   // 圖一起刪
+    if (i >= 0) s.added.splice(i, 1);
     else if (!s.removed.includes(id)) s.removed.push(id);
     delete s.edits[id];
   };
