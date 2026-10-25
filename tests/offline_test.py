@@ -826,6 +826,8 @@ def run(trip: str) -> bool:
             page.wait_for_timeout(800)
             mine = page.locator('.shop-g[data-group="藥妝店"] .shop-i', has_text="附圖的東西")
             src = lambda: mine.locator("img.shop-img").get_attribute("src") or ""
+            try: mine.locator("img.shop-img[src^='blob:']").wait_for(timeout=5000)
+            except Exception: pass
             # 圖是非同步從 IndexedDB 讀出來的，等它補上網址再檢查
             blob_ready = """() => [...document.querySelectorAll('img[data-uimg]')].some(i => i.src.startsWith('blob:'))"""
             try: page.wait_for_function(blob_ready, timeout=5000)
@@ -1110,7 +1112,7 @@ def run(trip: str) -> bool:
             bar = page.locator("#edit-bar")
             tabs = page.locator(".nav-item")
             prep = [i for i in range(tabs.count())
-                    if tabs.nth(i).inner_text().startswith("📝")]
+                    if tabs.nth(i).inner_text().strip().startswith("行前")]
             r.check("編輯列：行程有行前分頁", len(prep) == 1, f"{len(prep)} 個")
             tabs.nth(prep[0]).click()
             page.wait_for_timeout(300)
@@ -1428,7 +1430,8 @@ def run(trip: str) -> bool:
             # 隔天：從前一晚的住宿出發
             page.locator(".nav-item").nth(1).click(); page.wait_for_timeout(300)
             r.check("隔天：第一顆是前一晚的住宿（不編號），當天的點從 ① 開始",
-                    chips.all_inner_texts() == ["🏨 丁旅館", "① 戊站"]
+                    chips.all_inner_texts() == ["丁旅館", "① 戊站"]
+                    and chips.nth(0).locator("svg.ic use[href='#i-bed']").count() == 1
                     and "前一晚住宿" in (chips.nth(0).get_attribute("title") or ""), "／".join(chips.all_inner_texts()))
             r.check("隔天：路線從前一晚的住宿出發、晚上回到同一間（只列一顆）",
                     leg() == ("directions", "transit", D, D, E), str(leg()))
@@ -1534,7 +1537,7 @@ def run(trip: str) -> bool:
             hotel = page.locator("#main .card", has_text="測試飯店")
             r.check("私人資料：鎖著時兩張卡片各有一顆按鈕",
                     page.locator("#main .secret-ask").count() == 2)
-            r.check("私人資料：按鈕寫出這張卡片有什麼", "🔒 顯示門鎖密碼" in door.inner_text())
+            r.check("私人資料：按鈕寫出這張卡片有什麼", "顯示門鎖密碼" in door.inner_text())
             r.check("私人資料：鎖著時畫面上沒有內容", "SECRET-4821" not in main.inner_text())
 
             door.locator(".secret-ask").click()
@@ -1685,7 +1688,7 @@ def run(trip: str) -> bool:
                     const a = c.length > 3 ? c[3] : 1; if (a > 0) layers.push(c); if (a >= 1) break; }
                   let bg = [255, 255, 255]; for (const l of layers.reverse()) bg = over(l, bg); return bg; };
                 const name = e => (e.innerText || e.getAttribute("aria-label") || e.tagName).trim().slice(0, 20);
-                const out = { contrast: [], target: [], spacing: [], alt: [], heading: [], overflow: 0 };
+                const out = { contrast: [], target: [], spacing: [], alt: [], heading: [], emoji: [], overflow: 0 };
                 for (const e of document.querySelectorAll("body *")){
                   if (!vis(e)) continue;
                   const own = [...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim());
@@ -1712,10 +1715,15 @@ def run(trip: str) -> bool:
                 let last = 0;
                 for (const h of document.querySelectorAll("h1,h2,h3,h4,h5,h6")){ if (!vis(h)) continue;
                   const lv = +h.tagName[1]; if (lv > last + 1) out.heading.push(`${h.tagName} ${h.innerText.slice(0, 12)}`); last = lv; }
+                const tw = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+                for (let t; (t = tw.nextNode());){ const el = t.parentElement;
+                  if (!el || el.closest("#app-title, script, style") || !vis(el)) continue;
+                  const m = t.textContent.match(/\\p{Extended_Pictographic}/gu);
+                  if (m) out.emoji.push(`${m.join("")} ${t.textContent.trim().slice(0, 12)}`); }
                 out.overflow = document.documentElement.scrollWidth - document.documentElement.clientWidth;
                 return out;
             }"""
-            fails = {k: [] for k in ["contrast", "target", "spacing", "alt", "heading", "overflow"]}
+            fails = {k: [] for k in ["contrast", "target", "spacing", "alt", "heading", "emoji", "overflow"]}
             tabs = page.locator(".nav-item")
             for i in range(tabs.count()):
                 tab = tabs.nth(i).inner_text().split("\n")[0]
@@ -1723,12 +1731,13 @@ def run(trip: str) -> bool:
                 page.wait_for_timeout(300)
                 page.evaluate("document.querySelectorAll('#main details').forEach(d => d.open = true)")
                 got = page.evaluate(UX_PROBE)
-                for k in ["contrast", "target", "spacing", "alt", "heading"]:
+                for k in ["contrast", "target", "spacing", "alt", "heading", "emoji"]:
                     fails[k] += [f"{tab}：{x}" for x in got[k]]
                 if got["overflow"] > 0: fails["overflow"].append(f"{tab}：{got['overflow']}px")
             for k, label in [("contrast", "文字對比 ≥ 4.5:1（大字 3:1）"), ("target", "觸控目標 ≥ 44×44px"),
                              ("spacing", "觸控目標之間 ≥ 8px"), ("alt", "圖片都有替代文字"),
-                             ("heading", "標題層級不跳級"), ("overflow", "375px 不會橫向捲動")]:
+                             ("heading", "標題層級不跳級"), ("emoji", "介面不用 emoji 當圖示（網站標題除外）"),
+                             ("overflow", "375px 不會橫向捲動")]:
                 r.check(f"UI 規則：{label}", not fails[k], "；".join(sorted(set(fails[k]))[:4]) or "各分頁都過")
             ctx.close()
 

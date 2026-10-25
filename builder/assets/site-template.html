@@ -416,6 +416,11 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 .subject{ font-size:var(--fs-lg); font-weight:700; margin-bottom:var(--sp-1); }
 .lang-local{ font-size:var(--fs-sm); color:var(--c-text-dim); font-weight:400; margin-left:var(--sp-1); }
 .meta{ font-size:var(--fs-sm); color:var(--c-text-dim); margin-bottom:var(--sp-1); }
+/* 圖示：Phosphor regular 的 SVG，跟著文字的顏色與字級走，全站一個尺寸（1.15em） */
+.ic{ display:inline-block; width:1.15em; height:1.15em; flex:0 0 auto; vertical-align:-.2em; margin-right:.3em; fill:currentColor; }
+.fl-mid .ic, .shop-x .ic, .exp-del .ic, .wx-day .ic{ margin-right:0; }
+.daymap-open .ic{ margin:0 0 0 .3em; }
+.wx-emoji .ic{ width:2.6rem; height:2.6rem; margin:0; vertical-align:0; color:var(--c-on-accent); }
 /* 電話點了就撥，在店門口不用再抄號碼。外觀跟營業時間、費用那幾列一樣，只多一條虛線
    底線表示可以點。觸控目標照樣 44px：上下 padding 把點擊範圍撐大，再用等量的負 margin
    抵掉，版面不會因此多出一塊空白（ui-ux-pro-max：extend hit area beyond visual bounds） */
@@ -453,7 +458,7 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 }
 .intro.has-photo summary::after{
   content:""; position:absolute; inset:0; z-index:-1;
-  background:var(--photo) center/cover; opacity:.35;
+  background:var(--photo) center/cover; opacity:.25;   /* 照片最暗處 #BFBFBF，主題色字仍 ≥ 5.3:1 */
 }
 .intro.has-photo[open] summary::after{ opacity:0; }
 /* 展開後：照片鋪在整段介紹後面，最上面 --clear 那段照原樣看得清楚，往下刷上一層白，
@@ -846,6 +851,81 @@ footer > a{ display:inline-block; padding:14px 0; margin:-14px 0; }
 </style>
 </head>
 <body>
+<!-- 圖示：Phosphor Icons 2.1.1（regular），取代 emoji 當圖示（ui-ux-pro-max：no-emoji-icons）。
+     要加圖示：從 https://unpkg.com/@phosphor-icons/core@2.1.1/assets/regular/<名稱>.svg 取 path，
+     包成 <symbol id="i-名稱"> 放進來，程式裡用 ic("名稱")。
+
+MIT License
+
+Copyright (c) 2023 Phosphor Icons
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+-->
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+<symbol id="i-airplane-tilt" viewBox="0 0 256 256"><path d="M185.33,114.21l29.14-27.42.17-.17a32,32,0,0,0-45.26-45.26c0,.06-.11.11-.17.17L141.79,70.67l-83-30.2a8,8,0,0,0-8.39,1.86l-24,24a8,8,0,0,0,1.22,12.31l63.89,42.59L76.69,136H56a8,8,0,0,0-5.65,2.34l-24,24A8,8,0,0,0,29,175.42l36.82,14.73,14.7,36.75.06.16a8,8,0,0,0,13.18,2.47l23.87-23.88A8,8,0,0,0,120,200V179.31l14.76-14.76,42.59,63.89a8,8,0,0,0,12.31,1.22l24-24a8,8,0,0,0,1.86-8.39Zm-.07,97.23-42.59-63.88A8,8,0,0,0,136.8,144c-.27,0-.53,0-.79,0a8,8,0,0,0-5.66,2.35l-24,24A8,8,0,0,0,104,176v20.69L90.93,209.76,79.43,181A8,8,0,0,0,75,176.57l-28.74-11.5L59.32,152H80a8,8,0,0,0,5.66-2.34l24-24a8,8,0,0,0-1.22-12.32L44.56,70.74l13.5-13.49,83.22,30.26a8,8,0,0,0,8.56-2L180.78,52.6A16,16,0,0,1,203.4,75.23l-32.87,30.93a8,8,0,0,0-2,8.56l30.26,83.22Z"/></symbol>
+<symbol id="i-arrow-square-out" viewBox="0 0 256 256"><path d="M224,104a8,8,0,0,1-16,0V59.32l-66.33,66.34a8,8,0,0,1-11.32-11.32L196.68,48H152a8,8,0,0,1,0-16h64a8,8,0,0,1,8,8Zm-40,24a8,8,0,0,0-8,8v72H48V80h72a8,8,0,0,0,0-16H48A16,16,0,0,0,32,80V208a16,16,0,0,0,16,16H176a16,16,0,0,0,16-16V136A8,8,0,0,0,184,128Z"/></symbol>
+<symbol id="i-arrows-clockwise" viewBox="0 0 256 256"><path d="M224,48V96a8,8,0,0,1-8,8H168a8,8,0,0,1,0-16h28.69L182.06,73.37a79.56,79.56,0,0,0-56.13-23.43h-.45A79.52,79.52,0,0,0,69.59,72.71,8,8,0,0,1,58.41,61.27a96,96,0,0,1,135,.79L208,76.69V48a8,8,0,0,1,16,0ZM186.41,183.29a80,80,0,0,1-112.47-.66L59.31,168H88a8,8,0,0,0,0-16H40a8,8,0,0,0-8,8v48a8,8,0,0,0,16,0V179.31l14.63,14.63A95.43,95.43,0,0,0,130,222.06h.53a95.36,95.36,0,0,0,67.07-27.33,8,8,0,0,0-11.18-11.44Z"/></symbol>
+<symbol id="i-bed" viewBox="0 0 256 256"><path d="M216,72H32V48a8,8,0,0,0-16,0V208a8,8,0,0,0,16,0V176H240v32a8,8,0,0,0,16,0V112A40,40,0,0,0,216,72ZM32,88h72v72H32Zm88,72V88h96a24,24,0,0,1,24,24v48Z"/></symbol>
+<symbol id="i-bicycle" viewBox="0 0 256 256"><path d="M208,112a47.81,47.81,0,0,0-16.93,3.09L165.93,72H192a8,8,0,0,1,8,8,8,8,0,0,0,16,0,24,24,0,0,0-24-24H152a8,8,0,0,0-6.91,12l11.65,20H99.26L82.91,60A8,8,0,0,0,76,56H48a8,8,0,0,0,0,16H71.41L85.12,95.51,69.41,117.06a48.13,48.13,0,1,0,12.92,9.44l11.59-15.9L125.09,164A8,8,0,1,0,138.91,156l-30.32-52h57.48l11.19,19.17A48,48,0,1,0,208,112ZM80,160a32,32,0,1,1-20.21-29.74l-18.25,25a8,8,0,1,0,12.92,9.42l18.25-25A31.88,31.88,0,0,1,80,160Zm128,32a32,32,0,0,1-22.51-54.72L201.09,164A8,8,0,1,0,214.91,156L199.3,129.21A32,32,0,1,1,208,192Z"/></symbol>
+<symbol id="i-calendar-check" viewBox="0 0 256 256"><path d="M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM72,48v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V80H48V48ZM208,208H48V96H208V208Zm-38.34-85.66a8,8,0,0,1,0,11.32l-48,48a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L116,164.69l42.34-42.35A8,8,0,0,1,169.66,122.34Z"/></symbol>
+<symbol id="i-camera" viewBox="0 0 256 256"><path d="M208,56H180.28L166.65,35.56A8,8,0,0,0,160,32H96a8,8,0,0,0-6.65,3.56L75.71,56H48A24,24,0,0,0,24,80V192a24,24,0,0,0,24,24H208a24,24,0,0,0,24-24V80A24,24,0,0,0,208,56Zm8,136a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V80a8,8,0,0,1,8-8H80a8,8,0,0,0,6.66-3.56L100.28,48h55.43l13.63,20.44A8,8,0,0,0,176,72h32a8,8,0,0,1,8,8ZM128,88a44,44,0,1,0,44,44A44.05,44.05,0,0,0,128,88Zm0,72a28,28,0,1,1,28-28A28,28,0,0,1,128,160Z"/></symbol>
+<symbol id="i-car" viewBox="0 0 256 256"><path d="M240,104H229.2L201.42,41.5A16,16,0,0,0,186.8,32H69.2a16,16,0,0,0-14.62,9.5L26.8,104H16a8,8,0,0,0,0,16h8v80a16,16,0,0,0,16,16H64a16,16,0,0,0,16-16V184h96v16a16,16,0,0,0,16,16h24a16,16,0,0,0,16-16V120h8a8,8,0,0,0,0-16ZM69.2,48H186.8l24.89,56H44.31ZM64,200H40V184H64Zm128,0V184h24v16Zm24-32H40V120H216ZM56,144a8,8,0,0,1,8-8H80a8,8,0,0,1,0,16H64A8,8,0,0,1,56,144Zm112,0a8,8,0,0,1,8-8h16a8,8,0,0,1,0,16H176A8,8,0,0,1,168,144Z"/></symbol>
+<symbol id="i-chart-bar" viewBox="0 0 256 256"><path d="M224,200h-8V40a8,8,0,0,0-8-8H152a8,8,0,0,0-8,8V80H96a8,8,0,0,0-8,8v40H48a8,8,0,0,0-8,8v64H32a8,8,0,0,0,0,16H224a8,8,0,0,0,0-16ZM160,48h40V200H160ZM104,96h40V200H104ZM56,144H88v56H56Z"/></symbol>
+<symbol id="i-chat-circle-dots" viewBox="0 0 256 256"><path d="M140,128a12,12,0,1,1-12-12A12,12,0,0,1,140,128ZM84,116a12,12,0,1,0,12,12A12,12,0,0,0,84,116Zm88,0a12,12,0,1,0,12,12A12,12,0,0,0,172,116Zm60,12A104,104,0,0,1,79.12,219.82L45.07,231.17a16,16,0,0,1-20.24-20.24l11.35-34.05A104,104,0,1,1,232,128Zm-16,0A88,88,0,1,0,51.81,172.06a8,8,0,0,1,.66,6.54L40,216,77.4,203.53a7.85,7.85,0,0,1,2.53-.42,8,8,0,0,1,4,1.08A88,88,0,0,0,216,128Z"/></symbol>
+<symbol id="i-clock" viewBox="0 0 256 256"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm64-88a8,8,0,0,1-8,8H128a8,8,0,0,1-8-8V72a8,8,0,0,1,16,0v48h48A8,8,0,0,1,192,128Z"/></symbol>
+<symbol id="i-cloud" viewBox="0 0 256 256"><path d="M160,40A88.09,88.09,0,0,0,81.29,88.67,64,64,0,1,0,72,216h88a88,88,0,0,0,0-176Zm0,160H72a48,48,0,0,1,0-96c1.1,0,2.2,0,3.29.11A88,88,0,0,0,72,128a8,8,0,0,0,16,0,72,72,0,1,1,72,72Z"/></symbol>
+<symbol id="i-cloud-fog" viewBox="0 0 256 256"><path d="M120,208H72a8,8,0,0,1,0-16h48a8,8,0,0,1,0,16Zm64-16H160a8,8,0,0,0,0,16h24a8,8,0,0,0,0-16Zm-24,32H104a8,8,0,0,0,0,16h56a8,8,0,0,0,0-16Zm72-124a76.08,76.08,0,0,1-76,76H76A52,52,0,0,1,76,72a53.26,53.26,0,0,1,8.92.76A76.08,76.08,0,0,1,232,100Zm-16,0A60.06,60.06,0,0,0,96,96.46a8,8,0,0,1-16-.92q.21-3.66.77-7.23A38.11,38.11,0,0,0,76,88a36,36,0,0,0,0,72h80A60.07,60.07,0,0,0,216,100Z"/></symbol>
+<symbol id="i-cloud-lightning" viewBox="0 0 256 256"><path d="M156,16A76.2,76.2,0,0,0,84.92,64.76,53.26,53.26,0,0,0,76,64a52,52,0,0,0,0,104h37.87L97.14,195.88A8,8,0,0,0,104,208h25.87l-16.73,27.88a8,8,0,0,0,13.72,8.24l24-40A8,8,0,0,0,144,192H118.13l14.4-24H156a76,76,0,0,0,0-152Zm0,136H76a36,36,0,0,1,0-72,38.11,38.11,0,0,1,4.78.31q-.56,3.57-.77,7.23a8,8,0,0,0,16,.92A60.06,60.06,0,1,1,156,152Z"/></symbol>
+<symbol id="i-cloud-rain" viewBox="0 0 256 256"><path d="M158.66,196.44l-32,48a8,8,0,1,1-13.32-8.88l32-48a8,8,0,0,1,13.32,8.88ZM232,92a76.08,76.08,0,0,1-76,76H132.28l-29.62,44.44a8,8,0,1,1-13.32-8.88L113.05,168H76A52,52,0,0,1,76,64a53.26,53.26,0,0,1,8.92.76A76.08,76.08,0,0,1,232,92Zm-16,0A60.06,60.06,0,0,0,96,88.46a8,8,0,0,1-16-.92q.21-3.66.77-7.23A38.11,38.11,0,0,0,76,80a36,36,0,0,0,0,72h80A60.07,60.07,0,0,0,216,92Z"/></symbol>
+<symbol id="i-cloud-snow" viewBox="0 0 256 256"><path d="M88,196a12,12,0,1,1-12-12A12,12,0,0,1,88,196Zm28,4a12,12,0,1,0,12,12A12,12,0,0,0,116,200Zm48-16a12,12,0,1,0,12,12A12,12,0,0,0,164,184ZM68,224a12,12,0,1,0,12,12A12,12,0,0,0,68,224Zm88,0a12,12,0,1,0,12,12A12,12,0,0,0,156,224ZM232,92a76.08,76.08,0,0,1-76,76H76A52,52,0,0,1,76,64a53.26,53.26,0,0,1,8.92.76A76.08,76.08,0,0,1,232,92Zm-16,0A60.06,60.06,0,0,0,96,88.46a8,8,0,0,1-16-.92q.21-3.66.77-7.23A38.11,38.11,0,0,0,76,80a36,36,0,0,0,0,72h80A60.07,60.07,0,0,0,216,92Z"/></symbol>
+<symbol id="i-cloud-sun" viewBox="0 0 256 256"><path d="M164,72a76.2,76.2,0,0,0-20.26,2.73,55.63,55.63,0,0,0-9.41-11.54l9.51-13.57a8,8,0,1,0-13.11-9.18L121.22,54A55.9,55.9,0,0,0,96,48c-.58,0-1.16,0-1.74,0L91.37,31.71a8,8,0,1,0-15.75,2.77L78.5,50.82A56.1,56.1,0,0,0,55.23,65.67L41.61,56.14a8,8,0,1,0-9.17,13.11L46,78.77A55.55,55.55,0,0,0,40,104c0,.57,0,1.15,0,1.72L23.71,108.6a8,8,0,0,0,1.38,15.88,8.24,8.24,0,0,0,1.39-.12l16.32-2.88a55.74,55.74,0,0,0,5.86,12.42A52,52,0,0,0,84,224h80a76,76,0,0,0,0-152ZM56,104a40,40,0,0,1,72.54-23.24,76.26,76.26,0,0,0-35.62,40,52.14,52.14,0,0,0-31,4.17A40,40,0,0,1,56,104ZM164,208H84a36,36,0,1,1,4.78-71.69c-.37,2.37-.63,4.79-.77,7.23a8,8,0,0,0,16,.92,58.91,58.91,0,0,1,1.88-11.81c0-.16.09-.32.12-.48A60.06,60.06,0,1,1,164,208Z"/></symbol>
+<symbol id="i-compass" viewBox="0 0 256 256"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216ZM172.42,72.84l-64,32a8.05,8.05,0,0,0-3.58,3.58l-32,64A8,8,0,0,0,80,184a8.1,8.1,0,0,0,3.58-.84l64-32a8.05,8.05,0,0,0,3.58-3.58l32-64a8,8,0,0,0-10.74-10.74ZM138,138,97.89,158.11,118,118l40.15-20.07Z"/></symbol>
+<symbol id="i-credit-card" viewBox="0 0 256 256"><path d="M224,48H32A16,16,0,0,0,16,64V192a16,16,0,0,0,16,16H224a16,16,0,0,0,16-16V64A16,16,0,0,0,224,48Zm0,16V88H32V64Zm0,128H32V104H224v88Zm-16-24a8,8,0,0,1-8,8H168a8,8,0,0,1,0-16h32A8,8,0,0,1,208,168Zm-64,0a8,8,0,0,1-8,8H120a8,8,0,0,1,0-16h16A8,8,0,0,1,144,168Z"/></symbol>
+<symbol id="i-currency-jpy" viewBox="0 0 256 256"><path d="M206.19,53.07,144.88,128H176a8,8,0,0,1,0,16H136v16h40a8,8,0,0,1,0,16H136v40a8,8,0,0,1-16,0V176H80a8,8,0,0,1,0-16h40V144H80a8,8,0,0,1,0-16h31.12L49.81,53.07A8,8,0,0,1,62.19,42.93L128,123.37l65.81-80.44a8,8,0,1,1,12.38,10.14Z"/></symbol>
+<symbol id="i-download-simple" viewBox="0 0 256 256"><path d="M224,144v64a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V144a8,8,0,0,1,16,0v56H208V144a8,8,0,0,1,16,0Zm-101.66,5.66a8,8,0,0,0,11.32,0l40-40a8,8,0,0,0-11.32-11.32L136,124.69V32a8,8,0,0,0-16,0v92.69L93.66,98.34a8,8,0,0,0-11.32,11.32Z"/></symbol>
+<symbol id="i-first-aid" viewBox="0 0 256 256"><path d="M216,88H168V40a16,16,0,0,0-16-16H104A16,16,0,0,0,88,40V88H40a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16H88v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V168h48a16,16,0,0,0,16-16V104A16,16,0,0,0,216,88Zm0,64H160a8,8,0,0,0-8,8v56H104V160a8,8,0,0,0-8-8H40V104H96a8,8,0,0,0,8-8V40h48V96a8,8,0,0,0,8,8h56Z"/></symbol>
+<symbol id="i-fork-knife" viewBox="0 0 256 256"><path d="M72,88V40a8,8,0,0,1,16,0V88a8,8,0,0,1-16,0ZM216,40V224a8,8,0,0,1-16,0V176H152a8,8,0,0,1-8-8,268.75,268.75,0,0,1,7.22-56.88c9.78-40.49,28.32-67.63,53.63-78.47A8,8,0,0,1,216,40ZM200,53.9c-32.17,24.57-38.47,84.42-39.7,106.1H200ZM119.89,38.69a8,8,0,1,0-15.78,2.63L112,88.63a32,32,0,0,1-64,0l7.88-47.31a8,8,0,1,0-15.78-2.63l-8,48A8.17,8.17,0,0,0,32,88a48.07,48.07,0,0,0,40,47.32V224a8,8,0,0,0,16,0V135.32A48.07,48.07,0,0,0,128,88a8.17,8.17,0,0,0-.11-1.31Z"/></symbol>
+<symbol id="i-globe" viewBox="0 0 256 256"><path d="M128,24h0A104,104,0,1,0,232,128,104.12,104.12,0,0,0,128,24Zm88,104a87.61,87.61,0,0,1-3.33,24H174.16a157.44,157.44,0,0,0,0-48h38.51A87.61,87.61,0,0,1,216,128ZM102,168H154a115.11,115.11,0,0,1-26,45A115.27,115.27,0,0,1,102,168Zm-3.9-16a140.84,140.84,0,0,1,0-48h59.88a140.84,140.84,0,0,1,0,48ZM40,128a87.61,87.61,0,0,1,3.33-24H81.84a157.44,157.44,0,0,0,0,48H43.33A87.61,87.61,0,0,1,40,128ZM154,88H102a115.11,115.11,0,0,1,26-45A115.27,115.27,0,0,1,154,88Zm52.33,0H170.71a135.28,135.28,0,0,0-22.3-45.6A88.29,88.29,0,0,1,206.37,88ZM107.59,42.4A135.28,135.28,0,0,0,85.29,88H49.63A88.29,88.29,0,0,1,107.59,42.4ZM49.63,168H85.29a135.28,135.28,0,0,0,22.3,45.6A88.29,88.29,0,0,1,49.63,168Zm98.78,45.6a135.28,135.28,0,0,0,22.3-45.6h35.66A88.29,88.29,0,0,1,148.41,213.6Z"/></symbol>
+<symbol id="i-hand-pointing" viewBox="0 0 256 256"><path d="M196,88a27.86,27.86,0,0,0-13.35,3.39A28,28,0,0,0,144,74.7V44a28,28,0,0,0-56,0v80l-3.82-6.13A28,28,0,0,0,35.73,146l4.67,8.23C74.81,214.89,89.05,240,136,240a88.1,88.1,0,0,0,88-88V116A28,28,0,0,0,196,88Zm12,64a72.08,72.08,0,0,1-72,72c-37.63,0-47.84-18-81.68-77.68l-4.69-8.27,0-.05A12,12,0,0,1,54,121.61a11.88,11.88,0,0,1,6-1.6,12,12,0,0,1,10.41,6,1.76,1.76,0,0,0,.14.23l18.67,30A8,8,0,0,0,104,152V44a12,12,0,0,1,24,0v68a8,8,0,0,0,16,0V100a12,12,0,0,1,24,0v20a8,8,0,0,0,16,0v-4a12,12,0,0,1,24,0Z"/></symbol>
+<symbol id="i-hourglass-medium" viewBox="0 0 256 256"><path d="M200,75.64V40a16,16,0,0,0-16-16H72A16,16,0,0,0,56,40V76a16.07,16.07,0,0,0,6.4,12.8L114.67,128,62.4,167.2A16.07,16.07,0,0,0,56,180v36a16,16,0,0,0,16,16H184a16,16,0,0,0,16-16V180.36a16.09,16.09,0,0,0-6.35-12.77L141.27,128l52.38-39.6A16.05,16.05,0,0,0,200,75.64ZM72,40H184V75.64L178.23,80H77.33L72,76Zm56,78L98.67,96h58.4Zm56,98H72V180l48-36v24a8,8,0,0,0,16,0V144.08l48,36.28Z"/></symbol>
+<symbol id="i-house" viewBox="0 0 256 256"><path d="M219.31,108.68l-80-80a16,16,0,0,0-22.62,0l-80,80A15.87,15.87,0,0,0,32,120v96a8,8,0,0,0,8,8h64a8,8,0,0,0,8-8V160h32v56a8,8,0,0,0,8,8h64a8,8,0,0,0,8-8V120A15.87,15.87,0,0,0,219.31,108.68ZM208,208H160V152a8,8,0,0,0-8-8H104a8,8,0,0,0-8,8v56H48V120l80-80,80,80Z"/></symbol>
+<symbol id="i-info" viewBox="0 0 256 256"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm16-40a8,8,0,0,1-8,8,16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40A8,8,0,0,1,144,176ZM112,84a12,12,0,1,1,12,12A12,12,0,0,1,112,84Z"/></symbol>
+<symbol id="i-lock-simple" viewBox="0 0 256 256"><path d="M208,80H176V56a48,48,0,0,0-96,0V80H48A16,16,0,0,0,32,96V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V96A16,16,0,0,0,208,80ZM96,56a32,32,0,0,1,64,0V80H96ZM208,208H48V96H208V208Z"/></symbol>
+<symbol id="i-map-pin" viewBox="0 0 256 256"><path d="M128,64a40,40,0,1,0,40,40A40,40,0,0,0,128,64Zm0,64a24,24,0,1,1,24-24A24,24,0,0,1,128,128Zm0-112a88.1,88.1,0,0,0-88,88c0,31.4,14.51,64.68,42,96.25a254.19,254.19,0,0,0,41.45,38.3,8,8,0,0,0,9.18,0A254.19,254.19,0,0,0,174,200.25c27.45-31.57,42-64.85,42-96.25A88.1,88.1,0,0,0,128,16Zm0,206c-16.53-13-72-60.75-72-118a72,72,0,0,1,144,0C200,161.23,144.53,209,128,222Z"/></symbol>
+<symbol id="i-map-trifold" viewBox="0 0 256 256"><path d="M228.92,49.69a8,8,0,0,0-6.86-1.45L160.93,63.52,99.58,32.84a8,8,0,0,0-5.52-.6l-64,16A8,8,0,0,0,24,56V200a8,8,0,0,0,9.94,7.76l61.13-15.28,61.35,30.68A8.15,8.15,0,0,0,160,224a8,8,0,0,0,1.94-.24l64-16A8,8,0,0,0,232,200V56A8,8,0,0,0,228.92,49.69ZM104,52.94l48,24V203.06l-48-24ZM40,62.25l48-12v127.5l-48,12Zm176,131.5-48,12V78.25l48-12Z"/></symbol>
+<symbol id="i-note-pencil" viewBox="0 0 256 256"><path d="M229.66,58.34l-32-32a8,8,0,0,0-11.32,0l-96,96A8,8,0,0,0,88,128v32a8,8,0,0,0,8,8h32a8,8,0,0,0,5.66-2.34l96-96A8,8,0,0,0,229.66,58.34ZM124.69,152H104V131.31l64-64L188.69,88ZM200,76.69,179.31,56,192,43.31,212.69,64ZM224,128v80a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V48A16,16,0,0,1,48,32h80a8,8,0,0,1,0,16H48V208H208V128a8,8,0,0,1,16,0Z"/></symbol>
+<symbol id="i-pencil-simple" viewBox="0 0 256 256"><path d="M227.31,73.37,182.63,28.68a16,16,0,0,0-22.63,0L36.69,152A15.86,15.86,0,0,0,32,163.31V208a16,16,0,0,0,16,16H92.69A15.86,15.86,0,0,0,104,219.31L227.31,96a16,16,0,0,0,0-22.63ZM92.69,208H48V163.31l88-88L180.69,120ZM192,108.68,147.31,64l24-24L216,84.68Z"/></symbol>
+<symbol id="i-person-simple-walk" viewBox="0 0 256 256"><path d="M152,80a32,32,0,1,0-32-32A32,32,0,0,0,152,80Zm0-48a16,16,0,1,1-16,16A16,16,0,0,1,152,32Zm64,112a8,8,0,0,1-8,8c-35.31,0-52.95-17.81-67.12-32.12-2.74-2.77-5.36-5.4-8-7.84l-13.43,30.88,37.2,26.57A8,8,0,0,1,160,176v56a8,8,0,0,1-16,0V180.12l-31.07-22.2L79.34,235.19A8,8,0,0,1,72,240a7.84,7.84,0,0,1-3.19-.67,8,8,0,0,1-4.15-10.52l54.08-124.37c-9.31-1.65-20.92,1.2-34.7,8.58a163.88,163.88,0,0,0-30.57,21.77,8,8,0,0,1-10.95-11.66c2.5-2.35,61.69-57.23,98.72-25.08,3.83,3.32,7.48,7,11,10.57C166.19,122.7,179.36,136,208,136A8,8,0,0,1,216,144Z"/></symbol>
+<symbol id="i-phone" viewBox="0 0 256 256"><path d="M222.37,158.46l-47.11-21.11-.13-.06a16,16,0,0,0-15.17,1.4,8.12,8.12,0,0,0-.75.56L134.87,160c-15.42-7.49-31.34-23.29-38.83-38.51l20.78-24.71c.2-.25.39-.5.57-.77a16,16,0,0,0,1.32-15.06l0-.12L97.54,33.64a16,16,0,0,0-16.62-9.52A56.26,56.26,0,0,0,32,80c0,79.4,64.6,144,144,144a56.26,56.26,0,0,0,55.88-48.92A16,16,0,0,0,222.37,158.46ZM176,208A128.14,128.14,0,0,1,48,80,40.2,40.2,0,0,1,82.87,40a.61.61,0,0,0,0,.12l21,47L83.2,111.86a6.13,6.13,0,0,0-.57.77,16,16,0,0,0-1,15.7c9.06,18.53,27.73,37.06,46.46,46.11a16,16,0,0,0,15.75-1.14,8.44,8.44,0,0,0,.74-.56L168.89,152l47,21.05h0s.08,0,.11,0A40.21,40.21,0,0,1,176,208Z"/></symbol>
+<symbol id="i-receipt" viewBox="0 0 256 256"><path d="M72,104a8,8,0,0,1,8-8h96a8,8,0,0,1,0,16H80A8,8,0,0,1,72,104Zm8,40h96a8,8,0,0,0,0-16H80a8,8,0,0,0,0,16ZM232,56V208a8,8,0,0,1-11.58,7.15L192,200.94l-28.42,14.21a8,8,0,0,1-7.16,0L128,200.94,99.58,215.15a8,8,0,0,1-7.16,0L64,200.94,35.58,215.15A8,8,0,0,1,24,208V56A16,16,0,0,1,40,40H216A16,16,0,0,1,232,56Zm-16,0H40V195.06l20.42-10.22a8,8,0,0,1,7.16,0L96,199.06l28.42-14.22a8,8,0,0,1,7.16,0L160,199.06l28.42-14.22a8,8,0,0,1,7.16,0L216,195.06Z"/></symbol>
+<symbol id="i-shopping-bag" viewBox="0 0 256 256"><path d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40Zm0,160H40V56H216V200ZM176,88a48,48,0,0,1-96,0,8,8,0,0,1,16,0,32,32,0,0,0,64,0,8,8,0,0,1,16,0Z"/></symbol>
+<symbol id="i-snowflake" viewBox="0 0 256 256"><path d="M223.77,150.09a8,8,0,0,1-5.86,9.68l-24.64,6,6.46,24.11a8,8,0,0,1-5.66,9.8A8.25,8.25,0,0,1,192,200a8,8,0,0,1-7.72-5.93l-7.72-28.8L136,141.86v46.83l21.66,21.65a8,8,0,0,1-11.32,11.32L128,203.31l-18.34,18.35a8,8,0,0,1-11.32-11.32L120,188.69V141.86L79.45,165.27l-7.72,28.8A8,8,0,0,1,64,200a8.25,8.25,0,0,1-2.08-.27,8,8,0,0,1-5.66-9.8l6.46-24.11-24.64-6a8,8,0,0,1,3.82-15.54l29.45,7.23L112,128,71.36,104.54l-29.45,7.23A7.85,7.85,0,0,1,40,112a8,8,0,0,1-1.91-15.77l24.64-6L56.27,66.07a8,8,0,0,1,15.46-4.14l7.72,28.8L120,114.14V67.31L98.34,45.66a8,8,0,0,1,11.32-11.32L128,52.69l18.34-18.35a8,8,0,0,1,11.32,11.32L136,67.31v46.83l40.55-23.41,7.72-28.8a8,8,0,0,1,15.46,4.14l-6.46,24.11,24.64,6A8,8,0,0,1,216,112a7.85,7.85,0,0,1-1.91-.23l-29.45-7.23L144,128l40.64,23.46,29.45-7.23A8,8,0,0,1,223.77,150.09Z"/></symbol>
+<symbol id="i-subway" viewBox="0 0 256 256"><path d="M224,96V208a8,8,0,0,1-16,0V96a56.06,56.06,0,0,0-56-56H104A56.06,56.06,0,0,0,48,96V208a8,8,0,0,1-16,0V96a72.08,72.08,0,0,1,72-72h48A72.08,72.08,0,0,1,224,96Zm-40,0v72a24,24,0,0,1-19.29,23.53l2.45,4.89a8,8,0,0,1-14.32,7.16L147.06,192H108.94l-5.78,11.58a8,8,0,0,1-14.32-7.16l2.45-4.89A24,24,0,0,1,72,168V96A24,24,0,0,1,96,72h64A24,24,0,0,1,184,96ZM88,96v48h80V96a8,8,0,0,0-8-8H96A8,8,0,0,0,88,96Zm32,64v16h16V160ZM96,176h8V160H88v8A8,8,0,0,0,96,176Zm72-8v-8H152v16h8A8,8,0,0,0,168,168Z"/></symbol>
+<symbol id="i-sun" viewBox="0 0 256 256"><path d="M120,40V16a8,8,0,0,1,16,0V40a8,8,0,0,1-16,0Zm72,88a64,64,0,1,1-64-64A64.07,64.07,0,0,1,192,128Zm-16,0a48,48,0,1,0-48,48A48.05,48.05,0,0,0,176,128ZM58.34,69.66A8,8,0,0,0,69.66,58.34l-16-16A8,8,0,0,0,42.34,53.66Zm0,116.68-16,16a8,8,0,0,0,11.32,11.32l16-16a8,8,0,0,0-11.32-11.32ZM192,72a8,8,0,0,0,5.66-2.34l16-16a8,8,0,0,0-11.32-11.32l-16,16A8,8,0,0,0,192,72Zm5.66,114.34a8,8,0,0,0-11.32,11.32l16,16a8,8,0,0,0,11.32-11.32ZM48,128a8,8,0,0,0-8-8H16a8,8,0,0,0,0,16H40A8,8,0,0,0,48,128Zm80,80a8,8,0,0,0-8,8v24a8,8,0,0,0,16,0V216A8,8,0,0,0,128,208Zm112-88H216a8,8,0,0,0,0,16h24a8,8,0,0,0,0-16Z"/></symbol>
+<symbol id="i-thermometer" viewBox="0 0 256 256"><path d="M212,56a28,28,0,1,0,28,28A28,28,0,0,0,212,56Zm0,40a12,12,0,1,1,12-12A12,12,0,0,1,212,96Zm-84,57V88a8,8,0,0,0-16,0v65a32,32,0,1,0,16,0Zm-8,47a16,16,0,1,1,16-16A16,16,0,0,1,120,200Zm40-66V48a40,40,0,0,0-80,0v86a64,64,0,1,0,80,0Zm-40,98a48,48,0,0,1-27.42-87.4A8,8,0,0,0,96,138V48a24,24,0,0,1,48,0v90a8,8,0,0,0,3.42,6.56A48,48,0,0,1,120,232Z"/></symbol>
+<symbol id="i-ticket" viewBox="0 0 256 256"><path d="M232,104a8,8,0,0,0,8-8V64a16,16,0,0,0-16-16H32A16,16,0,0,0,16,64V96a8,8,0,0,0,8,8,24,24,0,0,1,0,48,8,8,0,0,0-8,8v32a16,16,0,0,0,16,16H224a16,16,0,0,0,16-16V160a8,8,0,0,0-8-8,24,24,0,0,1,0-48ZM32,167.2a40,40,0,0,0,0-78.4V64H88V192H32Zm192,0V192H104V64H224V88.8a40,40,0,0,0,0,78.4Z"/></symbol>
+<symbol id="i-timer" viewBox="0 0 256 256"><path d="M128,40a96,96,0,1,0,96,96A96.11,96.11,0,0,0,128,40Zm0,176a80,80,0,1,1,80-80A80.09,80.09,0,0,1,128,216ZM173.66,90.34a8,8,0,0,1,0,11.32l-40,40a8,8,0,0,1-11.32-11.32l40-40A8,8,0,0,1,173.66,90.34ZM96,16a8,8,0,0,1,8-8h48a8,8,0,0,1,0,16H104A8,8,0,0,1,96,16Z"/></symbol>
+<symbol id="i-train" viewBox="0 0 256 256"><path d="M184,24H72A32,32,0,0,0,40,56V184a32,32,0,0,0,32,32h8L65.6,235.2a8,8,0,1,0,12.8,9.6L100,216h56l21.6,28.8a8,8,0,1,0,12.8-9.6L176,216h8a32,32,0,0,0,32-32V56A32,32,0,0,0,184,24ZM56,120V80h64v40Zm80-40h64v40H136ZM72,40H184a16,16,0,0,1,16,16v8H56V56A16,16,0,0,1,72,40ZM184,200H72a16,16,0,0,1-16-16V136H200v48A16,16,0,0,1,184,200ZM96,172a12,12,0,1,1-12-12A12,12,0,0,1,96,172Zm88,0a12,12,0,1,1-12-12A12,12,0,0,1,184,172Z"/></symbol>
+<symbol id="i-wallet" viewBox="0 0 256 256"><path d="M216,64H56a8,8,0,0,1,0-16H192a8,8,0,0,0,0-16H56A24,24,0,0,0,32,56V184a24,24,0,0,0,24,24H216a16,16,0,0,0,16-16V80A16,16,0,0,0,216,64Zm0,128H56a8,8,0,0,1-8-8V78.63A23.84,23.84,0,0,0,56,80H216Zm-48-60a12,12,0,1,1,12,12A12,12,0,0,1,168,132Z"/></symbol>
+<symbol id="i-warning" viewBox="0 0 256 256"><path d="M236.8,188.09,149.35,36.22h0a24.76,24.76,0,0,0-42.7,0L19.2,188.09a23.51,23.51,0,0,0,0,23.72A24.35,24.35,0,0,0,40.55,224h174.9a24.35,24.35,0,0,0,21.33-12.19A23.51,23.51,0,0,0,236.8,188.09ZM222.93,203.8a8.5,8.5,0,0,1-7.48,4.2H40.55a8.5,8.5,0,0,1-7.48-4.2,7.59,7.59,0,0,1,0-7.72L120.52,44.21a8.75,8.75,0,0,1,15,0l87.45,151.87A7.59,7.59,0,0,1,222.93,203.8ZM120,144V104a8,8,0,0,1,16,0v40a8,8,0,0,1-16,0Zm20,36a12,12,0,1,1-12-12A12,12,0,0,1,140,180Z"/></symbol>
+<symbol id="i-x" viewBox="0 0 256 256"><path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"/></symbol>
+</svg>
 
 <div class="sync" id="sync" data-s="local">單機模式</div>
 <div class="app">
@@ -997,16 +1077,35 @@ function setSync(s, text){ syncEl.dataset.s = s; syncEl.textContent = text; }
 
 /* ── 渲染分派 ── */
 const linksHTML = (links=[]) => links.map(l =>
-  `<a class="btn btn-${esc(l.style||"plain")}" href="${esc(l.url)}" target="_blank" rel="noopener">${esc(l.label)}</a>`
+  `<a class="btn btn-${esc(l.style||"plain")}" href="${esc(l.url)}" target="_blank" rel="noopener">${iconText(l.label)}</a>`
 ).join("");
 const localSpan = t => t ? `<span class="lang-local">${esc(t)}</span>` : "";
+/* 圖示：頁首的 Phosphor 圖示表（i-名稱）。旁邊都有文字，所以對輔助技術隱藏；
+   只有圖示的按鈕（✕）由按鈕自己的 aria-label 提供名稱 */
+const ic = name => `<svg class="ic" aria-hidden="true" focusable="false"><use href="#i-${name}"/></svg>`;
+/* 資料裡（Excel、builder 產生的按鈕文字、說明開頭、分頁名稱）常用 emoji 當圖示。
+   開頭那一個換成對應的 SVG，對不到的直接拿掉——介面上不留 emoji 圖示（ui-ux-pro-max）。
+   資料本身不動，Excel 往返也不受影響。 */
+const EMOJI_IC = {
+  "🗺":"map-trifold", "📍":"map-pin", "🚗":"car", "🚶":"person-simple-walk", "🚆":"train", "🚇":"subway",
+  "🚲":"bicycle", "✈":"airplane-tilt", "🏨":"bed", "🏠":"house", "📅":"calendar-check", "🎟":"ticket",
+  "👉":"hand-pointing", "⚠":"warning", "📝":"note-pencil", "🛍":"shopping-bag", "💰":"wallet", "ℹ":"info",
+  "💳":"credit-card", "🧾":"receipt", "🕘":"clock", "💴":"currency-jpy", "☎":"phone", "⏳":"hourglass-medium",
+  "⏱":"timer", "🧭":"compass", "🍽":"fork-knife", "🔒":"lock-simple", "📷":"camera", "🌡":"thermometer",
+  "💬":"chat-circle-dots", "🆘":"first-aid", "📥":"download-simple", "📊":"chart-bar", "✏":"pencil-simple",
+  "🔄":"arrows-clockwise", "🌐":"globe"
+};
+const iconText = t => {
+  const s = String(t ?? ""), m = s.match(/^(\p{Extended_Pictographic})\uFE0F?\s*/u);
+  return m ? (EMOJI_IC[m[1]] ? ic(EMOJI_IC[m[1]]) : "") + esc(s.slice(m[0].length)) : esc(s);
+};
 /* 二選一的標題常在最後帶一段括號補充（「也可以…」「先回住處…」），字小一點，主標題才突出 */
 const subjectHTML = t => {
   const m = String(t ?? "").match(/^(.+?)(（[^（）]+）)$/);
   return m ? `${esc(m[1])}<span class="subject-note">${esc(m[2])}</span>` : esc(t);
 };
 const notesHTML = n => (n && n.length)
-  ? `<div class="note-box">${n.map(x=>esc(x)).join("<br>")}</div>` : "";
+  ? `<div class="note-box">${n.map(iconText).join("<br>")}</div>` : "";
 
 /* ── 清單項目與勾選狀態 ──────────────────────
    項目可以是字串，也可以是 { text, url, note, img }。 */
@@ -1169,13 +1268,13 @@ const introHTML = (v, photo, alt) => {
   if (!parts.length) return "";
   const src  = photo && /^img\/[\w\/.-]+$/.test(photo.src || "") ? photo.src : "";
   const href = photo && /^https?:\/\//i.test(photo.href || "") ? photo.href : "";
-  const credit = src ? `📷 ${esc(photo.credit || "")}・${esc(photo.license || "")}` : "";
+  const credit = src ? `${ic("camera")}${esc(photo.credit || "")}・${esc(photo.license || "")}` : "";
   /* 照片是介紹的底圖（.intro-body 裡最底層），出處放在照片框外面 */
   const pic = src ? `<img class="intro-photo" src="${esc(src)}" alt="${esc(alt || "")}" loading="lazy" decoding="async">` : "";
   const by = !src ? "" : href ? `<a class="photo-credit" href="${esc(href)}" target="_blank" rel="noopener">${credit}</a>`
                               : `<span class="photo-credit">${credit}</span>`;
   return `<details class="intro${src ? " has-photo" : ""}"${src ? ` style="--photo:url('${esc(src)}')"` : ""}><summary>看介紹</summary>
-    <div class="intro-body">${pic}${parts.map(p => `<p>${esc(p)}</p>`).join("")}</div>${by}
+    <div class="intro-body">${pic}${parts.map(p => `<p>${iconText(p)}</p>`).join("")}</div>${by}
   </details>`;
 };
 
@@ -1187,7 +1286,7 @@ const niceDate = d => {
   return `${Number(m[2])}/${Number(m[3])}（${WEEK[dt.getUTCDay()]}）`;
 };
 
-const KIND = { sight:"🧭", meal:"🍽️", shop:"🛍️" };
+const KIND = { sight:"compass", meal:"fork-knife", shop:"shopping-bag" };
 const fmtStay = n => {
   if (!n) return "";
   if (n < 60) return `${n} 分`;
@@ -1198,19 +1297,20 @@ const fmtStay = n => {
    靠它往下推，所以不能拆。卡片上要扣掉「交通(分)」才是真的停留：不扣的話，
    門司港會顯示「停留 3 小時 50 分」，其中 1 小時 20 分其實在開車。 */
 /* 圖示要跟 builder 產生的「從上一站」按鈕一致（builder/index.html 的 MODE_ICON） */
-const MODE_TAG = { driving:"🚗 車程", walking:"🚶 步行", transit:"🚆 搭車", bicycling:"🚲 騎車" };
+const MODE_TAG = { driving:["car","車程"], walking:["person-simple-walk","步行"], transit:["train","搭車"], bicycling:["bicycle","騎車"] };
+const modeTag = m => { const [n, t] = MODE_TAG[m] || ["train", "交通"]; return ic(n) + t; };
 const travelTag = b => b.travel
-  ? `<span class="stay">${MODE_TAG[b.mode] || "交通"} ${fmtStay(b.travel)}</span>` : "";
+  ? `<span class="stay">${modeTag(b.mode)} ${fmtStay(b.travel)}</span>` : "";
 const stayTag = b => {
   const v = (b.stay || 0) - (b.travel || 0);
-  return v > 0 ? `<span class="stay">⏳ 停留 ${fmtStay(v)}</span>` : "";
+  return v > 0 ? `<span class="stay">${ic("hourglass-medium")}停留 ${fmtStay(v)}</span>` : "";
 };
 /* 營業時間、費用、電話各自一列，不塞進說明欄：格式才會統一，電話也才能點了就撥 */
 const telHref = t => String(t).replace(/[^\d+]/g, "");
 const factsHTML = b =>
-  (b.hours ? `<div class="meta">🕘 ${esc(b.hours)}</div>` : "") +
-  (b.fee   ? `<div class="meta">💴 ${esc(b.fee)}</div>` : "") +
-  (b.tel   ? `<div class="meta"><a class="tel" href="tel:${esc(telHref(b.tel))}">☎ ${esc(b.tel)}</a></div>` : "");
+  (b.hours ? `<div class="meta">${ic("clock")}${esc(b.hours)}</div>` : "") +
+  (b.fee   ? `<div class="meta">${ic("currency-jpy")}${esc(b.fee)}</div>` : "") +
+  (b.tel   ? `<div class="meta"><a class="tel" href="tel:${esc(telHref(b.tel))}">${ic("phone")}${esc(b.tel)}</a></div>` : "");
 
 const RENDERERS = {
   flight: b => `<div class="card flight">
@@ -1224,7 +1324,7 @@ const RENDERERS = {
         <div class="p">${esc(b.from)}</div>
         <div class="g">${esc(b.fromTerminal || "")}</div>
       </div>
-      <div class="fl-mid"><span>✈</span></div>
+      <div class="fl-mid"><span>${ic("airplane-tilt")}</span></div>
       <div class="fl-side end">
         <div class="t">${esc(b.arrive)}</div>
         <div class="p">${esc(b.to)}</div>
@@ -1234,23 +1334,23 @@ const RENDERERS = {
 
   stop: b => `<div class="card"${slotAttrs(b)}${mapAttrs(b)}>
     ${nowSlot(b)}${b.time ? `<span class="time">${esc(b.time)}</span>` : ""}${travelTag(b)}${stayTag(b)}
-    <div class="subject">${KIND[b.kind] || KIND.sight} ${esc(b.title)}${localSpan(b.titleLocal)}</div>
-    ${b.place ? `<div class="meta">📍 ${esc(b.place)}${localSpan(b.placeLocal)}</div>` : ""}${factsHTML(b)}
+    <div class="subject">${ic(KIND[b.kind] || KIND.sight)}${esc(b.title)}${localSpan(b.titleLocal)}</div>
+    ${b.place ? `<div class="meta">${ic("map-pin")}${esc(b.place)}${localSpan(b.placeLocal)}</div>` : ""}${factsHTML(b)}
     ${notesHTML(b.notes)}${secretHTML(b)}${introHTML(b.intro, b.photo, b.title)}${linksHTML(b.links)}</div>`,
 
   /* 總耗時跟其他卡片的「停留」一樣放在時間旁邊，由 stay 算出來 */
   transit: b => `<div class="card">
-    ${b.time ? `<span class="time">${esc(b.time)}</span>` : ""}${b.stay ? `<span class="stay">⏱️ 總耗時約 ${fmtStay(b.stay)}</span>` : ""}
+    ${b.time ? `<span class="time">${esc(b.time)}</span>` : ""}${b.stay ? `<span class="stay">${ic("timer")}總耗時約 ${fmtStay(b.stay)}</span>` : ""}
     <div class="subject">${esc(b.title)}</div>
-    ${b.line ? `<div class="meta">🚇 ${esc(b.line)}</div>` : ""}
-    ${b.duration ? `<div class="meta">⏱️ ${esc(b.duration)}</div>` : ""}
+    ${b.line ? `<div class="meta">${ic("subway")}${esc(b.line)}</div>` : ""}
+    ${b.duration ? `<div class="meta">${ic("timer")}${esc(b.duration)}</div>` : ""}
     <div class="route">${(b.steps||[]).map(s => {
       const dot = s.via ? "" : `<div class="route-step">
            <div class="route-dot${s.active ? " on" : ""}"></div>
            <div class="route-body">
              <strong>${esc(s.name)}</strong>${s.nameLocal !== s.name ? localSpan(s.nameLocal) : ""}
-             ${s.exit ? `<div class="exit-note">${esc(s.exit)}</div>` : ""}
-             ${s.note ? `<div class="note-box warn">⚠️ ${esc(s.note)}</div>` : ""}
+             ${s.exit ? `<div class="exit-note">${iconText(s.exit)}</div>` : ""}
+             ${s.note ? `<div class="note-box warn">${ic("warning")}${esc(s.note)}</div>` : ""}
            </div></div>`;
       if (s.via) return `<div class="route-link"><div class="bar"></div><div class="via">${esc(s.via)}</div></div>`;
       // 站與站之間的線由 .route-step::before 畫到下一站，不另外插連接線
@@ -1259,21 +1359,21 @@ const RENDERERS = {
     ${notesHTML(b.notes)}${linksHTML(b.links)}</div>`,
 
   lodging: b => `<div class="card lodge"${slotAttrs(b)}${mapAttrs(b)}>
-    ${nowSlot(b)}<div><span class="ttag">🏨 住宿</span>${b.time ? `<span class="time">${esc(b.time)}</span>` : ""}${travelTag(b)}${stayTag(b)}</div>
+    ${nowSlot(b)}<div><span class="ttag">${ic("bed")}住宿</span>${b.time ? `<span class="time">${esc(b.time)}</span>` : ""}${travelTag(b)}${stayTag(b)}</div>
     <div class="subject">${esc(b.title)}${localSpan(b.titleLocal)}</div>
-    ${b.address ? `<div class="meta">📍 ${esc(b.address)}</div>` : ""}${factsHTML(b)}
+    ${b.address ? `<div class="meta">${ic("map-pin")}${esc(b.address)}</div>` : ""}${factsHTML(b)}
     ${(b.notes && b.notes.length)
-      ? `<div class="info">${b.notes.map(n => `<div>${esc(n)}</div>`).join("")}</div>` : ""}
+      ? `<div class="info">${b.notes.map(n => `<div>${iconText(n)}</div>`).join("")}</div>` : ""}
     ${secretHTML(b)}${linksHTML(b.links)}</div>`,
 
   options: b => `<div class="card"${mapAttrs((b.choices || []).find(c => mapQuery(c)) || {})}>
     ${b.time ? `<span class="time">${esc(b.time)}</span>` : ""}${stayTag(b)}
     <div class="subject">${subjectHTML(b.title)}</div>
-    ${b.place ? `<div class="meta">📍 ${esc(b.place)}${localSpan(b.placeLocal)}</div>` : ""}
+    ${b.place ? `<div class="meta">${ic("map-pin")}${esc(b.place)}${localSpan(b.placeLocal)}</div>` : ""}
     ${(b.choices||[]).map(c => `<div class="choice">
       <span class="tag">${esc(c.label)}</span>
       <div><strong>${esc(c.title)}</strong>${localSpan(c.titleLocal)}</div>
-      ${c.note ? `<div class="meta">${esc(c.note)}</div>` : ""}
+      ${c.note ? `<div class="meta">${iconText(c.note)}</div>` : ""}
       ${linksHTML(c.links)}</div>`).join("")}</div>`,
 
   checklist: b => {
@@ -1281,7 +1381,7 @@ const RENDERERS = {
     const done = (b.groups||[]).reduce((n,g)=>
       n + g.items.filter(it => state.checks[chkKey(b, it)]).length, 0);
     return `<div class="card" data-chk="${esc(b.key)}">
-      <div class="subject">${esc(b.title||"清單")}
+      <div class="subject">${iconText(b.title||"清單")}
         <span class="chk-progress">${done}/${total}</span></div>
       ${(b.groups||[]).map(g => `<div class="chk-group"><h2>${esc(g.name)}</h2>
         ${g.items.map(it=>{
@@ -1312,7 +1412,7 @@ const RENDERERS = {
     const hiddenCount = all.length - shown.length;
     const today = nowAtDestination().date;
 
-    return `<div class="card"><div class="subject">${esc(b.title || "信用卡")}</div>
+    return `<div class="card"><div class="subject">${iconText(b.title || "信用卡")}</div>
       ${notesHTML(b.notes)}
       ${shown.map(c => {
         const s      = state.cards[c.name] || {};
@@ -1338,7 +1438,7 @@ const RENDERERS = {
           ` : `<div class="meta">這張沒有回饋上限，不用算額度</div>`}
           ${c.register ? `<label class="chk cc-reg"><input type="checkbox" data-reg="${esc(c.name)}"${s.done ? " checked" : ""}><span>已完成銀行活動登錄</span></label>` : ""}
           ${c.note ? `<details class="intro"><summary>查看回饋條件與備註</summary>
-            <div class="intro-body">${c.note.split(/\n+/).filter(Boolean).map(p=>`<p>${esc(p)}</p>`).join("")}</div>
+            <div class="intro-body">${c.note.split(/\n+/).filter(Boolean).map(p=>`<p>${iconText(p)}</p>`).join("")}</div>
           </details>` : ""}
         </div>`;
       }).join("")}
@@ -1354,7 +1454,7 @@ const RENDERERS = {
     /* 券是「用掉」不是「買到」，所以不給數量與金額。旗標在群組層級，
        自己在網站上加進這一組的項目也一樣不給，同一組才不會長得不一樣。 */
     const coupon = new Set((b.groups || []).filter(g => g.coupon).map(g => g.name));
-    return `<div class="card"><div class="subject">${esc(b.title || "購物清單")}</div>
+    return `<div class="card"><div class="subject">${iconText(b.title || "購物清單")}</div>
       ${notesHTML(b.notes)}
       ${[...shopGroups(b)].map(([name, items]) => {
         const done = items.filter(it => (s.edits[it.id] || {}).done).length;
@@ -1370,7 +1470,7 @@ const RENDERERS = {
                新增時附的記在項目上，之後才補的記在 edits（Excel 給的項目也能補） */
             const uimg = it.uimg || ed.uimg;
             return `<div class="shop-i${it.img || uimg ? "" : " no-img"}" data-id="${esc(it.id)}">
-              <button class="shop-x" data-del="${esc(it.id)}" type="button" aria-label="刪除${esc(it.name)}">✕</button>
+              <button class="shop-x" data-del="${esc(it.id)}" type="button" aria-label="刪除${esc(it.name)}">${ic("x")}</button>
               ${it.img ? `<img class="shop-img" src="${esc(it.img)}" data-zoom="${esc(it.img)}" alt="${esc(it.name)}" loading="lazy">`
                 : uimg ? `<img class="shop-img" data-uimg="${esc(it.id)}" alt="${esc(it.name)}">` : ""}
               ${isCoupon
@@ -1379,15 +1479,15 @@ const RENDERERS = {
               ${/^https?:\/\//i.test(it.url) ? `<a class="btn shop-link" href="${esc(it.url)}" target="_blank" rel="noopener">${isCoupon ? "開啟優惠券" : "開啟連結"}</a>` : ""}
               ${isCoupon ? "" : `<input class="input shop-note" data-snote="${esc(it.id)}" value="${esc(ed.note || "")}" placeholder="數量／備註" autocomplete="off">
               <input class="input shop-amt" type="number" inputmode="numeric" min="0" data-samt="${esc(it.id)}" value="${esc(String(ed.amount ?? ""))}" placeholder="金額">`}
-              ${it.img || uimg ? "" : `<label class="shop-addimg"><input type="file" accept="image/*" data-simg="${esc(it.id)}" hidden>📷 加圖片</label>`}
+              ${it.img || uimg ? "" : `<label class="shop-addimg"><input type="file" accept="image/*" data-simg="${esc(it.id)}" hidden>${ic("camera")}加圖片</label>`}
             </div>`;
           }).join("")}</div>
           <form class="shop-add" data-addto="${esc(name)}">
             <input class="input" name="n" placeholder="加一項到「${esc(name)}」" autocomplete="off">
             <button class="btn" type="submit">新增</button>
             <div class="shop-extra">
-              <label class="shop-file"><input type="file" name="f" accept="image/*" hidden><span>📷 附圖片</span></label>
-              <input class="input" name="u" inputmode="url" placeholder="🔗 連結（選填）" autocomplete="off" aria-label="連結（選填）">
+              <label class="shop-file"><input type="file" name="f" accept="image/*" hidden>${ic("camera")}<span>附圖片</span></label>
+              <input class="input" name="u" inputmode="url" placeholder="連結（選填）" autocomplete="off" aria-label="連結（選填）">
             </div></form>
         </details>`;
       }).join("")}
@@ -1398,16 +1498,16 @@ const RENDERERS = {
     </div>`;
   },
 
-  weather: () => `<div class="card"><div class="subject">🌡️ 行程期間天氣</div>
+  weather: () => `<div class="card"><div class="subject">${ic("thermometer")}行程期間天氣</div>
     <div class="wx-strip" id="wx-strip">載入中…</div></div>`,
 
-  phrases: () => `<div class="card"><div class="subject">💬 常用片語</div>
+  phrases: () => `<div class="card"><div class="subject">${ic("chat-circle-dots")}常用片語</div>
     ${(TRIP_DATA.phrases||[]).map(p => p.local
       ? `<div class="ph"><div class="ph-l">${esc(p.local)}</div><div class="ph-z">${esc(p.zh)}</div></div>`
       : `<div class="ph"><div class="ph-l dim">${esc(p.zh)}</div><div class="ph-z">（沒有翻譯結果）</div></div>`
     ).join("")}</div>`,
 
-  emergency: b => `<div class="card"><div class="subject">🆘 緊急資訊</div>
+  emergency: b => `<div class="card"><div class="subject">${ic("first-aid")}緊急資訊</div>
     ${b && b.country ? `<div class="src">${esc(b.country)}${b.countryCode ? `（${esc(b.countryCode)}）` : ""}
       ${b.auto ? `　前 ${b.auto} 筆為當地官方緊急號碼` : ""}<br>
       出發前請再確認一次，號碼可能更動。</div>` : ""}
@@ -1519,24 +1619,24 @@ function buildNav(){
   };
   document.getElementById("nav").innerHTML = TRIP_DATA.days.map(d =>
     `<button class="nav-item" role="tab" data-day="${esc(d.id)}" aria-selected="false">` +
-      `<span class="nav-main">${esc(d.nav)}</span>${sub(d)}</button>`
+      `<span class="nav-main">${iconText(d.nav)}</span>${sub(d)}</button>`
   ).join("");
 }
 
 /* ── 天氣（Open-Meteo，免 API key） ── */
 const WMO = {
-  0:["☀️","晴"],1:["🌤️","大致晴"],2:["⛅","多雲"],3:["☁️","陰"],
-  45:["🌫️","霧"],48:["🌫️","霧淞"],
-  51:["🌦️","毛毛雨"],53:["🌦️","毛毛雨"],55:["🌦️","毛毛雨"],
-  56:["🌧️","凍雨"],57:["🌧️","凍雨"],
-  61:["🌧️","小雨"],63:["🌧️","雨"],65:["🌧️","大雨"],
-  66:["🌧️","凍雨"],67:["🌧️","凍雨"],
-  71:["🌨️","小雪"],73:["🌨️","雪"],75:["❄️","大雪"],77:["🌨️","冰珠"],
-  80:["🌦️","陣雨"],81:["🌦️","陣雨"],82:["⛈️","強陣雨"],
-  85:["🌨️","陣雪"],86:["❄️","強陣雪"],
-  95:["⛈️","雷雨"],96:["⛈️","雷雨冰雹"],99:["⛈️","雷雨冰雹"]
+  0:["sun","晴"],1:["cloud-sun","大致晴"],2:["cloud-sun","多雲"],3:["cloud","陰"],
+  45:["cloud-fog","霧"],48:["cloud-fog","霧淞"],
+  51:["cloud-rain","毛毛雨"],53:["cloud-rain","毛毛雨"],55:["cloud-rain","毛毛雨"],
+  56:["cloud-rain","凍雨"],57:["cloud-rain","凍雨"],
+  61:["cloud-rain","小雨"],63:["cloud-rain","雨"],65:["cloud-rain","大雨"],
+  66:["cloud-rain","凍雨"],67:["cloud-rain","凍雨"],
+  71:["cloud-snow","小雪"],73:["cloud-snow","雪"],75:["snowflake","大雪"],77:["cloud-snow","冰珠"],
+  80:["cloud-rain","陣雨"],81:["cloud-rain","陣雨"],82:["cloud-lightning","強陣雨"],
+  85:["cloud-snow","陣雪"],86:["snowflake","強陣雪"],
+  95:["cloud-lightning","雷雨"],96:["cloud-lightning","雷雨冰雹"],99:["cloud-lightning","雷雨冰雹"]
 };
-const wmo = c => WMO[c] || ["🌡️","—"];
+const wmo = c => WMO[c] || ["thermometer","—"];
 const WXKEY = `${KEY}:wx`;
 let wx = (() => { try { return JSON.parse(LS.get(WXKEY)); } catch { return null; } })();
 
@@ -1627,7 +1727,7 @@ function paintNow(){
     </div>`;
 
   if (!wx || !wx.current){
-    el.innerHTML = topHTML + `<div class="wx-main"><div class="wx-emoji">🌐</div>
+    el.innerHTML = topHTML + `<div class="wx-main"><div class="wx-emoji">${ic("globe")}</div>
       <div><div class="wx-desc">尚無天氣資料</div></div></div>`;
     stamp.textContent = "連上網路後會自動更新";
     return;
@@ -1644,7 +1744,7 @@ function paintNow(){
 
   el.innerHTML = topHTML + `
     <div class="wx-main">
-      <div class="wx-emoji">${emoji}</div>
+      <div class="wx-emoji">${ic(emoji)}</div>
       <div>
         <div class="wx-temp">${Math.round(c.temperature_2m)}°</div>
         <div class="wx-desc">${esc(desc)}</div>
@@ -1767,7 +1867,7 @@ function paintDayMap(day){
         `&origin=${e(lp[0])}&destination=${e(lp[lp.length - 1])}` +
         (via.length ? `&waypoints=${via.map(e).join("|")}` : "");
     main.insertAdjacentHTML("afterbegin",
-      `<a class="daymap-open" href="${esc(href)}" target="_blank" rel="noopener">在 Google 地圖開啟${leg ? "這一段" : "今天的路線"} ↗</a>`);
+      `<a class="daymap-open" href="${esc(href)}" target="_blank" rel="noopener">在 Google 地圖開啟${leg ? "這一段" : "今天的路線"}${ic("arrow-square-out")}</a>`);
   }
   main.querySelectorAll(".card[data-mapq]").forEach((c, k) => {
     const vis = visits[cardVisit[k]];
@@ -1793,11 +1893,11 @@ function paintDayMap(day){
   pick.innerHTML =
     `<label class="dm-chip"><input type="checkbox" data-all${all ? " checked" : ""}>全選</label>` +
     pts.map((p, i) => {
-      const name = p.start ? `🏨 ${p.title}` : `${NUM(num[i])} ${p.title}`;
+      const name = p.start ? ic("bed") + esc(p.title) : esc(`${NUM(num[i])} ${p.title}`);
       const tip = p.start ? `前一晚住宿：${p.title}` : p.alt ? `二選一：${p.title}` : p.title;
       return `<span class="dm-chip${focus && focus.p === i ? " is-on" : ""}${skip.has(i) ? " is-off" : ""}">` +
         `<label><input type="checkbox" data-skip="${i}"${skip.has(i) ? "" : " checked"} aria-label="畫進路線：${esc(p.title)}"></label>` +
-        `<button type="button" data-p="${i}" aria-pressed="${!!focus && focus.p === i}" title="${esc(tip)}">${esc(name)}</button></span>`;
+        `<button type="button" data-p="${i}" aria-pressed="${!!focus && focus.p === i}" title="${esc(tip)}">${name}</button></span>`;
     }).join("");
   /* 只勾了一部分：全選框顯示「–」，按下去會全部勾起來 */
   pick.querySelector("[data-all]").indeterminate = !all && skip.size < pts.length;
@@ -1910,7 +2010,7 @@ function paintForecast(){
     const wd = ["日","一","二","三","四","五","六"][dt.getUTCDay()];
     return `<div class="wx-day">
       <div>${dt.getUTCMonth()+1}/${dt.getUTCDate()} 週${wd}</div>
-      <div class="e">${e}</div>
+      <div class="e">${ic(e)}</div>
       <div class="hi">${Math.round(d.temperature_2m_max[i])}°</div>
       <div class="lo">${Math.round(d.temperature_2m_min[i])}°</div>
       <div class="lo">${d.precipitation_probability_max[i] ?? "—"}%</div></div>`;
@@ -1964,12 +2064,12 @@ function renderExpenses(){
           <span class="meta">${esc(e.payer)} 付 · 分 ${esc(e.split.join("、"))}</span></div>
         <div class="amt">${esc(M.money.home)} ${fmt(e.home)}
           ${e.local ? `<br><span class="lang-local">${esc(M.money.local)} ${fmt(e.local)}</span>` : ""}
-          <button class="exp-del" data-del="${esc(e.id)}" aria-label="刪除">✕</button></div>
+          <button class="exp-del" data-del="${esc(e.id)}" aria-label="刪除">${ic("x")}</button></div>
       </div>`).join("") : `<div class="meta">還沒有紀錄。</div>`}</div></div>
 
   <div class="card"><div class="subject">結清建議</div>${settleHTML()}
-    <button class="btn btn-plain" id="e-csv">📥 匯出明細 CSV</button>
-    <button class="btn" id="e-csv2">📊 匯出結清摘要</button>
+    <button class="btn btn-plain" id="e-csv">${ic("download-simple")}匯出明細 CSV</button>
+    <button class="btn" id="e-csv2">${ic("chart-bar")}匯出結清摘要</button>
     <div class="meta" style="margin-top:var(--sp-2)">CSV 已加 UTF-8 BOM，Excel 與 Google Sheets 都能直接開，中文不會亂碼。</div>
   </div>`;
 }
@@ -2131,7 +2231,7 @@ function secretHTML(b){
         <div class="secret-items">${(sec.items || []).map(secretItemHTML).join("")}</div>
         <button class="secret-lock" data-vault-lock type="button">上鎖</button></div>`
     : `<div class="secret is-locked" data-secret="${key}" data-hint="${hint}">
-        <button class="secret-ask" data-vault-ask type="button">🔒 顯示${hint}</button></div>`;
+        <button class="secret-ask" data-vault-ask type="button">${ic("lock-simple")}顯示${hint}</button></div>`;
 }
 
 /* 只換掉卡片上的私人資料那一格，不重畫整頁——整頁重畫會捲回頂端，展開的介紹也會收起來 */
@@ -2294,7 +2394,7 @@ document.getElementById("main").addEventListener("change", e => {
   if (!f) return;
   const lab = f.closest(".shop-file");
   lab.classList.toggle("has", f.files.length > 0);
-  lab.querySelector("span").textContent = f.files.length ? "📷 已選圖片" : "📷 附圖片";
+  lab.querySelector("span").textContent = f.files.length ? "已選圖片" : "附圖片";
 });
 
 /* 點圖放大給店員看。用原生 <dialog>：免自己做焦點管理，Esc 也能關。 */
@@ -2321,7 +2421,7 @@ document.getElementById("main").addEventListener("click", e => {
   /* 自己加的圖可以在這裡換一張或拿掉；Excel 給的圖不行 */
   const uid = img.dataset.uimg;
   dlg.querySelector(".zoom-acts").innerHTML = uid
-    ? `<label class="btn btn-route"><input type="file" accept="image/*" data-zimg="${esc(uid)}" hidden>📷 換一張</label>` +
+    ? `<label class="btn btn-route"><input type="file" accept="image/*" data-zimg="${esc(uid)}" hidden>${ic("camera")}換一張</label>` +
       `<button type="button" class="btn btn-route" data-zdel="${esc(uid)}">移除圖片</button>` : "";
   dlg.showModal();
 });
@@ -2549,11 +2649,11 @@ document.getElementById("app-sub").textContent = M.subtitle || "";
   const bar = document.getElementById("edit-bar");
   const out = [];
   if (M.sheetUrl)
-    out.push(`<a href="${esc(M.sheetUrl)}" target="_blank" rel="noopener">✏️ 編輯行程</a>`);
+    out.push(`<a href="${esc(M.sheetUrl)}" target="_blank" rel="noopener">${ic("pencil-simple")}編輯行程</a>`);
   if (M.builderUrl){
     const u = M.builderUrl + (M.sheetUrl ? (M.builderUrl.includes("?") ? "&" : "?") +
               "sheet=" + encodeURIComponent(M.sheetUrl) : "");
-    out.push(`<a class="go" href="${esc(u)}" target="_blank" rel="noopener">🔄 重新產生網站</a>`);
+    out.push(`<a class="go" href="${esc(u)}" target="_blank" rel="noopener">${ic("arrows-clockwise")}重新產生網站</a>`);
   }
   bar.innerHTML = out.join("");
 })();
