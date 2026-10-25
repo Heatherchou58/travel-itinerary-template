@@ -3271,7 +3271,7 @@ const RENDERERS = {
       ? `<div class="info">${b.notes.map(n => `<div>${esc(n)}</div>`).join("")}</div>` : ""}
     ${secretHTML(b)}${linksHTML(b.links)}</div>`,
 
-  options: b => `<div class="card">
+  options: b => `<div class="card"${mapAttrs((b.choices || []).find(c => mapQuery(c)) || {})}>
     ${b.time ? `<span class="time">${esc(b.time)}</span>` : ""}${stayTag(b)}
     <div class="subject">${subjectHTML(b.title)}</div>
     ${b.place ? `<div class="meta">📍 ${esc(b.place)}${localSpan(b.placeLocal)}</div>` : ""}
@@ -3423,8 +3423,8 @@ function renderBlock(b){
 
 /* ── 分頁 ── */
 let current = TRIP_DATA.days[0].id;
-let mapFocus = null;   // { day, p }：右側地圖只顯示當天第 p 個點
-const mapSkip = {};    // 每天取消勾選、不畫進路線的點（Set）。換天保留，重新整理就全部恢復
+let mapFocus = null;   // { day, v, p }：右側地圖只看當天第 v 站（地點 p）
+const mapSkip = {};    // 每天取消勾選、不畫進路線的點（Set，見 skipOf）。換天保留，重新整理就全部恢復
 function renderDay(id){
   if (id !== current) mapFocus = null;   // 換一天就回到整條路線
   current = id;
@@ -3663,46 +3663,85 @@ function paintNow(){
    每一點的位置見 mapQuery()。地圖上方列出當天每一點：點名字只看那一點，
    取消勾選的點不畫進路線——比較「去不去某個景點」路線差多少。 */
 const DESKTOP = matchMedia("(min-width:1024px)");
+/* 是不是同一個地方：比查詢字串逗號前的名字。同一間飯店，入住卡與住宿卡的地址常寫得
+   不一樣（「祇園町 2-31」與「祇園（地鐵空港線 祇園站）」），整串比會被當成兩個地方 */
+const placeKey = q => q.split(", ")[0].trim();
 function dayMapPoints(day){
-  const pts = [], cardPt = [];   // cardPt[k]：當天第 k 張有地點的卡片是第幾個點
+  /* pts：地點按鈕，同一個地方只有一顆。visits：一天實際移動的順序，同一個地方可以出現
+     兩次（出門再回飯店）——路線照 visits 畫。二選一是一個 visit 帶幾個候選點（alts）。
+     cardVisit[k]：當天第 k 張有地點的卡片是第幾個 visit。 */
+  const pts = [], visits = [], cardVisit = [];
+  const ptOf = (q, title, extra) => {
+    const i = pts.findIndex(p => placeKey(p.q) === placeKey(q));
+    if (i >= 0) return i;
+    pts.push({ q, title: title || q, ...extra });
+    return pts.length - 1;
+  };
+  const go = v => {   // 跟上一站是同一個地方（入住完接著是住宿卡）就不算移動
+    const last = visits[visits.length - 1];
+    if (!last || last.alts || v.alts || last.p !== v.p) visits.push(v);
+    return visits.length - 1;
+  };
   /* 從前一晚的住宿出發，才看得到怎麼從住處到第一站。只看緊接的前一天（有日期的分頁）；
      那天沒有住宿（第一天、搭夜班機）就不加 */
   const before = TRIP_DATA.days.slice(0, TRIP_DATA.days.indexOf(day)).reverse().find(d => d.date);
   const stay = before && [...(before.blocks || [])].reverse().find(b => b.type === "lodging" && mapQuery(b));
-  if (stay) pts.push({ q: mapQuery(stay), title: stay.title || mapQuery(stay), start: true });
+  if (stay) go({ p: ptOf(mapQuery(stay), stay.title, { start: true }) });
+  let alt = 0;
   for (const b of day.blocks || []){
+    /* mode：怎麼到這一站（卡片上的交通方式） */
+    if (b.type === "options"){
+      const cs = (b.choices || []).filter(c => mapQuery(c));   // 跟卡片上的 mapAttrs 一致
+      if (!cs.length) continue;
+      alt++;
+      cardVisit.push(go({ alts: cs.map(c => ptOf(mapQuery(c), c.title, { alt })), mode: b.mode }));
+    }
     if (b.type !== "stop" && b.type !== "lodging") continue;
     const q = mapQuery(b);
     if (!q) continue;                                   // 跟 mapAttrs 一樣，沒地點的卡片不算
-    /* mode：怎麼到這一點（卡片上的交通方式）。入住與住宿常是同一個地方，相鄰的合併 */
-    if (q !== (pts[pts.length - 1] || {}).q) pts.push({ q, title: b.title || q, mode: b.mode });
-    cardPt.push(pts.length - 1);
+    const p = ptOf(q, b.title);
+    /* 同一間飯店的入住卡與住宿卡合併後，按鈕用住宿卡的名字（飯店名），不用「Check-in・放行李」 */
+    if (b.type === "lodging" && !pts[p].start) pts[p].title = b.title || pts[p].title;
+    cardVisit.push(go({ p, mode: b.mode }));
   }
-  if (!cardPt.length) pts.length = 0;   // 當天自己沒有地點，只有前一晚的住宿就不畫
+  if (!cardVisit.length) pts.length = visits.length = 0;   // 當天自己沒有地點，只有前一晚的住宿就不畫
   /* 沒開車的日子用大眾運輸。嵌入地圖的大眾運輸一次只能查兩點之間：加了途經點就畫不出線，
      只把各點標出來（2026-10 實測，文件沒寫）——整天看地點分布，點某一站再看那一段怎麼搭 */
   const mode = (day.blocks || []).some(b => b.mode === "driving") ? "driving" : "transit";
-  return { pts, cardPt, mode };
+  return { pts, visits, cardVisit, mode };
 }
+/* 每天取消勾選的點。那天還沒動過的話，二選一每組先只勾第一個 */
+function skipOf(dayId, pts){
+  return mapSkip[dayId] = mapSkip[dayId] ||
+    new Set(pts.flatMap((p, i) => p.alt && pts.findIndex(o => o.alt === p.alt) !== i ? [i] : []));
+}
+/* 這一站實際去哪：二選一取勾著的那個，沒勾就是不去 */
+const chosen = (vis, skip) => vis.alts ? vis.alts.find(p => !skip.has(p)) : skip.has(vis.p) ? undefined : vis.p;
 const NUM = i => i < 20 ? String.fromCharCode(0x2460 + i) : `${i + 1}.`;   // ①②③…
 function paintDayMap(day){
   const app = document.querySelector(".app");
   const box = document.getElementById("daymap");
-  const { pts, cardPt, mode } = day && day.date ? dayMapPoints(day) : { pts: [], cardPt: [] };
+  const { pts, visits, cardVisit, mode } = day && day.date ? dayMapPoints(day) : { pts: [], visits: [], cardVisit: [] };
   const e = encodeURIComponent;
   app.classList.toggle("map-on", !!(M.mapsEmbedKey && DESKTOP.matches));
   const on = !!(M.mapsEmbedKey && pts.length && DESKTOP.matches);
   app.classList.toggle("has-map", on);
-  const skip = (day && mapSkip[day.id]) || new Set();
-  const route = pts.map(p => p.q).filter((_, i) => !skip.has(i)).slice(0, 22);   // 起點＋20 個途經點＋終點
-  const focus = on && mapFocus && mapFocus.day === day.id && pts[mapFocus.p] ? mapFocus.p : null;
+  const skip = day ? skipOf(day.id, pts) : new Set();
+  const seq = [];   // 路線依序經過的點：取消勾選的跳過，連續同一點只算一次
+  for (const vis of visits){
+    const p = chosen(vis, skip);
+    if (p !== undefined && p !== seq[seq.length - 1]) seq.push(p);
+  }
+  const route = seq.map(p => pts[p].q).slice(0, 22);   // 起點＋20 個途經點＋終點
+  const focus = on && mapFocus && mapFocus.day === day.id && visits[mapFocus.v] && pts[mapFocus.p] ? mapFocus : null;
   /* 沒開車的日子點了某一站：看「從上一站怎麼去」（取消勾選的站跳過），交通方式用那張卡片的。
      開車的日子點了只標位置。當天第一站沒有上一站，也只標位置 */
   let leg = null;
-  if (focus !== null && mode !== "driving"){
-    let prev = focus - 1;
-    while (prev >= 0 && skip.has(prev)) prev--;
-    if (prev >= 0) leg = { pts: [pts[prev].q, pts[focus].q], mode: pts[focus].mode || "transit" };
+  if (focus && mode !== "driving"){
+    let u = focus.v - 1, from;
+    while (u >= 0 && (from = chosen(visits[u], skip)) === undefined) u--;
+    if (u >= 0 && from !== focus.p)
+      leg = { pts: [pts[from].q, pts[focus.p].q], mode: visits[focus.v].mode || "transit" };
   }
 
   /* 同一條路線開到 Google 地圖：可以拖曳、看路況。不用金鑰，所以沒填嵌入金鑰的
@@ -3726,31 +3765,42 @@ function paintDayMap(day){
       `<a class="daymap-open" href="${esc(href)}" target="_blank" rel="noopener">在 Google 地圖開啟${leg ? "這一段" : "今天的路線"} ↗</a>`);
   }
   main.querySelectorAll(".card[data-mapq]").forEach((c, k) => {
-    c.classList.toggle("map-focus", focus !== null && cardPt[k] === focus);
+    const vis = visits[cardVisit[k]];
+    c.classList.toggle("map-focus", !!focus && !!vis && (vis.p === focus.p || (vis.alts || []).includes(focus.p)));
     /* 有地圖時卡片也能用鍵盤選（Tab 到卡片按 Enter）。手機不加，Tab 順序才不會多出一堆卡片 */
     if (on) c.tabIndex = 0; else c.removeAttribute("tabindex");
   });
   if (!on) return;
 
-  /* 地圖上方的地點按鈕。整排重畫，所以先記住鍵盤焦點在哪一顆，畫完放回去 */
+  /* 地圖上方的地點按鈕。前一晚的住宿不編號；二選一的候選點共用一個號碼。
+     整排重畫，所以先記住鍵盤焦點在哪一顆，畫完放回去 */
+  const num = {};
+  let n = 0;
+  for (const vis of visits){
+    const ps = (vis.alts || [vis.p]).filter(p => !(p in num) && !pts[p].start);
+    if (ps.length){ ps.forEach(p => num[p] = n); n++; }
+  }
+  const groups = [...new Set(pts.filter(p => p.alt).map(p => p.alt))];
+  const all = pts.every((p, i) => p.alt || !skip.has(i)) &&
+              groups.every(g => pts.some((p, i) => p.alt === g && !skip.has(i)));
   const pick = box.querySelector(".daymap-pick");
   const was = pick.contains(document.activeElement) ? { ...document.activeElement.dataset } : null;
-  let n = 0;   // 前一晚的住宿不編號，當天的點從 ① 開始
   pick.innerHTML =
-    `<label class="dm-chip"><input type="checkbox" data-all${skip.size ? "" : " checked"}>全選</label>` +
+    `<label class="dm-chip"><input type="checkbox" data-all${all ? " checked" : ""}>全選</label>` +
     pts.map((p, i) => {
-      const name = p.start ? `🏨 ${p.title}` : `${NUM(n++)} ${p.title}`;
-      return `<span class="dm-chip${focus === i ? " is-on" : ""}${skip.has(i) ? " is-off" : ""}">` +
+      const name = p.start ? `🏨 ${p.title}` : `${NUM(num[i])} ${p.title}`;
+      const tip = p.start ? `前一晚住宿：${p.title}` : p.alt ? `二選一：${p.title}` : p.title;
+      return `<span class="dm-chip${focus && focus.p === i ? " is-on" : ""}${skip.has(i) ? " is-off" : ""}">` +
         `<label><input type="checkbox" data-skip="${i}"${skip.has(i) ? "" : " checked"} aria-label="畫進路線：${esc(p.title)}"></label>` +
-        `<button type="button" data-p="${i}" aria-pressed="${focus === i}" title="${esc(p.start ? `前一晚住宿：${p.title}` : p.title)}">${esc(name)}</button></span>`;
+        `<button type="button" data-p="${i}" aria-pressed="${!!focus && focus.p === i}" title="${esc(tip)}">${esc(name)}</button></span>`;
     }).join("");
   /* 只勾了一部分：全選框顯示「–」，按下去會全部勾起來 */
-  pick.querySelector("[data-all]").indeterminate = skip.size > 0 && skip.size < pts.length;
+  pick.querySelector("[data-all]").indeterminate = !all && skip.size < pts.length;
   if (was) pick.querySelector(was.all !== undefined ? "[data-all]"
     : was.skip !== undefined ? `[data-skip="${was.skip}"]` : `[data-p="${was.p}"]`)?.focus();
 
   /* 全部取消勾選：沒有東西可畫，收起地圖、改成一行提示 */
-  const show = leg ? leg.pts : focus !== null ? [pts[focus].q] : route;
+  const show = leg ? leg.pts : focus ? [pts[focus.p].q] : route;
   const frame = box.querySelector("iframe");
   frame.hidden = !show.length;
   box.querySelector(".daymap-empty").hidden = !!show.length;
@@ -3768,17 +3818,19 @@ function paintDayMap(day){
 /* 視窗從手機寬度拉到電腦寬度時補載，反過來就收起 */
 DESKTOP.addEventListener("change", () => paintDayMap(TRIP_DATA.days.find(d => d.id === current)));
 
-/* 只看第 p 個點；p 為 null 回到路線。點同一個第二次也回到路線 */
-function setMapFocus(p){
-  mapFocus = p === null || (mapFocus && mapFocus.day === current && mapFocus.p === p)
-    ? null : { day: current, p };
+/* 只看某一站（{ v, p }：第 v 站、地點 p）；null 回到路線。點同一個地方第二次也回到路線 */
+function setMapFocus(f){
+  mapFocus = !f || (mapFocus && mapFocus.day === current && mapFocus.p === f.p) ? null : { day: current, ...f };
   paintDayMap(TRIP_DATA.days.find(d => d.id === current));
 }
-/* 點卡片 = 點上面對應的地點按鈕。卡片裡的按鈕、連結、看介紹、私人資料的表單
-   照常運作，不會順便切換地圖；反白選字（例如要複製地址）時也不切換。 */
+/* 點卡片 = 點上面對應的地點按鈕（二選一的卡片取勾著的那個）。卡片裡的按鈕、連結、
+   看介紹、私人資料的表單照常運作，不會順便切換地圖；反白選字（例如要複製地址）時也不切換。 */
 function cardPoint(card){
-  const k = [...document.querySelectorAll("#main .card[data-mapq]")].indexOf(card);
-  return dayMapPoints(TRIP_DATA.days.find(d => d.id === current)).cardPt[k];
+  const day = TRIP_DATA.days.find(d => d.id === current);
+  const { pts, visits, cardVisit } = dayMapPoints(day);
+  const v = cardVisit[[...document.querySelectorAll("#main .card[data-mapq]")].indexOf(card)];
+  const vis = visits[v];
+  return { v, p: vis.alts ? chosen(vis, skipOf(day.id, pts)) ?? vis.alts[0] : vis.p };
 }
 document.getElementById("main").addEventListener("click", ev => {
   if (!document.querySelector(".app.has-map")) return;
@@ -3796,18 +3848,32 @@ document.getElementById("main").addEventListener("keydown", ev => {
 const dmPick = document.querySelector("#daymap .daymap-pick");
 dmPick.addEventListener("click", ev => {
   const b = ev.target.closest("button[data-p]");
-  if (b) setMapFocus(Number(b.dataset.p));
+  if (!b) return;
+  const p = Number(b.dataset.p);
+  const { visits } = dayMapPoints(TRIP_DATA.days.find(d => d.id === current));
+  setMapFocus({ p, v: visits.findIndex(vis => vis.p === p || (vis.alts || []).includes(p)) });
 });
 dmPick.addEventListener("change", ev => {
   const day = TRIP_DATA.days.find(d => d.id === current);
+  const { pts } = dayMapPoints(day);
+  const s = skipOf(day.id, pts);
   if (ev.target.matches("[data-all]")){
-    /* 全選：沒全選（含只勾一部分）就全部勾起來，已經全選就全部取消 */
-    if (ev.target.checked) delete mapSkip[current];
-    else mapSkip[current] = new Set(dayMapPoints(day).pts.map((_, i) => i));
+    if (ev.target.checked){
+      /* 全選：全部勾起來，二選一每組只留一個（原本勾著的，沒有就第一個） */
+      const keep = [...new Set(pts.filter(p => p.alt).map(p => p.alt))].map(g => {
+        const ids = pts.flatMap((p, i) => p.alt === g ? [i] : []);
+        return ids.find(i => !s.has(i)) ?? ids[0];
+      });
+      mapSkip[day.id] = new Set(pts.flatMap((p, i) => p.alt && !keep.includes(i) ? [i] : []));
+    } else mapSkip[day.id] = new Set(pts.map((_, i) => i));   // 已經全選，再按一次全部取消
   } else {
     const i = Number(ev.target.dataset.skip);
-    const s = mapSkip[current] = mapSkip[current] || new Set();
-    if (ev.target.checked) s.delete(i); else s.add(i);
+    if (!ev.target.checked) s.add(i);
+    else {
+      s.delete(i);
+      /* 二選一：勾了一個，同組的其他自動取消 */
+      if (pts[i].alt) pts.forEach((p, j) => { if (j !== i && p.alt === pts[i].alt) s.add(j); });
+    }
   }
   mapFocus = null;   // 改勾選就是要看路線怎麼變：正在只看某一點的話，切回路線
   paintDayMap(day);

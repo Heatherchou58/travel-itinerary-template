@@ -310,7 +310,11 @@ def transit_trip() -> dict:
         {"type": "lodging", "title": "丁旅館", "address": "D 區", "notes": [], "mode": "transit"},
     ]
     # 隔天：地圖要從前一晚的住宿（丁旅館）出發
-    trip["days"][1]["blocks"].insert(0, stop("戊站", "E 區", "transit"))
+    trip["days"][1]["blocks"][0:0] = [
+        stop("戊站", "E 區", "transit"),
+        # 續住同一間：地址寫法跟前一晚不同，名字一樣就要當成同一個地方
+        {"type": "lodging", "title": "丁旅館（續住）", "titleLocal": "丁旅館", "address": "D 區 1-2",
+         "notes": [], "mode": "transit"}]
     return trip
 
 
@@ -1150,12 +1154,15 @@ def run(trip: str) -> bool:
                     "maps/dir/?api=1" in href and "travelmode=driving" in href and "Sydney" in href, href[:80])
 
             # 地圖上方的地點按鈕：點名字只看那一點、再點一次回到路線；勾選框決定畫不畫進路線，
-            # 「全選」沒全選就全部勾起來、已經全選就全部取消。點卡片等於點對應的那顆按鈕
+            # 「全選」沒全選就全部勾起來、已經全選就全部取消；二選一共用號碼、一次只勾一個。
+            # 點卡片等於點對應的那顆按鈕
             frame = page.locator("#daymap iframe")
             def map_q():
                 u = frame.get_attribute("src") or ""
                 kind = u.split("/embed/v1/")[1].split("?")[0] if "/embed/v1/" in u else ""
                 return kind, parse_qs(urlparse(u).query).get("q", [""])[0]
+            def via():
+                return parse_qs(urlparse(frame.get_attribute("src") or "").query).get("waypoints", [""])[0]
             chips = page.locator(".daymap-pick button[data-p]")
             pressed = lambda i: chips.nth(i).get_attribute("aria-pressed") == "true"
             all_box = page.locator(".daymap-pick input[data-all]")
@@ -1163,75 +1170,87 @@ def run(trip: str) -> bool:
             box = lambda i: page.locator(f'.daymap-pick input[data-skip="{i}"]')
             open_href = lambda: page.locator(".daymap-open").get_attribute("href") or ""
             opera = page.locator("#main .card[data-mapq]").nth(0)
-            hotel = page.locator("#main .card[data-mapq]").nth(1)
+            dinner = page.locator("#main .card[data-mapq]").nth(1)
+            hotel = page.locator("#main .card[data-mapq]").nth(2)
+            O, S, K, H = 0, 1, 2, 3   # 歌劇院、海鮮市場、牛排館（二選一）、飯店
             OPERA, HOTEL = "Sydney Opera House, Bennelong Point", "測試飯店, 1 Test St"
-            r.check("地點按鈕：第一天沒有前一晚的住宿，當天每一點各一顆、照順序編號",
-                    chips.all_inner_texts() == ["① 雪梨歌劇院", "② 測試飯店"], "／".join(chips.all_inner_texts()))
-            r.check("地點按鈕：一開始全選、沒有只看某一點", all_box.is_checked() and not pressed(0) and not pressed(1))
-            chips.nth(0).click(); page.wait_for_timeout(200)
+            r.check("地點按鈕：第一天沒有前一晚的住宿；二選一共用一個號碼",
+                    chips.all_inner_texts() == ["① 雪梨歌劇院", "② 海鮮市場", "② 牛排館", "③ 測試飯店"],
+                    "／".join(chips.all_inner_texts()))
+            r.check("二選一：一開始只勾第一個，路線經過它",
+                    box(S).is_checked() and not box(K).is_checked() and via() == "海鮮市場", via())
+            r.check("地點按鈕：一開始算全選（二選一勾一個就算）、沒有只看某一點",
+                    all_box.is_checked() and not partial() and not any(pressed(i) for i in range(4)))
+            box(K).check(); page.wait_for_timeout(200)
+            r.check("二選一：勾另一個，原本的自動取消、路線改經過新的",
+                    box(K).is_checked() and not box(S).is_checked() and via() == "牛排館", via())
+            r.check("二選一：換選項還是算全選", all_box.is_checked() and not partial())
+            dinner.locator(".subject").click(); page.wait_for_timeout(200)
+            r.check("二選一：點二選一的卡片，看的是勾著的那個", map_q() == ("place", "牛排館") and pressed(K), str(map_q()))
+            dinner.locator(".subject").click(); box(S).check(); page.wait_for_timeout(200)
+
+            chips.nth(O).click(); page.wait_for_timeout(200)
             r.check("地點按鈕：開車的日子點名字，地圖只標那一點", map_q() == ("place", OPERA), str(map_q()))
             r.check("地點按鈕：被點的那顆亮起來，對應的卡片也框起來",
-                    pressed(0) and not pressed(1) and "map-focus" in (opera.get_attribute("class") or "")
+                    pressed(O) and not pressed(H) and "map-focus" in (opera.get_attribute("class") or "")
                     and page.locator(".card.map-focus").count() == 1)
-            chips.nth(0).click(); page.wait_for_timeout(200)
+            chips.nth(O).click(); page.wait_for_timeout(200)
             r.check("地點按鈕：再點一次同一顆就回到路線",
-                    map_q()[0] == "directions" and not pressed(0) and page.locator(".card.map-focus").count() == 0,
+                    map_q()[0] == "directions" and not pressed(O) and page.locator(".card.map-focus").count() == 0,
                     str(map_q()))
 
             # 點卡片：跟點按鈕一樣
             opera.locator(".subject").click(); page.wait_for_timeout(200)
-            r.check("點卡片：地圖換成那一點、上面的按鈕跟著亮", map_q() == ("place", OPERA) and pressed(0), str(map_q()))
+            r.check("點卡片：地圖換成那一點、上面的按鈕跟著亮", map_q() == ("place", OPERA) and pressed(O), str(map_q()))
             opera.locator(".subject").click(); page.wait_for_timeout(200)
-            r.check("點卡片：再點一次同一張就回到路線", map_q()[0] == "directions" and not pressed(0), str(map_q()))
+            r.check("點卡片：再點一次同一張就回到路線", map_q()[0] == "directions" and not pressed(O), str(map_q()))
             # 卡片裡的連結照常開新分頁，不會順便切換地圖（攔下預設動作，免得真的開出去）
             page.evaluate("""() => { const a = document.querySelector('#main .card[data-mapq] a.btn');
                                      a.addEventListener('click', e => e.preventDefault(), { once: true }); a.click(); }""")
             page.wait_for_timeout(200)
             r.check("點卡片：點卡片裡的按鈕不會切換地圖", map_q()[0] == "directions", str(map_q()))
             hotel.focus(); page.keyboard.press("Enter"); page.wait_for_timeout(200)
-            r.check("點卡片：用鍵盤也能選（Enter）", map_q() == ("place", HOTEL) and pressed(1), str(map_q()))
+            r.check("點卡片：用鍵盤也能選（Enter）", map_q() == ("place", HOTEL) and pressed(H), str(map_q()))
             hotel.locator(".subject").click(); page.wait_for_timeout(200)
 
             # 勾選
-            r.check("勾選：一開始全部勾選", box(0).is_checked() and box(1).is_checked())
-            box(0).uncheck(); page.wait_for_timeout(200)
-            r.check("勾選：取消的點不畫進路線（只剩一點就只標那一點）", map_q() == ("place", HOTEL), str(map_q()))
-            r.check("勾選：「在 Google 地圖開啟」也不帶取消的點",
-                    "maps/search/" in open_href() and "Opera" not in open_href(), open_href()[:80])
+            box(O).uncheck(); page.wait_for_timeout(200)
+            r.check("勾選：取消的點不畫進路線", map_q()[0] == "directions" and "Opera" not in open_href()
+                    and "Opera" not in (frame.get_attribute("src") or ""), str(map_q()))
             r.check("勾選：取消的點名字劃掉，但還是可以點來看",
-                    "is-off" in (page.locator(".daymap-pick span.dm-chip").nth(0).get_attribute("class") or ""))
+                    "is-off" in (page.locator(".daymap-pick span.dm-chip").nth(O).get_attribute("class") or ""))
             r.check("全選：只勾一部分時顯示「–」", partial() and not all_box.is_checked())
-            chips.nth(0).click(); page.wait_for_timeout(200)
+            chips.nth(O).click(); page.wait_for_timeout(200)
             r.check("勾選：取消的點點名字照樣能看", map_q() == ("place", OPERA), str(map_q()))
             # 正在只看某一點時改勾選：切回路線，才看得到路線的變化
-            box(0).check(); page.wait_for_timeout(200)
+            box(O).check(); page.wait_for_timeout(200)
             r.check("勾選：只看某一點時改勾選，地圖切回路線",
-                    map_q()[0] == "directions" and not pressed(0) and page.locator(".card.map-focus").count() == 0,
+                    map_q()[0] == "directions" and not pressed(O) and page.locator(".card.map-focus").count() == 0,
                     str(map_q()))
-            box(0).uncheck(); page.wait_for_timeout(200)
+            box(O).uncheck(); page.wait_for_timeout(200)
             all_box.click(); page.wait_for_timeout(200)
-            r.check("全選：只勾一部分時按下去，全部勾起來",
-                    box(0).is_checked() and box(1).is_checked() and all_box.is_checked() and not partial()
-                    and map_q()[0] == "directions", str(map_q()))
+            r.check("全選：只勾一部分時按下去，全部勾起來（二選一還是只留一個）",
+                    box(O).is_checked() and box(H).is_checked() and box(S).is_checked() and not box(K).is_checked()
+                    and all_box.is_checked() and not partial() and map_q()[0] == "directions", str(map_q()))
             all_box.click(); page.wait_for_timeout(200)
             r.check("全選：已經全選時再按一次，全部取消、地圖收起來改成提示",
-                    not box(0).is_checked() and not box(1).is_checked() and not all_box.is_checked()
+                    not any(box(i).is_checked() for i in range(4)) and not all_box.is_checked()
                     and not frame.is_visible() and page.locator(".daymap-empty").is_visible()
                     and page.locator(".daymap-open").count() == 0)
             all_box.click(); page.wait_for_timeout(200)
-            r.check("全選：全部取消後再按一次，全部勾回來",
-                    box(0).is_checked() and box(1).is_checked() and frame.is_visible()
-                    and map_q()[0] == "directions", str(map_q()))
+            r.check("全選：全部取消後再按一次，全部勾回來、二選一勾第一個",
+                    box(O).is_checked() and box(H).is_checked() and box(S).is_checked() and not box(K).is_checked()
+                    and frame.is_visible() and map_q()[0] == "directions", str(map_q()))
             # 換一天再回來：不再只看某一點，取消的勾選保留
-            box(0).uncheck(); chips.nth(1).click(); page.wait_for_timeout(200)
+            box(O).uncheck(); chips.nth(H).click(); page.wait_for_timeout(200)
             page.locator(".nav-item").nth(1).click(); page.wait_for_timeout(300)
             page.locator(".nav-item").nth(0).click(); page.wait_for_timeout(300)
             r.check("換一天再回來：不再只看某一點、取消的勾選還在",
-                    not pressed(0) and not pressed(1) and page.locator(".card.map-focus").count() == 0
-                    and not box(0).is_checked() and box(1).is_checked(), str(map_q()))
+                    not any(pressed(i) for i in range(4)) and page.locator(".card.map-focus").count() == 0
+                    and not box(O).is_checked() and box(H).is_checked(), str(map_q()))
             all_box.click(); page.wait_for_timeout(200)
             r.check("換一天再回來：按全選就是原本的路線",
-                    box(0).is_checked() and map_q()[0] == "directions" and "Opera" in open_href(), str(map_q()))
+                    box(O).is_checked() and map_q()[0] == "directions" and "Opera" in open_href(), str(map_q()))
             # 沒有景點的分頁不畫。但版面寬度不能跟著變：退回兩欄會整個重新置中，
             # 切分頁時左邊的按鈕橫向跳將近 200px
             nav_x = page.locator(".nav-bar").bounding_box()["x"]
@@ -1301,9 +1320,14 @@ def run(trip: str) -> bool:
             r.check("隔天：第一顆是前一晚的住宿（不編號），當天的點從 ① 開始",
                     chips.all_inner_texts() == ["🏨 丁旅館", "① 戊站"]
                     and "前一晚住宿" in (chips.nth(0).get_attribute("title") or ""), "／".join(chips.all_inner_texts()))
-            r.check("隔天：路線從前一晚的住宿出發", leg() == ("directions", "transit", D, E, ""), str(leg()))
+            r.check("隔天：路線從前一晚的住宿出發、晚上回到同一間（只列一顆）",
+                    leg() == ("directions", "transit", D, D, E), str(leg()))
             chips.nth(1).click(); page.wait_for_timeout(200)
             r.check("隔天：點第一站，看從住宿怎麼過去", leg() == ("directions", "transit", D, E, ""), str(leg()))
+            page.locator("#main .card[data-mapq]").nth(1).locator(".subject").click(); page.wait_for_timeout(200)
+            r.check("隔天：點晚上的住宿卡，看從最後一站怎麼回去、住宿那顆跟著亮",
+                    leg() == ("directions", "transit", E, D, "")
+                    and chips.nth(0).get_attribute("aria-pressed") == "true", str(leg()))
             r.check("搭車日：沒有 JS 例外", not errs, "；".join(errs))
             ctx.close()
 
