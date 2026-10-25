@@ -175,7 +175,6 @@ node tools/intro-photos.mjs fukuoka-2026 --src <原圖資料夾>  # 先重新壓
 | 動畫要表達因果 | 背景飄落、起終點脈動是純裝飾，已拿掉；只留交通卡上表示方向的流動光點 |
 | 不用 emoji 當圖示 | 頁首有一份 Phosphor 圖示表（MIT，regular），程式裡用 `ic("名稱")`。資料裡（Excel、builder 產生的按鈕文字、說明、分頁名稱）開頭的 emoji 由 `iconText()` 換成對應圖示，對不到的直接拿掉，所以資料不用改。要加新圖示照圖示表上方註解的步驟。網站標題是使用者自己寫的文字，不換 |
 | 圖示按語意上色 | `ic()` 查 `IC_CAT` 決定類別（吃 food／行 move／住 stay／買 shop／看 see／提醒 warn），CSS 的 `.ic-food` 等給顏色。**實心按鈕、選取中的分頁與標籤裡的圖示要 `color:inherit`**，不然會在深色底上自己上色、看不見 |
-| 每天一個主題色 | `DAY_HUE` 七組 `{ink, soft}`，`hueOf()` 依「有日期的分頁」的順序配、超過就循環。分頁按鈕帶 inline 的 `--d-ink`／`--d-soft`，`renderDay()` 把當天那組掛到 `.app` 上並加 `is-day`，時間膠囊、說明框、住宿卡、「現在進行到哪」才跟著走。**三組對比都要 ≥ 4.5:1**：ink 在白底、白字在 ink 上、ink 在自己的 soft 上（最後一組最容易漏，`看介紹` 的字就是 ink 疊在 soft 上）|
 | `--c-accent` 一定要夠淡 | 它是底色，上面會疊 `--c-on-accent` 的字，兩者要 ≥ 4.5:1。線條、圓點、進度條這種沒有文字疊上去的地方改用 `--c-accent-strong`（＝各主題的 `--c-on-accent`），否則 4px 的線在白底上看不出來。換主題色時這三個要一起算 |
 | 輸入框要有看得見的標籤 | 用 `<label class="f-lbl">文字<input class="input" …></label>` 包住，提示文字（placeholder）只能當範例、不能當標籤。輸入框維持 16px、44px 高（小於 16px iPhone 會放大畫面）。電腦版地圖上方的勾選框用 `aria-labelledby` 指到旁邊的地點按鈕。測試在 375px 與 1400px 都會量 |
 ## 十五、地圖連結只能指到一個地點
