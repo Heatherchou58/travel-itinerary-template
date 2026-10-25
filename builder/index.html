@@ -281,7 +281,7 @@ const THEME = {
   snow:  { accent:"#74B9FF", ink:"#0F4670", bg:"#F5F2ED", glyph:"flake" },
   sakura:{ accent:"#F4A6C0", ink:"#6E2338", bg:"#FBF6F4", glyph:"petal" },
   ocean: { accent:"#6FCBD5", ink:"#0C4A50", bg:"#F2F7F7", glyph:"wave"  },
-  maple: { accent:"#E8A369", ink:"#6B3410", bg:"#F8F2EA", glyph:"leaf"  },
+  maple: { accent:"#F5D2C8", ink:"#A33A2A", bg:"#FAF8F5", glyph:"leaf"  },
   city:  { accent:"#A9A4E0", ink:"#322B70", bg:"#F5F4F8", glyph:"tower" },
   none:  { accent:"#74B9FF", ink:"#0F4670", bg:"#F5F2ED", glyph:"dot"   }
 };
@@ -892,7 +892,7 @@ function makeIndex(data){
   h = h.replace("const FIREBASE_CONFIG = null;", "const FIREBASE_CONFIG = " + firebaseText() + ";");
   h = h.replace(/<html lang="zh-TW" data-theme="\w+">/, `<html lang="zh-TW" data-theme="${data.meta.theme}">`);
   h = h.replace(/<title>[^<]*<\/title>/, `<title>${esc(data.meta.title)}</title>`);
-  h = h.replace(/<meta name="theme-color" content="[^"]*">/, `<meta name="theme-color" content="${t.accent}">`);
+  h = h.replace(/<meta name="theme-color" content="[^"]*">/, `<meta name="theme-color" content="${t.ink}">`);
   h = h.replace(/<meta name="apple-mobile-web-app-title" content="[^"]*">/,
                 `<meta name="apple-mobile-web-app-title" content="${esc(short)}">`);
   return h;
@@ -906,7 +906,7 @@ function makeManifest(data){
     short_name: shortName(data.meta),
     description: data.meta.subtitle || "旅遊行程",
     start_url: "./", scope: "./", display: "standalone", orientation: "portrait",
-    background_color: t.bg, theme_color: t.accent, lang: "zh-TW",
+    background_color: t.bg, theme_color: t.ink, lang: "zh-TW",
     icons: [
       { src:"icons/icon-192.png", sizes:"192x192", type:"image/png", purpose:"any" },
       { src:"icons/icon-512.png", sizes:"512x512", type:"image/png", purpose:"any" },
@@ -922,7 +922,7 @@ function drawIcon(size, theme, maskable){
   const cv = document.createElement("canvas");
   cv.width = cv.height = S;
   const c = cv.getContext("2d");
-  c.fillStyle = t.accent;
+  c.fillStyle = t.ink;
   if (maskable) c.fillRect(0, 0, S, S);
   else { const r = S * .22; c.beginPath(); c.roundRect(0, 0, S, S, r); c.fill(); }
 

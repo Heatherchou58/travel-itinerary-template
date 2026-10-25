@@ -469,8 +469,12 @@ def run(trip: str) -> bool:
             page.wait_for_load_state("domcontentloaded")
             page.wait_for_timeout(1500)
 
+            # 離線拿不到檔案時瀏覽器顯示的是錯誤頁，#main 根本不會存在。原本用
+            # page.content() 找「503」會被原始碼裡任何含這三個數字的字串誤判
+            # （顏色碼、地址都有可能），所以改成讀畫面（CLAUDE.md 第六節）
             r.check("離線重新整理：頁面開得起來",
-                    page.title() != "" and "503" not in page.content())
+                    page.title() != "" and page.locator("#main").count() > 0
+                    and "503" not in page.locator("body").inner_text())
             days = page.locator(".nav-item").count()
             r.check("離線：行程日期導覽有渲染", days >= 2, f"{days} 個分頁")
             # 資訊（信用卡、免稅、緊急資訊）是出發前就要讀的，排在行前後面

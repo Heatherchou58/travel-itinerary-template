@@ -9,7 +9,7 @@
    重新部署也救不回來。（sw.js 本身不在 PRECACHE 裡，瀏覽器
    會自己偵測並安裝新版，不需要為了它升版。）
    ══════════════════════════════════════════════════ */
-const VERSION  = "v4";
+const VERSION  = "v5";
 const CACHE    = `trip-${VERSION}`;
 const IMG_CACHE = "trip-img";   // 優惠券圖片，不隨版本清掉
 const TIMEOUT  = 3000;   // 網路等待上限（毫秒），超過就用快取

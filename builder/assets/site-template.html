@@ -32,6 +32,9 @@
   --c-accent:#74B9FF;
   --c-accent-soft:#E8F4FF;
   --c-on-accent:#0F4670;
+  /* 線條、圓點、進度條這種沒有文字疊在上面的地方用深的：--c-accent 要淡到能襯深色字，
+     拿來畫 4px 的線在白底上就看不出來了。每個主題的 --c-on-accent 都是它的深色版。 */
+  --c-accent-strong:var(--c-on-accent);
   --deco-size:120px 120px,180px 180px,240px 240px;
   --c-warn:#E0A458;
   --c-warn-text:#9A6210;   /* 拿來當文字時用這個，--c-warn 在白底只有 2.2 */
@@ -40,7 +43,7 @@
   --c-ok:#2A7F52;
   /* 外部服務色（固定不隨主題變） */
   --c-naver:  #027A38;
-  --c-booking:#C24400;
+  --c-booking:#A33A2A;
   --c-map:    #1A73E8;
   --c-on-solid:#FFFFFF;    /* 深色實心按鈕上的字 */
   --c-pop:    #B85C00;   /* theme 樣式用的對比色，各主題覆寫 */
@@ -61,8 +64,8 @@
 [data-theme="sakura"]{ --c-accent:#F4A6C0; --c-pop:#04855A; --c-on-accent:#6E2338; --c-accent-soft:#FDEEF3; --c-bg:#FBF6F4;
                        --deco:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><g transform='translate(30,24) rotate(-18) scale(0.875) translate(-8,-7)' opacity='1'><ellipse cx='8' cy='7' rx='6.5' ry='3.4' fill='%23F0A9C1'/></g><g transform='translate(86,58) rotate(42) scale(0.75) translate(-8,-7)' opacity='0.82'><ellipse cx='8' cy='7' rx='6.5' ry='3.4' fill='%23F0A9C1'/></g><g transform='translate(52,96) rotate(158) scale(0.95) translate(-8,-7)' opacity='0.66'><ellipse cx='8' cy='7' rx='6.5' ry='3.4' fill='%23F0A9C1'/></g></svg>"); --deco-size:120px 120px,120px 120px; --deco-size2:120px 120px;
                        --deco-op:.55; --anim-a:driftA; --anim-b:driftB; }
-[data-theme="maple"] { --c-accent:#E8A369; --c-pop:#0077DB; --c-on-accent:#6B3410; --c-accent-soft:#FBEDE0; --c-bg:#F8F2EA;
-                       --deco:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><g transform='translate(30,24) rotate(-18) scale(0.875) translate(-8,-7)' opacity='1'><path d='M8 1.5 L9.6 5 L13 4.2 L10.9 7 L14 8.6 L10.6 9.2 L11.4 12.6 L8 10.6 L4.6 12.6 L5.4 9.2 L2 8.6 L5.1 7 L3 4.2 L6.4 5 Z' fill='%23D98442'/></g><g transform='translate(86,58) rotate(42) scale(0.75) translate(-8,-7)' opacity='0.82'><path d='M8 1.5 L9.6 5 L13 4.2 L10.9 7 L14 8.6 L10.6 9.2 L11.4 12.6 L8 10.6 L4.6 12.6 L5.4 9.2 L2 8.6 L5.1 7 L3 4.2 L6.4 5 Z' fill='%23D98442'/></g><g transform='translate(52,96) rotate(158) scale(0.95) translate(-8,-7)' opacity='0.66'><path d='M8 1.5 L9.6 5 L13 4.2 L10.9 7 L14 8.6 L10.6 9.2 L11.4 12.6 L8 10.6 L4.6 12.6 L5.4 9.2 L2 8.6 L5.1 7 L3 4.2 L6.4 5 Z' fill='%23D98442'/></g></svg>"); --deco-size:120px 120px,120px 120px; --deco-size2:120px 120px;
+[data-theme="maple"] { --c-accent:#F5D2C8; --c-pop:#1F7A73; --c-on-accent:#A33A2A; --c-accent-soft:#FCF0EC; --c-bg:#FAF8F5;
+                       --deco:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><g transform='translate(30,24) rotate(-18) scale(0.875) translate(-8,-7)' opacity='1'><path d='M8 1.5 L9.6 5 L13 4.2 L10.9 7 L14 8.6 L10.6 9.2 L11.4 12.6 L8 10.6 L4.6 12.6 L5.4 9.2 L2 8.6 L5.1 7 L3 4.2 L6.4 5 Z' fill='%23B4503C'/></g><g transform='translate(86,58) rotate(42) scale(0.75) translate(-8,-7)' opacity='0.82'><path d='M8 1.5 L9.6 5 L13 4.2 L10.9 7 L14 8.6 L10.6 9.2 L11.4 12.6 L8 10.6 L4.6 12.6 L5.4 9.2 L2 8.6 L5.1 7 L3 4.2 L6.4 5 Z' fill='%23B4503C'/></g><g transform='translate(52,96) rotate(158) scale(0.95) translate(-8,-7)' opacity='0.66'><path d='M8 1.5 L9.6 5 L13 4.2 L10.9 7 L14 8.6 L10.6 9.2 L11.4 12.6 L8 10.6 L4.6 12.6 L5.4 9.2 L2 8.6 L5.1 7 L3 4.2 L6.4 5 Z' fill='%23B4503C'/></g></svg>"); --deco-size:120px 120px,120px 120px; --deco-size2:120px 120px;
                        --deco-op:.45; --anim-a:driftA; --anim-b:driftB; }
 [data-theme="ocean"] { --c-accent:#6FCBD5; --c-pop:#C2410C; --c-on-accent:#0C4A50; --c-accent-soft:#E3F5F7; --c-bg:#F2F7F7;
                        --deco:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><g transform='translate(28,26) rotate(0) scale(1) translate(-8,-7)' opacity='0.95'><circle cx='8' cy='7' r='6.6' fill='none' stroke='%236FCBD5' stroke-width='1.5'/></g><g transform='translate(88,60) rotate(0) scale(0.58) translate(-8,-7)' opacity='0.8'><circle cx='8' cy='7' r='6.6' fill='none' stroke='%236FCBD5' stroke-width='1.5'/></g><g transform='translate(54,98) rotate(0) scale(0.78) translate(-8,-7)' opacity='0.62'><circle cx='8' cy='7' r='6.6' fill='none' stroke='%236FCBD5' stroke-width='1.5'/></g></svg>"); --deco-size:120px 120px,120px 120px; --deco-size2:120px 120px;
@@ -335,7 +338,7 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
   height:6px; border-radius:3px; background:var(--c-line);
   margin-top:var(--sp-3); overflow:hidden;
 }
-.cc-bar i{ display:block; height:100%; background:var(--c-accent); transition:width .2s; }
+.cc-bar i{ display:block; height:100%; background:var(--c-accent-strong); transition:width .2s; }
 .cc-used{ margin-top:var(--sp-2); }
 .cc-left{ margin-top:2px; font-weight:700; color:var(--c-on-accent); }
 .cc-left.cc-full{ color:var(--c-danger); }   /* 額度用完，再刷就沒加碼了 */
@@ -390,7 +393,7 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 .card{ border-left:4px solid transparent; }
 /* 用 shorthand 連寬度一起指定。住宿卡片的 .card.lodge 有自己的 1px 邊框，
    只改 border-left-color 的話，住宿變成「現在」時高亮只有 1px。 */
-.card.is-now{ border-left:4px solid var(--c-accent); background:var(--c-accent-soft); }
+.card.is-now{ border-left:4px solid var(--c-accent-strong); background:var(--c-accent-soft); }
 .card.is-next{ border-left:4px solid var(--c-line); }
 .card.is-past{ opacity:.62; }
 /* 這行不能省：瀏覽器的 [hidden]{display:none} 來自 UA 樣式表，
@@ -425,6 +428,20 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 .fl-mid .ic, .shop-x .ic, .exp-del .ic, .wx-day .ic{ margin-right:0; }
 .daymap-open .ic{ margin:0 0 0 .3em; }
 .wx-emoji .ic{ width:2.6rem; height:2.6rem; margin:0; vertical-align:0; color:var(--c-on-accent); }
+/* 圖示按語意上色（ui-ux-pro-max icon-style-consistent：同一套圖示、同一類同一色）。
+   六類：吃 food／行 move／住 stay／買 shop／看 see／提醒 warn；時間與一般操作不上色，
+   跟著文字走。每個顏色在白底、淡色底上都 ≥ 4.5:1（非文字圖形只要 3:1，這裡留足餘裕）。 */
+:root{
+  --ic-food:#B23A1F; --ic-move:#1D5FA8; --ic-stay:#7A4FA3;
+  --ic-shop:#1F7A73; --ic-see:#2F7D32;  --ic-warn:#9A6210;
+  --ic-time:#6B635B;
+}
+.ic-food{ color:var(--ic-food); } .ic-move{ color:var(--ic-move); } .ic-stay{ color:var(--ic-stay); }
+.ic-shop{ color:var(--ic-shop); } .ic-see{ color:var(--ic-see); }  .ic-warn{ color:var(--ic-warn); }
+.ic-time{ color:var(--ic-time); }
+/* 實心按鈕、選取中的分頁與標籤：底色是深的或主題色，圖示要跟著容器的文字色，不能自己上色 */
+.btn .ic, .nav-item .ic, .ttag .ic, .zoom-x .ic, .now-line .ic,
+.choice .tag .ic, .chip .ic, .dm-chip .ic, #edit-bar .ic{ color:inherit; }
 /* 電話點了就撥，在店門口不用再抄號碼。外觀跟營業時間、費用那幾列一樣，只多一條虛線
    底線表示可以點。觸控目標照樣 44px：上下 padding 把點擊範圍撐大，再用等量的負 margin
    抵掉，版面不會因此多出一塊空白（ui-ux-pro-max：extend hit area beyond visual bounds） */
@@ -434,7 +451,9 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 }
 .note-box{
   background:var(--c-accent-soft); border-radius:10px;
-  padding:var(--sp-3); margin-top:var(--sp-3); font-size:var(--fs-md); line-height:1.7;
+  /* 說明框的字跟手機通知差不多大。不用 --fs-md（大螢幕會長到 18px），
+     也不能再小：小於 16px 時 iPhone 一點輸入框就放大畫面（ui-ux-pro-max） */
+  padding:var(--sp-3); margin-top:var(--sp-3); font-size:16px; line-height:1.7;
 }
 .note-box.warn{ background:var(--c-warn-soft); border-left:3px solid var(--c-warn); }
 
@@ -533,7 +552,7 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 /* 光點沿著這條線由上往下流 */
 .route-step:not(:last-child)::after{
   content:""; position:absolute; left:7px; width:4px; height:12px; border-radius:2px;
-  background:var(--c-accent); animation:flow-step 1.8s linear infinite;
+  background:var(--c-accent-strong); animation:flow-step 1.8s linear infinite;
 }
 @keyframes flow-step{
   from{ top:23px; opacity:0; }
@@ -547,7 +566,7 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
   box-sizing:content-box; z-index:2;
 }
 /* 起終點：實心主題色（原本的脈動光暈是純裝飾，拿掉；路線上的流動光點表示方向，保留） */
-.route-dot.on{ background:var(--c-accent); }
+.route-dot.on{ background:var(--c-accent-strong); }
 @keyframes pulse{
   0%   { transform:scale(1);   opacity:.45; }
   70%  { transform:scale(2.6); opacity:0; }
@@ -568,7 +587,7 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 .route-link .bar{ position:relative; }
 .route-link .bar::after{
   content:""; position:absolute; left:calc(50% - 2px); width:4px; height:16px;
-  border-radius:2px; background:var(--c-accent);
+  border-radius:2px; background:var(--c-accent-strong);
   animation:flow 1.8s linear infinite;
 }
 @keyframes flow{
@@ -1074,7 +1093,19 @@ const linksHTML = (links=[]) => links.map(l =>
 const localSpan = t => t ? `<span class="lang-local">${esc(t)}</span>` : "";
 /* 圖示：頁首的 Phosphor 圖示表（i-名稱）。旁邊都有文字，所以對輔助技術隱藏；
    只有圖示的按鈕（✕）由按鈕自己的 aria-label 提供名稱 */
-const ic = name => `<svg class="ic" aria-hidden="true" focusable="false"><use href="#i-${name}"/></svg>`;
+/* 圖示的語意分類，決定它的顏色（CSS 的 .ic-food 等）。對不到的不上色，跟著文字走。 */
+const IC_CAT = {
+  "fork-knife":"food",
+  car:"move", train:"move", subway:"move", "airplane-tilt":"move", bicycle:"move",
+  "person-simple-walk":"move", "map-trifold":"move", "map-pin":"move",
+  bed:"stay", house:"stay",
+  "shopping-bag":"shop", wallet:"shop", "credit-card":"shop", receipt:"shop",
+  "currency-jpy":"shop", ticket:"shop",
+  compass:"see", camera:"see", globe:"see",   /* compass 是景點卡的標題圖示 */
+  warning:"warn", "first-aid":"warn",
+  clock:"time", "hourglass-medium":"time", timer:"time", "calendar-check":"time",
+};
+const ic = name => `<svg class="ic${IC_CAT[name] ? " ic-" + IC_CAT[name] : ""}" aria-hidden="true" focusable="false"><use href="#i-${name}"/></svg>`;
 /* 資料裡（Excel、builder 產生的按鈕文字、說明開頭、分頁名稱）常用 emoji 當圖示。
    開頭那一個換成對應的 SVG，對不到的直接拿掉——介面上不留 emoji 圖示（ui-ux-pro-max）。
    資料本身不動，Excel 往返也不受影響。 */
