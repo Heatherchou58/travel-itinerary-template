@@ -1116,7 +1116,7 @@ def run(trip: str) -> bool:
                     seen[n] = t
                 r.check(f"行李清單沒有重複：{title}", not dup, "；".join(dup) or f"{len(items)} 項")
             pack = page.locator("#main [data-chk]", has_text="行李清單")
-            heads = [x.strip() for x in pack.locator(".chk-group h4").all_inner_texts()]
+            heads = [x.strip() for x in pack.locator(".chk-group h2").all_inner_texts()]
             r.check("行李清單：照五大類排列", heads[:5] == ["證件與錢", "電子產品", "衣物與鞋", "盥洗與藥品", "隨身雜物"],
                     "／".join(heads))
             ctx.close()
@@ -1529,6 +1529,84 @@ def run(trip: str) -> bool:
                         page.locator("#main img.intro-photo").evaluate("i => i.naturalWidth") > 0)
                 r.check("介紹照片：沒有 JS 例外", not photo_errors, "; ".join(photo_errors[:2]))
                 ctx.close()
+
+            # 12 ── ui-ux-pro-max 規則：之後所有 UI 變更都要過 ──────────
+            # 規則出處：ui-ux-pro-max-skill-main/.claude/skills/ui-ux-pro-max/references/quick-reference.md
+            ctx = browser.new_context(viewport={"width": 375, "height": 812}, is_mobile=True, has_touch=True)
+            page = ctx.new_page()
+            page.goto(base)
+            page.wait_for_load_state("networkidle")
+            page.wait_for_timeout(800)
+            UX_PROBE = """() => {
+                const vis = e => e.checkVisibility() && e.getBoundingClientRect().width > 0;
+                const nums = c => c.match(/[0-9.]+/g).map(Number);
+                const lum = ([r, g, b]) => { const f = v => { v /= 255; return v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; };
+                  return .2126 * f(r) + .7152 * f(g) + .0722 * f(b); };
+                const over = (fg, bg) => { const a = fg.length > 3 ? fg[3] : 1; return [0, 1, 2].map(i => fg[i] * a + bg[i] * (1 - a)); };
+                const bgOf = e => { const layers = [];
+                  for (let n = e; n; n = n.parentElement){ const c = nums(getComputedStyle(n).backgroundColor);
+                    const a = c.length > 3 ? c[3] : 1; if (a > 0) layers.push(c); if (a >= 1) break; }
+                  let bg = [255, 255, 255]; for (const l of layers.reverse()) bg = over(l, bg); return bg; };
+                const name = e => (e.innerText || e.getAttribute("aria-label") || e.tagName).trim().slice(0, 20);
+                const out = { contrast: [], target: [], spacing: [], alt: [], heading: [], overflow: 0 };
+                for (const e of document.querySelectorAll("body *")){
+                  if (!vis(e)) continue;
+                  const own = [...e.childNodes].some(n => n.nodeType === 3 && n.textContent.trim());
+                  if (!own) continue;
+                  const s = getComputedStyle(e), fs = parseFloat(s.fontSize);
+                  const bg = bgOf(e), fg = over(nums(s.color), bg);
+                  const L1 = lum(fg), L2 = lum(bg), ratio = (Math.max(L1, L2) + .05) / (Math.min(L1, L2) + .05);
+                  const need = (fs >= 24 || (fs >= 18.66 && +s.fontWeight >= 700)) ? 3 : 4.5;
+                  if (ratio < need) out.contrast.push(`${name(e)} ${ratio.toFixed(2)}`);
+                }
+                /* .shop-x 的圓圈只有 28px，點擊範圍由 ::after 撐到 44px，不量本體 */
+                const T = [...document.querySelectorAll('a[href], button, select, textarea, summary, [role=tab], label.chip, input:not([type=checkbox]):not([type=radio]):not([type=hidden])')]
+                  .filter(e => vis(e) && !e.matches(".shop-x"));
+                const R = T.map(e => e.getBoundingClientRect());
+                T.forEach((e, i) => { if (R[i].width < 44 || R[i].height < 44) out.target.push(`${name(e)} ${Math.round(R[i].width)}×${Math.round(R[i].height)}`); });
+                for (let i = 0; i < T.length; i++) for (let j = i + 1; j < T.length; j++){
+                  if (T[i].contains(T[j]) || T[j].contains(T[i])) continue;
+                  const A = R[i], B = R[j];
+                  const dx = Math.max(A.left, B.left) - Math.min(A.right, B.right);
+                  const dy = Math.max(A.top, B.top) - Math.min(A.bottom, B.bottom);
+                  if ((dy < 0 && dx < 8) || (dx < 0 && dy < 8)) out.spacing.push(`${name(T[i])}／${name(T[j])}`);
+                }
+                for (const im of document.querySelectorAll("img")) if (vis(im) && !im.getAttribute("alt")) out.alt.push(im.getAttribute("src"));
+                let last = 0;
+                for (const h of document.querySelectorAll("h1,h2,h3,h4,h5,h6")){ if (!vis(h)) continue;
+                  const lv = +h.tagName[1]; if (lv > last + 1) out.heading.push(`${h.tagName} ${h.innerText.slice(0, 12)}`); last = lv; }
+                out.overflow = document.documentElement.scrollWidth - document.documentElement.clientWidth;
+                return out;
+            }"""
+            fails = {k: [] for k in ["contrast", "target", "spacing", "alt", "heading", "overflow"]}
+            tabs = page.locator(".nav-item")
+            for i in range(tabs.count()):
+                tab = tabs.nth(i).inner_text().split("\n")[0]
+                tabs.nth(i).click()
+                page.wait_for_timeout(300)
+                page.evaluate("document.querySelectorAll('#main details').forEach(d => d.open = true)")
+                got = page.evaluate(UX_PROBE)
+                for k in ["contrast", "target", "spacing", "alt", "heading"]:
+                    fails[k] += [f"{tab}：{x}" for x in got[k]]
+                if got["overflow"] > 0: fails["overflow"].append(f"{tab}：{got['overflow']}px")
+            for k, label in [("contrast", "文字對比 ≥ 4.5:1（大字 3:1）"), ("target", "觸控目標 ≥ 44×44px"),
+                             ("spacing", "觸控目標之間 ≥ 8px"), ("alt", "圖片都有替代文字"),
+                             ("heading", "標題層級不跳級"), ("overflow", "375px 不會橫向捲動")]:
+                r.check(f"UI 規則：{label}", not fails[k], "；".join(sorted(set(fails[k]))[:4]) or "各分頁都過")
+            ctx.close()
+
+            ctx = browser.new_context(viewport={"width": 375, "height": 812}, reduced_motion="reduce")
+            page = ctx.new_page()
+            page.goto(base)
+            page.wait_for_load_state("networkidle")
+            moving = set()
+            tabs = page.locator(".nav-item")
+            for i in range(tabs.count()):
+                tabs.nth(i).click()
+                page.wait_for_timeout(300)
+                moving |= set(page.evaluate("document.getAnimations().filter(a => a.playState === 'running' && a.effect.getTiming().duration > 1).map(a => a.animationName || 'transition')"))
+            r.check("UI 規則：減少動態效果時沒有動畫在跑", not moving, "、".join(sorted(moving)))
+            ctx.close()
 
             browser.close()
 
