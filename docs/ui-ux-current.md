@@ -1,24 +1,26 @@
 # 福岡 2026 行程網站 —— UI／UX 現況
 
 讀自 `fukuoka-2026/index.html`，狀態是 2026-10-25 做完第九節「已處理」那七項、
-並把背景飄落的裝飾裝回去之後。
-`<style>` 區段與 `builder/assets/site-template.html` **逐行相同**（870 行，`diff` 無差異），
+把背景飄落的裝飾裝回去、並補上第七節那六條無障礙缺口（含深色模式）之後。
+`<style>` 區段與 `builder/assets/site-template.html` **逐行相同**（930 行，`diff` 無差異），
 所以這份文件同時描述模板；下面寫的每一條改動都要改兩處（CLAUDE.md 第一節）。
 
 ---
 
 ## 一、整站骨架
 
-單一 HTML，三層：設計層 `<style>`（19–888）、資料層 `TRIP_DATA`（993–3247）、程式層（3248–4969）。
+單一 HTML，三層：設計層 `<style>`（19–948）、資料層 `TRIP_DATA`（1054–3313）、程式層（3314–5064）。
 沒有外部 CSS／JS／字型，圖示是內嵌的 Phosphor regular SVG `<symbol>`。
 
 ```
+a.skip               跳到主內容（鍵盤第一個 Tab，平常移出畫面，z-index 400）
 .sync                連線狀態（position:fixed 左下角，z-index 200）
 .app                 max-width 由斷點決定
   header             h1 標題 ・ 副標 ・ 目前天氣條 .wx-now ・ 更新時間 .wx-stamp
-  nav.nav-bar        role=tablist，11 顆 .nav-item（sticky top:0，z-index 100）
+  nav.nav-bar        role=tablist，11 顆 .nav-item（sticky top:0，z-index 100）；
+                     每顆有 id=tab-<dayid>、aria-controls=main，只有選取中的那顆 tabindex=0
   aside#daymap       當日路線地圖（只有 ≥1024px 出現）
-  main#main          當天的卡片；切分頁時整段 innerHTML 重畫
+  main#main          role=tabpanel、tabindex=-1；當天的卡片，切分頁時整段 innerHTML 重畫
   footer             #edit-bar（只有「行前」分頁顯示）＋ Open-Meteo 授權
 #toast               提示訊息（第一次用到才建立，role=status）
 #zoom                圖片放大 <dialog>（第一次用到才建立）
@@ -76,6 +78,9 @@
 
 三者的關係要一起算：`--c-accent` 是底色、`--c-on-accent` 是疊在上面的字（≥ 4.5:1），
 `--c-accent-strong` 是同一色的深版，給 4px 的線這種白底上看不見淡色的地方。
+
+上面是淺色的值。深色模式在 CSS 最後一塊 `@media (prefers-color-scheme: dark)` 整組覆寫，
+明暗角色對調（`--c-accent` 變成深底、`--c-on-accent` 變成淺字），細節見第七節。
 
 ### 圖示語意色
 
@@ -172,7 +177,7 @@
 | `flight` | 1px accent 框 ・ 航空公司＋班號／日期一列 ・ 三欄 grid：出發時刻／機場／航廈 — 飛機圖示（虛線穿過） — 抵達 |
 | `transit` | 標題 ・ 路線 ・ 總耗時 ・ `.route` 垂直時間軸：`.route-dot`（起終點實心、經過站空心且字淡一階）、站間 4px 線由上一站畫到下一站、出口說明、`.note-box.warn` |
 | `options` | 二選一：標題（結尾括號補充字較小）＋每個選項一塊 `.choice`（10px 框、A／B 標籤、名稱、備註、按鈕） |
-| `checklist` | 標題＋`done/total` ・ 每組一個 `h2` ・ 每項 `<label class="chk">`（18px 原生勾選框，勾了文字變淡加刪除線）；有連結的項目把 `<a>` 放在 label **外面**，點連結不會順便打勾 |
+| `checklist` | 標題＋`done/total` ・ 每組一個 `h3` ・ 每項 `<label class="chk">`（18px 原生勾選框，勾了文字變淡加刪除線）；有連結的項目把 `<a>` 放在 label **外面**，點連結不會順便打勾 |
 | `cards` | 每張信用卡一塊：卡名＋回饋率膠囊 ・ 已刷金額輸入框 ・ 6px 進度條 ・ 剩餘額度（用完變紅） ・ 登錄狀態；可隱藏／還原 |
 | `shopping` | 可收合的群組（`<details>`，標題＋件數＋刪群組） ・ 兩欄 grid，每格左上一顆 ✕、120px 封面圖（點了放大，沒圖時改成「加圖片」）。購物項目是勾選框＋品名（＋誰要的）＋「數量／備註」與「金額」兩個輸入框；優惠券群組只有品名與「開啟優惠券」，沒有勾選框也沒有輸入框。底部是「加一項」與「加一組」表單 |
 | `weather` | `.wx-strip` 橫向捲動，每天一張 76px 寬的 `.wx-day`（日期／圖示／高／低／降雨機率） |
@@ -189,7 +194,7 @@
 |---|---|
 | `.time` | 淡底圓角膠囊，12px 粗體 |
 | `.stay` / 車程 | 時間旁邊的灰字，`停留` 是扣掉 `交通(分)` 之後的數字 |
-| `.subject` | 18.4px 粗體，前面一個語意上色的圖示。**是 `div` 不是標題元素** |
+| `.subject` | 18.4px 粗體，前面一個語意上色的圖示。是 `h2`（CSS 自己歸零邊距，外觀跟原本的 `div` 一樣） |
 | `.meta` | 13.6px 灰字一列；電話是 `a.tel`，虛線底線，上下 12px padding ＋ −12px margin 撐出 44px 熱區 |
 | `.note-box` | 淡底 10px 圓角、16px 字；`.warn` 版本換成警示底色＋左邊 3px 線 |
 | `.intro` | 原生 `<details>`，預設收合，標題列「看介紹」44px 高。有照片時收合那一條鋪 0.25 透明度的照片（展開後收掉），照片放在文字下面、照原比例完整顯示，底下附作者與授權 |
@@ -219,7 +224,7 @@
 |---|---|
 | 開啟網站 | 直接跳到「今天」那個分頁（不在行程期間就顯示第一個分頁），再捲到目前進行中的項目（`prefers-reduced-motion` 時不用平滑捲動） |
 | 「現在進行到哪」 | 每 30 秒、以及從背景切回來時重算。只改 class 與一行字，不重畫整頁——否則展開到一半的介紹會被收起來。目前項目 `.is-now`（左邊 4px 線＋淡底＋「現在・還有 N 分（預計 HH:MM 離開）」），下一個 `.is-next`（灰線），已結束 `.is-past`（底色換成頁面色、浮起的陰影換成一條細框線，文字對比不變） |
-| 切分頁 | 點 `.nav-item` → `renderDay()` 重畫 `#main`、更新 `aria-selected`、重畫地圖、捲回頂端 |
+| 切分頁 | 點 `.nav-item` → `renderDay()` 重畫 `#main`、更新 `aria-selected` 與 roving tabindex、重畫地圖、捲回頂端。鍵盤：焦點在分頁上時 ←→↑↓ 直接換過去並把焦點帶著走，Home／End 跳頭尾 |
 | 展開／收合 | 介紹與購物群組都用原生 `<details>`，沒有 JS；三角由 `summary::before` 畫，`[open]` 時旋轉 90°（.15s） |
 | 勾選 | 勾選 key 是「清單:項目文字」（不含群組名稱，換分組不會掉勾；**改項目文字會掉勾**）。只存本機、不同步 |
 | 事件 | 全部委派在 `#main`／`#nav`／`#daymap` 上，沒有 inline `onclick` |
@@ -252,16 +257,35 @@
 標題層級不跳級、介面沒有 emoji、輸入框有看得見的標籤、取得焦點的密語框沒被分頁列蓋住、
 375px 不會橫向捲動。另外兩個情境：`reduced-motion` 下沒有動畫在跑、1400px 下輸入框也都有標籤。
 
-### 缺口（測試目前量不到的）
+### 2026-10-25 補上的
 
-| 缺口 | 說明 |
+| 項目 | 怎麼做的 |
 |---|---|
-| 分頁沒有完整的 tab 語意 | `nav` 是 `role="tablist"`、按鈕是 `role="tab"` 且有 `aria-selected`，但沒有 `aria-controls`，`<main>` 也沒有 `role="tabpanel"`；`#nav` 只綁 `click`，**方向鍵不能切分頁**（tablist 的慣例是左右鍵移動） |
-| 整頁只有兩個標題元素 | 一個 `h1`（網站標題）、一個 `h2`（清單群組）。卡片標題 `.subject` 是 `div`，所以讀螢幕的人沒辦法用標題在一天的行程裡跳 |
-| 放大檢視的圖沒有替代文字 | `<img alt="">`，但它是那個對話框的主要內容（縮圖有 alt）；對話框本身也沒有 `aria-label` |
-| 沒有跳到主內容的連結 | 頁首加 11 顆分頁按鈕之後才到行程，用鍵盤每切一次都要重新 Tab 過去 |
-| 記帳的群組標籤沒有綁定 | 「誰付錢」「分攤對象」是沒有 `for` 的 `<label>`，等於一段純文字（`fieldset`／`legend` 或 `role="group"` 才會被讀出來）。測試過得去是因為每顆 chip 自己被 `<label>` 包住 |
-| 沒有深色模式 | `<meta name="color-scheme" content="light">`，CSS 沒有 `prefers-color-scheme` 分支。五個主題都是淺色 |
+| 分頁的 tab 語意與鍵盤操作 | 每顆分頁有 `id="tab-<dayid>"` 與 `aria-controls="main"`；`<main>` 是 `role="tabpanel"` ＋ `aria-labelledby` 指回選取中的分頁。roving tabindex：只有選取中的那顆是 Tab 鍵的停留點，其餘用 ←→↑↓ 走（手機橫向、電腦直向，所以四個方向都收），Home／End 跳頭尾。**代價：`<main>` 的 role 被 `tabpanel` 蓋掉，失去 main 地標**——改用下面的「跳到主內容」補回同樣的用途 |
+| 標題層級 | 卡片標題 `.subject` 從 `div` 改成 `h2`，清單群組從 `h2` 降成 `h3`。現在是 h1（網站標題）→ h2（卡片）→ h3（清單群組），讀螢幕可以跳著讀。CSS 補 `margin:0 0 var(--sp-1)` 歸零瀏覽器預設，外觀完全沒變（實測仍是 18.4px／700／`margin:0 0 4px`） |
+| 放大檢視 | 開啟時把縮圖的 `alt` 複製到放大的那張圖，對話框也設 `aria-label`（「<品名>（放大）」） |
+| 跳到主內容 | `<a class="skip" href="#main">` 放在 body 最前面，鍵盤第一個 Tab 就是它，按下去焦點落在 `#main`（所以它要 `tabindex="-1"`）。平常用 `left:-9999px` 移出畫面——`display:none` 與 `visibility:hidden` 會讓它根本不能被聚焦 |
+| 記帳的群組標籤 | 「我是誰」「誰付錢」「分攤對象」改成 `role="group"` ＋ `aria-labelledby` 指到旁邊的標題（`.f-grp`，樣式與 `.field > label` 共用）。原本是沒有 `for` 的 `<label>`，等於一段純文字 |
+| 深色模式 | 檔案最後一段自成一塊的 `@media (prefers-color-scheme: dark)`，跟著系統走。五個主題各一套底色／`--c-surface`／`--c-accent`／`--c-accent-soft`／`--c-on-accent`，其餘語意色（文字、線、提醒、刪除、同步、六個圖示色、兩階陰影）不分主題。`--c-pop` **刻意不覆寫**——原本的深飽和色配白字仍有 4.6–5.4:1，改淺反而會讓 `.btn-theme` 的白字糊掉 |
+
+#### 深色模式裡「光換 token 不夠」的幾個地方
+
+這幾條是實際量出來才發現的，不是推出來的：
+
+| 地方 | 為什麼 |
+|---|---|
+| `.btn`、`.skip` | 底色是 `--c-text`。深色模式下 `--c-text` 變成淺的，白字就看不見了，所以字改用 `--c-bg` |
+| `.btn-plain`／`.btn-route`／`.btn-theme` | 上面那條 `.btn{ color }` 寫在它們後面，同樣是一個 class 的優先序，會把它們的 `color` 一起蓋掉。**四個變體都要在深色區塊裡重新宣告一次**——不補的話外框按鈕會變成深字配深底，實測 1.10:1 |
+| `.chk input`／`.vault-remember input` 的 `accent-color` | 原本吃 `--c-accent`，那在深色模式是「底色」用的深色，拿來當勾勾看不見，改用 `--c-on-accent` |
+| `.wx-grid` 的分隔線 | 寫死 `rgba(0,0,0,.06)`，在深底上等於沒有，改成 `rgba(255,255,255,.1)` |
+| 「看介紹」鋪的照片 | 深色模式的字是淺的，照片要從 `.25` 壓到 `.15` 才不會吃掉對比 |
+
+嵌入的 Google 地圖永遠是淺色的，控制不了（只有電腦版會出現）。
+
+### 還沒做
+
+第七節原本列的六條都補上了。深色模式有測試在守（第 12 段多一個 `color_scheme="dark"`
+的情境，逐一打開 11 個分頁量對比），所以之後改淺色忘了改深色會直接失敗。
 
 ---
 

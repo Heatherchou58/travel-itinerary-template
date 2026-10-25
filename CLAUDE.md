@@ -172,13 +172,15 @@ node tools/intro-photos.mjs fukuoka-2026 --src <原圖資料夾>  # 先重新壓
 | 文字對比 ≥ 4.5:1（大字 3:1） | 次要文字 `--c-text-dim` 是 `#6B635B`，不要調淡。`--c-warn` 太淡不能當文字，文字用 `--c-warn-text` |
 | 降低存在感不要用 `opacity` | 整塊調透明會連文字一起壓掉：`.card.is-past` 原本的 `opacity:.62` 讓正文從 11.8:1 掉到 3.8:1、次要文字掉到 2.7:1。**測試的對比探針只讀 `backgroundColor`、不算 `opacity`，所以量不到**。要降級就改容器本身——底色換成 `--c-bg`、浮起的陰影換成一條 `0 0 0 1px` 的細框線 |
 | 觸控目標 ≥ 44×44px、彼此間隔 ≥ 8px | 外觀小的連結（電話、照片出處、頁尾）用上下 padding 撐出點擊範圍、再用等量負 margin 抵掉，版面不變。購物的 ✕ 用 `::after` 撐，測試特別排除它 |
-| 標題層級不跳級 | 頁首是 h1，清單群組是 h2 |
-| 圖片要有替代文字 | 介紹照片的 alt 用景點名稱 |
+| 標題層級不跳級 | 頁首 h1 → 卡片標題 `.subject` h2 → 清單群組 h3。`.subject` 自己寫 `margin:0 0 var(--sp-1)` 歸零瀏覽器預設，外觀才跟原本的 `div` 一樣。**加新的卡片型別時 `.subject` 要用 `h2`**；測試用 `.chk-group h3` 讀群組名，改了層級要一起改測試 |
+| 圖片要有替代文字 | 介紹照片的 alt 用景點名稱；放大檢視的那張在開啟時從縮圖複製 alt，對話框另外設 `aria-label` |
+| 分頁是 APG 的 tabs | 每顆 `id="tab-<dayid>"`＋`aria-controls="main"`，`<main>` 是 `role="tabpanel"`＋`aria-labelledby`。只有選取中的那顆 `tabindex=0`（roving），其餘靠方向鍵。**`<main>` 因此不再是 main 地標**，改由 `.skip` 這條「跳到主內容」補 |
 | 減少動態效果時不能有動畫在跑 | `*` 不會套到 `::before／::after`，偽元素的動畫要另外寫進 reduced-motion 規則，而且選擇器要跟原規則一樣具體 |
 | 動畫要表達因果 | 起終點的脈動光暈是純裝飾，已拿掉；交通卡上表示方向的流動光點保留 |
 | **背景飄落的裝飾是這條規則的例外** | 使用者指定要留。`c024925` 曾照 motion-meaning 把 `body::before／::after` 的 `animation` 拿掉，2026-10-25 又順手刪了留下來的 `@keyframes`，使用者發現楓葉不會動、要求裝回去。**不要再把它當成純裝飾刪掉。** 偏好減少動態的人由 `prefers-reduced-motion` 連圖層一起關掉，所以測試那條仍然會過 |
 | 不用 emoji 當圖示 | 頁首有一份 Phosphor 圖示表（MIT，regular），程式裡用 `ic("名稱")`。資料裡（Excel、builder 產生的按鈕文字、說明、分頁名稱）開頭的 emoji 由 `iconText()` 換成對應圖示，對不到的直接拿掉，所以資料不用改。要加新圖示照圖示表上方註解的步驟。網站標題是使用者自己寫的文字，不換 |
 | 圖示按語意上色 | `ic()` 查 `IC_CAT` 決定類別（吃 food／行 move／住 stay／買 shop／看 see／提醒 warn），CSS 的 `.ic-food` 等給顏色。**實心按鈕、選取中的分頁與標籤裡的圖示要 `color:inherit`**，不然會在深色底上自己上色、看不見 |
+| 深色模式在 CSS 最後一塊 | `@media (prefers-color-scheme: dark)` 自成一段，五個主題各一套底色與強調色。改了淺色的顏色就要想一下深色——測試第 12 段有一個 `color_scheme="dark"` 的情境會量。**最容易踩的是按鈕**：`.btn` 的底是 `--c-text`，深色下會翻過來，所以深色區塊裡 `.btn{ color:var(--c-bg) }`；而這一條寫在 `.btn-plain`／`.btn-route`／`.btn-theme` 後面，會蓋掉它們的 `color`，四個變體都要重新宣告一次。`--c-pop` 不覆寫 |
 | `--c-accent` 一定要夠淡 | 它是底色，上面會疊 `--c-on-accent` 的字，兩者要 ≥ 4.5:1。線條、圓點、進度條這種沒有文字疊上去的地方改用 `--c-accent-strong`（＝各主題的 `--c-on-accent`），否則 4px 的線在白底上看不出來。換主題色時這三個要一起算 |
 | 輸入框要有看得見的標籤 | 用 `<label class="f-lbl">文字<input class="input" …></label>` 包住，提示文字（placeholder）只能當範例、不能當標籤。輸入框維持 16px、44px 高（小於 16px iPhone 會放大畫面）。電腦版地圖上方的勾選框用 `aria-labelledby` 指到旁邊的地點按鈕。測試在 375px 與 1400px 都會量 |
 ## 十五、地圖連結只能指到一個地點

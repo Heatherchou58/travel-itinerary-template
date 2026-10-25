@@ -1235,7 +1235,8 @@ def run(trip: str) -> bool:
                     seen[n] = t
                 r.check(f"行李清單沒有重複：{title}", not dup, "；".join(dup) or f"{len(items)} 項")
             pack = page.locator("#main [data-chk]", has_text="行李清單")
-            heads = [x.strip() for x in pack.locator(".chk-group h2").all_inner_texts()]
+            # 群組名是 h3：卡片標題已經是 h2，群組要低一階才不會跳級（第 12 段的標題層級那條）
+            heads = [x.strip() for x in pack.locator(".chk-group h3").all_inner_texts()]
             r.check("行李清單：照五大類排列", heads[:5] == ["證件與錢", "電子產品", "衣物與鞋", "盥洗與藥品", "隨身雜物"],
                     "／".join(heads))
             ctx.close()
@@ -1770,6 +1771,29 @@ def run(trip: str) -> bool:
                 page.wait_for_timeout(300)
                 moving |= set(page.evaluate("document.getAnimations().filter(a => a.playState === 'running' && a.effect.getTiming().duration > 1).map(a => a.animationName || 'transition')"))
             r.check("UI 規則：減少動態效果時沒有動畫在跑", not moving, "、".join(sorted(moving)))
+            ctx.close()
+
+            # 深色模式也要過對比。五個主題各一套深色，而且有幾個地方是「光換 token 不夠」的
+            # （.btn 的底色是 --c-text，深色下會翻過來）——只改淺色就會在這裡失敗。
+            ctx = browser.new_context(viewport={"width": 375, "height": 812}, color_scheme="dark")
+            page = ctx.new_page()
+            page.goto(base)
+            page.wait_for_load_state("networkidle")
+            page.wait_for_timeout(500)
+            dark_fail = []
+            tabs = page.locator(".nav-item")
+            for i in range(tabs.count()):
+                tab = tabs.nth(i).inner_text().split("\n")[0]
+                tabs.nth(i).click()
+                page.wait_for_timeout(300)
+                page.evaluate("document.querySelectorAll('#main details').forEach(d => d.open = true)")
+                if page.locator("#main .secret-ask").count():
+                    page.locator("#main .secret-ask").first.click()
+                    page.wait_for_timeout(100)
+                    page.evaluate("window.scrollTo(0, 0)")
+                dark_fail += [f"{tab}：{x}" for x in page.evaluate(UX_PROBE)["contrast"]]
+            r.check("UI 規則：深色模式的文字對比 ≥ 4.5:1（大字 3:1）", not dark_fail,
+                    "；".join(sorted(set(dark_fail))[:4]) or "各分頁都過")
             ctx.close()
 
             # 電腦版才有的介面（右側地圖上方的地點列）也要過標籤這條

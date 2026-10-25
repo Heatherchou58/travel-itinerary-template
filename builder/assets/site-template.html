@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<meta name="color-scheme" content="light">
+<meta name="color-scheme" content="light dark">
 <!-- 行程含住宿、日期與同行者，不要被搜尋引擎收錄。
      專案站（/{repo}/）無法用 robots.txt——爬蟲只讀網域根目錄的那一份。 -->
 <meta name="robots" content="noindex, nofollow">
@@ -150,6 +150,17 @@ body::after{
 }
 
 .app{ width:100%; max-width:var(--w-app); position:relative; z-index:1; padding-bottom:var(--sp-6); }
+
+/* 跳到行程內容：鍵盤的第一個 Tab 就是它，按下去可以略過頁首與十一顆分頁。
+   平常用 left:-9999px 移出畫面，不用 display:none／visibility:hidden——那兩個會讓它
+   根本不能被聚焦。position:fixed 的負 left 不會把頁面撐出橫向捲動。 */
+.skip{
+  position:fixed; top:var(--sp-2); left:-9999px; z-index:400;
+  display:inline-flex; align-items:center; min-height:44px; padding:0 var(--sp-4);
+  border-radius:10px; background:var(--c-text); color:var(--c-on-solid);
+  font-size:var(--fs-sm); font-weight:700; text-decoration:none;
+}
+.skip:focus{ left:var(--sp-2); }
 
 /* ── Header ───────────────────────────── */
 header{ text-align:center; padding:var(--sp-5) var(--sp-4) var(--sp-3); }
@@ -440,7 +451,9 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
   display:inline-block; font-size:var(--fs-xs); color:var(--c-text-dim);
   margin-left:var(--sp-2); margin-bottom:var(--sp-2);
 }
-.subject{ font-size:var(--fs-lg); font-weight:700; margin-bottom:var(--sp-1); }
+/* 卡片標題是 h2（頁首 h1 → 卡片 h2 → 清單群組 h3），所以要自己歸零瀏覽器
+   預設的字級與上下邊距，外觀跟原本的 div 一模一樣 */
+.subject{ margin:0 0 var(--sp-1); font-size:var(--fs-lg); font-weight:700; }
 .lang-local{ font-size:var(--fs-sm); color:var(--c-text-dim); font-weight:400; margin-left:var(--sp-1); }
 .meta{ font-size:var(--fs-sm); color:var(--c-text-dim); margin-bottom:var(--sp-1); }
 /* 卡片最後的補充說明（匯率、CSV 編碼），跟上面的欄位或按鈕隔開一段 */
@@ -636,7 +649,7 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 /* ── 勾選清單 ─────────────────────────── */
 .chk-group{ margin-top:var(--sp-3); }
 .chk-group:first-of-type{ margin-top:var(--sp-2); }
-.chk-group h2{ margin:0 0 var(--sp-2); font-size:var(--fs-sm); color:var(--c-on-accent); }
+.chk-group h3{ margin:0 0 var(--sp-2); font-size:var(--fs-sm); color:var(--c-on-accent); }
 .chk{
   display:flex; align-items:center; gap:var(--sp-3);
   min-height:44px; padding:0; cursor:pointer; font-size:var(--fs-sm); line-height:1.4;
@@ -668,7 +681,10 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 
 /* ── 記帳 ─────────────────────────────── */
 .field{ margin-bottom:var(--sp-3); }
-.field > label{ display:block; font-size:var(--fs-sm); font-weight:700; margin-bottom:var(--sp-2); }
+/* .f-grp：一組 chip（我是誰、誰付錢、分攤對象）的標題。它不能是 <label>——沒有
+   單一的輸入框可以指；改用 role="group" + aria-labelledby 綁，讀螢幕的人才知道
+   這幾顆是一組的。外觀跟 .field > label 一樣。 */
+.field > label, .f-grp{ display:block; font-size:var(--fs-sm); font-weight:700; margin-bottom:var(--sp-2); }
 .input{
   width:100%; padding:10px var(--sp-3); min-height:44px;
   border:1px solid var(--c-line); border-radius:10px;
@@ -885,6 +901,50 @@ html{ font-size:clamp(16px, 4.2vw, 18px); }
 footer{ text-align:center; font-size:var(--fs-xs); color:var(--c-text-dim); padding:var(--sp-5) var(--sp-4); }
 footer a{ color:inherit; }
 footer > a{ display:inline-block; padding:14px 0; margin:-14px 0; }
+
+/* ── 深色模式 ─────────────────────────────────
+   跟著系統走。五個主題各一套底色與強調色，其餘的語意色不分主題。
+   每一組會疊在一起的前景／背景都算過對比：文字 ≥ 4.5:1，圖示這種非文字圖形 ≥ 3:1。
+
+   有幾個地方光換 token 不夠，附在最後單獨處理——最典型的是 .btn 與 .skip：
+   它們的底色是 --c-text，深色模式下 --c-text 變成淺的，白字就看不見了。 */
+@media (prefers-color-scheme: dark){
+  :root{
+    --c-surface:#1A2029; --c-text:#EDE7E1; --c-text-dim:#AAA098; --c-line:#3B332D;
+    --c-warn-text:#F0B870; --c-warn-soft:#2A2118;
+    --c-danger:#F28E88; --c-ok:#74D7A0;
+    /* 深底上要更重的影子才看得出層次 */
+    --shadow:0 2px 8px rgba(0,0,0,.45);
+    --shadow-pop:0 4px 14px rgba(0,0,0,.6);
+    --ic-food:#F0896B; --ic-move:#7FB6EE; --ic-stay:#C6A2E8;
+    --ic-shop:#5FC9C0; --ic-see:#86CE89;  --ic-warn:#F0B870;
+    --ic-time:#AAA098;
+  }
+  /* --c-pop 刻意不覆寫：各主題原本的深飽和色配白字仍有 4.6–5.4:1，在深底上也還看得出
+     是一塊按鈕（3.4–4.0:1）。改淺反而會讓 .btn-theme 的白字糊掉。 */
+  [data-theme="snow"]  { --c-bg:#10141A; --c-surface:#1A2029; --c-accent:#1E3A52; --c-accent-soft:#171D25; --c-on-accent:#A8D4F5; --deco-op:.30; }
+  [data-theme="sakura"]{ --c-bg:#191215; --c-surface:#241A20; --c-accent:#4E2436; --c-accent-soft:#231820; --c-on-accent:#F7B9CE; --deco-op:.30; }
+  [data-theme="maple"] { --c-bg:#17120F; --c-surface:#221C18; --c-accent:#4A2A20; --c-accent-soft:#251D19; --c-on-accent:#F3B9A6; --deco-op:.28; }
+  [data-theme="ocean"] { --c-bg:#0E1617; --c-surface:#182224; --c-accent:#1C3F44; --c-accent-soft:#151F20; --c-on-accent:#9EDCE3; --deco-op:.30; }
+  [data-theme="city"]  { --c-bg:#14141C; --c-surface:#1E1E29; --c-accent:#2E2A55; --c-accent-soft:#1A1A24; --c-on-accent:#C3BEF0; --deco-op:.18; }
+
+  /* 實心的主要按鈕與「跳到主內容」：底是 --c-text（深色模式下是淺的），字要翻成底色。
+     下面四行不能省：這一條在 .btn-* 那些變體後面，同樣是一個 class 的優先序，
+     不重新宣告的話會把它們的 color 一起蓋掉——外框樣式的 .btn-plain／.btn-route
+     會變成深字配深底（實測 1.10:1，等於看不見）。 */
+  .btn, .skip{ color:var(--c-bg); }
+  .btn-naver, .btn-booking, .btn-map{ color:var(--c-on-solid); }
+  .btn-theme{ color:var(--c-on-solid); }
+  .btn-plain{ color:var(--c-text); }
+  .btn-route{ color:var(--c-on-accent); }
+  /* 勾選框：--c-accent 在深色模式是「底色」用的深色，拿來當勾勾會看不見 */
+  .chk input, .vault-remember input{ accent-color:var(--c-on-accent); }
+  /* 天氣格的分隔線原本是黑色半透明，在深底上等於沒有 */
+  .wx-grid div + div{ border-left-color:rgba(255,255,255,.1); }
+  /* 「看介紹」那條鋪的照片：深色模式的字是淺的，照片要壓更暗才不會吃掉對比
+     （照片最亮處以純白計，疊完仍有 6:1 以上） */
+  .intro.has-photo summary::after{ opacity:.15; }
+}
 </style>
 </head>
 <body>
@@ -964,6 +1024,7 @@ SOFTWARE.
 <symbol id="i-x" viewBox="0 0 256 256"><path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"/></symbol>
 </svg>
 
+<a class="skip" href="#main">跳到行程內容</a>
 <div class="sync" id="sync" data-s="local">單機模式</div>
 <div class="app">
   <header>
@@ -979,7 +1040,7 @@ SOFTWARE.
     <iframe title="當天路線地圖" loading="lazy" allowfullscreen
             referrerpolicy="strict-origin-when-cross-origin"></iframe>
   </aside>
-  <main id="main"></main>
+  <main id="main" role="tabpanel" tabindex="-1"></main>
   <footer>
     <div id="edit-bar"></div>
     天氣資料 <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> · CC BY 4.0
@@ -1383,14 +1444,14 @@ const RENDERERS = {
 
   stop: b => `<div class="card"${slotAttrs(b)}${mapAttrs(b)}>
     ${nowSlot(b)}${b.time ? `<span class="time">${esc(b.time)}</span>` : ""}${travelTag(b)}${stayTag(b)}
-    <div class="subject">${ic(KIND[b.kind] || KIND.sight)}${esc(b.title)}${localSpan(b.titleLocal)}</div>
+    <h2 class="subject">${ic(KIND[b.kind] || KIND.sight)}${esc(b.title)}${localSpan(b.titleLocal)}</h2>
     ${b.place ? `<div class="meta">${ic("map-pin")}${esc(b.place)}${localSpan(b.placeLocal)}</div>` : ""}${factsHTML(b)}
     ${notesHTML(b.notes)}${secretHTML(b)}${introHTML(b.intro, b.photo, b.title)}${linksHTML(b.links)}</div>`,
 
   /* 總耗時跟其他卡片的「停留」一樣放在時間旁邊，由 stay 算出來 */
   transit: b => `<div class="card">
     ${b.time ? `<span class="time">${esc(b.time)}</span>` : ""}${b.stay ? `<span class="stay">${ic("timer")}總耗時約 ${fmtStay(b.stay)}</span>` : ""}
-    <div class="subject">${esc(b.title)}</div>
+    <h2 class="subject">${esc(b.title)}</h2>
     ${b.line ? `<div class="meta">${ic("subway")}${esc(b.line)}</div>` : ""}
     ${b.duration ? `<div class="meta">${ic("timer")}${esc(b.duration)}</div>` : ""}
     <div class="route">${(b.steps||[]).map(s => {
@@ -1409,7 +1470,7 @@ const RENDERERS = {
 
   lodging: b => `<div class="card lodge"${slotAttrs(b)}${mapAttrs(b)}>
     ${nowSlot(b)}<div><span class="ttag">${ic("bed")}住宿</span>${b.time ? `<span class="time">${esc(b.time)}</span>` : ""}${travelTag(b)}${stayTag(b)}</div>
-    <div class="subject">${esc(b.title)}${localSpan(b.titleLocal)}</div>
+    <h2 class="subject">${esc(b.title)}${localSpan(b.titleLocal)}</h2>
     ${b.address ? `<div class="meta">${ic("map-pin")}${esc(b.address)}</div>` : ""}${factsHTML(b)}
     ${(b.notes && b.notes.length)
       ? `<div class="info">${b.notes.map(n => `<div>${iconText(n)}</div>`).join("")}</div>` : ""}
@@ -1417,7 +1478,7 @@ const RENDERERS = {
 
   options: b => `<div class="card"${mapAttrs((b.choices || []).find(c => mapQuery(c)) || {})}>
     ${b.time ? `<span class="time">${esc(b.time)}</span>` : ""}${stayTag(b)}
-    <div class="subject">${subjectHTML(b.title)}</div>
+    <h2 class="subject">${subjectHTML(b.title)}</h2>
     ${b.place ? `<div class="meta">${ic("map-pin")}${esc(b.place)}${localSpan(b.placeLocal)}</div>` : ""}
     ${(b.choices||[]).map(c => `<div class="choice">
       <span class="tag">${esc(c.label)}</span>
@@ -1430,9 +1491,9 @@ const RENDERERS = {
     const done = (b.groups||[]).reduce((n,g)=>
       n + g.items.filter(it => state.checks[chkKey(b, it)]).length, 0);
     return `<div class="card" data-chk="${esc(b.key)}">
-      <div class="subject">${iconText(b.title||"清單")}
-        <span class="chk-progress">${done}/${total}</span></div>
-      ${(b.groups||[]).map(g => `<div class="chk-group"><h2>${esc(g.name)}</h2>
+      <h2 class="subject">${iconText(b.title||"清單")}
+        <span class="chk-progress">${done}/${total}</span></h2>
+      ${(b.groups||[]).map(g => `<div class="chk-group"><h3>${esc(g.name)}</h3>
         ${g.items.map(it=>{
           const k = chkKey(b, it);
           /* 項目可以是字串，也可以是物件：
@@ -1461,7 +1522,7 @@ const RENDERERS = {
     const hiddenCount = all.length - shown.length;
     const today = nowAtDestination().date;
 
-    return `<div class="card"><div class="subject">${iconText(b.title || "信用卡")}</div>
+    return `<div class="card"><h2 class="subject">${iconText(b.title || "信用卡")}</h2>
       ${notesHTML(b.notes)}
       ${shown.map(c => {
         const s      = state.cards[c.name] || {};
@@ -1503,7 +1564,7 @@ const RENDERERS = {
     /* 券是「用掉」不是「買到」，所以不給數量與金額。旗標在群組層級，
        自己在網站上加進這一組的項目也一樣不給，同一組才不會長得不一樣。 */
     const coupon = new Set((b.groups || []).filter(g => g.coupon).map(g => g.name));
-    return `<div class="card"><div class="subject">${iconText(b.title || "購物清單")}</div>
+    return `<div class="card"><h2 class="subject">${iconText(b.title || "購物清單")}</h2>
       ${notesHTML(b.notes)}
       ${[...shopGroups(b)].map(([name, items]) => {
         const done = items.filter(it => (s.edits[it.id] || {}).done).length;
@@ -1547,16 +1608,16 @@ const RENDERERS = {
     </div>`;
   },
 
-  weather: () => `<div class="card"><div class="subject">${ic("thermometer")}行程期間天氣</div>
+  weather: () => `<div class="card"><h2 class="subject">${ic("thermometer")}行程期間天氣</h2>
     <div class="wx-strip" id="wx-strip">載入中…</div></div>`,
 
-  phrases: () => `<div class="card"><div class="subject">${ic("chat-circle-dots")}常用片語</div>
+  phrases: () => `<div class="card"><h2 class="subject">${ic("chat-circle-dots")}常用片語</h2>
     ${(TRIP_DATA.phrases||[]).map(p => p.local
       ? `<div class="ph"><div class="ph-l">${esc(p.local)}</div><div class="ph-z">${esc(p.zh)}</div></div>`
       : `<div class="ph"><div class="ph-l dim">${esc(p.zh)}</div><div class="ph-z">（沒有翻譯結果）</div></div>`
     ).join("")}</div>`,
 
-  emergency: b => `<div class="card"><div class="subject">${ic("first-aid")}緊急資訊</div>
+  emergency: b => `<div class="card"><h2 class="subject">${ic("first-aid")}緊急資訊</h2>
     ${b && b.country ? `<div class="src">${esc(b.country)}${b.countryCode ? `（${esc(b.countryCode)}）` : ""}
       ${b.auto ? `　前 ${b.auto} 筆為當地官方緊急號碼` : ""}<br>
       出發前請再確認一次，號碼可能更動。</div>` : ""}
@@ -1583,8 +1644,15 @@ function renderDay(id){
   current = id;
   const day = TRIP_DATA.days.find(d => d.id === id);
   document.getElementById("main").innerHTML = day.blocks.map(renderBlock).join("");
-  document.querySelectorAll(".nav-item").forEach(b =>
-    b.setAttribute("aria-selected", String(b.dataset.day === id)));
+  /* 分頁與內容的對應（APG tabs）：只有選取中的那顆是 Tab 鍵的停留點，其餘用方向鍵走
+     （roving tabindex）——不然光是跨過十一顆分頁就要按十一次 Tab。
+     內容區用 aria-labelledby 指回選取中的分頁，讀螢幕時才知道現在看的是哪一天。 */
+  document.querySelectorAll(".nav-item").forEach(b => {
+    const on = b.dataset.day === id;
+    b.setAttribute("aria-selected", String(on));
+    b.tabIndex = on ? 0 : -1;
+  });
+  document.getElementById("main").setAttribute("aria-labelledby", `tab-${id}`);
   revealTab();
   /* 編輯入口只留在行前：其他分頁是旅途中當下要看的東西，
      不該混進「回去改試算表、重新產生網站」這種出發前才做的事。
@@ -1668,7 +1736,8 @@ function buildNav(){
     return `<span class="nav-sub">${Number(m[2])}/${Number(m[3])} ${wk}</span>`;
   };
   document.getElementById("nav").innerHTML = TRIP_DATA.days.map(d =>
-    `<button class="nav-item" role="tab" data-day="${esc(d.id)}" aria-selected="false">` +
+    `<button class="nav-item" role="tab" id="tab-${esc(d.id)}" data-day="${esc(d.id)}" ` +
+      `aria-controls="main" aria-selected="false" tabindex="-1">` +
       `<span class="nav-main">${iconText(d.nav)}</span>${sub(d)}</button>`
   ).join("");
   navEdges();
@@ -2101,20 +2170,20 @@ function renderExpenses(){
   const rows = [...state.expenses].sort((a,b)=>b.createdAt-a.createdAt);
   const total = state.expenses.reduce((s,e)=>s+e.home,0);
   return `<div class="card">
-    <div class="subject">我是誰</div>
-    <div class="field"><div class="chips" id="e-me">
+    <h2 class="subject" id="e-me-l">我是誰</h2>
+    <div class="field"><div class="chips" id="e-me" role="group" aria-labelledby="e-me-l">
       ${members.map(m=>`<label class="chip"><input type="radio" name="me" value="${esc(m)}"${state.me===m?" checked":""}>${esc(m)}</label>`).join("")}
     </div></div>
     <div class="note-box">只存在這台裝置，用來標記每筆花費是誰記的。</div>
   </div>
   <div class="card">
-    <div class="subject">新增花費</div>
+    <h2 class="subject">新增花費</h2>
     <div class="field"><label for="e-day">日期</label>
       <select class="input" id="e-day">${days.map(d=>`<option value="${esc(d.id)}">${esc(d.nav)}</option>`).join("")}</select></div>
-    <div class="field"><label>誰付錢</label><div class="chips" id="e-payer">
+    <div class="field"><div class="f-grp" id="e-payer-l">誰付錢</div><div class="chips" id="e-payer" role="group" aria-labelledby="e-payer-l">
       ${members.map((m,i)=>`<label class="chip"><input type="radio" name="payer" value="${esc(m)}"${i===0?" checked":""}>${esc(m)}</label>`).join("")}
     </div></div>
-    <div class="field"><label>分攤對象</label><div class="chips" id="e-split">
+    <div class="field"><div class="f-grp" id="e-split-l">分攤對象</div><div class="chips" id="e-split" role="group" aria-labelledby="e-split-l">
       ${members.map(m=>`<label class="chip"><input type="checkbox" name="split" value="${esc(m)}" checked>${esc(m)}</label>`).join("")}
     </div></div>
     <div class="field"><label for="e-item">項目</label>
@@ -2131,8 +2200,8 @@ function renderExpenses(){
       : `<div class="meta meta-foot">沒有匯率資料，兩種幣別請各自填寫。</div>`}
   </div>
 
-  <div class="card"><div class="subject">花費明細
-      <span class="chk-progress">合計 ${esc(M.money.home)} ${fmt(total)}</span></div>
+  <div class="card"><h2 class="subject">花費明細
+      <span class="chk-progress">合計 ${esc(M.money.home)} ${fmt(total)}</span></h2>
     <div class="exp-list">${rows.length ? rows.map(e=>`
       <div class="exp-item">
         <div><strong>${esc(e.item)}</strong> <span class="lang-local">${esc(e.cat)}</span><br>
@@ -2142,7 +2211,7 @@ function renderExpenses(){
           <button class="exp-del" data-del="${esc(e.id)}" aria-label="刪除">${ic("x")}</button></div>
       </div>`).join("") : `<div class="meta">還沒有紀錄。</div>`}</div></div>
 
-  <div class="card"><div class="subject">結清建議</div>${settleHTML()}
+  <div class="card"><h2 class="subject">結清建議</h2>${settleHTML()}
     <button class="btn btn-plain" id="e-csv">${ic("download-simple")}匯出明細 CSV</button>
     <button class="btn btn-plain" id="e-csv2">${ic("chart-bar")}匯出結清摘要</button>
     <div class="meta meta-foot">CSV 已加 UTF-8 BOM，Excel 與 Google Sheets 都能直接開，中文不會亂碼。</div>
@@ -2380,6 +2449,22 @@ document.getElementById("nav").addEventListener("click", e => {
   if (b) renderDay(b.dataset.day);
 });
 
+/* 方向鍵換分頁（APG tabs）。手機上分頁是橫的、電腦版是直的，所以四個方向都收；
+   Home／End 跳到第一個與最後一個。切過去之後把焦點留在那一顆上。 */
+document.getElementById("nav").addEventListener("keydown", e => {
+  const STEP = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 };
+  if (!(e.key in STEP) && e.key !== "Home" && e.key !== "End") return;
+  const tabs = [...document.querySelectorAll(".nav-item")];
+  const i = tabs.indexOf(e.target.closest(".nav-item"));
+  if (i < 0) return;
+  e.preventDefault();
+  const n = e.key === "Home" ? 0
+          : e.key === "End"  ? tabs.length - 1
+          : (i + STEP[e.key] + tabs.length) % tabs.length;
+  renderDay(tabs[n].dataset.day);
+  tabs[n].focus();
+});
+
 document.getElementById("main").addEventListener("change", e => {
   const cb = e.target.closest("input[data-k]");
   if (cb){
@@ -2492,7 +2577,12 @@ document.getElementById("main").addEventListener("click", e => {
     });
     document.body.appendChild(dlg);
   }
-  dlg.querySelector("img").src = img.dataset.zoom;
+  /* 放大的那張圖就是這個對話框的內容，替代文字要跟著縮圖走，不能留空；
+     對話框本身也要有名字，不然讀螢幕只會說「對話方塊」。 */
+  const zimg = dlg.querySelector("img");
+  zimg.src = img.dataset.zoom;
+  zimg.alt = img.alt || "";
+  dlg.setAttribute("aria-label", img.alt ? `${img.alt}（放大）` : "放大檢視");
   /* 自己加的圖可以在這裡換一張或拿掉；Excel 給的圖不行 */
   const uid = img.dataset.uimg;
   dlg.querySelector(".zoom-acts").innerHTML = uid
