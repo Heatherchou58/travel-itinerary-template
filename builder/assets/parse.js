@@ -581,10 +581,11 @@ export function parseGrids(book){
         blocks: [cards, ...infoLists,
                  phrases.length && { type:"phrases" },
                  emergency.length && { type:"emergency" }].filter(Boolean) },
-      ...days,
-      /* 購物排在記帳前面：買東西跟花錢是同一件事的前後腳 */
+      /* 購物與記帳排在行程前面：四顆沒有日期的分頁擺在一起，手機上第一屏就全部看得到，
+         不用橫向捲過七天才找得到。購物排在記帳前面：買東西跟花錢是同一件事的前後腳 */
       { id:"shop",   nav:"🛍️ 購物", blocks: [shopping].filter(Boolean) },
-      { id:"wallet", nav:"💰 記帳", blocks:[{ type:"expenses" }] }
+      { id:"wallet", nav:"💰 記帳", blocks:[{ type:"expenses" }] },
+      ...days
     ].filter(d => d.blocks.length),
     phrases, emergency
   };

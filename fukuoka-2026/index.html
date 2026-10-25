@@ -57,6 +57,9 @@
   --fs-xs:.75rem; --fs-sm:.85rem; --fs-md:1rem; --fs-lg:1.15rem;
   --fs-xl:1.35rem; --fs-2xl:1.5rem; --fs-3xl:2.4rem;
   --shadow:0 2px 8px rgba(0,0,0,.06);
+  /* 浮在內容之上的東西（提示、連線狀態）比卡片重一階（ui-ux-pro-max elevation-consistent）。
+     放大檢視不用：它的 ::backdrop 已經把底下壓暗，再加影子也看不出來。 */
+  --shadow-pop:0 4px 14px rgba(0,0,0,.12);
 }
 [data-theme="snow"]  { --c-accent:#74B9FF; --c-pop:#B85C00; --c-on-accent:#0F4670; --c-accent-soft:#E8F4FF; --c-bg:#F5F2ED;
                        --deco:radial-gradient(circle,#FFFFFF 2px,transparent 3px); --deco-size:120px 120px,180px 180px; --deco-size2:240px 240px;
@@ -100,7 +103,10 @@ body::before{
   background-repeat:var(--deco-repeat,repeat);
   background-position:var(--deco-pos,0 0);
   opacity:var(--deco-op);
-  /* 背景裝飾維持靜態：ui-ux-pro-max 的 motion-meaning 要求動畫要表達因果，純裝飾的不做 */
+  /* 飄落的裝飾是使用者指定要的。ui-ux-pro-max 的 motion-meaning 說純裝飾的動畫不做，
+     這一條是使用者自己決定要留的，不要再「修正」掉——偏好減少動態的人由下面的
+     prefers-reduced-motion 關掉（連圖層一起隱藏）。 */
+  animation:var(--anim-a) 24s linear infinite;
 }
 body::after{
   background-image:var(--deco-c,var(--deco));
@@ -108,6 +114,7 @@ body::after{
   background-repeat:var(--deco-repeat,repeat);
   background-position:var(--deco-pos,0 0);
   opacity:calc(var(--deco-op) * .7);
+  animation:var(--anim-b) 17s linear infinite;
 }
 /* 垂直位移 720px（120／180／240 的公倍數），才能無縫接回；
    水平回到原點，中間的節點刻意不等距，落下速度才不會像機器 */
@@ -192,6 +199,13 @@ header .subtitle{ font-size:var(--fs-sm); color:var(--c-text-dim); margin:0 0 va
   scrollbar-width:none; -webkit-overflow-scrolling:touch;
 }
 .nav-bar::-webkit-scrollbar{ display:none; }
+/* 兩端的漸層：提示還有捲不到的分頁，捲到底的那一邊就收起來。
+   電腦版的分頁是直向、捲不動的，JS 不會加這兩個 class，所以不用另外排除。 */
+.nav-bar.nav-l, .nav-bar.nav-r{ -webkit-mask-image:var(--nav-fade); mask-image:var(--nav-fade); }
+.nav-bar.nav-l{ --nav-fade:linear-gradient(to right, transparent, #000 var(--sp-6)); }
+.nav-bar.nav-r{ --nav-fade:linear-gradient(to right, #000 calc(100% - var(--sp-6)), transparent); }
+.nav-bar.nav-l.nav-r{ --nav-fade:linear-gradient(to right, transparent, #000 var(--sp-6),
+                                                #000 calc(100% - var(--sp-6)), transparent); }
 .nav-item{
   flex:0 0 auto; display:inline-flex; flex-direction:column;
   align-items:center; justify-content:center; line-height:1.25;
@@ -395,7 +409,13 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
    只改 border-left-color 的話，住宿變成「現在」時高亮只有 1px。 */
 .card.is-now{ border-left:4px solid var(--c-accent-strong); background:var(--c-accent-soft); }
 .card.is-next{ border-left:4px solid var(--c-line); }
-.card.is-past{ opacity:.62; }
+/* 已結束：原本是整張卡片 opacity:.62，那會連文字一起壓掉——正文的對比從 11.8:1 掉到
+   3.8:1、次要文字掉到 2.7:1（測試的對比探針只讀 backgroundColor、不算 opacity，量不到）。
+   已結束的卡片旅途中還是會回去翻，所以只收掉「浮起來」這件事：底色跟頁面同色、
+   陰影換成一條細框線，文字維持原本的對比。 */
+.card.is-past{ background:var(--c-bg); box-shadow:0 0 0 1px var(--c-line); }
+/* 住宿卡本來就有自己的 1px 邊框，再加一圈會變兩倍粗：只把邊框調淡 */
+.card.lodge.is-past{ border-color:var(--c-line); box-shadow:none; }
 /* 這行不能省：瀏覽器的 [hidden]{display:none} 來自 UA 樣式表，
    會被下面的 display:inline-flex 蓋掉，收起來的膠囊仍會露出一小條色塊。 */
 .now-line[hidden]{ display:none; }
@@ -423,6 +443,8 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 .subject{ font-size:var(--fs-lg); font-weight:700; margin-bottom:var(--sp-1); }
 .lang-local{ font-size:var(--fs-sm); color:var(--c-text-dim); font-weight:400; margin-left:var(--sp-1); }
 .meta{ font-size:var(--fs-sm); color:var(--c-text-dim); margin-bottom:var(--sp-1); }
+/* 卡片最後的補充說明（匯率、CSV 編碼），跟上面的欄位或按鈕隔開一段 */
+.meta-foot{ margin-top:var(--sp-2); }
 /* 圖示：Phosphor regular 的 SVG，跟著文字的顏色與字級走，全站一個尺寸（1.15em） */
 .ic{ display:inline-block; width:1.15em; height:1.15em; flex:0 0 auto; vertical-align:-.2em; margin-right:.3em; fill:currentColor; }
 .fl-mid .ic, .shop-x .ic, .exp-del .ic, .wx-day .ic{ margin-right:0; }
@@ -509,6 +531,15 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 .btn-map  { background:var(--c-map); }
 /* theme：主題色的互補色，在一排服務色按鈕裡跳出來 */
 .btn-theme{ background:var(--c-pop); color:var(--c-on-solid); }
+/* plain：次要動作的外框樣式。跟深色實心的 .btn 擺在一起時明顯是從屬的，
+   一個畫面只留一顆主要動作（ui-ux-pro-max primary-action）。
+   padding 少 1px 把邊框的厚度讓出來，高度維持 44px。 */
+.btn-plain{
+  padding:9px var(--sp-4); border:1px solid var(--c-line);
+  background:var(--c-surface); color:var(--c-text);
+}
+/* full：整列寬的送出鍵。.btn 預設的右邊距在滿版時會把按鈕推出容器 */
+.btn-full{ display:block; width:100%; margin-right:0; text-align:center; }
 /* 路線：外框樣式，跟「開啟某個服務」的實心按鈕區隔開 */
 .btn-route{
   background:transparent; color:var(--c-on-accent);
@@ -567,11 +598,6 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 }
 /* 起終點：實心主題色（原本的脈動光暈是純裝飾，拿掉；路線上的流動光點表示方向，保留） */
 .route-dot.on{ background:var(--c-accent-strong); }
-@keyframes pulse{
-  0%   { transform:scale(1);   opacity:.45; }
-  70%  { transform:scale(2.6); opacity:0; }
-  100% { transform:scale(1);   opacity:0; }
-}
 .route-body{ flex:1; padding-bottom:var(--sp-3); }
 .route-step:last-child .route-body{ padding-bottom:0; }
 .route-body strong{ font-size:var(--fs-md); }
@@ -684,7 +710,7 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
   position:fixed; left:var(--sp-2); z-index:200;
   bottom:calc(var(--sp-2) + env(safe-area-inset-bottom));
   font-size:var(--fs-xs); font-weight:700; padding:var(--sp-1) var(--sp-3);
-  border-radius:var(--r-pill); background:var(--c-surface); box-shadow:var(--shadow);
+  border-radius:var(--r-pill); background:var(--c-surface); box-shadow:var(--shadow-pop);
 }
 .sync[data-s="ok"]{ color:var(--c-ok); }
 .sync[data-s="offline"]{ color:var(--c-warn-text); }
@@ -729,7 +755,7 @@ body{
   position:fixed; left:50%; bottom:calc(var(--sp-6) + env(safe-area-inset-bottom));
   transform:translateX(-50%); z-index:300; max-width:calc(var(--w-app) - var(--sp-6));
   background:var(--c-text); color:var(--c-bg); font-size:var(--fs-sm); font-weight:700;
-  padding:var(--sp-3) var(--sp-4); border-radius:var(--r-pill); box-shadow:var(--shadow);
+  padding:var(--sp-3) var(--sp-4); border-radius:var(--r-pill); box-shadow:var(--shadow-pop);
   opacity:0; pointer-events:none; transition:opacity .25s;
 }
 .toast.show{ opacity:.96; }
@@ -1281,6 +1307,113 @@ const TRIP_DATA = {
       ]
     },
     {
+      "id": "shop",
+      "nav": "🛍️ 購物",
+      "blocks": [
+        {
+          "type": "shopping",
+          "title": "🛍️ 購物清單與優惠券",
+          "notes": [
+            "優惠券點圖片就能放大給店員看，離線也打得開。",
+            "唐吉訶德 Donki、AEON 的券要現場生成，所以是直接跳轉的按鈕。"
+          ],
+          "groups": [
+            {
+              "name": "優惠券",
+              "coupon": true,
+              "items": [
+                {
+                  "name": "唐吉訶德 Donki",
+                  "url": "https://japanportal.donki-global.com/coupon/cp001_zhtw.html"
+                },
+                {
+                  "name": "AEON",
+                  "url": "https://www.welcome-aeon.com/coupon/web_coupon.php?lang=zh-CHT&id=19&cid=cp1694597628&cv=1"
+                },
+                {
+                  "name": "鶴羽藥妝",
+                  "img": "img/tsuruha.jpg"
+                },
+                {
+                  "name": "SUGI 藥妝",
+                  "img": "img/sugi.jpg"
+                },
+                {
+                  "name": "SUN DRUG",
+                  "img": "img/sundrug.jpg"
+                },
+                {
+                  "name": "大賀藥局",
+                  "img": "img/daiga-drug.jpg"
+                },
+                {
+                  "name": "Drug 11",
+                  "img": "img/drug11.jpg"
+                },
+                {
+                  "name": "天神 COSMOS",
+                  "img": "img/tenjin-cosmos.jpg"
+                },
+                {
+                  "name": "BicCamera／KOJIMA",
+                  "img": "img/biccamera.jpg"
+                },
+                {
+                  "name": "BicCamera／SALONIA",
+                  "img": "img/biccamera-salonia.jpg"
+                },
+                {
+                  "name": "YAMADA 電機",
+                  "img": "img/yamada.jpg"
+                },
+                {
+                  "name": "愛電王",
+                  "img": "img/aidenwang.jpg"
+                },
+                {
+                  "name": "Alpen 運動用品",
+                  "img": "img/alpen.jpg"
+                },
+                {
+                  "name": "Snow Peak",
+                  "img": "img/snowpeak.jpg"
+                },
+                {
+                  "name": "PARIS MIKI 眼鏡",
+                  "img": "img/paris-miki.jpg"
+                },
+                {
+                  "name": "福岡機場免稅店",
+                  "img": "img/fukuoka-airport-dutyfree.jpg"
+                }
+              ]
+            },
+            {
+              "name": "藥妝店",
+              "items": []
+            },
+            {
+              "name": "電器 3C",
+              "items": []
+            },
+            {
+              "name": "伴手禮",
+              "items": []
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "wallet",
+      "nav": "💰 記帳",
+      "blocks": [
+        {
+          "type": "expenses"
+        }
+      ]
+    },
+    {
       "id": "d1",
       "nav": "D1 博多",
       "date": "2026-11-14",
@@ -1431,11 +1564,11 @@ const TRIP_DATA = {
           ],
           "stay": null,
           "mode": "transit",
+          "secret": "origo",
+          "secretHint": "預訂號碼與驗證碼",
           "hours": "退房 11:00",
           "fee": "¥35,280 含稅（約 NT$1,760／人）",
-          "tel": "+81 50-1754-1110",
-          "secret": "origo",
-          "secretHint": "預訂號碼與驗證碼"
+          "tel": "+81 50-1754-1110"
         }
       ]
     },
@@ -1472,12 +1605,12 @@ const TRIP_DATA = {
           ],
           "stay": 42,
           "mode": "walking",
+          "secret": "orix",
+          "secretHint": "預約號碼",
           "fee": "¥43,714 含稅，於店鋪付款",
           "travel": 12,
           "hours": "08:00–20:00",
-          "tel": "092-411-8694",
-          "secret": "orix",
-          "secretHint": "預約號碼"
+          "tel": "092-411-8694"
         },
         {
           "type": "stop",
@@ -1642,13 +1775,13 @@ const TRIP_DATA = {
           "intro": "標高 622 公尺，山頂一次望盡北九州工業地帶、洞海灣與關門海峽，被選為「新日本三大夜景」，常被形容成「百億美元的夜景」。從山麓到展望台要先搭纜車再換斜行電梯，兩段都是看風景的一部分。",
           "travel": 10,
           "hours": "纜車 11–3 月 10:00–20:00、上行末班 19:20、週二公休（今天週日正常）",
-          "fee": "來回 ¥1,230（纜車＋斜行電梯）／只搭纜車 ¥820，在山麓駅買",
           "photo": {
             "src": "img/intro/sarakurayama.jpg",
             "credit": "Suicasmo",
             "license": "CC BY-SA 4.0",
             "href": "https://commons.wikimedia.org/wiki/File:Night_Views_from_Mount_Sarakura_20170527-1.jpg"
-          }
+          },
+          "fee": "來回 ¥1,230（纜車＋斜行電梯）／只搭纜車 ¥820，在山麓駅買"
         },
         {
           "type": "stop",
@@ -1709,11 +1842,11 @@ const TRIP_DATA = {
           ],
           "stay": null,
           "mode": "driving",
+          "secret": "relief",
+          "secretHint": "訂單編號",
           "hours": "Check-in 15:00／退房 10:00",
           "fee": "¥15,204 含稅（約 NT$759／人）",
-          "tel": "+81 93-521-5006",
-          "secret": "relief",
-          "secretHint": "訂單編號"
+          "tel": "+81 93-521-5006"
         }
       ]
     },
@@ -1945,10 +2078,10 @@ const TRIP_DATA = {
           ],
           "stay": null,
           "mode": "driving",
-          "hours": "Check-in 15:00／退房 10:00",
-          "fee": "¥29,248 含稅（約 NT$1,459／人）",
           "secret": "yufuinn",
-          "secretHint": "訂單編號"
+          "secretHint": "訂單編號",
+          "hours": "Check-in 15:00／退房 10:00",
+          "fee": "¥29,248 含稅（約 NT$1,459／人）"
         }
       ]
     },
@@ -2181,12 +2314,12 @@ const TRIP_DATA = {
           ],
           "stay": null,
           "mode": "driving",
+          "secret": "kamenoi",
+          "secretHint": "訂單編號",
           "travel": 80,
           "hours": "Check-in 15:00 起／退房 10:00",
           "fee": "¥55,836 含稅（約 NT$2,786／人）",
-          "tel": "+81 967-34-0811",
-          "secret": "kamenoi",
-          "secretHint": "訂單編號"
+          "tel": "+81 967-34-0811"
         }
       ]
     },
@@ -2500,9 +2633,9 @@ const TRIP_DATA = {
           ],
           "stay": null,
           "mode": "transit",
-          "hours": "入住 16:00",
           "secret": "shield21",
-          "secretHint": "房號、門鎖密碼與入住指南"
+          "secretHint": "房號、門鎖密碼與入住指南",
+          "hours": "入住 16:00"
         }
       ]
     },
@@ -2953,113 +3086,6 @@ const TRIP_DATA = {
           "date": "2026-11-20",
           "depart": "12:15",
           "arrive": "13:50"
-        }
-      ]
-    },
-    {
-      "id": "shop",
-      "nav": "🛍️ 購物",
-      "blocks": [
-        {
-          "type": "shopping",
-          "title": "🛍️ 購物清單與優惠券",
-          "notes": [
-            "優惠券點圖片就能放大給店員看，離線也打得開。",
-            "唐吉訶德 Donki、AEON 的券要現場生成，所以是直接跳轉的按鈕。"
-          ],
-          "groups": [
-            {
-              "name": "優惠券",
-              "coupon": true,
-              "items": [
-                {
-                  "name": "唐吉訶德 Donki",
-                  "url": "https://japanportal.donki-global.com/coupon/cp001_zhtw.html"
-                },
-                {
-                  "name": "AEON",
-                  "url": "https://www.welcome-aeon.com/coupon/web_coupon.php?lang=zh-CHT&id=19&cid=cp1694597628&cv=1"
-                },
-                {
-                  "name": "鶴羽藥妝",
-                  "img": "img/tsuruha.jpg"
-                },
-                {
-                  "name": "SUGI 藥妝",
-                  "img": "img/sugi.jpg"
-                },
-                {
-                  "name": "SUN DRUG",
-                  "img": "img/sundrug.jpg"
-                },
-                {
-                  "name": "大賀藥局",
-                  "img": "img/daiga-drug.jpg"
-                },
-                {
-                  "name": "Drug 11",
-                  "img": "img/drug11.jpg"
-                },
-                {
-                  "name": "天神 COSMOS",
-                  "img": "img/tenjin-cosmos.jpg"
-                },
-                {
-                  "name": "BicCamera／KOJIMA",
-                  "img": "img/biccamera.jpg"
-                },
-                {
-                  "name": "BicCamera／SALONIA",
-                  "img": "img/biccamera-salonia.jpg"
-                },
-                {
-                  "name": "YAMADA 電機",
-                  "img": "img/yamada.jpg"
-                },
-                {
-                  "name": "愛電王",
-                  "img": "img/aidenwang.jpg"
-                },
-                {
-                  "name": "Alpen 運動用品",
-                  "img": "img/alpen.jpg"
-                },
-                {
-                  "name": "Snow Peak",
-                  "img": "img/snowpeak.jpg"
-                },
-                {
-                  "name": "PARIS MIKI 眼鏡",
-                  "img": "img/paris-miki.jpg"
-                },
-                {
-                  "name": "福岡機場免稅店",
-                  "img": "img/fukuoka-airport-dutyfree.jpg"
-                }
-              ]
-            },
-            {
-              "name": "藥妝店",
-              "items": []
-            },
-            {
-              "name": "電器 3C",
-              "items": []
-            },
-            {
-              "name": "伴手禮",
-              "items": []
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "id": "wallet",
-      "nav": "💰 記帳",
-      "blocks": [
-        {
-          "type": "expenses"
         }
       ]
     }
@@ -3725,6 +3751,7 @@ function renderDay(id){
   document.getElementById("main").innerHTML = day.blocks.map(renderBlock).join("");
   document.querySelectorAll(".nav-item").forEach(b =>
     b.setAttribute("aria-selected", String(b.dataset.day === id)));
+  revealTab();
   /* 編輯入口只留在行前：其他分頁是旅途中當下要看的東西，
      不該混進「回去改試算表、重新產生網站」這種出發前才做的事。
      （Open-Meteo 的授權標示留在 footer，所有分頁都要有。）*/
@@ -3810,7 +3837,32 @@ function buildNav(){
     `<button class="nav-item" role="tab" data-day="${esc(d.id)}" aria-selected="false">` +
       `<span class="nav-main">${iconText(d.nav)}</span>${sub(d)}</button>`
   ).join("");
+  navEdges();
 }
+
+/* 選取中的分頁捲進視野。開啟網站會直接跳到今天，那顆分頁常常在畫面外——
+   不捲的話，看起來就像停在第一個分頁上。
+   直接捲 nav 自己，不用 scrollIntoView：電腦版的分頁是直向的，
+   scrollIntoView 會把整頁一起捲走，跟 renderDay 的「捲回頂端」打架。 */
+function revealTab(){
+  const bar = document.getElementById("nav");
+  const btn = bar.querySelector('.nav-item[aria-selected="true"]');
+  if (!btn || bar.scrollWidth <= bar.clientWidth) return;   // 電腦版直向排列，沒有橫向捲動
+  bar.scrollTo({
+    left: btn.offsetLeft - (bar.clientWidth - btn.offsetWidth) / 2,
+    behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"
+  });
+}
+
+/* 哪一邊還有捲不到的分頁，就在那一邊鋪漸層（CSS 的 .nav-l／.nav-r）。 */
+function navEdges(){
+  const bar = document.getElementById("nav");
+  const max = bar.scrollWidth - bar.clientWidth;
+  bar.classList.toggle("nav-l", max > 1 && bar.scrollLeft > 1);
+  bar.classList.toggle("nav-r", max > 1 && bar.scrollLeft < max - 1);
+}
+document.getElementById("nav").addEventListener("scroll", navEdges, { passive: true });
+addEventListener("resize", navEdges);
 
 /* ── 天氣（Open-Meteo，免 API key） ── */
 const WMO = {
@@ -4239,10 +4291,10 @@ function renderExpenses(){
     </div></div>
     <div class="field"><label for="e-cat">分類</label>
       <select class="input" id="e-cat">${cats.map(c=>`<option>${esc(c)}</option>`).join("")}</select></div>
-    <button class="btn btn-plain" id="e-add" style="width:100%">新增花費</button>
+    <button class="btn btn-full" id="e-add">新增花費</button>
     ${M.money.rate
-      ? `<div class="meta" style="margin-top:var(--sp-2)">匯率 1 ${esc(M.money.local)} = ${M.money.rate} ${esc(M.money.home)}${M.money.rateDate ? `（${esc(M.money.rateDate)} 查得）` : ""}，僅供估算。</div>`
-      : `<div class="meta" style="margin-top:var(--sp-2)">沒有匯率資料，兩種幣別請各自填寫。</div>`}
+      ? `<div class="meta meta-foot">匯率 1 ${esc(M.money.local)} = ${M.money.rate} ${esc(M.money.home)}${M.money.rateDate ? `（${esc(M.money.rateDate)} 查得）` : ""}，僅供估算。</div>`
+      : `<div class="meta meta-foot">沒有匯率資料，兩種幣別請各自填寫。</div>`}
   </div>
 
   <div class="card"><div class="subject">花費明細
@@ -4258,8 +4310,8 @@ function renderExpenses(){
 
   <div class="card"><div class="subject">結清建議</div>${settleHTML()}
     <button class="btn btn-plain" id="e-csv">${ic("download-simple")}匯出明細 CSV</button>
-    <button class="btn" id="e-csv2">${ic("chart-bar")}匯出結清摘要</button>
-    <div class="meta" style="margin-top:var(--sp-2)">CSV 已加 UTF-8 BOM，Excel 與 Google Sheets 都能直接開，中文不會亂碼。</div>
+    <button class="btn btn-plain" id="e-csv2">${ic("chart-bar")}匯出結清摘要</button>
+    <div class="meta meta-foot">CSV 已加 UTF-8 BOM，Excel 與 Google Sheets 都能直接開，中文不會亂碼。</div>
   </div>`;
 }
 
