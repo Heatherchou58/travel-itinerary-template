@@ -450,7 +450,7 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 .intro-body p{ margin:0 0 var(--sp-3); }
 .intro-body p:last-child{ margin-bottom:0; }
 /* 有照片的介紹：收合時「看介紹」那一條鋪一層淡淡的照片，不點開也看得出是什麼地方；
-   展開後那一條的淡底收掉，照片改鋪在整段介紹後面（見下面 .intro-body） */
+   展開後那一條的淡底收掉，照片放在文字下面（見下面 .intro-photo） */
 .intro.has-photo{ border-top:none; }
 .intro.has-photo summary{
   position:relative; isolation:isolate; overflow:hidden;
@@ -461,23 +461,11 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
   background:var(--photo) center/cover; opacity:.25;   /* 照片最暗處 #BFBFBF，主題色字仍 ≥ 5.3:1 */
 }
 .intro.has-photo[open] summary::after{ opacity:0; }
-/* 展開後：照片鋪在整段介紹後面，最上面 --clear 那段照原樣看得清楚，往下刷上一層白，
-   文字直接寫在上面、不加底色。白色蓋到 75%：照片最暗（純黑）的地方也只到 #BFBFBF，
-   內文 --c-text 對它約 6:1，一定過 4.5:1。文字從 --clear 以下才開始，不會壓在還沒刷淡的地方。
-   照片用 <img> 不用 background-image：替代文字（景點名稱）才留得住。 */
-.intro.has-photo .intro-body{
-  --clear:112px;
-  position:relative; isolation:isolate; overflow:hidden;
-  margin-top:var(--sp-2); padding:calc(var(--clear) + var(--sp-3)) var(--sp-4) var(--sp-4);
-  border-radius:10px; background:var(--c-line);
-}
-.intro.has-photo .intro-body::before{
-  content:""; position:absolute; inset:0; z-index:-1;
-  background:linear-gradient(rgb(255 255 255 / 0) calc(var(--clear) - 48px), rgb(255 255 255 / .75) var(--clear));
-}
+/* 展開後：文字在上、照片在下，照片照原本的比例完整顯示——不固定比例、不 cover，
+   否則 4:3 的照片會被切掉上下。照片都是橫的（tools/intro-photos.mjs 限寬 800）。 */
 .intro-photo{
-  position:absolute; inset:0; z-index:-2;
-  width:100%; height:100%; object-fit:cover; object-position:center top;
+  display:block; width:100%; height:auto; margin-top:var(--sp-3);
+  border-radius:10px; background:var(--c-line);
 }
 /* 點擊範圍用 padding 撐到 44px、負 margin 抵掉（touch-target-size：extend hit area） */
 .photo-credit{
@@ -1269,12 +1257,12 @@ const introHTML = (v, photo, alt) => {
   const src  = photo && /^img\/[\w\/.-]+$/.test(photo.src || "") ? photo.src : "";
   const href = photo && /^https?:\/\//i.test(photo.href || "") ? photo.href : "";
   const credit = src ? `${ic("camera")}${esc(photo.credit || "")}・${esc(photo.license || "")}` : "";
-  /* 照片是介紹的底圖（.intro-body 裡最底層），出處放在照片框外面 */
+  /* 文字在上、照片在下，出處緊接在照片底下 */
   const pic = src ? `<img class="intro-photo" src="${esc(src)}" alt="${esc(alt || "")}" loading="lazy" decoding="async">` : "";
   const by = !src ? "" : href ? `<a class="photo-credit" href="${esc(href)}" target="_blank" rel="noopener">${credit}</a>`
                               : `<span class="photo-credit">${credit}</span>`;
   return `<details class="intro${src ? " has-photo" : ""}"${src ? ` style="--photo:url('${esc(src)}')"` : ""}><summary>看介紹</summary>
-    <div class="intro-body">${pic}${parts.map(p => `<p>${iconText(p)}</p>`).join("")}</div>${by}
+    <div class="intro-body">${parts.map(p => `<p>${iconText(p)}</p>`).join("")}${pic}</div>${by}
   </details>`;
 };
 

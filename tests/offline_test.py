@@ -895,8 +895,11 @@ def run(trip: str) -> bool:
             page.wait_for_timeout(300)
             acts = page.locator("#zoom .zoom-acts")
             r.check("補圖：放大後可以換一張或移除", acts.locator("[data-zimg]").count() == 1 and acts.locator("[data-zdel]").count() == 1)
+            before = seed_src()
             acts.locator("[data-zimg]").set_input_files({"name": "d.png", "mimeType": "image/png", "buffer": PNG})
-            try: page.wait_for_function(blob_ready, timeout=5000)
+            # 換圖是非同步的：等卡片上出現「新的」圖片網址
+            try: page.wait_for_function("""o => { const i = document.querySelector('.shop-i[data-id="藥妝店:托買的東西"] img.shop-img');
+                                                  return !!i && i.src.startsWith('blob:') && i.src !== o; }""", arg=before, timeout=5000)
             except Exception: pass
             r.check("補圖：換一張後放大視窗關掉、卡片上還是有圖",
                     page.locator("#zoom[open]").count() == 0 and seed_src().startswith("blob:") and idb_count() == 1)
@@ -1626,28 +1629,19 @@ def run(trip: str) -> bool:
                 bar.click()
                 page.wait_for_function(
                     "document.querySelector('img.intro-photo')?.complete", timeout=10000)
-                r.check("介紹照片：展開後看得到照片（鋪在介紹後面）",
+                r.check("介紹照片：展開後看得到照片",
                         pic.is_visible() and pic.evaluate("i => i.naturalWidth") > 0)
                 faded = bar.evaluate("s => getComputedStyle(s, '::after').opacity")
                 r.check("介紹照片：展開後淡底收掉", float(faded) == 0, faded)
-                # 照片鋪在介紹後面、刷一層白，文字直接寫在上面。測試第 12 段只看得到背景「顏色」、
-                # 看不到照片，所以這裡用最壞的情況算：照片是純黑，蓋上白色後文字還要過 4.5:1；
-                # 文字也不能壓在最上面還沒刷淡的那段
-                worst = with_photo.locator(".intro-body").evaluate("""b => {
-                  const g = getComputedStyle(b, '::before').backgroundImage;
-                  const a = Math.max(...[...g.matchAll(/rgba\(255, 255, 255, ([0-9.]+)\)/g)].map(m => +m[1]));
-                  const f = v => { v /= 255; return v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; };
-                  const L = c => .2126 * f(c[0]) + .7152 * f(c[1]) + .0722 * f(c[2]);
-                  const p = b.querySelector('p'), fg = getComputedStyle(p).color.match(/[0-9.]+/g).map(Number);
-                  const w = 255 * a, Lb = L([w, w, w]), Lf = L(fg);
-                  return { a, ratio: +((Math.max(Lb, Lf) + .05) / (Math.min(Lb, Lf) + .05)).toFixed(2),
-                           textTop: Math.round(p.getBoundingClientRect().top - b.getBoundingClientRect().top),
-                           clear: parseFloat(getComputedStyle(b).getPropertyValue('--clear')),
-                           textBg: getComputedStyle(p).backgroundColor };
+                # 文字在上、照片在下；照片照原本的比例完整顯示，不能被裁切
+                lay = with_photo.locator(".intro-body").evaluate("""b => {
+                  const ps = b.querySelectorAll('p'), img = b.querySelector('img.intro-photo');
+                  const last = ps[ps.length - 1].getBoundingClientRect(), r = img.getBoundingClientRect();
+                  return { gap: Math.round(r.top - last.bottom), shown: +(r.width / r.height).toFixed(3),
+                           natural: +(img.naturalWidth / img.naturalHeight).toFixed(3) };
                 }""")
-                r.check("介紹照片：照片當底、刷淡後文字最暗處也過 4.5:1",
-                        worst["ratio"] >= 4.5 and worst["textTop"] >= worst["clear"], str(worst))
-                r.check("介紹照片：文字本身沒有底色", worst["textBg"] == "rgba(0, 0, 0, 0)", worst["textBg"])
+                r.check("介紹照片：文字在上、照片在下，沒有疊在一起", lay["gap"] >= 0, str(lay))
+                r.check("介紹照片：照片照原本比例完整顯示，沒有裁切", abs(lay["shown"] - lay["natural"]) < 0.02, str(lay))
                 credit = with_photo.locator(".photo-credit")
                 r.check("介紹照片：照片底下有作者與授權，並連到出處",
                         "測試作者" in credit.inner_text() and "CC BY-SA 4.0" in credit.inner_text()
