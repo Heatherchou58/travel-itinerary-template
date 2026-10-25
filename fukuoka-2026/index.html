@@ -386,10 +386,12 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 .subject{ font-size:var(--fs-lg); font-weight:700; margin-bottom:var(--sp-1); }
 .lang-local{ font-size:var(--fs-sm); color:var(--c-text-dim); font-weight:400; margin-left:var(--sp-1); }
 .meta{ font-size:var(--fs-sm); color:var(--c-text-dim); margin-bottom:var(--sp-1); }
-/* 電話點了就撥，在店門口不用再抄號碼。觸控目標照樣 44px */
+/* 電話點了就撥，在店門口不用再抄號碼。外觀跟營業時間、費用那幾列一樣，只多一條虛線
+   底線表示可以點。觸控目標照樣 44px：上下 padding 把點擊範圍撐大，再用等量的負 margin
+   抵掉，版面不會因此多出一塊空白（ui-ux-pro-max：extend hit area beyond visual bounds） */
 .meta a.tel{
-  display:inline-flex; align-items:center; min-height:44px;
-  color:var(--c-on-accent); font-weight:700; text-decoration:none;
+  display:inline-block; padding:12px 0; margin:-12px 0;
+  color:inherit; text-decoration:underline dotted; text-underline-offset:3px;
 }
 .note-box{
   background:var(--c-accent-soft); border-radius:10px;

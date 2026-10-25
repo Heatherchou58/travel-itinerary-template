@@ -640,6 +640,12 @@ def run(trip: str) -> bool:
             tb = tel.bounding_box()
             r.check("電話：觸控目標 ≥ 44px", tb and round(tb["height"]) >= 44,
                     f"{round(tb['height']) if tb else '—'}px 高")
+            # 點擊範圍是用 padding 撐出來再用負 margin 抵掉的，那一列看起來要跟營業時間一樣高
+            row_h = opera.evaluate("""c => { const rows = [...c.querySelectorAll(".meta")];
+                const tel = c.querySelector("a.tel").closest(".meta");
+                const hours = rows.find(r => r.textContent.includes("09:00"));
+                return [tel, hours].map(r => Math.round(r.getBoundingClientRect().height)); }""")
+            r.check("電話：那一列不比其他資訊列高", row_h[0] <= row_h[1] + 2, f"電話 {row_h[0]}px／營業時間 {row_h[1]}px")
             hotel = page.locator("#main .card.lodge", has_text="測試飯店")
             htext = hotel.inner_text()
             r.check("住宿：也顯示交通", "車程 15 分" in htext)
