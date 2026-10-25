@@ -736,7 +736,7 @@ html{ font-size:clamp(16px, 4.2vw, 18px); }
     color:var(--c-on-accent); font-size:var(--fs-sm); font-weight:700; text-decoration:none;
   }
   .daymap-open:hover{ text-decoration:underline; }
-  /* 地圖上方：「整天路線」＋當天每一點一顆。點名字只看那一點，勾選框決定畫不畫進路線。
+  /* 地圖上方：「全選」＋每一點一顆（前一晚的住宿排第一）。點名字只看那一點，勾選框決定畫不畫進路線。
      做得比一般按鈕小：一天十個地點時，44px 高的按鈕會把地圖擠到剩 250px。
      名字只露出前幾個字，完整名稱在 title（滑鼠移上去）與按鈕文字裡（讀螢幕軟體讀得到） */
   .daymap-pick{ display:flex; flex-wrap:wrap; gap:var(--sp-1); margin-bottom:var(--sp-2); }
@@ -746,6 +746,7 @@ html{ font-size:clamp(16px, 4.2vw, 18px); }
     color:var(--c-text); font-family:inherit; font-size:var(--fs-xs); font-weight:700; cursor:pointer;
   }
   span.dm-chip{ padding:0; cursor:auto; }
+  label.dm-chip{ gap:var(--sp-1); }   /* 全選：整顆都是勾選框的標籤 */
   .dm-chip label{ display:flex; align-items:center; align-self:stretch; padding:0 2px 0 var(--sp-2); cursor:pointer; }
   .dm-chip input{ width:15px; height:15px; margin:0; accent-color:var(--c-on-accent); cursor:pointer; }
   .dm-chip button{
@@ -753,7 +754,7 @@ html{ font-size:clamp(16px, 4.2vw, 18px); }
     border:0; background:none; color:inherit; font:inherit; cursor:pointer;
     overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
   }
-  .dm-chip.is-on, button.dm-chip[aria-pressed="true"]{
+  .dm-chip.is-on{
     background:var(--c-accent); border-color:var(--c-accent); color:var(--c-on-accent);
   }
   .dm-chip.is-off button{ color:var(--c-text-dim); text-decoration:line-through; }
@@ -3662,6 +3663,11 @@ function paintNow(){
 const DESKTOP = matchMedia("(min-width:1024px)");
 function dayMapPoints(day){
   const pts = [], cardPt = [];   // cardPt[k]：當天第 k 張有地點的卡片是第幾個點
+  /* 從前一晚的住宿出發，才看得到怎麼從住處到第一站。只看緊接的前一天（有日期的分頁）；
+     那天沒有住宿（第一天、搭夜班機）就不加 */
+  const before = TRIP_DATA.days.slice(0, TRIP_DATA.days.indexOf(day)).reverse().find(d => d.date);
+  const stay = before && [...(before.blocks || [])].reverse().find(b => b.type === "lodging" && mapQuery(b));
+  if (stay) pts.push({ q: mapQuery(stay), title: stay.title || mapQuery(stay), start: true });
   for (const b of day.blocks || []){
     if (b.type !== "stop" && b.type !== "lodging") continue;
     const q = mapQuery(b);
@@ -3670,6 +3676,7 @@ function dayMapPoints(day){
     if (q !== (pts[pts.length - 1] || {}).q) pts.push({ q, title: b.title || q, mode: b.mode });
     cardPt.push(pts.length - 1);
   }
+  if (!cardPt.length) pts.length = 0;   // 當天自己沒有地點，只有前一晚的住宿就不畫
   /* 沒開車的日子用大眾運輸。嵌入地圖的大眾運輸一次只能查兩點之間：加了途經點就畫不出線，
      只把各點標出來（2026-10 實測，文件沒寫）——整天看地點分布，點某一站再看那一段怎麼搭 */
   const mode = (day.blocks || []).some(b => b.mode === "driving") ? "driving" : "transit";
@@ -3726,13 +3733,19 @@ function paintDayMap(day){
   /* 地圖上方的地點按鈕。整排重畫，所以先記住鍵盤焦點在哪一顆，畫完放回去 */
   const pick = box.querySelector(".daymap-pick");
   const was = pick.contains(document.activeElement) ? { ...document.activeElement.dataset } : null;
+  let n = 0;   // 前一晚的住宿不編號，當天的點從 ① 開始
   pick.innerHTML =
-    `<button type="button" class="dm-chip" data-p="all" aria-pressed="${focus === null && !skip.size}">整天路線</button>` +
-    pts.map((p, i) => `<span class="dm-chip${focus === i ? " is-on" : ""}${skip.has(i) ? " is-off" : ""}">` +
-      `<label><input type="checkbox" data-skip="${i}"${skip.has(i) ? "" : " checked"} aria-label="畫進路線：${esc(p.title)}"></label>` +
-      `<button type="button" data-p="${i}" aria-pressed="${focus === i}" title="${esc(p.title)}">${NUM(i)} ${esc(p.title)}</button></span>`
-    ).join("");
-  if (was) pick.querySelector(was.skip !== undefined ? `[data-skip="${was.skip}"]` : `[data-p="${was.p}"]`)?.focus();
+    `<label class="dm-chip"><input type="checkbox" data-all${skip.size ? "" : " checked"}>全選</label>` +
+    pts.map((p, i) => {
+      const name = p.start ? `🏨 ${p.title}` : `${NUM(n++)} ${p.title}`;
+      return `<span class="dm-chip${focus === i ? " is-on" : ""}${skip.has(i) ? " is-off" : ""}">` +
+        `<label><input type="checkbox" data-skip="${i}"${skip.has(i) ? "" : " checked"} aria-label="畫進路線：${esc(p.title)}"></label>` +
+        `<button type="button" data-p="${i}" aria-pressed="${focus === i}" title="${esc(p.start ? `前一晚住宿：${p.title}` : p.title)}">${esc(name)}</button></span>`;
+    }).join("");
+  /* 只勾了一部分：全選框顯示「–」，按下去會全部勾起來 */
+  pick.querySelector("[data-all]").indeterminate = skip.size > 0 && skip.size < pts.length;
+  if (was) pick.querySelector(was.all !== undefined ? "[data-all]"
+    : was.skip !== undefined ? `[data-skip="${was.skip}"]` : `[data-p="${was.p}"]`)?.focus();
 
   /* 全部取消勾選：沒有東西可畫，收起地圖、改成一行提示 */
   const show = leg ? leg.pts : focus !== null ? [pts[focus].q] : route;
@@ -3781,17 +3794,21 @@ document.getElementById("main").addEventListener("keydown", ev => {
 const dmPick = document.querySelector("#daymap .daymap-pick");
 dmPick.addEventListener("click", ev => {
   const b = ev.target.closest("button[data-p]");
-  if (!b) return;
-  if (b.dataset.p !== "all") return setMapFocus(Number(b.dataset.p));
-  delete mapSkip[current];   // 「整天」就是全部：取消的勾選一起恢復
-  setMapFocus(null);
+  if (b) setMapFocus(Number(b.dataset.p));
 });
 dmPick.addEventListener("change", ev => {
-  const i = Number(ev.target.dataset.skip);
-  const s = mapSkip[current] = mapSkip[current] || new Set();
-  if (ev.target.checked) s.delete(i); else s.add(i);
+  const day = TRIP_DATA.days.find(d => d.id === current);
+  if (ev.target.matches("[data-all]")){
+    /* 全選：沒全選（含只勾一部分）就全部勾起來，已經全選就全部取消 */
+    if (ev.target.checked) delete mapSkip[current];
+    else mapSkip[current] = new Set(dayMapPoints(day).pts.map((_, i) => i));
+  } else {
+    const i = Number(ev.target.dataset.skip);
+    const s = mapSkip[current] = mapSkip[current] || new Set();
+    if (ev.target.checked) s.delete(i); else s.add(i);
+  }
   mapFocus = null;   // 改勾選就是要看路線怎麼變：正在只看某一點的話，切回路線
-  paintDayMap(TRIP_DATA.days.find(d => d.id === current));
+  paintDayMap(day);
 });
 
 function paintForecast(){
