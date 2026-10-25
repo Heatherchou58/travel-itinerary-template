@@ -17,6 +17,7 @@ CSV 的 BOM、鍵盤 focus，以及最重要的「把 TRIP_DATA 換掉，網站�
 """
 
 import argparse
+import base64
 import functools
 import http.server
 import json
@@ -100,7 +101,7 @@ SWAP_TRIP = {
             {"type": "shopping", "title": "購物", "notes": ["購物說明"],
              "groups": [
                  # coupon 的群組不給數量與金額欄位——券是用掉的，不是買到的
-                 {"name": "折價券", "coupon": True, "items": [
+                 {"name": "優惠券", "coupon": True, "items": [
                      {"name": "有圖的券", "img": "img/swap-coupon.png"},
                      {"name": "要現場生成的券", "url": "https://example.com/coupon"}]},
                  {"name": "藥妝店", "items": [
@@ -472,6 +473,10 @@ def run(trip: str) -> bool:
                     page.title() != "" and "503" not in page.content())
             days = page.locator(".nav-item").count()
             r.check("離線：行程日期導覽有渲染", days >= 2, f"{days} 個分頁")
+            # 資訊（信用卡、免稅、緊急資訊）是出發前就要讀的，排在行前後面
+            tabs = [t.split("\n")[0].strip() for t in page.locator(".nav-item").all_inner_texts()]
+            if any("資訊" in t for t in tabs):
+                r.check("分頁順序：資訊緊接在行前後面", "行前" in tabs[0] and "資訊" in tabs[1], "／".join(tabs))
             items = page.locator(".chk").count()
             r.check("離線：打包清單有渲染", items > 0, f"{items} 項")
             sync = page.locator("#sync").inner_text().strip()
@@ -695,28 +700,28 @@ def run(trip: str) -> bool:
             r.check("購物：有填圖片的才有縮圖", page.locator(".shop-img").count() == 1)
             r.check("購物：有填連結的才有跳轉按鈕", page.locator(".shop-link").count() == 1)
             r.check("購物：沒有圖片的要讓開左上角的 ✕",
-                    page.locator('.shop-i[data-id="折價券:要現場生成的券"].no-img').count() == 1)
+                    page.locator('.shop-i[data-id="優惠券:要現場生成的券"].no-img').count() == 1)
             r.check("購物：誰要的有顯示",
                     "媽媽" in page.locator('.shop-i[data-id="藥妝店:托買的東西"]').inner_text())
 
             # 券是用掉、不是買到，所以整組都不該有數量與金額
             r.check("購物：券的群組沒有數量與金額欄位",
-                    page.locator('.shop-g[data-group="折價券"] .shop-note').count() == 0
-                    and page.locator('.shop-g[data-group="折價券"] .shop-amt').count() == 0,
-                    f"{page.locator('.shop-g[data-group=\"折價券\"] .shop-note').count()} 個備註／"
-                    f"{page.locator('.shop-g[data-group=\"折價券\"] .shop-amt').count()} 個金額")
+                    page.locator('.shop-g[data-group="優惠券"] .shop-note').count() == 0
+                    and page.locator('.shop-g[data-group="優惠券"] .shop-amt').count() == 0,
+                    f"{page.locator('.shop-g[data-group=\"優惠券\"] .shop-note').count()} 個備註／"
+                    f"{page.locator('.shop-g[data-group=\"優惠券\"] .shop-amt').count()} 個金額")
             r.check("購物：商品的群組有數量與金額欄位",
                     page.locator('.shop-g[data-group="藥妝店"] .shop-note').count() == 1
                     and page.locator('.shop-g[data-group="藥妝店"] .shop-amt').count() == 1)
             # 券不是待辦事項，是拿出來給店員看的東西，所以也不給勾選框
             r.check("購物：券沒有勾選框",
-                    page.locator('.shop-g[data-group="折價券"] input[type=checkbox]').count() == 0,
-                    f"{page.locator('.shop-g[data-group=\"折價券\"] input[type=checkbox]').count()} 個")
+                    page.locator('.shop-g[data-group="優惠券"] input[type=checkbox]').count() == 0,
+                    f"{page.locator('.shop-g[data-group=\"優惠券\"] input[type=checkbox]').count()} 個")
             r.check("購物：券的群組標題顯示張數不是進度",
-                    page.locator('.shop-g[data-group="折價券"] .shop-n').inner_text() == "共 2 張",
-                    page.locator('.shop-g[data-group="折價券"] .shop-n').inner_text())
+                    page.locator('.shop-g[data-group="優惠券"] .shop-n').inner_text() == "共 2 張",
+                    page.locator('.shop-g[data-group="優惠券"] .shop-n').inner_text())
             r.check("購物：券的名稱還是看得到",
-                    "有圖的券" in page.locator('.shop-i[data-id="折價券:有圖的券"]').inner_text())
+                    "有圖的券" in page.locator('.shop-i[data-id="優惠券:有圖的券"]').inner_text())
 
             item = page.locator('.shop-i[data-id="藥妝店:托買的東西"]')
             item.locator("input[type=checkbox]").check()
@@ -769,7 +774,7 @@ def run(trip: str) -> bool:
             # 刪掉的項目要能還原——誤觸 ✕ 不該讓一張券永久消失
             r.check("購物：沒刪東西時不顯示還原按鈕",
                     page.locator(".shop-restore").count() == 0)
-            page.locator('.shop-i[data-id="折價券:有圖的券"] .shop-x').click()
+            page.locator('.shop-i[data-id="優惠券:有圖的券"] .shop-x').click()
             page.wait_for_timeout(400)
             r.check("購物：刪除後項目消失", page.locator(".shop-i").count() == 2)
             r.check("購物：刪除後出現還原按鈕",
@@ -801,6 +806,65 @@ def run(trip: str) -> bool:
                     f"{page.locator('.shop-g[data-group=\"藥妝店\"] .shop-i').count()} 項")
             r.check("購物：新增的群組重新整理後還在",
                     page.locator('.shop-g[data-group="超市"]').count() == 1)
+
+            # 新增時附圖片與連結：圖存在 IndexedDB（不進 localStorage，免得塞爆連記帳都存不了），
+            # 連結只收 http／https
+            PNG = base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==")
+            idb_count = lambda: page.evaluate("""() => new Promise(ok => {
+                const r = indexedDB.open('trip:swaptest-2027:img');
+                r.onsuccess = () => { const db = r.result;
+                  if (!db.objectStoreNames.contains('img')){ db.close(); return ok(0); }
+                  const c = db.transaction('img').objectStore('img').count();
+                  c.onsuccess = () => { ok(c.result); db.close(); }; };
+                r.onerror = () => ok(-1); })""")
+            form = page.locator('.shop-add[data-addto="藥妝店"]')
+            form.locator('[name="n"]').fill("附圖的東西")
+            form.locator('[name="u"]').fill("www.example.com/coupon")
+            form.locator('[name="f"]').set_input_files({"name": "c.png", "mimeType": "image/png", "buffer": PNG})
+            r.check("附圖片：選了圖，按鈕變成「已選圖片」", "已選圖片" in form.locator(".shop-file").inner_text())
+            form.locator('button[type="submit"]').click()
+            page.wait_for_timeout(800)
+            mine = page.locator('.shop-g[data-group="藥妝店"] .shop-i', has_text="附圖的東西")
+            src = lambda: mine.locator("img.shop-img").get_attribute("src") or ""
+            r.check("附圖片：新增的項目有縮圖（從 IndexedDB 讀出來）", src().startswith("blob:"), src()[:30])
+            link = mine.locator(".shop-link")
+            r.check("附連結：沒打 https:// 的自動補上、按鈕寫「開啟連結」",
+                    link.get_attribute("href") == "https://www.example.com/coupon" and link.inner_text() == "開啟連結",
+                    f"{link.get_attribute('href')}／{link.inner_text()}")
+            r.check("附圖片：圖存在 IndexedDB、沒有塞進 localStorage",
+                    idb_count() == 1 and "data:image" not in page.evaluate("JSON.stringify(localStorage)"))
+            mine.locator("img.shop-img").click()
+            page.wait_for_timeout(300)
+            r.check("附圖片：自己加的圖也能點開放大", page.locator("#zoom[open]").count() == 1)
+            page.keyboard.press("Escape")
+            page.wait_for_timeout(300)
+            page.reload(wait_until="domcontentloaded")
+            page.wait_for_timeout(1200)
+            page.locator(".nav-item").nth(1).click()
+            page.wait_for_timeout(600)
+            r.check("附圖片：重新整理後圖還在", src().startswith("blob:"), src()[:30])
+            # 不合格的連結擋下來：javascript: 點了會在網站裡執行程式
+            said = []
+            page.once("dialog", lambda d: (said.append(d.message), d.dismiss()))
+            form.locator('[name="n"]').fill("壞連結")
+            form.locator('[name="u"]').fill("javascript:alert(1)")
+            form.locator('button[type="submit"]').click()
+            page.wait_for_timeout(500)
+            r.check("附連結：javascript: 這種網址擋下來、不新增",
+                    page.locator(".shop-i", has_text="壞連結").count() == 0 and said and "網址" in said[0],
+                    "／".join(said))
+            # 券的群組加的連結，按鈕寫「開啟優惠券」
+            cform = page.locator('.shop-add[data-addto="優惠券"]')
+            cform.locator('[name="n"]').fill("自己加的券")
+            cform.locator('[name="u"]').fill("https://example.com/my-coupon")
+            cform.locator('button[type="submit"]').click()
+            page.wait_for_timeout(500)
+            r.check("附連結：優惠券那組的按鈕寫「開啟優惠券」",
+                    page.locator(".shop-i", has_text="自己加的券").locator(".shop-link").inner_text() == "開啟優惠券")
+            mine.locator(".shop-x").click()
+            page.wait_for_timeout(500)
+            r.check("附圖片：刪掉項目，IndexedDB 裡的圖也一起刪", mine.count() == 0 and idb_count() == 0,
+                    f"還剩 {idb_count()} 張")
 
             # 點圖放大給店員看
             page.locator(".shop-img").first.click()

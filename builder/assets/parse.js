@@ -576,14 +576,15 @@ export function parseGrids(book){
     meta,
     days: [
       { id:"d0", nav:"📝 行前", blocks: prepBlocks },
-      ...days,
-      /* 購物排在記帳前面：買東西跟花錢是同一件事的前後腳 */
-      { id:"shop",   nav:"🛍️ 購物", blocks: [shopping].filter(Boolean) },
-      { id:"wallet", nav:"💰 記帳", blocks:[{ type:"expenses" }] },
+      /* 資訊緊接在行前後面：信用卡、免稅規定這些出發前就要讀的，跟行前放在一起 */
       { id:"info",   nav:"ℹ️ 資訊",
         blocks: [cards, ...infoLists,
                  phrases.length && { type:"phrases" },
-                 emergency.length && { type:"emergency" }].filter(Boolean) }
+                 emergency.length && { type:"emergency" }].filter(Boolean) },
+      ...days,
+      /* 購物排在記帳前面：買東西跟花錢是同一件事的前後腳 */
+      { id:"shop",   nav:"🛍️ 購物", blocks: [shopping].filter(Boolean) },
+      { id:"wallet", nav:"💰 記帳", blocks:[{ type:"expenses" }] }
     ].filter(d => d.blocks.length),
     phrases, emergency
   };

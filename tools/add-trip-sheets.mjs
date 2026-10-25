@@ -26,8 +26,8 @@ const SHOP = {
   /* 填入的欄位要上奶油色底，跟其他工作表一致 */
   fillFrom: [1, 1, 1, 1, 1, 1],
   rows: [
-    ["折價券", "券", "鶴羽藥妝", "", "img/tsuruha.jpg", ""],
-    ["折價券", "券", "唐吉訶德 Donki", "", "", "https://japanportal.donki-global.com/coupon/cp001_zhtw.html"],
+    ["優惠券", "券", "鶴羽藥妝", "", "img/tsuruha.jpg", ""],
+    ["優惠券", "券", "唐吉訶德 Donki", "", "", "https://japanportal.donki-global.com/coupon/cp001_zhtw.html"],
     ["藥妝店", "", "資生堂吸油面紙", "媽媽", "", ""],
   ],
 };

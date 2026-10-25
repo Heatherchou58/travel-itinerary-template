@@ -270,6 +270,16 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 .shop-add .input, .shop-addg .input{ flex:1; min-width:0; }
 .shop-add .btn, .shop-addg .btn{ margin-top:0; flex:0 0 auto; }
 .shop-addg{ margin-top:var(--sp-3); }
+/* 新增時可以附一張圖（例如優惠券截圖）或一個連結，選填，放在名稱那一列下面 */
+.shop-add{ flex-wrap:wrap; }
+.shop-extra{ display:flex; gap:var(--sp-2); flex:1 0 100%; }
+.shop-extra .input{ font-size:var(--fs-xs); }
+.shop-file{
+  display:inline-flex; align-items:center; flex:0 0 auto; min-height:44px; padding:0 var(--sp-3);
+  border:1px dashed var(--c-line); border-radius:10px; cursor:pointer;
+  font-size:var(--fs-xs); font-weight:700; color:var(--c-text-dim); white-space:nowrap;
+}
+.shop-file.has{ border-style:solid; border-color:var(--c-accent); background:var(--c-accent-soft); color:var(--c-on-accent); }
 
 /* 放大檢視：給店員看的時候要夠大 */
 #zoom{
@@ -977,6 +987,176 @@ const TRIP_DATA = {
               ]
             }
           ]
+        }
+      ]
+    },
+    {
+      "id": "info",
+      "nav": "ℹ️ 資訊",
+      "blocks": [
+        {
+          "type": "cards",
+          "title": "💳 信用卡刷卡攻略",
+          "notes": [
+            "回饋條件每季變動，以下為 2026-10-23 查證的結果，出發前請再到銀行官網確認。",
+            "海外刷卡通常有約 1.5% 手續費，回饋率要高於這個才划算。"
+          ],
+          "items": [
+            {
+              "name": "中國信託 uniopen 卡",
+              "rate": 11,
+              "regions": "日本、韓國、泰國、新加坡、美洲",
+              "until": "2026-12-31",
+              "quota": 6250,
+              "register": false,
+              "note": "海外實體最高 11% OPENPOINT：一般 2% ＋ 實體 1% ＋ 加碼 8%。\n8% 加碼每月上限 500 點，所以每月海外實體刷到 NT$6,250 就拿滿。\n2026 年起免領券。\n⚠️ 官網的唐吉訶德活動是 2026-07-15～10-31，在你 11/14 出發前就結束了，不要算進預算。"
+            },
+            {
+              "name": "星展 eco 永續卡",
+              "rate": 5,
+              "regions": "日本、韓國、泰國、新加坡、美洲、歐洲",
+              "until": "2026-12-31",
+              "quota": 15000,
+              "register": true,
+              "note": "指定國家實體消費 5%：基礎 1% 無上限 ＋ 加碼 4%。\n加碼每期上限 600 點，約當每期消費 NT$15,000 封頂。\n2026-09-01～12-31 海外實體「餐廳」登錄後最高 10%（單日上限 NT$300、每月 NT$1,000）。\n⚠️ 必須以當地貨幣結帳。結帳時店員問要日幣還台幣，選日幣，選台幣就不算。"
+            },
+            {
+              "name": "台新 Richart 卡",
+              "rate": 3.3,
+              "regions": "海外實體消費",
+              "until": "2027-03-31",
+              "quota": 0,
+              "register": true,
+              "note": "海外實體 3.3% 無上限，沒有登錄名額的問題，是最省心的主力卡。\n需要在 App 裡把回饋模式切換到「玩旅刷」。"
+            },
+            {
+              "name": "台新 Gogoro Rewards 聯名卡",
+              "rate": 4,
+              "regions": "海外消費",
+              "until": "2026-12-31",
+              "quota": 0,
+              "register": true,
+              "note": "2026-10-24 查證。海外消費 4% 無上限：基本 0.3% ＋ 加碼 3.7%，比 Richart 卡多 0.7%。\n加碼條件：信用卡帳款設定由台新帳戶（含 Richart）自動扣繳，並使用數位帳單，要在帳單結帳日 3 個工作天前設好。\n回饋是 Gogoro Smart Points（1 點＝NT$1），要先在 Gogoro Wallet 綁定這張卡，綁定前刷的不回溯補發。"
+            },
+            {
+              "name": "國泰世華 CUBE 卡",
+              "rate": 8,
+              "regions": "日系指定通路",
+              "until": "2026-11-30",
+              "quota": 0,
+              "register": true,
+              "note": "「秋日遊」快閃權益：指定日系消費最高 8%，搭配指定商戶專屬優惠券最高 10% 小樹點。\n⚠️ 這是期間限定權益，2026-10-01～11-30，正好涵蓋這趟行程，但要自己在 App 裡切換到「秋日遊」。\n11/30 之後就沒有了，回國前刷的還算得到。"
+            },
+            {
+              "name": "玉山 熊本熊卡",
+              "rate": 8.5,
+              "regions": "日本指定商店",
+              "until": "2026-12-31",
+              "quota": 5882,
+              "register": true,
+              "note": "日本指定商店最高 8.5%，每期加碼上限 500 元；超過上限仍有 2.5% 無上限。\n額度是以加碼部分回推的概估，實際適用店家以活動頁為準。"
+            },
+            {
+              "name": "台北富邦 J 卡",
+              "rate": 3,
+              "regions": "日本",
+              "until": "2026-12-31",
+              "quota": 33333,
+              "register": true,
+              "note": "基本約 3%，加碼需要每季登錄。\n單筆消費須滿 NT$1,000 才計入，每季回饋上限 NT$1,000。"
+            },
+            {
+              "name": "永豐 幣倍卡",
+              "rate": 2,
+              "regions": "海外一般消費",
+              "until": "2026-12-31",
+              "quota": 0,
+              "register": true,
+              "note": "海外一般消費 2% 無上限。精選通路（含 SUICA、PASMO、ICOCA 等交通卡儲值）有加碼。\n需先完成指定設定。"
+            },
+            {
+              "name": "PayPay × 玉山 Wallet 綁台外幣帳戶",
+              "rate": 11.5,
+              "regions": "日本 PayPay 商店",
+              "until": "2026-12-31",
+              "quota": 868,
+              "register": false,
+              "note": "2026-10-24 查證。回饋最高的組合，但上限也最低——每月歸戶上限 500 日圓，以 11.5% 計約 4,350 日圓就滿，而且每月活動總預算等值新臺幣 60 萬元，額滿即止。\n綁的是玉山台、外幣帳戶，不是信用卡，所以拿不到任何刷卡回饋。\n另免 1.5% 跨國手續費，所以廣告上寫 13%。"
+            },
+            {
+              "name": "PayPay × 台新 Pay+ 綁 Richart",
+              "rate": 3.8,
+              "regions": "日本 PayPay 商店",
+              "until": "2027-03-31",
+              "quota": 0,
+              "register": true,
+              "note": "2026-10-24 查證。要先在 Richart Life App 切換「Pay著刷」權益。\n實質沒有額度問題：加碼以每期帳單的永久信用額度加計 NT$30 萬為限。大筆消費用這個最划算。\n⚠️ 台新這檔活動的官方新聞稿寫「即日起至 2026 年 6 月 30 日」，但 Richart 的「Pay著刷」權益本身列到 2027-03-31。兩者對不上，出發前要在 App 裡確認還有沒有。\n另免 1.5% 海外手續費，所以廣告上寫 5.3%。"
+            },
+            {
+              "name": "PayPay × 玉山 Wallet 綁熊本熊卡",
+              "rate": 3.5,
+              "regions": "日本 PayPay 商店",
+              "until": "2026-12-31",
+              "quota": 2857,
+              "register": false,
+              "note": "2026-10-24 查證，玉山官方活動頁。不限新舊戶。\n每歸戶每季回饋上限 100 元，以 3.5% 計約刷 NT$2,857 就滿。\n⚠️ 這 3.5% 不與熊本熊卡的日本一般消費 2.5%、指定日本商店加碼疊加——走 Wallet 掃 PayPay 就拿不到那些，大筆消費直接刷卡反而比較好。\n另免 1.5% 國外交易服務費，所以廣告上寫 5%。"
+            },
+            {
+              "name": "PayPay × 全支付 綁國泰世華卡",
+              "rate": 3.5,
+              "regions": "日本 PayPay 商店",
+              "until": "2026-12-31",
+              "quota": 4000,
+              "register": false,
+              "note": "2026-10-24 查證。全支付是唯一（除玉山外）支援綁信用卡的，但限國泰世華。\n筆筆 3.5%：單筆上限 35 全點、每月上限 140 全點。\n單筆滿 NT$3,000 另享 4%（單筆上限 120 全點），指定帳戶或信用卡再加碼 5%。\n當月註冊新戶另有 5%（當月上限 100 全點）。\n另免 1.5% 海外手續費。"
+            },
+            {
+              "name": "PayPay × 街口 綁街口或銀行帳戶",
+              "rate": 2,
+              "regions": "日本 PayPay 商店",
+              "until": "2026-12-31",
+              "quota": 0,
+              "register": false,
+              "note": "2026-10-24 查證。回饋最低，但**上限最高**——精選通路每月 1 萬街口幣，以 2% 計要刷到 NT$50 萬才會滿，實務上用不完。買貴的東西時這個反而最穩。\n一般消費 1% ＋ 精選加碼 1%，另免 1.5% 海外手續費，所以廣告上寫 3.5%。\n⚠️ 以 TWQR 形式消費不算精選通路，只有 1%。\n街口只能綁街口帳戶或銀行帳戶，綁不了信用卡——台新街口聯名卡是拿來儲值街口帳戶的，不是直接綁卡。"
+            }
+          ]
+        },
+        {
+          "type": "checklist",
+          "key": "shoplist",
+          "title": "🧾 日本免稅新制",
+          "groups": [
+            {
+              "name": "日本免稅 2026-11-01 改制（你整趟都適用新制）",
+              "items": [
+                {
+                  "text": "知道店內要付「含稅價」，不是當場免稅",
+                  "note": "舊制是結帳時直接免稅，新制改成先付含稅價。"
+                },
+                {
+                  "text": "出境時在機場海關完成持出確認",
+                  "note": "沒做這一步就拿不到退稅。購買後 90 天內要完成。"
+                },
+                {
+                  "text": "確認退稅要退到哪張卡",
+                  "note": "退款會退到信用卡或電子支付，所以刷免稅品的那張卡要留意。"
+                },
+                {
+                  "text": "記得門檻是同店同日未稅 5,000 円以上",
+                  "note": "分開結帳可能湊不到門檻。"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "phrases"
+        },
+        {
+          "type": "emergency",
+          "country": "日本",
+          "countryCode": "JP",
+          "auto": 4
         }
       ]
     },
@@ -2633,7 +2813,7 @@ const TRIP_DATA = {
           ],
           "groups": [
             {
-              "name": "折價券",
+              "name": "優惠券",
               "coupon": true,
               "items": [
                 {
@@ -2724,176 +2904,6 @@ const TRIP_DATA = {
       "blocks": [
         {
           "type": "expenses"
-        }
-      ]
-    },
-    {
-      "id": "info",
-      "nav": "ℹ️ 資訊",
-      "blocks": [
-        {
-          "type": "cards",
-          "title": "💳 信用卡刷卡攻略",
-          "notes": [
-            "回饋條件每季變動，以下為 2026-10-23 查證的結果，出發前請再到銀行官網確認。",
-            "海外刷卡通常有約 1.5% 手續費，回饋率要高於這個才划算。"
-          ],
-          "items": [
-            {
-              "name": "中國信託 uniopen 卡",
-              "rate": 11,
-              "regions": "日本、韓國、泰國、新加坡、美洲",
-              "until": "2026-12-31",
-              "quota": 6250,
-              "register": false,
-              "note": "海外實體最高 11% OPENPOINT：一般 2% ＋ 實體 1% ＋ 加碼 8%。\n8% 加碼每月上限 500 點，所以每月海外實體刷到 NT$6,250 就拿滿。\n2026 年起免領券。\n⚠️ 官網的唐吉訶德活動是 2026-07-15～10-31，在你 11/14 出發前就結束了，不要算進預算。"
-            },
-            {
-              "name": "星展 eco 永續卡",
-              "rate": 5,
-              "regions": "日本、韓國、泰國、新加坡、美洲、歐洲",
-              "until": "2026-12-31",
-              "quota": 15000,
-              "register": true,
-              "note": "指定國家實體消費 5%：基礎 1% 無上限 ＋ 加碼 4%。\n加碼每期上限 600 點，約當每期消費 NT$15,000 封頂。\n2026-09-01～12-31 海外實體「餐廳」登錄後最高 10%（單日上限 NT$300、每月 NT$1,000）。\n⚠️ 必須以當地貨幣結帳。結帳時店員問要日幣還台幣，選日幣，選台幣就不算。"
-            },
-            {
-              "name": "台新 Richart 卡",
-              "rate": 3.3,
-              "regions": "海外實體消費",
-              "until": "2027-03-31",
-              "quota": 0,
-              "register": true,
-              "note": "海外實體 3.3% 無上限，沒有登錄名額的問題，是最省心的主力卡。\n需要在 App 裡把回饋模式切換到「玩旅刷」。"
-            },
-            {
-              "name": "台新 Gogoro Rewards 聯名卡",
-              "rate": 4,
-              "regions": "海外消費",
-              "until": "2026-12-31",
-              "quota": 0,
-              "register": true,
-              "note": "2026-10-24 查證。海外消費 4% 無上限：基本 0.3% ＋ 加碼 3.7%，比 Richart 卡多 0.7%。\n加碼條件：信用卡帳款設定由台新帳戶（含 Richart）自動扣繳，並使用數位帳單，要在帳單結帳日 3 個工作天前設好。\n回饋是 Gogoro Smart Points（1 點＝NT$1），要先在 Gogoro Wallet 綁定這張卡，綁定前刷的不回溯補發。"
-            },
-            {
-              "name": "國泰世華 CUBE 卡",
-              "rate": 8,
-              "regions": "日系指定通路",
-              "until": "2026-11-30",
-              "quota": 0,
-              "register": true,
-              "note": "「秋日遊」快閃權益：指定日系消費最高 8%，搭配指定商戶專屬優惠券最高 10% 小樹點。\n⚠️ 這是期間限定權益，2026-10-01～11-30，正好涵蓋這趟行程，但要自己在 App 裡切換到「秋日遊」。\n11/30 之後就沒有了，回國前刷的還算得到。"
-            },
-            {
-              "name": "玉山 熊本熊卡",
-              "rate": 8.5,
-              "regions": "日本指定商店",
-              "until": "2026-12-31",
-              "quota": 5882,
-              "register": true,
-              "note": "日本指定商店最高 8.5%，每期加碼上限 500 元；超過上限仍有 2.5% 無上限。\n額度是以加碼部分回推的概估，實際適用店家以活動頁為準。"
-            },
-            {
-              "name": "台北富邦 J 卡",
-              "rate": 3,
-              "regions": "日本",
-              "until": "2026-12-31",
-              "quota": 33333,
-              "register": true,
-              "note": "基本約 3%，加碼需要每季登錄。\n單筆消費須滿 NT$1,000 才計入，每季回饋上限 NT$1,000。"
-            },
-            {
-              "name": "永豐 幣倍卡",
-              "rate": 2,
-              "regions": "海外一般消費",
-              "until": "2026-12-31",
-              "quota": 0,
-              "register": true,
-              "note": "海外一般消費 2% 無上限。精選通路（含 SUICA、PASMO、ICOCA 等交通卡儲值）有加碼。\n需先完成指定設定。"
-            },
-            {
-              "name": "PayPay × 玉山 Wallet 綁台外幣帳戶",
-              "rate": 11.5,
-              "regions": "日本 PayPay 商店",
-              "until": "2026-12-31",
-              "quota": 868,
-              "register": false,
-              "note": "2026-10-24 查證。回饋最高的組合，但上限也最低——每月歸戶上限 500 日圓，以 11.5% 計約 4,350 日圓就滿，而且每月活動總預算等值新臺幣 60 萬元，額滿即止。\n綁的是玉山台、外幣帳戶，不是信用卡，所以拿不到任何刷卡回饋。\n另免 1.5% 跨國手續費，所以廣告上寫 13%。"
-            },
-            {
-              "name": "PayPay × 台新 Pay+ 綁 Richart",
-              "rate": 3.8,
-              "regions": "日本 PayPay 商店",
-              "until": "2027-03-31",
-              "quota": 0,
-              "register": true,
-              "note": "2026-10-24 查證。要先在 Richart Life App 切換「Pay著刷」權益。\n實質沒有額度問題：加碼以每期帳單的永久信用額度加計 NT$30 萬為限。大筆消費用這個最划算。\n⚠️ 台新這檔活動的官方新聞稿寫「即日起至 2026 年 6 月 30 日」，但 Richart 的「Pay著刷」權益本身列到 2027-03-31。兩者對不上，出發前要在 App 裡確認還有沒有。\n另免 1.5% 海外手續費，所以廣告上寫 5.3%。"
-            },
-            {
-              "name": "PayPay × 玉山 Wallet 綁熊本熊卡",
-              "rate": 3.5,
-              "regions": "日本 PayPay 商店",
-              "until": "2026-12-31",
-              "quota": 2857,
-              "register": false,
-              "note": "2026-10-24 查證，玉山官方活動頁。不限新舊戶。\n每歸戶每季回饋上限 100 元，以 3.5% 計約刷 NT$2,857 就滿。\n⚠️ 這 3.5% 不與熊本熊卡的日本一般消費 2.5%、指定日本商店加碼疊加——走 Wallet 掃 PayPay 就拿不到那些，大筆消費直接刷卡反而比較好。\n另免 1.5% 國外交易服務費，所以廣告上寫 5%。"
-            },
-            {
-              "name": "PayPay × 全支付 綁國泰世華卡",
-              "rate": 3.5,
-              "regions": "日本 PayPay 商店",
-              "until": "2026-12-31",
-              "quota": 4000,
-              "register": false,
-              "note": "2026-10-24 查證。全支付是唯一（除玉山外）支援綁信用卡的，但限國泰世華。\n筆筆 3.5%：單筆上限 35 全點、每月上限 140 全點。\n單筆滿 NT$3,000 另享 4%（單筆上限 120 全點），指定帳戶或信用卡再加碼 5%。\n當月註冊新戶另有 5%（當月上限 100 全點）。\n另免 1.5% 海外手續費。"
-            },
-            {
-              "name": "PayPay × 街口 綁街口或銀行帳戶",
-              "rate": 2,
-              "regions": "日本 PayPay 商店",
-              "until": "2026-12-31",
-              "quota": 0,
-              "register": false,
-              "note": "2026-10-24 查證。回饋最低，但**上限最高**——精選通路每月 1 萬街口幣，以 2% 計要刷到 NT$50 萬才會滿，實務上用不完。買貴的東西時這個反而最穩。\n一般消費 1% ＋ 精選加碼 1%，另免 1.5% 海外手續費，所以廣告上寫 3.5%。\n⚠️ 以 TWQR 形式消費不算精選通路，只有 1%。\n街口只能綁街口帳戶或銀行帳戶，綁不了信用卡——台新街口聯名卡是拿來儲值街口帳戶的，不是直接綁卡。"
-            }
-          ]
-        },
-        {
-          "type": "checklist",
-          "key": "shoplist",
-          "title": "🧾 日本免稅新制",
-          "groups": [
-            {
-              "name": "日本免稅 2026-11-01 改制（你整趟都適用新制）",
-              "items": [
-                {
-                  "text": "知道店內要付「含稅價」，不是當場免稅",
-                  "note": "舊制是結帳時直接免稅，新制改成先付含稅價。"
-                },
-                {
-                  "text": "出境時在機場海關完成持出確認",
-                  "note": "沒做這一步就拿不到退稅。購買後 90 天內要完成。"
-                },
-                {
-                  "text": "確認退稅要退到哪張卡",
-                  "note": "退款會退到信用卡或電子支付，所以刷免稅品的那張卡要留意。"
-                },
-                {
-                  "text": "記得門檻是同店同日未稅 5,000 円以上",
-                  "note": "分開結帳可能湊不到門檻。"
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "type": "phrases"
-        },
-        {
-          "type": "emergency",
-          "country": "日本",
-          "countryCode": "JP",
-          "auto": 4
         }
       ]
     }
@@ -3071,7 +3081,7 @@ const load = () => { try{ return JSON.parse(LS.get(KEY)) || {}; }catch{ return {
 const saved = load();
 const state = {
   checks: saved.checks || {},       // 個人清單（打包、個人購物）：只存本機
-  shopping: saved.shopping || {},   // 購物清單：只存本機
+  shopping: saved.shopping || {},   // 購物清單：只存本機（flush 只同步記帳）
   cards: saved.cards || {},         // 信用卡額度追蹤：每人刷多少是自己的事，只存本機
   expenses: saved.expenses || [],
   queue: saved.queue || [],
@@ -3121,6 +3131,65 @@ const shopBag = () => {
   if (!s.groups)  s.groups  = [];
   return s;
 };
+
+/* 自己加的圖片（例如優惠券截圖）存在 IndexedDB，不放 localStorage：localStorage 只有
+   5MB 左右，而且整份狀態（含記帳）存在同一個 key——被圖片塞爆的話，連記帳都存不進去。
+   跟購物清單一樣只在這台裝置，不同步。 */
+const imgDB = (() => {
+  let conn;
+  const open = () => conn ||= new Promise((ok, bad) => {
+    const r = indexedDB.open(`${KEY}:img`, 1);
+    r.onupgradeneeded = () => r.result.createObjectStore("img");
+    r.onsuccess = () => ok(r.result);
+    r.onerror = () => bad(r.error);
+  });
+  const run = (mode, fn) => open().then(db => new Promise((ok, bad) => {
+    const t = db.transaction("img", mode), req = fn(t.objectStore("img"));
+    t.oncomplete = () => ok(req.result);
+    t.onerror = t.onabort = () => bad(t.error);
+  }));
+  return {
+    put: (id, blob) => run("readwrite", s => s.put(blob, id)),
+    get: id => run("readonly", s => s.get(id)),
+    del: id => run("readwrite", s => s.delete(id)),
+  };
+})();
+/* 縮到長邊 1600px 再存：手機截圖動輒 3、4MB，縮完幾百 KB，條碼與 QR code 還掃得到。
+   先鋪白底，透明的 PNG 轉 JPEG 才不會變黑。讀不了的格式就存原檔。 */
+async function shrinkImage(file){
+  try{
+    const bmp = await createImageBitmap(file);
+    const k = Math.min(1, 1600 / Math.max(bmp.width, bmp.height));
+    const c = document.createElement("canvas");
+    c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k);
+    const g = c.getContext("2d");
+    g.fillStyle = "#FFFFFF"; g.fillRect(0, 0, c.width, c.height);
+    g.drawImage(bmp, 0, 0, c.width, c.height);
+    return await new Promise(res => c.toBlob(res, "image/jpeg", 0.88)) || file;
+  }catch{ return file; }
+}
+const userImgURL = new Map();   // 同一張圖重畫時沿用同一個網址，不重新讀
+async function paintUserImages(){
+  for (const el of document.querySelectorAll("#main img[data-uimg]")){
+    const id = el.dataset.uimg;
+    if (!userImgURL.has(id)){
+      const blob = await imgDB.get(id).catch(() => null);
+      if (!blob) continue;
+      userImgURL.set(id, URL.createObjectURL(blob));
+    }
+    el.src = el.dataset.zoom = userImgURL.get(id);
+  }
+}
+/* 自己貼的連結只收 http／https：javascript: 這種網址點了會在網站裡執行程式。
+   沒打 https:// 的（www.donki.com）幫忙補上。不合格回傳 null */
+function cleanLink(v){
+  v = v.trim();
+  if (!v) return "";
+  try{
+    const u = new URL(/^[a-z][a-z\d+.-]*:/i.test(v) ? v : `https://${v}`);
+    return /^https?:$/.test(u.protocol) ? u.href : null;
+  }catch{ return null; }
+}
 
 /* 把種子與本機資料合併成要渲染的群組。Map 保留插入順序：
    先種子群組、再使用者自己加的。 */
@@ -3377,20 +3446,26 @@ const RENDERERS = {
           <div class="shop-grid">${items.map(it => {
             const ed = s.edits[it.id] || {};
             /* 沒有圖片的卡片加 no-img，內容才會讓開左上角那顆 ✕ */
-            return `<div class="shop-i${it.img ? "" : " no-img"}" data-id="${esc(it.id)}">
+            /* 自己加的圖存在 IndexedDB（uimg），網址等 paintUserImages() 讀出來才補上 */
+            return `<div class="shop-i${it.img || it.uimg ? "" : " no-img"}" data-id="${esc(it.id)}">
               <button class="shop-x" data-del="${esc(it.id)}" type="button" aria-label="刪除${esc(it.name)}">✕</button>
-              ${it.img ? `<img class="shop-img" src="${esc(it.img)}" data-zoom="${esc(it.img)}" alt="${esc(it.name)}" loading="lazy">` : ""}
+              ${it.img ? `<img class="shop-img" src="${esc(it.img)}" data-zoom="${esc(it.img)}" alt="${esc(it.name)}" loading="lazy">`
+                : it.uimg ? `<img class="shop-img" data-uimg="${esc(it.id)}" alt="${esc(it.name)}">` : ""}
               ${isCoupon
                 ? `<div class="shop-name">${esc(it.name)}</div>`
                 : `<label class="chk"><input type="checkbox" data-sid="${esc(it.id)}"${ed.done ? " checked" : ""}><span>${esc(it.name)}${it.who ? `<span class="shop-who">${esc(it.who)}</span>` : ""}</span></label>`}
-              ${it.url ? `<a class="btn shop-link" href="${esc(it.url)}" target="_blank" rel="noopener">開啟優惠券</a>` : ""}
+              ${/^https?:\/\//i.test(it.url) ? `<a class="btn shop-link" href="${esc(it.url)}" target="_blank" rel="noopener">${isCoupon ? "開啟優惠券" : "開啟連結"}</a>` : ""}
               ${isCoupon ? "" : `<input class="input shop-note" data-snote="${esc(it.id)}" value="${esc(ed.note || "")}" placeholder="數量／備註" autocomplete="off">
               <input class="input shop-amt" type="number" inputmode="numeric" min="0" data-samt="${esc(it.id)}" value="${esc(String(ed.amount ?? ""))}" placeholder="金額">`}
             </div>`;
           }).join("")}</div>
           <form class="shop-add" data-addto="${esc(name)}">
             <input class="input" name="n" placeholder="加一項到「${esc(name)}」" autocomplete="off">
-            <button class="btn" type="submit">新增</button></form>
+            <button class="btn" type="submit">新增</button>
+            <div class="shop-extra">
+              <label class="shop-file"><input type="file" name="f" accept="image/*" hidden><span>📷 附圖片</span></label>
+              <input class="input" name="u" inputmode="url" placeholder="🔗 連結（選填）" autocomplete="off" aria-label="連結（選填）">
+            </div></form>
         </details>`;
       }).join("")}
       ${s.removed.length ? `<button class="shop-restore" data-srestore="1" type="button">還原已移除的 ${s.removed.length} 項</button>` : ""}
@@ -3444,6 +3519,7 @@ function renderDay(id){
   document.getElementById("edit-bar").hidden = id !== "d0";
   paintForecast();
   paintVaults();        // 記住密語的話，卡片上的私人資料在這裡自動解開（解密是非同步的）
+  paintUserImages();    // 購物清單裡自己加的圖片從 IndexedDB 讀出來（非同步）
   paintDayMap(day);
   window.scrollTo({ top:0, behavior:"smooth" });
   markNow();           // 捲到頂之後才標記；第一次進站會再捲到目前項目
@@ -4283,6 +4359,15 @@ document.getElementById("main").addEventListener("input", e => {
   leftEl.classList.toggle("cc-full", left === 0);
 });
 
+/* 選了圖片，按鈕改成「已選圖片」，才知道有沒有選到 */
+document.getElementById("main").addEventListener("change", e => {
+  const f = e.target.closest('.shop-add [name="f"]');
+  if (!f) return;
+  const lab = f.closest(".shop-file");
+  lab.classList.toggle("has", f.files.length > 0);
+  lab.querySelector("span").textContent = f.files.length ? "📷 已選圖片" : "📷 附圖片";
+});
+
 /* 點圖放大給店員看。用原生 <dialog>：免自己做焦點管理，Esc 也能關。 */
 document.getElementById("main").addEventListener("click", e => {
   const img = e.target.closest("[data-zoom]");
@@ -4308,7 +4393,13 @@ document.getElementById("main").addEventListener("click", e => {
     /* 種子項目記進 removed（重新產生網站後才不會跑回來），
        自己加的直接從 added 拿掉。 */
     const i = s.added.findIndex(a => a.id === id);
-    if (i >= 0) s.added.splice(i, 1);
+    if (i >= 0){
+      if (s.added[i].uimg){
+        imgDB.del(id).catch(() => {});
+        URL.revokeObjectURL(userImgURL.get(id)); userImgURL.delete(id);
+      }
+      s.added.splice(i, 1);
+    }
     else if (!s.removed.includes(id)) s.removed.push(id);
     delete s.edits[id];
   };
@@ -4331,17 +4422,25 @@ document.getElementById("main").addEventListener("click", e => {
   }
 });
 
-/* 新增項目與群組。用 <form> 的 submit，Enter 鍵才會自然生效。 */
-document.getElementById("main").addEventListener("submit", e => {
+/* 新增項目與群組。用 <form> 的 submit，Enter 鍵才會自然生效。
+   項目可以附一張圖片、一個連結（選填）。 */
+document.getElementById("main").addEventListener("submit", async e => {
   const s = shopBag();
   const addItem = e.target.closest(".shop-add");
   if (addItem){
     e.preventDefault();
-    const inp = addItem.querySelector('[name="n"]');
-    const name = inp.value.trim();
-    if (!name) return;
-    s.added.push({ id: `+${Date.now().toString(36)}`, group: addItem.dataset.addto, name });
-    inp.value = "";
+    const name = addItem.querySelector('[name="n"]').value.trim();
+    if (!name){ alert("請填寫名稱"); return; }
+    const url = cleanLink(addItem.querySelector('[name="u"]').value);
+    if (url === null){ alert("連結要是網址，例如 https://www.donki.com"); return; }
+    const it = { id: `+${Date.now().toString(36)}`, group: addItem.dataset.addto, name };
+    if (url) it.url = url;
+    const file = addItem.querySelector('[name="f"]').files[0];
+    if (file){
+      try{ await imgDB.put(it.id, await shrinkImage(file)); it.uimg = true; }
+      catch{ alert("這個瀏覽器存不了圖片，先只加名稱與連結"); }
+    }
+    s.added.push(it);
     persist(); renderDay(current); return;
   }
   const addGroup = e.target.closest(".shop-addg");
