@@ -1798,7 +1798,25 @@ def run(trip: str) -> bool:
             page.goto(base)
             page.wait_for_load_state("networkidle")
             page.wait_for_timeout(500)
-            dark_fail = []
+            # 深色模式特有的第二條：面跟面要分得開。上面那支探針只量文字，量不到
+            # 「說明框的底色跟卡片底色幾乎一樣」——使用者是看畫面才發現的，當時
+            # 區別度只有 1.02（1.00 ＝ 完全同色）。
+            FLAT_PROBE = """() => {
+                const lum = ([r, g, b]) => { const f = v => { v /= 255; return v <= .03928 ? v / 12.92 : ((v + .055) / 1.055) ** 2.4; };
+                  return .2126 * f(r) + .7152 * f(g) + .0722 * f(b); };
+                const nums = c => c.match(/[0-9.]+/g).map(Number);
+                const out = [];
+                for (const el of document.querySelectorAll('#main .note-box, #main .src, #main .wx-day')){
+                  const card = el.closest('.card');
+                  if (!card || !el.checkVisibility()) continue;
+                  const a = lum(nums(getComputedStyle(el).backgroundColor));
+                  const b = lum(nums(getComputedStyle(card).backgroundColor));
+                  const ratio = (Math.max(a, b) + .05) / (Math.min(a, b) + .05);
+                  if (ratio < 1.2) out.push(`${el.className.split(' ')[0]} ${ratio.toFixed(2)}`);
+                }
+                return out;
+            }"""
+            dark_fail, dark_flat = [], []
             tabs = page.locator(".nav-item")
             for i in range(tabs.count()):
                 tab = tabs.nth(i).inner_text().split("\n")[0]
@@ -1810,8 +1828,39 @@ def run(trip: str) -> bool:
                     page.wait_for_timeout(100)
                     page.evaluate("window.scrollTo(0, 0)")
                 dark_fail += [f"{tab}：{x}" for x in page.evaluate(UX_PROBE)["contrast"]]
+                dark_flat += [f"{tab}：{x}" for x in page.evaluate(FLAT_PROBE)]
             r.check("UI 規則：深色模式的文字對比 ≥ 4.5:1（大字 3:1）", not dark_fail,
                     "；".join(sorted(set(dark_fail))[:4]) or "各分頁都過")
+            r.check("UI 規則：深色模式下說明框等區塊跟卡片分得開", not dark_flat,
+                    "；".join(sorted(set(dark_flat))[:4]) or "各分頁都過")
+            ctx.close()
+
+            # 配色切換鍵：跟隨系統／淺色／深色三段循環，記在本機，手動指定要蓋過系統。
+            # 這個情境的系統偏好是深色，所以「手動選淺色」能不能壓過它是重點。
+            ctx = browser.new_context(viewport={"width": 375, "height": 812}, color_scheme="dark")
+            page = ctx.new_page()
+            page.goto(base)
+            page.wait_for_load_state("networkidle")
+            btn = page.locator("#scheme")
+            seq = []
+            for _ in range(4):
+                seq.append((page.evaluate("document.documentElement.dataset.scheme"),
+                            btn.get_attribute("aria-label") or ""))
+                btn.click()
+                page.wait_for_timeout(150)
+            r.check("配色：預設跟隨系統（這裡是深色）",
+                    seq[0][0] == "dark" and "跟隨系統" in seq[0][1], str(seq[0]))
+            r.check("配色：手動選淺色會蓋過系統的深色",
+                    seq[1][0] == "light" and "淺色" in seq[1][1], str(seq[1]))
+            r.check("配色：可以手動選深色", seq[2][0] == "dark" and "深色" in seq[2][1], str(seq[2]))
+            r.check("配色：繞一圈回到跟隨系統",
+                    seq[3][0] == "dark" and "跟隨系統" in seq[3][1], str(seq[3]))
+            # 上面按了四次，現在停在「淺色」；重新整理要記得（<head> 那段在繪製前就套上）
+            page.reload()
+            page.wait_for_load_state("networkidle")
+            r.check("配色：重新整理後記得選擇",
+                    page.evaluate("document.documentElement.dataset.scheme") == "light",
+                    page.evaluate("document.documentElement.dataset.scheme"))
             ctx.close()
 
             # 電腦版才有的介面（右側地圖上方的地點列）也要過標籤這條

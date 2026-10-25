@@ -15,7 +15,19 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="apple-mobile-web-app-title" content="九州福岡七日自駕">
-<title>🍁 KYUSHU ROAD TRIP 2026 ♨️</title>
+<title>🍁 KYUSHU ROAD TRIP 2026</title>
+<script>
+/* 配色要在畫面繪製前就定下來，不然偏好深色的人每次開都會先閃一下白底。
+   這一段刻意獨立、不依賴下面的模組（模組跑到的時候畫面已經畫完了），
+   也刻意不帶 tripId——同一個網域下所有行程共用一個偏好。 */
+(function(){
+  var v = null;
+  try{ v = localStorage.getItem("travel:scheme"); }catch(e){}
+  if (v !== "light" && v !== "dark")
+    v = matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  document.documentElement.dataset.scheme = v;
+})();
+</script>
 <style>
 /* ═══════════════════════════════════════════════
    設計層 —— 換旅程時不需要修改
@@ -29,6 +41,11 @@
      #6B635B 在五個主題的底色、淡色底上最低 5.1 */
   --c-text-dim:#6B635B;
   --c-line:#E7E1D8;
+  /* 控制項（輸入框、chip、分頁、外框按鈕…）的邊框。WCAG 1.4.11 要求能識別介面元件的
+     圖形 >= 3:1，--c-line 對白底只有 1.3。刻意不拿來畫分隔線與路線——實測整組調深之後
+     交通卡那條 4px 的線會變成一根灰柱，跟站點的圓點搶視線。
+     同一個中灰對淺色底（最差 3.27）與深色底（最差 3.17）都夠，所以深色模式不用另外覆寫。 */
+  --c-border:#8A8278;
   --c-accent:#74B9FF;
   --c-accent-soft:#E8F4FF;
   --c-on-accent:#0F4670;
@@ -163,8 +180,20 @@ body::after{
 .skip:focus{ left:var(--sp-2); }
 
 /* ── Header ───────────────────────────── */
-header{ text-align:center; padding:var(--sp-5) var(--sp-4) var(--sp-3); }
-header h1{ font-size:var(--fs-2xl); margin:0 0 var(--sp-1); letter-spacing:.5px; }
+header{ position:relative; text-align:center; padding:var(--sp-5) var(--sp-4) var(--sp-3); }
+/* 配色切換：跟隨系統／淺色／深色，點一下換下一個。只有圖示，所以名稱靠 aria-label */
+.scheme{
+  position:absolute; top:var(--sp-4); right:var(--sp-4);
+  display:inline-flex; align-items:center; justify-content:center;
+  width:44px; height:44px; padding:0;
+  border:1px solid var(--c-border); border-radius:50%;
+  background:var(--c-surface); color:var(--c-text-dim); cursor:pointer;
+}
+.scheme .ic{ width:1.25em; height:1.25em; margin:0; vertical-align:0; }
+/* 左右各讓出右上角那顆切換鍵的寬度（44 ＋ 8 間距）。兩側都讓是為了維持置中——
+   只讓右邊的話標題會偏左。實測 375px 仍是兩行，沒有因此多一行。 */
+header h1{ font-size:var(--fs-2xl); margin:0 0 var(--sp-1); letter-spacing:.5px;
+           padding:0 calc(44px + var(--sp-2)); }
 header .subtitle{ font-size:var(--fs-sm); color:var(--c-text-dim); margin:0 0 var(--sp-4); }
 
 /* ── 目前天氣條 ───────────────────────── */
@@ -221,7 +250,7 @@ header .subtitle{ font-size:var(--fs-sm); color:var(--c-text-dim); margin:0 0 va
   flex:0 0 auto; display:inline-flex; flex-direction:column;
   align-items:center; justify-content:center; line-height:1.25;
   padding:var(--sp-2) var(--sp-4); min-height:44px;
-  border:1px solid var(--c-line); border-radius:var(--r-pill);
+  border:1px solid var(--c-border); border-radius:var(--r-pill);
   background:var(--c-surface); color:var(--c-text-dim);
   font-size:var(--fs-sm); font-family:inherit; font-weight:700;
   cursor:pointer; white-space:nowrap; transition:background .15s,color .15s;
@@ -274,7 +303,7 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 .shop-x{
   position:absolute; top:2px; left:2px; z-index:1;
   width:28px; height:28px; border-radius:50%;
-  border:1px solid var(--c-line); background:var(--c-surface);
+  border:1px solid var(--c-border); background:var(--c-surface);
   color:var(--c-text-dim); font-family:inherit; line-height:1; cursor:pointer;
 }
 /* 可點範圍補到 44px：圓圈本身再放大會擋住券上的條碼與折扣數字，
@@ -308,14 +337,14 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 .shop-extra{ display:flex; align-items:flex-end; gap:var(--sp-2); flex:1 0 100%; }
 .shop-file{
   display:inline-flex; align-items:center; flex:0 0 auto; min-height:44px; padding:0 var(--sp-3);
-  border:1px dashed var(--c-line); border-radius:10px; cursor:pointer;
+  border:1px dashed var(--c-border); border-radius:10px; cursor:pointer;
   font-size:var(--fs-xs); font-weight:700; color:var(--c-text-dim); white-space:nowrap;
 }
 .shop-file.has{ border-style:solid; border-color:var(--c-accent); background:var(--c-accent-soft); color:var(--c-on-accent); }
 /* 已經加好的項目之後再補圖 */
 .shop-addimg{
   display:flex; align-items:center; justify-content:center; min-height:44px;
-  border:1px dashed var(--c-line); border-radius:8px; cursor:pointer;
+  border:1px dashed var(--c-border); border-radius:8px; cursor:pointer;
   font-size:var(--fs-xs); font-weight:700; color:var(--c-text-dim);
 }
 /* 放大檢視裡：自己加的圖可以換一張或拿掉 */
@@ -350,7 +379,7 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 }
 .cc-x, .cc-restore, .shop-restore{
   flex:0 0 auto; min-height:44px; padding:0 var(--sp-3);
-  border:1px solid var(--c-line); border-radius:var(--r-pill);
+  border:1px solid var(--c-border); border-radius:var(--r-pill);
   background:var(--c-surface); color:var(--c-text-dim);
   font-family:inherit; font-size:var(--fs-xs); cursor:pointer;
 }
@@ -378,7 +407,7 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 .secret.is-locked{ padding:0; border:none; }
 .secret-ask{
   width:100%; min-height:44px; padding:0 var(--sp-3); text-align:left;
-  border:1px dashed var(--c-line); border-radius:10px;
+  border:1px dashed var(--c-border); border-radius:10px;
   background:var(--c-surface); color:var(--c-text-dim);
   font-family:inherit; font-size:var(--fs-sm); cursor:pointer;
 }
@@ -548,7 +577,7 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
    一個畫面只留一顆主要動作（ui-ux-pro-max primary-action）。
    padding 少 1px 把邊框的厚度讓出來，高度維持 44px。 */
 .btn-plain{
-  padding:9px var(--sp-4); border:1px solid var(--c-line);
+  padding:9px var(--sp-4); border:1px solid var(--c-border);
   background:var(--c-surface); color:var(--c-text);
 }
 /* full：整列寬的送出鍵。.btn 預設的右邊距在滿版時會把按鈕推出容器 */
@@ -687,7 +716,7 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 .field > label, .f-grp{ display:block; font-size:var(--fs-sm); font-weight:700; margin-bottom:var(--sp-2); }
 .input{
   width:100%; padding:10px var(--sp-3); min-height:44px;
-  border:1px solid var(--c-line); border-radius:10px;
+  border:1px solid var(--c-border); border-radius:10px;
   background:var(--c-surface); color:var(--c-text);
   font-size:var(--fs-md); font-family:inherit;
 }
@@ -695,7 +724,7 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 .chip{
   display:inline-flex; align-items:center; justify-content:center;
   min-height:44px; min-width:44px; padding:var(--sp-1) var(--sp-3);
-  border:1px solid var(--c-line); border-radius:var(--r-pill);
+  border:1px solid var(--c-border); border-radius:var(--r-pill);
   background:var(--c-surface); font-size:var(--fs-sm); cursor:pointer; user-select:none;
 }
 .chip input{ position:absolute; opacity:0; width:0; height:0; }
@@ -785,6 +814,7 @@ html{ font-size:clamp(16px, 4.2vw, 18px); }
   body{ padding:var(--sp-4) var(--sp-4) 0; }
   main{ padding-left:0; padding-right:0; }
   header{ padding-left:0; padding-right:0; }
+  .scheme{ right:0; }
   .nav-bar{ padding-left:0; padding-right:0; }
 }
 
@@ -800,7 +830,7 @@ html{ font-size:clamp(16px, 4.2vw, 18px); }
     column-gap:var(--sp-6);
   }
   header{ grid-column:1; grid-row:1; text-align:left; padding:0 0 var(--sp-4); }
-  header h1{ font-size:var(--fs-xl); }
+  header h1{ font-size:var(--fs-xl); padding-left:0; }   /* 電腦版標題靠左，只讓右邊 */
   .nav-bar{
     grid-column:1; grid-row:2; align-self:start;
     position:sticky; top:var(--sp-4);
@@ -846,7 +876,7 @@ html{ font-size:clamp(16px, 4.2vw, 18px); }
   .daymap-pick{ display:flex; flex-wrap:wrap; gap:var(--sp-1); margin-bottom:var(--sp-2); }
   .dm-chip{
     display:inline-flex; align-items:center; min-height:34px; max-width:100%; padding:0 var(--sp-3);
-    border:1px solid var(--c-line); border-radius:var(--r-pill); background:var(--c-surface);
+    border:1px solid var(--c-border); border-radius:var(--r-pill); background:var(--c-surface);
     color:var(--c-text); font-family:inherit; font-size:var(--fs-xs); font-weight:700; cursor:pointer;
   }
   span.dm-chip{ padding:0; cursor:auto; }
@@ -894,7 +924,7 @@ html{ font-size:clamp(16px, 4.2vw, 18px); }
 #edit-bar[hidden]{ display:none; }
 #edit-bar a{
   display:inline-block; padding:10px var(--sp-4); min-height:44px; line-height:22px;
-  border:1px solid var(--c-line); border-radius:var(--r-pill); background:var(--c-surface);
+  border:1px solid var(--c-border); border-radius:var(--r-pill); background:var(--c-surface);
   color:var(--c-text); font-size:var(--fs-sm); font-weight:700; text-decoration:none;
 }
 #edit-bar a.go{ background:var(--c-accent); border-color:var(--c-accent); color:var(--c-on-accent); }
@@ -903,48 +933,57 @@ footer a{ color:inherit; }
 footer > a{ display:inline-block; padding:14px 0; margin:-14px 0; }
 
 /* ── 深色模式 ─────────────────────────────────
-   跟著系統走。五個主題各一套底色與強調色，其餘的語意色不分主題。
-   每一組會疊在一起的前景／背景都算過對比：文字 ≥ 4.5:1，圖示這種非文字圖形 ≥ 3:1。
+   由 <html data-scheme> 決定，不直接寫 @media——因為使用者可以自己切（跟隨系統／
+   淺色／深色，頁首右上角那顆鍵）。<head> 有一小段在繪製前就把屬性設好；選「跟隨
+   系統」時由 JS 監聽 prefers-color-scheme 的變化再改它。
+
+   五個主題各一套底色與強調色，其餘的語意色不分主題。每一組會疊在一起的前景／背景
+   都算過對比：文字 ≥ 4.5:1，圖示這種非文字圖形 ≥ 3:1。
+
+   深色模式的層次是靠「亮」表達的：--c-accent-soft 與 --c-warn-soft 一定要比
+   --c-surface 亮，否則說明框會整個消失（第一版做反了，區別度只有 1.02）。
+   對比探針只量文字、量不到這種「面跟面分不開」，所以測試另外有一條在守。
 
    有幾個地方光換 token 不夠，附在最後單獨處理——最典型的是 .btn 與 .skip：
    它們的底色是 --c-text，深色模式下 --c-text 變成淺的，白字就看不見了。 */
-@media (prefers-color-scheme: dark){
-  :root{
-    --c-surface:#1A2029; --c-text:#EDE7E1; --c-text-dim:#AAA098; --c-line:#3B332D;
-    --c-warn-text:#F0B870; --c-warn-soft:#2A2118;
-    --c-danger:#F28E88; --c-ok:#74D7A0;
-    /* 深底上要更重的影子才看得出層次 */
-    --shadow:0 2px 8px rgba(0,0,0,.45);
-    --shadow-pop:0 4px 14px rgba(0,0,0,.6);
-    --ic-food:#F0896B; --ic-move:#7FB6EE; --ic-stay:#C6A2E8;
-    --ic-shop:#5FC9C0; --ic-see:#86CE89;  --ic-warn:#F0B870;
-    --ic-time:#AAA098;
-  }
-  /* --c-pop 刻意不覆寫：各主題原本的深飽和色配白字仍有 4.6–5.4:1，在深底上也還看得出
-     是一塊按鈕（3.4–4.0:1）。改淺反而會讓 .btn-theme 的白字糊掉。 */
-  [data-theme="snow"]  { --c-bg:#10141A; --c-surface:#1A2029; --c-accent:#1E3A52; --c-accent-soft:#171D25; --c-on-accent:#A8D4F5; --deco-op:.30; }
-  [data-theme="sakura"]{ --c-bg:#191215; --c-surface:#241A20; --c-accent:#4E2436; --c-accent-soft:#231820; --c-on-accent:#F7B9CE; --deco-op:.30; }
-  [data-theme="maple"] { --c-bg:#17120F; --c-surface:#221C18; --c-accent:#4A2A20; --c-accent-soft:#251D19; --c-on-accent:#F3B9A6; --deco-op:.28; }
-  [data-theme="ocean"] { --c-bg:#0E1617; --c-surface:#182224; --c-accent:#1C3F44; --c-accent-soft:#151F20; --c-on-accent:#9EDCE3; --deco-op:.30; }
-  [data-theme="city"]  { --c-bg:#14141C; --c-surface:#1E1E29; --c-accent:#2E2A55; --c-accent-soft:#1A1A24; --c-on-accent:#C3BEF0; --deco-op:.18; }
-
-  /* 實心的主要按鈕與「跳到主內容」：底是 --c-text（深色模式下是淺的），字要翻成底色。
-     下面四行不能省：這一條在 .btn-* 那些變體後面，同樣是一個 class 的優先序，
-     不重新宣告的話會把它們的 color 一起蓋掉——外框樣式的 .btn-plain／.btn-route
-     會變成深字配深底（實測 1.10:1，等於看不見）。 */
-  .btn, .skip{ color:var(--c-bg); }
-  .btn-naver, .btn-booking, .btn-map{ color:var(--c-on-solid); }
-  .btn-theme{ color:var(--c-on-solid); }
-  .btn-plain{ color:var(--c-text); }
-  .btn-route{ color:var(--c-on-accent); }
-  /* 勾選框：--c-accent 在深色模式是「底色」用的深色，拿來當勾勾會看不見 */
-  .chk input, .vault-remember input{ accent-color:var(--c-on-accent); }
-  /* 天氣格的分隔線原本是黑色半透明，在深底上等於沒有 */
-  .wx-grid div + div{ border-left-color:rgba(255,255,255,.1); }
-  /* 「看介紹」那條鋪的照片：深色模式的字是淺的，照片要壓更暗才不會吃掉對比
-     （照片最亮處以純白計，疊完仍有 6:1 以上） */
-  .intro.has-photo summary::after{ opacity:.15; }
+:root[data-scheme="light"]{ color-scheme:light; }
+:root[data-scheme="dark"]{
+  color-scheme:dark;
+  --c-surface:#1A2029; --c-text:#EDE7E1; --c-text-dim:#AAA098; --c-line:#3B332D;
+  --c-warn-text:#F0B870; --c-warn-soft:#3E301A;
+  --c-danger:#F28E88; --c-ok:#74D7A0;
+  /* 深底上要更重的影子才看得出層次 */
+  --shadow:0 2px 8px rgba(0,0,0,.45);
+  --shadow-pop:0 4px 14px rgba(0,0,0,.6);
+  --ic-food:#F0896B; --ic-move:#7FB6EE; --ic-stay:#C6A2E8;
+  --ic-shop:#5FC9C0; --ic-see:#86CE89;  --ic-warn:#F0B870;
+  --ic-time:#AAA098;
 }
+/* --c-border 不覆寫：同一個中灰對淺色底（最差 3.27）與深色底（最差 3.17）都夠。
+   --c-pop 也不覆寫：各主題原本的深飽和色配白字仍有 4.6–5.4:1，改淺反而會讓
+   .btn-theme 的白字糊掉。 */
+:root[data-scheme="dark"][data-theme="snow"]  { --c-bg:#10141A; --c-surface:#1A2029; --c-accent:#1E3A52; --c-accent-soft:#2C3749; --c-on-accent:#A8D4F5; --deco-op:.30; }
+:root[data-scheme="dark"][data-theme="sakura"]{ --c-bg:#191215; --c-surface:#241A20; --c-accent:#4E2436; --c-accent-soft:#3C2A36; --c-on-accent:#F7B9CE; --deco-op:.30; }
+:root[data-scheme="dark"][data-theme="maple"] { --c-bg:#17120F; --c-surface:#221C18; --c-accent:#4A2A20; --c-accent-soft:#3A2D26; --c-on-accent:#F3B9A6; --deco-op:.28; }
+:root[data-scheme="dark"][data-theme="ocean"] { --c-bg:#0E1617; --c-surface:#182224; --c-accent:#1C3F44; --c-accent-soft:#27373A; --c-on-accent:#9EDCE3; --deco-op:.30; }
+:root[data-scheme="dark"][data-theme="city"]  { --c-bg:#14141C; --c-surface:#1E1E29; --c-accent:#2E2A55; --c-accent-soft:#302F42; --c-on-accent:#C3BEF0; --deco-op:.18; }
+
+/* 實心的主要按鈕與「跳到主內容」：底是 --c-text（深色模式下是淺的），字要翻成底色。
+   下面四行不能省：這一條在 .btn-* 那些變體後面、而且多一層選擇器，不重新宣告的話
+   會把它們的 color 一起蓋掉——外框樣式的 .btn-plain／.btn-route 會變成深字配深底
+   （實測 1.10:1，等於看不見）。 */
+[data-scheme="dark"] .btn, [data-scheme="dark"] .skip{ color:var(--c-bg); }
+[data-scheme="dark"] .btn-naver, [data-scheme="dark"] .btn-booking, [data-scheme="dark"] .btn-map{ color:var(--c-on-solid); }
+[data-scheme="dark"] .btn-theme{ color:var(--c-on-solid); }
+[data-scheme="dark"] .btn-plain{ color:var(--c-text); }
+[data-scheme="dark"] .btn-route{ color:var(--c-on-accent); }
+/* 勾選框：--c-accent 在深色模式是「底色」用的深色，拿來當勾勾會看不見 */
+[data-scheme="dark"] .chk input, [data-scheme="dark"] .vault-remember input{ accent-color:var(--c-on-accent); }
+/* 天氣格的分隔線原本是黑色半透明，在深底上等於沒有 */
+[data-scheme="dark"] .wx-grid div + div{ border-left-color:rgba(255,255,255,.1); }
+/* 「看介紹」那條鋪的照片：深色模式的字是淺的，照片要壓更暗才不會吃掉對比
+   （照片最亮處以純白計，疊完仍有 6:1 以上） */
+[data-scheme="dark"] .intro.has-photo summary::after{ opacity:.15; }
 </style>
 </head>
 <body>
@@ -985,6 +1024,7 @@ SOFTWARE.
 <symbol id="i-car" viewBox="0 0 256 256"><path d="M240,104H229.2L201.42,41.5A16,16,0,0,0,186.8,32H69.2a16,16,0,0,0-14.62,9.5L26.8,104H16a8,8,0,0,0,0,16h8v80a16,16,0,0,0,16,16H64a16,16,0,0,0,16-16V184h96v16a16,16,0,0,0,16,16h24a16,16,0,0,0,16-16V120h8a8,8,0,0,0,0-16ZM69.2,48H186.8l24.89,56H44.31ZM64,200H40V184H64Zm128,0V184h24v16Zm24-32H40V120H216ZM56,144a8,8,0,0,1,8-8H80a8,8,0,0,1,0,16H64A8,8,0,0,1,56,144Zm112,0a8,8,0,0,1,8-8h16a8,8,0,0,1,0,16H176A8,8,0,0,1,168,144Z"/></symbol>
 <symbol id="i-chart-bar" viewBox="0 0 256 256"><path d="M224,200h-8V40a8,8,0,0,0-8-8H152a8,8,0,0,0-8,8V80H96a8,8,0,0,0-8,8v40H48a8,8,0,0,0-8,8v64H32a8,8,0,0,0,0,16H224a8,8,0,0,0,0-16ZM160,48h40V200H160ZM104,96h40V200H104ZM56,144H88v56H56Z"/></symbol>
 <symbol id="i-chat-circle-dots" viewBox="0 0 256 256"><path d="M140,128a12,12,0,1,1-12-12A12,12,0,0,1,140,128ZM84,116a12,12,0,1,0,12,12A12,12,0,0,0,84,116Zm88,0a12,12,0,1,0,12,12A12,12,0,0,0,172,116Zm60,12A104,104,0,0,1,79.12,219.82L45.07,231.17a16,16,0,0,1-20.24-20.24l11.35-34.05A104,104,0,1,1,232,128Zm-16,0A88,88,0,1,0,51.81,172.06a8,8,0,0,1,.66,6.54L40,216,77.4,203.53a7.85,7.85,0,0,1,2.53-.42,8,8,0,0,1,4,1.08A88,88,0,0,0,216,128Z"/></symbol>
+<symbol id="i-circle-half" viewBox="0 0 256 256"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm8,16.37a86.4,86.4,0,0,1,16,3V212.67a86.4,86.4,0,0,1-16,3Zm32,9.26a87.81,87.81,0,0,1,16,10.54V195.83a87.81,87.81,0,0,1-16,10.54ZM40,128a88.11,88.11,0,0,1,80-87.63V215.63A88.11,88.11,0,0,1,40,128Zm160,50.54V77.46a87.82,87.82,0,0,1,0,101.08Z"/></symbol>
 <symbol id="i-clock" viewBox="0 0 256 256"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm64-88a8,8,0,0,1-8,8H128a8,8,0,0,1-8-8V72a8,8,0,0,1,16,0v48h48A8,8,0,0,1,192,128Z"/></symbol>
 <symbol id="i-cloud" viewBox="0 0 256 256"><path d="M160,40A88.09,88.09,0,0,0,81.29,88.67,64,64,0,1,0,72,216h88a88,88,0,0,0,0-176Zm0,160H72a48,48,0,0,1,0-96c1.1,0,2.2,0,3.29.11A88,88,0,0,0,72,128a8,8,0,0,0,16,0,72,72,0,1,1,72,72Z"/></symbol>
 <symbol id="i-cloud-fog" viewBox="0 0 256 256"><path d="M120,208H72a8,8,0,0,1,0-16h48a8,8,0,0,1,0,16Zm64-16H160a8,8,0,0,0,0,16h24a8,8,0,0,0,0-16Zm-24,32H104a8,8,0,0,0,0,16h56a8,8,0,0,0,0-16Zm72-124a76.08,76.08,0,0,1-76,76H76A52,52,0,0,1,76,72a53.26,53.26,0,0,1,8.92.76A76.08,76.08,0,0,1,232,100Zm-16,0A60.06,60.06,0,0,0,96,96.46a8,8,0,0,1-16-.92q.21-3.66.77-7.23A38.11,38.11,0,0,0,76,88a36,36,0,0,0,0,72h80A60.07,60.07,0,0,0,216,100Z"/></symbol>
@@ -1006,6 +1046,7 @@ SOFTWARE.
 <symbol id="i-lock-simple" viewBox="0 0 256 256"><path d="M208,80H176V56a48,48,0,0,0-96,0V80H48A16,16,0,0,0,32,96V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V96A16,16,0,0,0,208,80ZM96,56a32,32,0,0,1,64,0V80H96ZM208,208H48V96H208V208Z"/></symbol>
 <symbol id="i-map-pin" viewBox="0 0 256 256"><path d="M128,64a40,40,0,1,0,40,40A40,40,0,0,0,128,64Zm0,64a24,24,0,1,1,24-24A24,24,0,0,1,128,128Zm0-112a88.1,88.1,0,0,0-88,88c0,31.4,14.51,64.68,42,96.25a254.19,254.19,0,0,0,41.45,38.3,8,8,0,0,0,9.18,0A254.19,254.19,0,0,0,174,200.25c27.45-31.57,42-64.85,42-96.25A88.1,88.1,0,0,0,128,16Zm0,206c-16.53-13-72-60.75-72-118a72,72,0,0,1,144,0C200,161.23,144.53,209,128,222Z"/></symbol>
 <symbol id="i-map-trifold" viewBox="0 0 256 256"><path d="M228.92,49.69a8,8,0,0,0-6.86-1.45L160.93,63.52,99.58,32.84a8,8,0,0,0-5.52-.6l-64,16A8,8,0,0,0,24,56V200a8,8,0,0,0,9.94,7.76l61.13-15.28,61.35,30.68A8.15,8.15,0,0,0,160,224a8,8,0,0,0,1.94-.24l64-16A8,8,0,0,0,232,200V56A8,8,0,0,0,228.92,49.69ZM104,52.94l48,24V203.06l-48-24ZM40,62.25l48-12v127.5l-48,12Zm176,131.5-48,12V78.25l48-12Z"/></symbol>
+<symbol id="i-moon" viewBox="0 0 256 256"><path d="M233.54,142.23a8,8,0,0,0-8-2,88.08,88.08,0,0,1-109.8-109.8,8,8,0,0,0-10-10,104.84,104.84,0,0,0-52.91,37A104,104,0,0,0,136,224a103.09,103.09,0,0,0,62.52-20.88,104.84,104.84,0,0,0,37-52.91A8,8,0,0,0,233.54,142.23ZM188.9,190.34A88,88,0,0,1,65.66,67.11a89,89,0,0,1,31.4-26A106,106,0,0,0,96,56,104.11,104.11,0,0,0,200,160a106,106,0,0,0,14.92-1.06A89,89,0,0,1,188.9,190.34Z"/></symbol>
 <symbol id="i-note-pencil" viewBox="0 0 256 256"><path d="M229.66,58.34l-32-32a8,8,0,0,0-11.32,0l-96,96A8,8,0,0,0,88,128v32a8,8,0,0,0,8,8h32a8,8,0,0,0,5.66-2.34l96-96A8,8,0,0,0,229.66,58.34ZM124.69,152H104V131.31l64-64L188.69,88ZM200,76.69,179.31,56,192,43.31,212.69,64ZM224,128v80a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V48A16,16,0,0,1,48,32h80a8,8,0,0,1,0,16H48V208H208V128a8,8,0,0,1,16,0Z"/></symbol>
 <symbol id="i-pencil-simple" viewBox="0 0 256 256"><path d="M227.31,73.37,182.63,28.68a16,16,0,0,0-22.63,0L36.69,152A15.86,15.86,0,0,0,32,163.31V208a16,16,0,0,0,16,16H92.69A15.86,15.86,0,0,0,104,219.31L227.31,96a16,16,0,0,0,0-22.63ZM92.69,208H48V163.31l88-88L180.69,120ZM192,108.68,147.31,64l24-24L216,84.68Z"/></symbol>
 <symbol id="i-person-simple-walk" viewBox="0 0 256 256"><path d="M152,80a32,32,0,1,0-32-32A32,32,0,0,0,152,80Zm0-48a16,16,0,1,1-16,16A16,16,0,0,1,152,32Zm64,112a8,8,0,0,1-8,8c-35.31,0-52.95-17.81-67.12-32.12-2.74-2.77-5.36-5.4-8-7.84l-13.43,30.88,37.2,26.57A8,8,0,0,1,160,176v56a8,8,0,0,1-16,0V180.12l-31.07-22.2L79.34,235.19A8,8,0,0,1,72,240a7.84,7.84,0,0,1-3.19-.67,8,8,0,0,1-4.15-10.52l54.08-124.37c-9.31-1.65-20.92,1.2-34.7,8.58a163.88,163.88,0,0,0-30.57,21.77,8,8,0,0,1-10.95-11.66c2.5-2.35,61.69-57.23,98.72-25.08,3.83,3.32,7.48,7,11,10.57C166.19,122.7,179.36,136,208,136A8,8,0,0,1,216,144Z"/></symbol>
@@ -1028,6 +1069,7 @@ SOFTWARE.
 <div class="sync" id="sync" data-s="local">單機模式</div>
 <div class="app">
   <header>
+    <button class="scheme" id="scheme" type="button"></button>
     <h1 id="app-title">—</h1>
     <p class="subtitle" id="app-sub"></p>
     <div class="wx-now" id="wx-now"><div class="col">載入中…</div></div>
@@ -1054,7 +1096,7 @@ SOFTWARE.
 const TRIP_DATA = {
   "meta": {
     "tripId": "kyushu-fukuoka-2026",
-    "title": "🍁 KYUSHU ROAD TRIP 2026 ♨️",
+    "title": "🍁 KYUSHU ROAD TRIP 2026",
     "subtitle": "九州福岡七日自駕・完整行程與動態導航",
     "theme": "maple",
     "startDate": "2026-11-14",
@@ -5028,6 +5070,41 @@ document.getElementById("app-sub").textContent = M.subtitle || "";
   state.checks = out;
   persist();
 })();
+
+/* ── 配色：跟隨系統／淺色／深色 ──────────────────
+   偏好存在這台裝置、不帶 tripId（同網域下所有行程共用）。<head> 那一段已經在繪製前
+   把 data-scheme 設好了，這裡只是再算一次並把按鈕畫出來。 */
+const SCHEME_KEY = "travel:scheme";
+const SCHEMES = [
+  ["auto",  "circle-half", "跟隨系統"],
+  ["light", "sun",         "淺色"],
+  ["dark",  "moon",        "深色"],
+];
+const schemeMQ  = matchMedia("(prefers-color-scheme: dark)");
+const schemeBtn = document.getElementById("scheme");
+const schemePref = () => {
+  const v = LS.get(SCHEME_KEY);
+  return SCHEMES.some(s => s[0] === v) ? v : "auto";
+};
+function paintScheme(){
+  const pref = schemePref();
+  const [, icon, label] = SCHEMES.find(s => s[0] === pref);
+  document.documentElement.dataset.scheme =
+    pref === "auto" ? (schemeMQ.matches ? "dark" : "light") : pref;
+  schemeBtn.innerHTML = ic(icon);
+  schemeBtn.setAttribute("aria-label", `配色：${label}（點一下換下一個）`);
+  schemeBtn.title = `配色：${label}`;
+}
+schemeBtn.addEventListener("click", () => {
+  const i = SCHEMES.findIndex(s => s[0] === schemePref());
+  const [key, , label] = SCHEMES[(i + 1) % SCHEMES.length];
+  LS.set(SCHEME_KEY, key);
+  paintScheme();
+  toast(`配色：${label}`);
+});
+/* 選「跟隨系統」時，系統自己換了也要跟著換 */
+schemeMQ.addEventListener("change", () => { if (schemePref() === "auto") paintScheme(); });
+paintScheme();
 
 buildNav();
 /* 開啟時直接跳到今天。旅途中每次都要自己點到正確的分頁很煩；
