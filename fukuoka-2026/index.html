@@ -202,6 +202,25 @@ header .subtitle{ font-size:var(--fs-sm); color:var(--c-text-dim); margin:0 0 va
   cursor:pointer; white-space:nowrap; transition:background .15s,color .15s;
 }
 .nav-item[aria-selected="true"]{ background:var(--c-accent); border-color:var(--c-accent); color:var(--c-on-accent); }
+
+/* ── 每天一個主題色 ───────────────────────
+   七天七個色，分頁列就是一張顏色索引，翻到哪一天一眼看得出來。
+   ink 是深色（當底色時配白字），soft 是同色系的淡底。兩者都算過對比：
+   ink 在白底、白字在 ink 上、ink 在自己的 soft 上，最低 4.5:1。
+   顏色由 DAY_HUE 依日期順序配，寫在程式裡而不是資料裡，換一趟旅行也能用。
+   沒有日期的分頁（行前、資訊、購物、記帳）不上色，維持中性。 */
+.nav-item[data-ink]{ color:var(--d-ink); border-color:var(--d-soft); }
+.nav-item[data-ink][aria-selected="true"]{
+  background:var(--d-ink); border-color:var(--d-ink); color:var(--c-on-solid);
+}
+.app.is-day .time{ background:var(--day-ink); color:var(--c-on-solid); }
+/* 說明框是整頁面積最大的一塊底色，不跟著走的話，綠色的那天還是看起來一片橘 */
+.app.is-day .note-box{ background:var(--day-soft); }
+.app.is-day .card.lodge{ background:var(--day-soft); border-color:var(--day-ink); }
+.app.is-day .card.lodge .ttag{ background:var(--day-ink); color:var(--c-on-solid); }
+.app.is-day .card.is-now{ border-left-color:var(--day-ink); background:var(--day-soft); }
+.app.is-day .card.is-now .now-line{ background:var(--day-ink); color:var(--c-on-solid); }
+.app.is-day .intro summary{ color:var(--day-ink); }
 .nav-item:focus-visible,.btn:focus-visible,input:focus-visible,select:focus-visible,button:focus-visible,
 a:focus-visible,summary:focus-visible{
   outline:2px solid var(--c-accent); outline-offset:2px;
@@ -3715,6 +3734,21 @@ function renderBlock(b){
 /* ── 分頁 ── */
 let current = TRIP_DATA.days[0].id;
 let mapFocus = null;   // { day, v, p }：右側地圖只看當天第 v 站（地點 p）
+/* 每天一個主題色。ink 配白字、soft 是淡底，對比都算過（見 CSS 的「每天一個主題色」）。
+   依「有日期的分頁」的順序配，超過七天就循環。 */
+const DAY_HUE = [
+  { ink:"#2B5C8A", soft:"#E8F0F7" },   // 靛藍
+  { ink:"#1F7A73", soft:"#E9F5F3" },   // 青綠
+  { ink:"#3F7A3A", soft:"#E9F2E7" },   // 森綠
+  { ink:"#6B4E9B", soft:"#EFEAF7" },   // 紫
+  { ink:"#1A6B96", soft:"#E4F1F8" },   // 水藍
+  { ink:"#B33A6B", soft:"#FAE9F0" },   // 桃紅
+  { ink:"#A33A2A", soft:"#FCF0EC" },   // 楓紅
+];
+const hueOf = id => {
+  const i = TRIP_DATA.days.filter(d => d.date).findIndex(d => d.id === id);
+  return i < 0 ? null : DAY_HUE[i % DAY_HUE.length];
+};
 const mapSkip = {};    // 每天取消勾選、不畫進路線的點（Set，見 skipOf）。換天保留，重新整理就全部恢復
 function renderDay(id){
   if (id !== current) mapFocus = null;   // 換一天就回到整條路線
@@ -3727,6 +3761,11 @@ function renderDay(id){
      不該混進「回去改試算表、重新產生網站」這種出發前才做的事。
      （Open-Meteo 的授權標示留在 footer，所有分頁都要有。）*/
   document.getElementById("edit-bar").hidden = id !== "d0";
+  /* 當天的顏色掛在 .app 上，底下的時間膠囊、住宿卡、「現在進行到哪」都跟著走 */
+  const hue = hueOf(id), app = document.querySelector(".app");
+  app.classList.toggle("is-day", !!hue);
+  app.style.setProperty("--day-ink", hue ? hue.ink : "");
+  app.style.setProperty("--day-soft", hue ? hue.soft : "");
   paintForecast();
   paintVaults();        // 記住密語的話，卡片上的私人資料在這裡自動解開（解密是非同步的）
   paintUserImages();    // 購物清單裡自己加的圖片從 IndexedDB 讀出來（非同步）
@@ -3805,8 +3844,10 @@ function buildNav(){
     return `<span class="nav-sub">${Number(m[2])}/${Number(m[3])} ${wk}</span>`;
   };
   document.getElementById("nav").innerHTML = TRIP_DATA.days.map(d =>
-    `<button class="nav-item" role="tab" data-day="${esc(d.id)}" aria-selected="false">` +
-      `<span class="nav-main">${iconText(d.nav)}</span>${sub(d)}</button>`
+    ((h = hueOf(d.id)) =>
+      `<button class="nav-item" role="tab" data-day="${esc(d.id)}" aria-selected="false"` +
+      (h ? ` data-ink style="--d-ink:${h.ink};--d-soft:${h.soft}"` : "") + `>` +
+      `<span class="nav-main">${iconText(d.nav)}</span>${sub(d)}</button>`)()
   ).join("");
 }
 
