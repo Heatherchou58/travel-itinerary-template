@@ -1093,14 +1093,14 @@ def run(trip: str) -> bool:
                 pg.wait_for_timeout(600)
                 return c, pg
 
-            # 2026-11-17 03:30Z = 東京 12:30，上色見熊野座神社（11:20 起、停留 145 分）進行中
-            ctx, page = at("2026-11-17T03:30:00Z")
+            # 2026-11-17 03:00Z = 東京 12:00，上色見熊野座神社（11:05 起、停留 115 分）進行中
+            ctx, page = at("2026-11-17T03:00:00Z")
             nowc = page.locator("#main .card.is-now")
             r.check("目前行程：剛好標出一張卡片", nowc.count() == 1, f"{nowc.count()} 張")
             r.check("目前行程：標在上色見熊野座神社上", "上色見熊野座神社" in nowc.inner_text())
             line = page.locator("#main .card.is-now .now-line").inner_text()
             r.check("目前行程：顯示剩餘時間與離開時刻",
-                    "還有 1 小時 15 分" in line and "13:45" in line, f"「{line}」")
+                    "還有 1 小時" in line and "13:00" in line, f"「{line}」")
             r.check("已結束的項目有淡化", page.locator("#main .card.is-past").count() >= 2,
                     f"{page.locator('#main .card.is-past').count()} 張")
             r.check("自動跳到今天的分頁",
@@ -1134,15 +1134,15 @@ def run(trip: str) -> bool:
             r.check("目前項目的高亮邊框是 4px", w == "4px", f"實際 {w}")
             ctx.close()
 
-            # 東京 11:30：已經從草千里出發、還沒到上色見熊野座神社（11:20 出發、交通 50 分）
-            ctx, page = at("2026-11-17T02:30:00Z")
+            # 東京 11:15：已經從草千里出發、還沒到上色見熊野座神社（11:05 出發、交通 50 分）
+            ctx, page = at("2026-11-17T02:15:00Z")
             nowc = page.locator("#main .card.is-now")
             line = nowc.locator(".now-line").inner_text() if nowc.count() else ""
             r.check("在路上：標「前往中」與預計抵達時刻",
-                    nowc.count() == 1 and "上色見熊野座神社" in nowc.inner_text() and "前往中" in line and "12:10" in line,
+                    nowc.count() == 1 and "上色見熊野座神社" in nowc.inner_text() and "前往中" in line and "11:55" in line,
                     f"「{line}」")
             r.check("在路上：卡片左上角還是出發時間（這張卡片開始的時間）",
-                    nowc.count() == 1 and nowc.locator(".time").inner_text() == "11:20")
+                    nowc.count() == 1 and nowc.locator(".time").inner_text() == "11:05")
             ctx.close()
 
             # 東京 06:00：當天第一項（金鱗湖 07:00）還沒開始，應標成「接下來」
