@@ -4593,27 +4593,23 @@ function renderExpenses(){
   </div>`;
 }
 
-/* 一筆花費的每人分攤，整數。除不盡的餘數一人多攤 1 元，攤完為止，
-   所以加總一定等於原金額。
+/* 一筆花費的每人分攤，以「分」（0.01 元）為單位的整數。畫面與 CSV 顯示到小數點後兩位。
+   使用者要「平分就是平分」：41,553 四人分就是每人 10,388.25，不要有人因為零頭多攤 1 元。
 
-   直接寫 e.home / e.split.length 會留下小數，各處再各自四捨五入就湊不
-   回來——1000 三人均分，畫面會顯示「A 應收 667」但「B、C 各應付 333」，
-   差 1 元。筆數越多誤差越明顯。
+   還是用整數（分）來算，不直接寫 e.home / e.split.length：浮點數各處各自四捨五入，
+   加總會湊不回來——1000 三人分會顯示 333.33、333.33，應收那邊卻是 666.67。
+   連「分」都除不盡的（1000 三人分），多出的 1 分整本帳輪流給：照記帳順序累計每人
+   「多攤 − 應攤」，給目前多攤得最少的人，每人加總最多差 0.01。
 
-   settle() 與兩個 CSV 匯出都走這個函式，畫面和匯出才不會各算各的。
-
-   零頭給誰要整本帳一起看：照記帳順序累計每個人「多攤 − 應攤」，這一筆的零頭給
-   目前多攤得最少的人（一樣少就照分攤名單的順序）。以前一律給名單前面的人——
-   五筆住宿的名單都是「白、周、陳、盧」，白每筆都多攤、盧從沒多攤過，累積差到 5 元。
-   現在同一群人分的帳，每人加總最多差 1 元。 */
-function shares(e){
-  const drift = {};                         // 到目前為止每人累計「多攤 − 應攤」
+   settle() 與兩個 CSV 匯出都走這個函式，畫面和匯出才不會各算各的。 */
+function shareCents(e){
+  const drift = {};                         // 到目前為止每人累計「多攤 − 應攤」（分）
   let out = {};
   for (const x of state.expenses.includes(e) ? state.expenses : [e]){
     out = {};
     const n = x.split.length;               // 舊資料可能沒有分攤對象
     if (n){
-      const total = Math.round(x.home), base = Math.floor(total / n), rem = total - base * n;
+      const total = Math.round(x.home * 100), base = Math.floor(total / n), rem = total - base * n;
       const d = m => drift[m] || 0;
       const extra = new Set([...x.split].sort((a, b) =>
         Math.abs(d(a) - d(b)) > 1e-9 ? d(a) - d(b) : x.split.indexOf(a) - x.split.indexOf(b)).slice(0, rem));
@@ -4626,24 +4622,28 @@ function shares(e){
   }
   return out;
 }
+/* 分 → 金額文字：有零頭顯示兩位小數（10,388.25），剛好整數就不帶（10,388） */
+const fmtCents = c => (c / 100).toLocaleString("en-US",
+  { minimumFractionDigits: c % 100 ? 2 : 0, maximumFractionDigits: 2 });
+const csvCents = c => (c / 100).toFixed(2);   // CSV 一律兩位小數，Excel 加總才不會混到文字
 
-function settle(){
+function settle(){                         // 金額單位都是分
   const net = Object.fromEntries(M.members.map(m=>[m,0]));
   for (const e of state.expenses){
-    if (net[e.payer] !== undefined) net[e.payer] += Math.round(e.home);
-    const sh = shares(e);
+    if (net[e.payer] !== undefined) net[e.payer] += Math.round(e.home * 100);
+    const sh = shareCents(e);
     for (const m in sh) if (net[m] !== undefined) net[m] -= sh[m];
   }
-  const cred = Object.entries(net).filter(([,v])=>v > 0.5).map(([m,v])=>({m,v})).sort((a,b)=>b.v-a.v);
-  const debt = Object.entries(net).filter(([,v])=>v < -0.5).map(([m,v])=>({m,v:-v})).sort((a,b)=>b.v-a.v);
+  const cred = Object.entries(net).filter(([,v])=>v > 0).map(([m,v])=>({m,v})).sort((a,b)=>b.v-a.v);
+  const debt = Object.entries(net).filter(([,v])=>v < 0).map(([m,v])=>({m,v:-v})).sort((a,b)=>b.v-a.v);
   const tx = [];
   let i=0, j=0;
   while (i < debt.length && j < cred.length){
     const amt = Math.min(debt[i].v, cred[j].v);
     tx.push({ from:debt[i].m, to:cred[j].m, amt });
     debt[i].v -= amt; cred[j].v -= amt;
-    if (debt[i].v < 0.5) i++;
-    if (cred[j].v < 0.5) j++;
+    if (debt[i].v === 0) i++;
+    if (cred[j].v === 0) j++;
   }
   return { net, tx };
 }
@@ -4652,9 +4652,9 @@ function settleHTML(){
   if (!state.expenses.length) return `<div class="meta">還沒有紀錄。</div>`;
   const { net, tx } = settle();
   return M.members.map(m => `<div class="settle"><span>${esc(m)}</span>
-      <span>${net[m] >= 0 ? "應收" : "應付"} <b>${esc(M.money.home)} ${fmt(Math.abs(net[m]))}</b></span></div>`).join("")
+      <span>${net[m] >= 0 ? "應收" : "應付"} <b>${esc(M.money.home)} ${fmtCents(Math.abs(net[m]))}</b></span></div>`).join("")
     + (tx.length ? `<div class="note-box">${tx.map(t =>
-        `${esc(t.from)} → ${esc(t.to)}　<strong>${esc(M.money.home)} ${fmt(t.amt)}</strong>`).join("<br>")}</div>`
+        `${esc(t.from)} → ${esc(t.to)}　<strong>${esc(M.money.home)} ${fmtCents(t.amt)}</strong>`).join("<br>")}</div>`
       : `<div class="note-box">已經結清。</div>`);
 }
 
@@ -4687,9 +4687,9 @@ function exportDetail(){
     rows.push([
       d.date || "", d.nav || e.day, e.item, e.cat, e.payer,
       e.split.join("、"), e.split.length,
-      /* 分攤不一定每人相同（餘數會多攤 1 元），所以逐人列出，
+      /* 分攤不一定每人相同（連「分」都除不盡時會差 0.01），所以逐人列出，
          順序與「分攤對象」欄一致，加起來剛好等於金額。 */
-      e.local || "", e.home, e.split.map(m => shares(e)[m]).join("、"),
+      e.local || "", e.home, (sh => e.split.map(m => csvCents(sh[m])).join("、"))(shareCents(e)),
       new Date(e.createdAt).toLocaleString("sv-SE"), e.createdBy || ""
     ]);
   }
@@ -4702,19 +4702,18 @@ function exportSettle(){
   const paid = Object.fromEntries(M.members.map(m=>[m,0]));
   const owe  = Object.fromEntries(M.members.map(m=>[m,0]));
   const byCat = {};
-  for (const e of state.expenses){
-    const total = Math.round(e.home);
-    if (paid[e.payer] !== undefined) paid[e.payer] += total;
-    const sh = shares(e);
+  for (const e of state.expenses){            // 代墊與應分攤用分加總，最後才換成元
+    if (paid[e.payer] !== undefined) paid[e.payer] += Math.round(e.home * 100);
+    const sh = shareCents(e);
     for (const m in sh) if (owe[m] !== undefined) owe[m] += sh[m];
-    byCat[e.cat] = (byCat[e.cat] || 0) + total;
+    byCat[e.cat] = (byCat[e.cat] || 0) + Math.round(e.home);
   }
   const rows = [["成員","代墊總額","應分攤","淨額","狀態"]];
   for (const m of M.members)
-    rows.push([m, Math.round(paid[m]), Math.round(owe[m]),
-               Math.round(Math.abs(net[m])), net[m] >= 0 ? "應收" : "應付"]);
+    rows.push([m, csvCents(paid[m]), csvCents(owe[m]),
+               csvCents(Math.abs(net[m])), net[m] >= 0 ? "應收" : "應付"]);
   rows.push([], ["結清建議","付款人","收款人",`金額(${M.money.home})`]);
-  tx.forEach((t,i) => rows.push([i+1, t.from, t.to, Math.round(t.amt)]));
+  tx.forEach((t,i) => rows.push([i+1, t.from, t.to, csvCents(t.amt)]));
   rows.push([], ["分類統計","金額"]);
   for (const [c,v] of Object.entries(byCat).sort((a,b)=>b[1]-a[1])) rows.push([c, Math.round(v)]);
   rows.push([], ["總計", Math.round(state.expenses.reduce((s,e)=>s+e.home,0))]);

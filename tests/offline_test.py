@@ -149,9 +149,10 @@ def expense(payer: str, home: int, split: list) -> dict:
 
 # (說明, 花費清單, 檢查函式)。檢查函式收到 {rows, tx}，回傳 (通過, 細節)。
 def _sum_balanced(data):
-    recv = sum(r["amt"] for r in data["rows"] if r["dir"] == "recv")
-    pay = sum(r["amt"] for r in data["rows"] if r["dir"] == "pay")
-    return recv == pay, f"畫面上應收 {recv}、應付 {pay}"
+    # 金額有小數（分），用分加總比對，免得浮點數差一點點
+    recv = sum(round(r["amt"] * 100) for r in data["rows"] if r["dir"] == "recv")
+    pay = sum(round(r["amt"] * 100) for r in data["rows"] if r["dir"] == "pay")
+    return recv == pay, f"畫面上應收 {recv / 100}、應付 {pay / 100}"
 
 
 def _two_way_split(data):
@@ -174,13 +175,13 @@ def _fewest_transfers(data):
     return len(data["tx"]) == 2, f"產生 {len(data['tx'])} 筆轉帳，最少應為 2 筆"
 
 
-def _fair_remainders(data):
-    # 零頭要整本帳輪流分配：同一群人分的帳，每人加總最多差 1 元。
-    # 以前一律給名單第一個人，這五筆會變成 A 10,391、C 10,387、D 10,386
+def _even_split_cents(data):
+    # 平分就是平分：41,553 四人分，每人 10,388.25，不能有人因為零頭多攤 1 元。
+    # 以前一律把零頭給名單第一個人，這五筆會變成 A 10,391、C 10,387、D 10,386
     by = {r["who"]: r for r in data["rows"]}
-    owe = [by[m]["amt"] for m in ("A", "C", "D")]
-    ok = max(owe) - min(owe) <= 1 and by["B"]["dir"] == "recv" and by["B"]["amt"] == sum(owe)
-    return ok, f"A {owe[0]} / C {owe[1]} / D {owe[2]}，B 應收 {by['B']['amt']}"
+    owe = [round(by[m]["amt"] * 100) for m in ("A", "C", "D")]
+    ok = owe == [1038825] * 3 and by["B"]["dir"] == "recv" and round(by["B"]["amt"] * 100) == sum(owe)
+    return ok, f"A {owe[0] / 100} / C {owe[1] / 100} / D {owe[2] / 100}，B 應收 {by['B']['amt']}"
 
 
 SETTLE_CASES = [
@@ -192,9 +193,9 @@ SETTLE_CASES = [
     ("轉帳建議要是最少筆數",
      [expense("A", 400, ["A", "B", "C", "D"]), expense("B", 400, ["A", "B", "C", "D"])],
      _fewest_transfers),
-    ("零頭輪流分配：同一個人先付五筆、四人平分，另外三人的金額最多差 1 元",
+    ("平分到小數點：同一個人先付五筆、四人平分，另外三人都是 10,388.25",
      [expense("B", h, ["A", "B", "C", "D"]) for h in (14493, 11145, 5838, 3035, 7042)],
-     _fair_remainders),
+     _even_split_cents),
 ]
 
 # 讀出畫面上「結清建議」卡片的內容，而不是重算一次——要驗的是使用者看到什麼。
@@ -1066,14 +1067,15 @@ def run(trip: str) -> bool:
             # 成員那幾列：成員,代墊總額,應分攤,淨額,狀態
             member_rows = [ln.split(",") for ln in csv.splitlines()
                            if ln.split(",")[0] in ("A", "B", "C", "D") and len(ln.split(",")) >= 4]
-            advanced = sum(int(c[1]) for c in member_rows)
-            owed = sum(int(c[2]) for c in member_rows)
+            # 金額有兩位小數，換成分再加總
+            advanced = sum(round(float(c[1]) * 100) for c in member_rows) / 100
+            owed = sum(round(float(c[2]) * 100) for c in member_rows) / 100
             r.check("CSV 結清摘要：代墊總額加總 = 花費總額", advanced == 1000, f"實際 {advanced}")
             r.check("CSV 結清摘要：應分攤加總 = 花費總額", owed == 1000, f"實際 {owed}")
 
             screen = page.evaluate(READ_SETTLE)
-            csv_net = {c[0]: int(c[3]) for c in member_rows}
-            screen_net = {row["who"]: row["amt"] for row in screen["rows"]}
+            csv_net = {c[0]: round(float(c[3]) * 100) for c in member_rows}
+            screen_net = {row["who"]: round(row["amt"] * 100) for row in screen["rows"]}
             r.check("CSV 結清摘要：淨額與畫面相同", csv_net == screen_net,
                     f"CSV {csv_net} / 畫面 {screen_net}")
             ctx.close()
