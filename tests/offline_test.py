@@ -174,6 +174,15 @@ def _fewest_transfers(data):
     return len(data["tx"]) == 2, f"產生 {len(data['tx'])} 筆轉帳，最少應為 2 筆"
 
 
+def _fair_remainders(data):
+    # 零頭要整本帳輪流分配：同一群人分的帳，每人加總最多差 1 元。
+    # 以前一律給名單第一個人，這五筆會變成 A 10,391、C 10,387、D 10,386
+    by = {r["who"]: r for r in data["rows"]}
+    owe = [by[m]["amt"] for m in ("A", "C", "D")]
+    ok = max(owe) - min(owe) <= 1 and by["B"]["dir"] == "recv" and by["B"]["amt"] == sum(owe)
+    return ok, f"A {owe[0]} / C {owe[1]} / D {owe[2]}，B 應收 {by['B']['amt']}"
+
+
 SETTLE_CASES = [
     ("兩人均分 1000 整除", [expense("A", 1000, ["A", "B"])], _two_way_split),
     ("三人均分 1000 除不盡：淨額加總要對得起來",
@@ -183,6 +192,9 @@ SETTLE_CASES = [
     ("轉帳建議要是最少筆數",
      [expense("A", 400, ["A", "B", "C", "D"]), expense("B", 400, ["A", "B", "C", "D"])],
      _fewest_transfers),
+    ("零頭輪流分配：同一個人先付五筆、四人平分，另外三人的金額最多差 1 元",
+     [expense("B", h, ["A", "B", "C", "D"]) for h in (14493, 11145, 5838, 3035, 7042)],
+     _fair_remainders),
 ]
 
 # 讀出畫面上「結清建議」卡片的內容，而不是重算一次——要驗的是使用者看到什麼。

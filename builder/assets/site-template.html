@@ -2429,15 +2429,30 @@ function renderExpenses(){
    回來——1000 三人均分，畫面會顯示「A 應收 667」但「B、C 各應付 333」，
    差 1 元。筆數越多誤差越明顯。
 
-   settle() 與兩個 CSV 匯出都走這個函式，畫面和匯出才不會各算各的。 */
+   settle() 與兩個 CSV 匯出都走這個函式，畫面和匯出才不會各算各的。
+
+   零頭給誰要整本帳一起看：照記帳順序累計每個人「多攤 − 應攤」，這一筆的零頭給
+   目前多攤得最少的人（一樣少就照分攤名單的順序）。以前一律給名單前面的人——
+   五筆住宿的名單都是「白、周、陳、盧」，白每筆都多攤、盧從沒多攤過，累積差到 5 元。
+   現在同一群人分的帳，每人加總最多差 1 元。 */
 function shares(e){
-  const out = {};
-  const n = e.split.length;
-  if (!n) return out;                       // 舊資料可能沒有分攤對象
-  const total = Math.round(e.home);
-  const base = Math.floor(total / n);
-  const rem  = total - base * n;            // 0 ≤ rem < n
-  e.split.forEach((m, i) => { out[m] = base + (i < rem ? 1 : 0); });
+  const drift = {};                         // 到目前為止每人累計「多攤 − 應攤」
+  let out = {};
+  for (const x of state.expenses.includes(e) ? state.expenses : [e]){
+    out = {};
+    const n = x.split.length;               // 舊資料可能沒有分攤對象
+    if (n){
+      const total = Math.round(x.home), base = Math.floor(total / n), rem = total - base * n;
+      const d = m => drift[m] || 0;
+      const extra = new Set([...x.split].sort((a, b) =>
+        Math.abs(d(a) - d(b)) > 1e-9 ? d(a) - d(b) : x.split.indexOf(a) - x.split.indexOf(b)).slice(0, rem));
+      for (const m of x.split){
+        out[m] = base + (extra.has(m) ? 1 : 0);
+        drift[m] = d(m) + out[m] - total / n;
+      }
+    }
+    if (x === e) break;
+  }
   return out;
 }
 
