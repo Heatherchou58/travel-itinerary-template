@@ -683,7 +683,11 @@ def run(trip: str) -> bool:
             # 交通、營業時間、費用、電話：各自一列，不塞在說明裡
             opera = page.locator("#main .card", has_text="雪梨歌劇院")
             otext = opera.inner_text()
-            r.check("交通：顯示步行與分鐘數", "步行 20 分" in otext, otext.splitlines()[0])
+            # 交通放在兩張卡片中間（這張卡片的正上方），不在卡片裡
+            oleg = opera.locator("xpath=preceding-sibling::*[1][contains(@class,'leg')]")
+            r.check("交通：在兩張卡片中間顯示步行與分鐘數",
+                    oleg.count() == 1 and "步行 20 分" in oleg.inner_text() and "步行 20 分" not in otext,
+                    oleg.inner_text() if oleg.count() else "卡片上方沒有交通")
             # 停留(分) 含交通，卡片要扣掉——不扣的話門司港會顯示停留 3 小時 50 分
             r.check("交通：停留扣掉交通（90 − 20）", "停留 1 小時 10 分" in otext)
             r.check("交通：沒有把總時間當成停留", "停留 1 小時 30 分" not in otext)
@@ -707,7 +711,8 @@ def run(trip: str) -> bool:
             r.check("電話：那一列不比其他資訊列高", row_h[0] <= row_h[1] + 2, f"電話 {row_h[0]}px／營業時間 {row_h[1]}px")
             hotel = page.locator("#main .card.lodge", has_text="測試飯店")
             htext = hotel.inner_text()
-            r.check("住宿：也顯示交通", "車程 15 分" in htext)
+            hleg = hotel.locator("xpath=preceding-sibling::*[1][contains(@class,'leg')]")
+            r.check("住宿：交通也在卡片上方", hleg.count() == 1 and "車程 15 分" in hleg.inner_text())
             r.check("住宿：交通等於總時間時不顯示停留", "停留" not in htext)
             r.check("住宿：營業時間（入住退房）獨立一列", "Check-in 15:00／退房 10:00" in htext)
 
@@ -1912,7 +1917,8 @@ def run(trip: str) -> bool:
                 const out = [];
                 for (const el of document.querySelectorAll('#main .note-box, #main .src, #main .wx-day, #main .stay.move, #main .chk-group h3, #main .card.lodge')){
                   // 住宿卡本身就是一張卡片，要跟頁面底色比
-                  const card = el.matches('.card') ? document.body : el.closest('.card');
+                  // 兩張卡片中間的交通標籤不在卡片裡，跟頁面背景比
+                  const card = el.matches('.card') || el.closest('.leg') ? document.body : el.closest('.card');
                   if (!card || !el.checkVisibility()) continue;
                   const a = lum(nums(getComputedStyle(el).backgroundColor));
                   const b = lum(nums(getComputedStyle(card).backgroundColor));

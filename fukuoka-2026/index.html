@@ -596,6 +596,14 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
   background:var(--c-alt-soft); color:var(--c-alt-text); font-weight:700;
 }
 .stay.move .ic{ color:inherit; }
+/* 兩張卡片中間的交通：左邊一條虛線接上下兩張卡片，標籤沿用上面的淡底。
+   上面吃掉一半卡片間距，跟上下兩張卡片各留 8px 左右，看得出是夾在中間的 */
+.leg{
+  display:flex; align-items:center; min-height:32px;
+  margin:calc(-1 * var(--sp-2)) 0 var(--sp-2) var(--sp-5);
+  padding-left:var(--sp-3); border-left:2px dashed var(--c-line);
+}
+.leg .stay{ margin:0; }
 /* 卡片標題是 h2（頁首 h1 → 卡片 h2 → 清單群組 h3），所以要自己歸零瀏覽器
    預設的字級與上下邊距，外觀跟原本的 div 一模一樣 */
 .subject{ margin:0 0 var(--sp-1); font-size:var(--fs-lg); font-weight:700; }
@@ -1848,9 +1856,7 @@ const TRIP_DATA = {
           "title": "HOTEL ORIGO HAKATA - Gion -",
           "titleLocal": "ホテル オリゴ 博多 祇園",
           "address": "福岡市博多區祇園（地鐵空港線 祇園站）",
-          "notes": [
-          "明早 07:30 出發，走去博多口取車"
-        ],
+          "notes": [],
           "links": [
             {
               "label": "🗺️ 地圖",
@@ -2442,7 +2448,7 @@ const TRIP_DATA = {
           "titleLocal": "草千里ヶ浜",
           "place": "熊本縣阿蘇市",
           "notes": [
-          "⚠️ 中岳火口因火山活動封閉時，草千里通常照常開放；若連パノラマライン也封閉，改走国道 265 直下高森，草千里就跳過"
+          "⚠️ 中岳火口因火山活動封閉時，草千里通常照常開放；若連パノラマライン也封閉，改走国道 265 直下高森，草千里就跳過——出發前點下面的連結看目前火山警戒等級"
         ],
           "links": [
             {
@@ -2454,6 +2460,11 @@ const TRIP_DATA = {
               "label": "🚗 從上一站",
               "url": "https://www.google.com/maps/dir/?api=1&origin=%E7%94%B1%E5%B8%83%E3%81%AE%E5%AE%BF%20YUFU-Inn%20%E8%97%A4%20%E6%9D%BE%2C%20%E5%A4%A7%E5%88%86%E7%B8%A3%E7%94%B1%E5%B8%83%E5%B8%82%E6%B9%AF%E5%B8%83%E9%99%A2%E7%94%BA%E5%B7%9D%E4%B8%8A3732-1%EF%BC%88%E7%94%B1%E5%B8%83%E9%99%A2%E7%AB%99%E6%AD%A5%E8%A1%8C%202%20%E5%88%86%EF%BC%89&destination=%E8%8D%89%E5%8D%83%E9%87%8C%E3%83%B6%E6%B5%9C%2C%20%E7%86%8A%E6%9C%AC%E7%B8%A3%E9%98%BF%E8%98%87%E5%B8%82&travelmode=driving",
               "style": "route"
+            },
+            {
+              "label": "🌋 火山警戒等級",
+              "url": "https://www.jma.go.jp/bosai/volcano/",
+              "style": "booking"
             }
           ],
           "stay": 125,
@@ -3795,8 +3806,10 @@ const fmtStay = n => {
 /* 圖示要跟 builder 產生的「從上一站」按鈕一致（builder/index.html 的 MODE_ICON） */
 const MODE_TAG = { driving:["car","車程"], walking:["person-simple-walk","步行"], transit:["train","搭車"], bicycling:["bicycle","騎車"] };
 const modeTag = m => { const [n, t] = MODE_TAG[m] || ["train", "交通"]; return ic(n) + t; };
-const travelTag = b => b.travel
-  ? `<span class="stay move">${modeTag(b.mode)} ${fmtStay(b.travel)}</span>` : "";
+/* 兩站之間的交通放在兩張卡片中間（.leg），不放在卡片裡：路上花多久是「上一張到這一張」
+   的事，放中間一看就懂；卡片上只留這個地點的抵達時間與停留 */
+const legHTML = b => b.travel
+  ? `<div class="leg"><span class="stay move">${modeTag(b.mode)} ${fmtStay(b.travel)}</span></div>` : "";
 const stayTag = b => {
   const v = (b.stay || 0) - (b.travel || 0);
   return v > 0 ? `<span class="stay">${ic("hourglass-medium")}停留 ${fmtStay(v)}</span>` : "";
@@ -3843,8 +3856,8 @@ const RENDERERS = {
       </div>
     </div></div>`,
 
-  stop: b => `<div class="card"${slotAttrs(b)}${mapAttrs(b)}>
-    ${nowSlot(b)}${timeTag(b)}${travelTag(b)}${stayTag(b)}
+  stop: b => `${legHTML(b)}<div class="card"${slotAttrs(b)}${mapAttrs(b)}>
+    ${nowSlot(b)}${timeTag(b)}${stayTag(b)}
     <h2 class="subject">${ic(KIND[b.kind] || KIND.sight)}${esc(b.title)}${localSpan(b.titleLocal)}</h2>
     ${b.place ? `<div class="meta">${ic("map-pin")}${esc(b.place)}${localSpan(b.placeLocal)}</div>` : ""}${factsHTML(b)}${wakeHTML(b)}
     ${notesHTML(b.notes)}${secretHTML(b)}${introHTML(b.intro, b.photo, b.title)}${linksHTML(b.links)}</div>`,
@@ -3869,8 +3882,8 @@ const RENDERERS = {
     }).join("")}</div>
     ${notesHTML(b.notes)}${linksHTML(b.links)}</div>`,
 
-  lodging: b => `<div class="card lodge"${slotAttrs(b)}${mapAttrs(b)}>
-    ${nowSlot(b)}<div><span class="ttag">${ic("bed")}住宿</span>${timeTag(b)}${travelTag(b)}${stayTag(b)}</div>
+  lodging: b => `${legHTML(b)}<div class="card lodge"${slotAttrs(b)}${mapAttrs(b)}>
+    ${nowSlot(b)}<div><span class="ttag">${ic("bed")}住宿</span>${timeTag(b)}${stayTag(b)}</div>
     <h2 class="subject">${esc(b.title)}${localSpan(b.titleLocal)}</h2>
     ${b.address ? `<div class="meta">${ic("map-pin")}${esc(b.address)}</div>` : ""}${factsHTML(b)}${wakeHTML(b)}
     ${(b.notes && b.notes.length)

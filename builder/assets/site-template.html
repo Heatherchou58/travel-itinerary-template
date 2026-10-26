@@ -596,6 +596,14 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
   background:var(--c-alt-soft); color:var(--c-alt-text); font-weight:700;
 }
 .stay.move .ic{ color:inherit; }
+/* 兩張卡片中間的交通：左邊一條虛線接上下兩張卡片，標籤沿用上面的淡底。
+   上面吃掉一半卡片間距，跟上下兩張卡片各留 8px 左右，看得出是夾在中間的 */
+.leg{
+  display:flex; align-items:center; min-height:32px;
+  margin:calc(-1 * var(--sp-2)) 0 var(--sp-2) var(--sp-5);
+  padding-left:var(--sp-3); border-left:2px dashed var(--c-line);
+}
+.leg .stay{ margin:0; }
 /* 卡片標題是 h2（頁首 h1 → 卡片 h2 → 清單群組 h3），所以要自己歸零瀏覽器
    預設的字級與上下邊距，外觀跟原本的 div 一模一樣 */
 .subject{ margin:0 0 var(--sp-1); font-size:var(--fs-lg); font-weight:700; }
@@ -1670,8 +1678,10 @@ const fmtStay = n => {
 /* 圖示要跟 builder 產生的「從上一站」按鈕一致（builder/index.html 的 MODE_ICON） */
 const MODE_TAG = { driving:["car","車程"], walking:["person-simple-walk","步行"], transit:["train","搭車"], bicycling:["bicycle","騎車"] };
 const modeTag = m => { const [n, t] = MODE_TAG[m] || ["train", "交通"]; return ic(n) + t; };
-const travelTag = b => b.travel
-  ? `<span class="stay move">${modeTag(b.mode)} ${fmtStay(b.travel)}</span>` : "";
+/* 兩站之間的交通放在兩張卡片中間（.leg），不放在卡片裡：路上花多久是「上一張到這一張」
+   的事，放中間一看就懂；卡片上只留這個地點的抵達時間與停留 */
+const legHTML = b => b.travel
+  ? `<div class="leg"><span class="stay move">${modeTag(b.mode)} ${fmtStay(b.travel)}</span></div>` : "";
 const stayTag = b => {
   const v = (b.stay || 0) - (b.travel || 0);
   return v > 0 ? `<span class="stay">${ic("hourglass-medium")}停留 ${fmtStay(v)}</span>` : "";
@@ -1718,8 +1728,8 @@ const RENDERERS = {
       </div>
     </div></div>`,
 
-  stop: b => `<div class="card"${slotAttrs(b)}${mapAttrs(b)}>
-    ${nowSlot(b)}${timeTag(b)}${travelTag(b)}${stayTag(b)}
+  stop: b => `${legHTML(b)}<div class="card"${slotAttrs(b)}${mapAttrs(b)}>
+    ${nowSlot(b)}${timeTag(b)}${stayTag(b)}
     <h2 class="subject">${ic(KIND[b.kind] || KIND.sight)}${esc(b.title)}${localSpan(b.titleLocal)}</h2>
     ${b.place ? `<div class="meta">${ic("map-pin")}${esc(b.place)}${localSpan(b.placeLocal)}</div>` : ""}${factsHTML(b)}${wakeHTML(b)}
     ${notesHTML(b.notes)}${secretHTML(b)}${introHTML(b.intro, b.photo, b.title)}${linksHTML(b.links)}</div>`,
@@ -1744,8 +1754,8 @@ const RENDERERS = {
     }).join("")}</div>
     ${notesHTML(b.notes)}${linksHTML(b.links)}</div>`,
 
-  lodging: b => `<div class="card lodge"${slotAttrs(b)}${mapAttrs(b)}>
-    ${nowSlot(b)}<div><span class="ttag">${ic("bed")}住宿</span>${timeTag(b)}${travelTag(b)}${stayTag(b)}</div>
+  lodging: b => `${legHTML(b)}<div class="card lodge"${slotAttrs(b)}${mapAttrs(b)}>
+    ${nowSlot(b)}<div><span class="ttag">${ic("bed")}住宿</span>${timeTag(b)}${stayTag(b)}</div>
     <h2 class="subject">${esc(b.title)}${localSpan(b.titleLocal)}</h2>
     ${b.address ? `<div class="meta">${ic("map-pin")}${esc(b.address)}</div>` : ""}${factsHTML(b)}${wakeHTML(b)}
     ${(b.notes && b.notes.length)
