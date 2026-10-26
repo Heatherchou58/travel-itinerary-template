@@ -226,20 +226,22 @@ body::after{
 .skip:focus{ left:var(--sp-2); }
 
 /* ── Header ───────────────────────────── */
-header{ position:relative; text-align:center; padding:var(--sp-5) var(--sp-4) var(--sp-3); }
+/* 頂端多留一列給右上角的切換鍵（8 ＋ 44 ＋ 4），標題才能拿回整行的寬度 */
+header{ position:relative; text-align:center; padding:calc(var(--sp-2) + 44px + var(--sp-1)) var(--sp-4) var(--sp-3); }
 /* 配色切換：跟隨系統／淺色／深色，點一下換下一個。只有圖示，所以名稱靠 aria-label */
 .scheme{
-  position:absolute; top:var(--sp-4); right:var(--sp-4);
+  position:absolute; top:var(--sp-2); right:var(--sp-4);
   display:inline-flex; align-items:center; justify-content:center;
   width:44px; height:44px; padding:0;
   border:1px solid var(--c-border); border-radius:50%;
   background:var(--c-surface); color:var(--c-text-dim); cursor:pointer;
 }
 .scheme .ic{ width:1.25em; height:1.25em; margin:0; vertical-align:0; }
-/* 左右各讓出右上角那顆切換鍵的寬度（44 ＋ 8 間距）。兩側都讓是為了維持置中——
-   只讓右邊的話標題會偏左。實測 375px 仍是兩行，沒有因此多一行。 */
-header h1{ font-size:var(--fs-2xl); margin:0 0 var(--sp-1); letter-spacing:.5px;
-           padding:0 calc(44px + var(--sp-2)); }
+/* 切換鍵在標題上面自己一列，標題拿回整行的寬度。原本是左右各讓 52px 給切換鍵，
+   375px 時標題（一行要 343px）就被擠成兩行——使用者不要切換鍵影響到標題換行。
+   字距 .5 → .2px：375px 時整行可用的寬度剛好也是 343px，收一點才有餘裕（肉眼看不出差別）。
+   320px 本來就放不下一行，會自然折行。 */
+header h1{ font-size:var(--fs-2xl); margin:0 0 var(--sp-1); letter-spacing:.2px; }
 header .subtitle{ font-size:var(--fs-sm); color:var(--c-text-dim); margin:0 0 var(--sp-4); }
 
 /* ── 目前天氣條 ───────────────────────── */
@@ -921,19 +923,30 @@ html{ font-size:clamp(16px, 4.2vw, 18px); }
   html{ font-size:17px; }
   body{ align-items:flex-start; padding:var(--sp-5) var(--sp-5) 0; }
   .app{
-    max-width:960px;
+    max-width:1020px;
     display:grid;
-    grid-template-columns:300px minmax(0,1fr);
+    grid-template-columns:360px minmax(0,1fr);
     grid-template-rows:auto 1fr auto;
     column-gap:var(--sp-6);
   }
-  header{ grid-column:1; grid-row:1; text-align:left; padding:0 0 var(--sp-4); }
-  header h1{ font-size:var(--fs-xl); padding-left:0; }   /* 電腦版標題靠左，只讓右邊 */
-  /* 三組由上而下排在左欄，整塊黏住 */
+  /* 左欄 300 → 360px：標題一行要 329px，300 本來就放不下（拿掉切換鍵也一樣）。
+     整頁上限跟著加 60px，右邊的行程欄不會因此變窄。
+     切換鍵移到副標那一行的右邊，不再跟標題搶同一行 */
+  header{
+    grid-column:1; grid-row:1; text-align:left; padding:0 0 var(--sp-4);
+    display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; column-gap:var(--sp-3);
+  }
+  header h1{ grid-column:1 / -1; font-size:var(--fs-xl); }
+  header .subtitle{ grid-column:1; margin:0; }
+  .scheme{ position:static; grid-column:2; grid-row:2; }
+  .wx-now{ grid-column:1 / -1; margin-top:var(--sp-4); }
+  .wx-stamp{ grid-column:1 / -1; }
+  /* 左欄裡再分兩欄：左邊「準備資訊＋旅途工具」，右邊「每日行程」，整塊黏住。
+     原本三組上下疊成一長條（約 650px），在 900px 高的螢幕上黏住之後，下面幾天要捲才看得到 */
   .sidenav{
     grid-column:1; grid-row:2; align-self:start;
     position:sticky; top:var(--sp-4);
-    display:flex; flex-direction:column; gap:var(--sp-5);
+    display:grid; grid-template-columns:minmax(0,2fr) minmax(0,3fr); column-gap:var(--sp-4); align-items:start;
   }
   .nav-aux{ flex-direction:column; align-items:stretch; gap:var(--sp-5); padding:0; }
   .nav-group, .nav-bar{ flex-direction:column; gap:var(--sp-2); }
@@ -961,7 +974,7 @@ html{ font-size:clamp(16px, 4.2vw, 18px); }
    1280 以上：變成第三欄，捲行程時固定不動，一邊看卡片一邊對地圖。
    map-on（網站有金鑰、而且是電腦寬度）決定三欄的寬度，has-map（這一頁有地圖）
    只決定地圖要不要出現——分開是因為：如果沒地圖的分頁（行前、記帳…）退回兩欄，
-   整個版面會從 1500px 縮回 960px 重新置中，切分頁時左邊的按鈕會橫向跳將近 200px。 */
+   整個版面會從 1560px 縮回 1020px 重新置中，切分頁時左邊的按鈕會橫向跳將近 200px。 */
 /* 開啟路線的按鈕放在當天行程最上面：手機、電腦都有，有沒有嵌入地圖都在同一個位置 */
 .daymap-open{
   display:inline-flex; align-items:center; min-height:44px; margin-bottom:var(--sp-2);
@@ -1014,7 +1027,7 @@ html{ font-size:clamp(16px, 4.2vw, 18px); }
 }
 @media (min-width:1280px){
   /* 行程欄上限 720px 跟下面的超寬規則一致，多的寬度給地圖 */
-  .app.map-on{ max-width:1500px; grid-template-columns:300px minmax(0,720px) minmax(360px,1fr); }
+  .app.map-on{ max-width:1560px; grid-template-columns:360px minmax(0,720px) minmax(360px,1fr); }
   .app.has-map #daymap{
     grid-column:3; grid-row:1 / span 2; align-self:start;
     position:sticky; top:var(--sp-4); height:calc(100vh - 2 * var(--sp-4));
@@ -1026,7 +1039,7 @@ html{ font-size:clamp(16px, 4.2vw, 18px); }
 /* 超寬螢幕：只把內容欄加寬，不要拆成兩欄。
    行程是有時間順序的，拆欄之後閱讀動線會從第一欄底部跳到第二欄頂端，很難跟。 */
 @media (min-width:1440px){
-  .app{ max-width:1100px; grid-template-columns:300px minmax(0,720px); }
+  .app{ max-width:1160px; grid-template-columns:360px minmax(0,720px); }
 }
 
 #edit-bar{ display:flex; gap:var(--sp-2); justify-content:center; flex-wrap:wrap; margin-bottom:var(--sp-5); }
