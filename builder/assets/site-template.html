@@ -258,20 +258,19 @@ body::after{
 .skip:focus{ left:var(--sp-2); }
 
 /* ── Header ───────────────────────────── */
-/* 頂端多留一列給右上角的切換鍵（8 ＋ 44 ＋ 4），標題才能拿回整行的寬度 */
-header{ position:relative; text-align:center; padding:calc(var(--sp-2) + 44px + var(--sp-1)) var(--sp-4) var(--sp-3); }
-/* 配色切換：跟隨系統／淺色／深色，點一下換下一個。只有圖示，所以名稱靠 aria-label */
+header{ position:relative; text-align:center; padding:var(--sp-5) var(--sp-4) var(--sp-3); }
+/* 配色切換：跟隨系統／淺色／深色，點一下換下一個。只有圖示，所以名稱靠 aria-label。
+   放在導覽列「記帳」的右邊（使用者要的）：原本在頁首右上角自己佔一列，標題上面多一塊空白 */
 .scheme{
-  position:absolute; top:var(--sp-2); right:var(--sp-4);
+  flex:0 0 auto; margin-left:auto;
   display:inline-flex; align-items:center; justify-content:center;
   width:44px; height:44px; padding:0;
   border:1px solid var(--c-border); border-radius:50%;
   background:var(--c-surface); color:var(--c-text-dim); cursor:pointer;
 }
 .scheme .ic{ width:1.25em; height:1.25em; margin:0; vertical-align:0; }
-/* 切換鍵在標題上面自己一列，標題拿回整行的寬度。原本是左右各讓 52px 給切換鍵，
-   375px 時標題（一行要 343px）就被擠成兩行——使用者不要切換鍵影響到標題換行。
-   字距 .5 → .2px：375px 時整行可用的寬度剛好也是 343px，收一點才有餘裕（肉眼看不出差別）。
+/* 標題要一行：375px 時一行要 343px，整行可用的寬度剛好也是 343px，所以字距 .5 → .2px
+   留一點餘裕（肉眼看不出差別），切換鍵也不能放在標題這一行（使用者不要標題被擠斷）。
    320px 本來就放不下一行，會自然折行。 */
 header h1{ font-size:var(--fs-2xl); margin:0 0 var(--sp-1); letter-spacing:.2px; }
 header .subtitle{ font-size:var(--fs-sm); color:var(--c-text-dim); margin:0 0 var(--sp-4); }
@@ -338,7 +337,9 @@ header .subtitle{ font-size:var(--fs-sm); color:var(--c-text-dim); margin:0 0 va
 /* ── 導覽三組（準備資訊／旅途工具／每日行程）──────────
    每日行程是主要導覽：外框膠囊、兩行（名稱＋日期）、黏在畫面頂端。
    準備與工具是輔助入口：沒有外框的「圖示＋文字」，單行，不黏——跟日期列一眼就分得出來，
-   文字本身 ≥ 4.5:1，像連結一樣靠文字辨識，不需要外框。 */
+   文字本身 ≥ 4.5:1，像連結一樣靠文字辨識，不需要外框。
+   手機上一排三塊：準備（左）、工具（中）、配色切換（右）。space-between 讓工具落在中間，
+   不再貼著右邊。 */
 .sidenav{ display:contents; }   /* 手機：拆開，日期列才能單獨黏在 .app 頂端（包在 div 裡的話只能黏在 div 範圍內） */
 .nav-aux{
   display:flex; justify-content:space-between; align-items:center; gap:var(--sp-2);
@@ -653,7 +654,9 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 .intro summary::-webkit-details-marker{ display:none; }   /* Safari 的預設三角 */
 .intro summary::before{ content:"▸"; display:inline-block; transition:transform .15s; }
 .intro[open] summary::before{ transform:rotate(90deg); }
-.intro-body{ padding-bottom:var(--sp-2); font-size:var(--fs-md); line-height:1.75; }
+/* 跟說明框一樣固定 16px。原本是 1rem，基準字級在手機上隨螢幕放大到 18px、電腦版 17px，
+   介紹就比說明框大一號（Pro Max 上差 2px），使用者看得出來 */
+.intro-body{ padding-bottom:var(--sp-2); font-size:16px; line-height:1.75; }
 .intro-body p{ margin:0 0 var(--sp-3); }
 .intro-body p:last-child{ margin-bottom:0; }
 /* 有照片的介紹：收合時「看介紹」那一條鋪一層淡淡的照片，不點開也看得出是什麼地方；
@@ -969,7 +972,6 @@ html{ font-size:clamp(16px, 4.2vw, 18px); }
   body{ padding:var(--sp-4) var(--sp-4) 0; }
   main{ padding-left:0; padding-right:0; }
   header{ padding-left:0; padding-right:0; }
-  .scheme{ right:0; }
   .nav-bar, .nav-aux{ padding-left:0; padding-right:0; }
 }
 
@@ -984,18 +986,10 @@ html{ font-size:clamp(16px, 4.2vw, 18px); }
     grid-template-rows:auto 1fr auto;
     column-gap:var(--sp-6);
   }
-  /* 左欄 300 → 360px：標題一行要 329px，300 本來就放不下（拿掉切換鍵也一樣）。
-     整頁上限跟著加 60px，右邊的行程欄不會因此變窄。
-     切換鍵移到副標那一行的右邊，不再跟標題搶同一行 */
-  header{
-    grid-column:1; grid-row:1; text-align:left; padding:0 0 var(--sp-4);
-    display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; column-gap:var(--sp-3);
-  }
-  header h1{ grid-column:1 / -1; font-size:var(--fs-xl); }
-  header .subtitle{ grid-column:1; margin:0; }
-  .scheme{ position:static; grid-column:2; grid-row:2; }
-  .wx-now{ grid-column:1 / -1; margin-top:var(--sp-4); }
-  .wx-stamp{ grid-column:1 / -1; }
+  /* 左欄 300 → 360px：標題一行要 329px，300 本來就放不下。
+     整頁上限跟著加 60px，右邊的行程欄不會因此變窄 */
+  header{ grid-column:1; grid-row:1; text-align:left; padding:0 0 var(--sp-4); }
+  header h1{ font-size:var(--fs-xl); }
   /* 左欄裡再分兩欄：左邊「準備資訊＋旅途工具」，右邊「每日行程」，整塊黏住。
      原本三組上下疊成一長條（約 650px），在 900px 高的螢幕上黏住之後，下面幾天要捲才看得到 */
   .sidenav{
@@ -1004,6 +998,7 @@ html{ font-size:clamp(16px, 4.2vw, 18px); }
     display:grid; grid-template-columns:minmax(0,2fr) minmax(0,3fr); column-gap:var(--sp-4); align-items:start;
   }
   .nav-aux{ flex-direction:column; align-items:stretch; gap:var(--sp-5); padding:0; }
+  .scheme{ align-self:flex-start; margin-left:var(--sp-1); }   /* 直排時接在「記帳」下面，不拉滿整欄 */
   .nav-group, .nav-bar{ flex-direction:column; gap:var(--sp-2); }
   .nav-bar{
     position:static; overflow:visible;
@@ -1264,7 +1259,6 @@ SOFTWARE.
 <div class="sync" id="sync" data-s="local">單機模式</div>
 <div class="app">
   <header>
-    <button class="scheme" id="scheme" type="button"></button>
     <h1 id="app-title">—</h1>
     <p class="subtitle" id="app-sub"></p>
     <div class="wx-now" id="wx-now"><div class="col">載入中…</div></div>
@@ -1277,6 +1271,8 @@ SOFTWARE.
     <div class="nav-aux">
       <div class="nav-group" id="nav-prep" role="tablist" aria-label="準備資訊"></div>
       <div class="nav-group" id="nav-tools" role="tablist" aria-label="旅途工具"></div>
+      <!-- 配色切換不是分頁，放在 tablist 外面 -->
+      <button class="scheme" id="scheme" type="button"></button>
     </div>
     <nav class="nav-bar" id="nav" role="tablist" aria-label="每日行程"></nav>
   </div>
@@ -2016,7 +2012,7 @@ function buildNav(){
   group("nav-prep",  "準備資訊", prep);
   group("nav-tools", "旅途工具", tools);
   group("nav",       "每日行程", days);
-  document.querySelector(".nav-aux").hidden = !prep.length && !tools.length;
+  // .nav-aux 不整列藏起來：配色切換鍵也在這一列，兩組都沒有項目時它仍然要在
   navEdges();
 }
 
