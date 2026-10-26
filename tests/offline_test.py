@@ -325,7 +325,7 @@ def transit_trip() -> dict:
     ]
     # 隔天：地圖要從前一晚的住宿（丁旅館）出發
     trip["days"][1]["blocks"][0:0] = [
-        stop("戊站", "E 區", "transit"),
+        {**stop("戊站", "E 區", "transit"), "travel": 15},   # 要先出門：起床時間照出門時間算
         # 續住同一間：地址寫法跟前一晚不同，名字一樣就要當成同一個地方
         {"type": "lodging", "title": "丁旅館（續住）", "titleLocal": "丁旅館", "address": "D 區 1-2",
          "notes": [], "mode": "transit"}]
@@ -1531,6 +1531,16 @@ def run(trip: str) -> bool:
             r.check("隔天：點晚上的住宿卡，看從最後一站怎麼回去、住宿那顆跟著亮",
                     leg() == ("directions", "transit", E, D, "")
                     and chips.nth(0).get_attribute("aria-pressed") == "true", str(leg()))
+
+            # 隔天幾點起床：寫在前一天最後一張卡片（住宿）上，隔天第一個行程出門前半小時
+            r.check("起床時間：最後一天不寫（沒有隔天）", page.locator("#main .wake").count() == 0)
+            page.locator(".nav-item").nth(0).click(); page.wait_for_timeout(300)
+            wake = page.locator("#main .wake")
+            r.check("起床時間：寫在前一天最後一張卡片上、只有一行",
+                    wake.count() == 1 and page.locator("#main .card").last.locator(".wake").count() == 1)
+            r.check("起床時間：隔天第一個行程出門（10:00）前半小時",
+                    wake.count() == 1 and "明天 09:30 起床" in wake.inner_text() and "10:00 出門・戊站" in wake.inner_text(),
+                    wake.inner_text() if wake.count() else "")
             r.check("搭車日：沒有 JS 例外", not errs, "；".join(errs))
             ctx.close()
 

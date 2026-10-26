@@ -1204,6 +1204,7 @@ SOFTWARE.
 -->
 <svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
 <symbol id="i-airplane-tilt" viewBox="0 0 256 256"><path d="M185.33,114.21l29.14-27.42.17-.17a32,32,0,0,0-45.26-45.26c0,.06-.11.11-.17.17L141.79,70.67l-83-30.2a8,8,0,0,0-8.39,1.86l-24,24a8,8,0,0,0,1.22,12.31l63.89,42.59L76.69,136H56a8,8,0,0,0-5.65,2.34l-24,24A8,8,0,0,0,29,175.42l36.82,14.73,14.7,36.75.06.16a8,8,0,0,0,13.18,2.47l23.87-23.88A8,8,0,0,0,120,200V179.31l14.76-14.76,42.59,63.89a8,8,0,0,0,12.31,1.22l24-24a8,8,0,0,0,1.86-8.39Zm-.07,97.23-42.59-63.88A8,8,0,0,0,136.8,144c-.27,0-.53,0-.79,0a8,8,0,0,0-5.66,2.35l-24,24A8,8,0,0,0,104,176v20.69L90.93,209.76,79.43,181A8,8,0,0,0,75,176.57l-28.74-11.5L59.32,152H80a8,8,0,0,0,5.66-2.34l24-24a8,8,0,0,0-1.22-12.32L44.56,70.74l13.5-13.49,83.22,30.26a8,8,0,0,0,8.56-2L180.78,52.6A16,16,0,0,1,203.4,75.23l-32.87,30.93a8,8,0,0,0-2,8.56l30.26,83.22Z"/></symbol>
+<symbol id="i-alarm" viewBox="0 0 256 256"><path d="M128,40a96,96,0,1,0,96,96A96.11,96.11,0,0,0,128,40Zm0,176a80,80,0,1,1,80-80A80.09,80.09,0,0,1,128,216ZM61.66,37.66l-32,32A8,8,0,0,1,18.34,58.34l32-32A8,8,0,0,1,61.66,37.66Zm176,32a8,8,0,0,1-11.32,0l-32-32a8,8,0,0,1,11.32-11.32l32,32A8,8,0,0,1,237.66,69.66ZM184,128a8,8,0,0,1,0,16H128a8,8,0,0,1-8-8V80a8,8,0,0,1,16,0v48Z"/></symbol>
 <symbol id="i-arrow-square-out" viewBox="0 0 256 256"><path d="M224,104a8,8,0,0,1-16,0V59.32l-66.33,66.34a8,8,0,0,1-11.32-11.32L196.68,48H152a8,8,0,0,1,0-16h64a8,8,0,0,1,8,8Zm-40,24a8,8,0,0,0-8,8v72H48V80h72a8,8,0,0,0,0-16H48A16,16,0,0,0,32,80V208a16,16,0,0,0,16,16H176a16,16,0,0,0,16-16V136A8,8,0,0,0,184,128Z"/></symbol>
 <symbol id="i-arrows-clockwise" viewBox="0 0 256 256"><path d="M224,48V96a8,8,0,0,1-8,8H168a8,8,0,0,1,0-16h28.69L182.06,73.37a79.56,79.56,0,0,0-56.13-23.43h-.45A79.52,79.52,0,0,0,69.59,72.71,8,8,0,0,1,58.41,61.27a96,96,0,0,1,135,.79L208,76.69V48a8,8,0,0,1,16,0ZM186.41,183.29a80,80,0,0,1-112.47-.66L59.31,168H88a8,8,0,0,0,0-16H40a8,8,0,0,0-8,8v48a8,8,0,0,0,16,0V179.31l14.63,14.63A95.43,95.43,0,0,0,130,222.06h.53a95.36,95.36,0,0,0,67.07-27.33,8,8,0,0,0-11.18-11.44Z"/></symbol>
 <symbol id="i-bed" viewBox="0 0 256 256"><path d="M216,72H32V48a8,8,0,0,0-16,0V208a8,8,0,0,0,16,0V176H240v32a8,8,0,0,0,16,0V112A40,40,0,0,0,216,72ZM32,88h72v72H32Zm88,72V88h96a24,24,0,0,1,24,24v48Z"/></symbol>
@@ -3808,6 +3809,21 @@ const factsHTML = b =>
   (b.fee   ? `<div class="meta">${ic("currency-jpy")}${esc(b.fee)}</div>` : "") +
   (b.tel   ? `<div class="meta"><a class="tel" href="tel:${esc(telHref(b.tel))}">${ic("phone")}${esc(b.tel)}</a></div>` : "");
 
+/* 隔天幾點起床：隔天第一個行程出發前半小時，寫在今天最後一張地點卡片上（通常是住宿）。
+   第一個行程的 time 就是離開住處的時間（要先出門的話是出門時間），所以直接減 30 分。
+   最後一天沒有隔天，不寫。 */
+function wakeFor(day){
+  if (!day.date) return null;
+  const next = TRIP_DATA.days.slice(TRIP_DATA.days.indexOf(day) + 1).find(d => d.date);
+  const first = next && (next.blocks || []).find(b => toMin(b.time) !== null);
+  if (!first) return null;
+  const t = toMin(first.time);
+  return { at: toHHMM((t + 1440 - 30) % 1440), go: toHHMM(t),
+           out: (Number(first.travel) || 0) > 0, what: first.title || first.line || "" };
+}
+const wakeHTML = b => b.wake
+  ? `<div class="meta wake">${ic("alarm")}明天 <b>${esc(b.wake.at)}</b> 起床（${esc(b.wake.go)} ${b.wake.out ? "出門・" : ""}${esc(b.wake.what)}）</div>` : "";
+
 const RENDERERS = {
   flight: b => `<div class="card flight">
     <div class="fl-head">
@@ -3831,7 +3847,7 @@ const RENDERERS = {
   stop: b => `<div class="card"${slotAttrs(b)}${mapAttrs(b)}>
     ${nowSlot(b)}${timeTag(b)}${travelTag(b)}${stayTag(b)}
     <h2 class="subject">${ic(KIND[b.kind] || KIND.sight)}${esc(b.title)}${localSpan(b.titleLocal)}</h2>
-    ${b.place ? `<div class="meta">${ic("map-pin")}${esc(b.place)}${localSpan(b.placeLocal)}</div>` : ""}${factsHTML(b)}
+    ${b.place ? `<div class="meta">${ic("map-pin")}${esc(b.place)}${localSpan(b.placeLocal)}</div>` : ""}${factsHTML(b)}${wakeHTML(b)}
     ${notesHTML(b.notes)}${secretHTML(b)}${introHTML(b.intro, b.photo, b.title)}${linksHTML(b.links)}</div>`,
 
   /* 總耗時跟其他卡片的「停留」一樣放在時間旁邊，由 stay 算出來 */
@@ -3857,7 +3873,7 @@ const RENDERERS = {
   lodging: b => `<div class="card lodge"${slotAttrs(b)}${mapAttrs(b)}>
     ${nowSlot(b)}<div><span class="ttag">${ic("bed")}住宿</span>${timeTag(b)}${travelTag(b)}${stayTag(b)}</div>
     <h2 class="subject">${esc(b.title)}${localSpan(b.titleLocal)}</h2>
-    ${b.address ? `<div class="meta">${ic("map-pin")}${esc(b.address)}</div>` : ""}${factsHTML(b)}
+    ${b.address ? `<div class="meta">${ic("map-pin")}${esc(b.address)}</div>` : ""}${factsHTML(b)}${wakeHTML(b)}
     ${(b.notes && b.notes.length)
       ? `<div class="info">${b.notes.map(n => `<div>${iconText(n)}</div>`).join("")}</div>` : ""}
     ${secretHTML(b)}${linksHTML(b.links)}</div>`,
@@ -4029,7 +4045,11 @@ function renderDay(id){
   if (id !== current) mapFocus = null;   // 換一天就回到整條路線
   current = id;
   const day = TRIP_DATA.days.find(d => d.id === id);
-  document.getElementById("main").innerHTML = day.blocks.map(renderBlock).join("");
+  /* 隔天起床時間掛在今天最後一張地點卡片（景點或住宿）上 */
+  const wake = wakeFor(day);
+  const lastPlace = wake ? day.blocks.map(b => b.type === "stop" || b.type === "lodging").lastIndexOf(true) : -1;
+  document.getElementById("main").innerHTML =
+    day.blocks.map((b, i) => renderBlock(i === lastPlace ? { ...b, wake } : b)).join("");
   /* 分頁與內容的對應（APG tabs）：三組各是一個 tablist，每組只留一個 Tab 停留點——
      有選取中的就是它，沒有就是那組的第一顆（roving tabindex）。只讓「全站選取中的那一顆」
      能 Tab 到的話，另外兩組會整組跳過、用鍵盤進不去；全部都能 Tab 到的話，光跨過十一顆
