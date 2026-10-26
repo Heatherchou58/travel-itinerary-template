@@ -60,6 +60,25 @@
   --c-ok:#2A7F52;
   --c-on-solid:#FFFFFF;    /* 深色實心按鈕上的字 */
   --c-pop:    #B85C00;   /* theme 樣式用的對比色，各主題覆寫 */
+  /* 第二層配色：讓不同內容一眼分得出來（交通、住宿、提醒、景點類型）。版面只認這些名字，
+     顏色由主題決定；主題沒指定的就退回它自己的主色與淡色，所以別的主題不會冒出它沒有的顏色。
+       --c-alt / -text / -soft   第二強調色：交通、地圖、訂位、實用資訊（線與框 ≥3:1／文字 ≥4.5:1／淡底）
+       --c-link-line / -text     地圖、訂位按鈕的外框與字（預設是中性外框）
+       --c-note-bg               一般說明框；重要提醒（⚠️）用 --c-warn-soft
+       --c-lodge-bg / -line      住宿卡
+       --c-time-bg / -fg         時間膠囊
+       --k-see / -food / -shop   景點、美食、購物標題前那個小色塊的底 */
+  --c-alt:var(--c-accent-strong); --c-alt-text:var(--c-on-accent); --c-alt-soft:var(--c-accent-soft);
+  --c-link-line:var(--c-border); --c-link-text:var(--c-text);
+  --c-note-bg:var(--c-accent-soft);
+  --c-lodge-bg:var(--c-accent-soft); --c-lodge-line:var(--c-accent);
+  --c-time-bg:var(--c-accent-soft); --c-time-fg:var(--c-text);
+  --k-see:var(--c-accent-soft); --k-food:var(--c-accent-soft); --k-shop:var(--c-accent-soft);
+  /* 圖示按語意上色（見 .ic-food 那段）。放在這裡而不是那段旁邊：主題要能覆寫，
+     寫在後面的 :root 會因為順序比較晚，把主題區塊的值蓋回去 */
+  --ic-food:#B23A1F; --ic-move:#1D5FA8; --ic-stay:#7A4FA3;
+  --ic-shop:#1F7A73; --ic-see:#2F7D32;  --ic-warn:#9A6210;
+  --ic-time:#6B635B;
   /* 尺寸 */
   --w-app:480px;
   --r-card:10px;
@@ -81,8 +100,21 @@
 [data-theme="sakura"]{ --c-accent:#F4A6C0; --c-pop:#04855A; --c-on-accent:#6E2338; --c-accent-soft:#FDEEF3; --c-bg:#FBF6F4;
                        --deco:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><g transform='translate(30,24) rotate(-18) scale(0.875) translate(-8,-7)' opacity='1'><ellipse cx='8' cy='7' rx='6.5' ry='3.4' fill='%23F0A9C1'/></g><g transform='translate(86,58) rotate(42) scale(0.75) translate(-8,-7)' opacity='0.82'><ellipse cx='8' cy='7' rx='6.5' ry='3.4' fill='%23F0A9C1'/></g><g transform='translate(52,96) rotate(158) scale(0.95) translate(-8,-7)' opacity='0.66'><ellipse cx='8' cy='7' rx='6.5' ry='3.4' fill='%23F0A9C1'/></g></svg>"); --deco-size:120px 120px,120px 120px; --deco-size2:120px 120px;
                        --deco-op:.55; --anim-a:driftA; --anim-b:driftB; }
-[data-theme="maple"] { --c-accent:#F4DCD3; --c-pop:#556528; --c-on-accent:#A3392B; --c-accent-soft:#FBEFE9; --c-bg:#FAF6EF;
+/* 楓葉：楓葉紅 × 湖水藍 × 奶油白。楓葉紅留給選取中的日期、主要按鈕、「現在」與重要提醒；
+   湖水藍是第二強調（交通、地圖、實用資訊），森林綠給景點——都是輔助，面積刻意比紅色小。
+   淡色底只用在住宿卡、提醒框、標題前的小色塊，不是每張卡片換一個顏色。
+   每一組前景／背景都算過：文字 ≥ 4.5:1，線、框、圖示 ≥ 3:1（湖水藍 #3F8990 對白底只有 4.0，
+   所以當文字時用深一階的 #2C6268） */
+[data-theme="maple"] { --c-accent:#F4DCD3; --c-pop:#526B46; --c-on-accent:#A3392B; --c-accent-soft:#FBEFE9; --c-bg:#FAF6EF;
                        --c-text:#3A2D24; --c-text-dim:#6F6157;   /* 深棕與灰褐，秋日九州 */
+                       --c-alt:#3F8990; --c-alt-text:#2C6268; --c-alt-soft:#D9E9E7;   /* 湖水藍 */
+                       --c-link-line:#3F8990; --c-link-text:#2C6268;
+                       --c-note-bg:#F8F0E3;                                          /* 奶油 */
+                       --c-lodge-bg:#F8EEDC; --c-lodge-line:#E3CC9F;                 /* 淡米黃 */
+                       --c-time-bg:#3A2D24; --c-time-fg:#FAF6EF;                     /* 墨色，像雜誌的時刻 */
+                       --c-warn:#A3392B; --c-warn-text:#A3392B; --c-warn-soft:#F5DAD6; /* 重要提醒：楓葉紅＋淡粉 */
+                       --k-see:#E4EBDC; --k-food:#F5DAD6; --k-shop:#F3E3C7;
+                       --ic-move:#3F8990; --ic-see:#526B46; --ic-shop:#8A5A12; --ic-stay:#8E3B2B; --ic-warn:#A3392B;
                        /* 楓葉改成 .leaves 每片一個元素（見 .leaves 那段），舊的貼圖關掉，同時只跑一套 */
                        --deco:none; --deco-op:0; --anim-a:none; --anim-b:none; }
 [data-theme="ocean"] { --c-accent:#6FCBD5; --c-pop:#C2410C; --c-on-accent:#0C4A50; --c-accent-soft:#E3F5F7; --c-bg:#F2F7F7;
@@ -267,7 +299,7 @@ header .subtitle{ font-size:var(--fs-sm); color:var(--c-text-dim); margin:0 0 va
 .wx-hl .lo{ font-size:var(--fs-lg); color:var(--c-text-dim); line-height:1.15; }
 /* 數據列：標籤與數值同一行，高度只有原本的一半 */
 .wx-grid{
-  display:flex; margin-top:var(--sp-3); background:var(--c-accent-soft);
+  display:flex; margin-top:var(--sp-3); background:var(--c-alt-soft);
   border-radius:8px; padding:var(--sp-1) 0;
 }
 .wx-grid div{
@@ -324,6 +356,11 @@ header .subtitle{ font-size:var(--fs-sm); color:var(--c-text-dim); margin:0 0 va
    規格要求選取狀態不能只靠細微的顏色差異，實心的明度差一眼就看得出來 */
 .nav-item[aria-selected="true"]{ background:var(--c-accent-strong); border-color:var(--c-accent-strong); color:var(--c-on-solid); }
 .nav-item[aria-selected="true"] .nav-sub{ opacity:1; }   /* 實心底上 .75 的透明度會掉對比 */
+/* 日期分頁：地名用正文色、日期用次要色，兩行分得出主次（原本整顆都是灰字）。
+   今天：第二強調色的雙線外框，跟選取中的實心紅一眼分開 */
+.nav-bar .nav-item:not([aria-selected="true"]){ color:var(--c-text); }
+.nav-bar .nav-item:not([aria-selected="true"]) .nav-sub{ color:var(--c-text-dim); opacity:1; }
+.nav-bar .nav-item.is-today:not([aria-selected="true"]){ border-color:var(--c-alt); box-shadow:inset 0 0 0 1px var(--c-alt); }
 .nav-item:focus-visible,.btn:focus-visible,input:focus-visible,select:focus-visible,button:focus-visible,
 a:focus-visible,summary:focus-visible{
   outline:2px solid var(--c-accent); outline-offset:2px;
@@ -331,7 +368,7 @@ a:focus-visible,summary:focus-visible{
 
 /* ── 內容 ─────────────────────────────── */
 main{ padding:var(--sp-3) var(--sp-4) 0; }
-.card.lodge{ background:var(--c-accent-soft); border:1px solid var(--c-accent); }
+.card.lodge{ background:var(--c-lodge-bg); border:1px solid var(--c-lodge-line); }
 .ttag{
   display:inline-block; background:var(--c-accent); color:var(--c-on-accent);
   font-size:var(--fs-xs); font-weight:700; padding:2px var(--sp-2);
@@ -447,7 +484,7 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 .cc-name{ flex:1; font-weight:700; font-size:var(--fs-md); }
 .cc-rate{
   margin-left:var(--sp-2); padding:1px var(--sp-2); border-radius:var(--r-pill);
-  background:var(--c-accent-soft); color:var(--c-on-accent); font-size:var(--fs-xs);
+  background:var(--c-alt-soft); color:var(--c-alt-text); font-size:var(--fs-xs);
 }
 .cc-x, .cc-restore, .shop-restore{
   flex:0 0 auto; min-height:44px; padding:0 var(--sp-3);
@@ -544,17 +581,30 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 .nav-item.is-today .nav-sub::after{ content:"・今天"; }
 
 .time{
-  display:inline-block; background:var(--c-accent-soft); color:var(--c-text);
+  display:inline-block; background:var(--c-time-bg); color:var(--c-time-fg);
   font-size:var(--fs-xs); font-weight:700; padding:2px var(--sp-2);
-  border-radius:6px; margin-bottom:var(--sp-2);
+  border-radius:6px; margin-bottom:var(--sp-2); letter-spacing:.3px;
 }
 .stay{
   display:inline-block; font-size:var(--fs-xs); color:var(--c-text-dim);
   margin-left:var(--sp-2); margin-bottom:var(--sp-2);
 }
+/* 交通時間：淡底小標籤，跟「停留」分開——原本兩個都是灰字，路上花多久要讀完才知道 */
+.stay.move{
+  padding:2px var(--sp-2); border-radius:6px;
+  background:var(--c-alt-soft); color:var(--c-alt-text); font-weight:700;
+}
+.stay.move .ic{ color:inherit; }
 /* 卡片標題是 h2（頁首 h1 → 卡片 h2 → 清單群組 h3），所以要自己歸零瀏覽器
    預設的字級與上下邊距，外觀跟原本的 div 一模一樣 */
 .subject{ margin:0 0 var(--sp-1); font-size:var(--fs-lg); font-weight:700; }
+/* 景點／美食／購物：標題前的圖示墊一塊淡色，掃過去就分得出類型，不用整張卡片換顏色 */
+.subject > .ic-see:first-child, .subject > .ic-food:first-child, .subject > .ic-shop:first-child{
+  width:1.6em; height:1.6em; padding:.22em; border-radius:6px; vertical-align:-.38em; margin-right:.4em;
+}
+.subject > .ic-see:first-child{ background:var(--k-see); }
+.subject > .ic-food:first-child{ background:var(--k-food); }
+.subject > .ic-shop:first-child{ background:var(--k-shop); }
 .lang-local{ font-size:var(--fs-sm); color:var(--c-text-dim); font-weight:400; margin-left:var(--sp-1); }
 .meta{ font-size:var(--fs-sm); color:var(--c-text-dim); margin-bottom:var(--sp-1); }
 /* 卡片最後的補充說明（匯率、CSV 編碼），跟上面的欄位或按鈕隔開一段 */
@@ -566,12 +616,8 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 .wx-emoji .ic{ width:2.6rem; height:2.6rem; margin:0; vertical-align:0; color:var(--c-on-accent); }
 /* 圖示按語意上色（ui-ux-pro-max icon-style-consistent：同一套圖示、同一類同一色）。
    六類：吃 food／行 move／住 stay／買 shop／看 see／提醒 warn；時間與一般操作不上色，
-   跟著文字走。每個顏色在白底、淡色底上都 ≥ 4.5:1（非文字圖形只要 3:1，這裡留足餘裕）。 */
-:root{
-  --ic-food:#B23A1F; --ic-move:#1D5FA8; --ic-stay:#7A4FA3;
-  --ic-shop:#1F7A73; --ic-see:#2F7D32;  --ic-warn:#9A6210;
-  --ic-time:#6B635B;
-}
+   跟著文字走。每個顏色在白底、淡色底上都 ≥ 4.5:1（非文字圖形只要 3:1，這裡留足餘裕）。
+   顏色定義在最上面的 :root（主題要能覆寫）。 */
 .ic-food{ color:var(--ic-food); } .ic-move{ color:var(--ic-move); } .ic-stay{ color:var(--ic-stay); }
 .ic-shop{ color:var(--ic-shop); } .ic-see{ color:var(--ic-see); }  .ic-warn{ color:var(--ic-warn); }
 .ic-time{ color:var(--ic-time); }
@@ -586,12 +632,14 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
   color:inherit; text-decoration:underline dotted; text-underline-offset:3px;
 }
 .note-box{
-  background:var(--c-accent-soft); border-radius:10px;
+  background:var(--c-note-bg); border-radius:10px;
   /* 說明框的字跟手機通知差不多大。不用 --fs-md（大螢幕會長到 18px），
      也不能再小：小於 16px 時 iPhone 一點輸入框就放大畫面（ui-ux-pro-max） */
   padding:var(--sp-3); margin-top:var(--sp-3); font-size:16px; line-height:1.7;
 }
+/* 重要提醒（⚠️ 開頭的句子由 notesHTML 拆出來）：淡底＋左側色條，不只是換字色 */
 .note-box.warn{ background:var(--c-warn-soft); border-left:3px solid var(--c-warn); }
+.note-box + .note-box{ margin-top:var(--sp-2); }
 
 /* ── 景點介紹（預設收合）─────────────────
    旅途中主要看的是時間與交通，介紹是背景知識，收起來才不會把
@@ -651,6 +699,9 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
   padding:9px var(--sp-4); border:1px solid var(--c-border);
   background:var(--c-surface); color:var(--c-text);
 }
+/* 地圖與訂位：第二強調色的外框（主題沒指定時就是上面的中性外框）。
+   「從上一站／從住處」維持楓葉紅外框，它是卡片上的主要動作 */
+.btn-booking, .btn-map{ border-color:var(--c-link-line); color:var(--c-link-text); }
 .btn-theme{ background:var(--c-pop); color:var(--c-on-solid); }
 /* full：整列寬的送出鍵。.btn 預設的右邊距在滿版時會把按鈕推出容器 */
 .btn-full{ display:block; width:100%; margin-right:0; text-align:center; }
@@ -663,16 +714,16 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 .btn:active{ opacity:.85; }
 
 /* ── 航班卡 ───────────────────────────── */
-.flight{ border:1px solid var(--c-accent); }
+.flight{ border:1px solid var(--c-alt); }
 .fl-head{
   display:flex; justify-content:space-between; align-items:baseline;
   font-size:var(--fs-xs); color:var(--c-text-dim); margin-bottom:var(--sp-3);
 }
 .fl-air{ font-weight:700; color:var(--c-text); letter-spacing:.3px; }
-.fl-air b{ color:var(--c-on-accent); margin-left:var(--sp-2); font-weight:800; }
+.fl-air b{ color:var(--c-alt-text); margin-left:var(--sp-2); font-weight:800; }
 .fl-body{ display:grid; grid-template-columns:auto minmax(48px,1fr) auto; align-items:center; gap:var(--sp-3); }
 .fl-side .t{ font-size:var(--fs-xl); font-weight:800; line-height:1.05; letter-spacing:-.5px; }
-.fl-side .p{ font-size:var(--fs-sm); font-weight:700; letter-spacing:1.5px; color:var(--c-on-accent); }
+.fl-side .p{ font-size:var(--fs-sm); font-weight:700; letter-spacing:1.5px; color:var(--c-alt-text); }
 .fl-side .g{ font-size:var(--fs-xs); color:var(--c-text-dim); white-space:nowrap; }
 .fl-side.end{ text-align:right; }
 .fl-mid{ position:relative; display:flex; align-items:center; justify-content:center; }
@@ -682,7 +733,7 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 }
 .fl-mid span{
   position:relative; background:var(--c-surface); padding:0 var(--sp-2);
-  font-size:var(--fs-sm); color:var(--c-on-accent);
+  font-size:var(--fs-sm); color:var(--c-alt-text);
 }
 
 /* ── 交通路線 ─────────────────────────── */
@@ -698,7 +749,7 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 /* 光點沿著這條線由上往下流 */
 .route-step:not(:last-child)::after{
   content:""; position:absolute; left:7px; width:4px; height:12px; border-radius:2px;
-  background:var(--c-accent-strong); animation:flow-step 1.8s linear infinite;
+  background:var(--c-alt); animation:flow-step 1.8s linear infinite;
 }
 @keyframes flow-step{
   from{ top:23px; opacity:0; }
@@ -712,7 +763,7 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
   box-sizing:content-box; z-index:2;
 }
 /* 起終點：實心主題色（原本的脈動光暈是純裝飾，拿掉；路線上的流動光點表示方向，保留） */
-.route-dot.on{ background:var(--c-accent-strong); }
+.route-dot.on{ background:var(--c-alt); }
 .route-body{ flex:1; padding-bottom:var(--sp-3); }
 .route-step:last-child .route-body{ padding-bottom:0; }
 .route-body strong{ font-size:var(--fs-md); }
@@ -728,7 +779,7 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 .route-link .bar{ position:relative; }
 .route-link .bar::after{
   content:""; position:absolute; left:calc(50% - 2px); width:4px; height:16px;
-  border-radius:2px; background:var(--c-accent-strong);
+  border-radius:2px; background:var(--c-alt);
   animation:flow 1.8s linear infinite;
 }
 @keyframes flow{
@@ -751,7 +802,11 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 /* ── 勾選清單 ─────────────────────────── */
 .chk-group{ margin-top:var(--sp-3); }
 .chk-group:first-of-type{ margin-top:var(--sp-2); }
-.chk-group h3{ margin:0 0 var(--sp-2); font-size:var(--fs-sm); color:var(--c-on-accent); letter-spacing:.06em; }
+/* 分組標題是實用資訊的小標籤：淡底色塊，不只靠字色 */
+.chk-group h3{
+  display:inline-block; margin:0 0 var(--sp-2); padding:2px var(--sp-2); border-radius:6px;
+  background:var(--c-alt-soft); color:var(--c-alt-text); font-size:var(--fs-sm); letter-spacing:.06em;
+}
 .chk{
   display:flex; align-items:center; gap:var(--sp-3);
   min-height:44px; padding:0; cursor:pointer; font-size:var(--fs-sm); line-height:1.4;
@@ -774,7 +829,7 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 .wx-strip{ display:flex; gap:var(--sp-2); overflow-x:auto; padding-bottom:var(--sp-2); scrollbar-width:none; }
 .wx-strip::-webkit-scrollbar{ display:none; }
 .wx-day{
-  flex:0 0 76px; text-align:center; background:var(--c-accent-soft);
+  flex:0 0 76px; text-align:center; background:var(--c-alt-soft);
   border-radius:10px; padding:var(--sp-2) var(--sp-1); font-size:var(--fs-xs);
 }
 .wx-day .e{ font-size:var(--fs-xl); line-height:1.3; }
@@ -856,7 +911,7 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 /* ── 其他 ─────────────────────────────── */
 .src{
   font-size:var(--fs-xs); color:var(--c-text-dim); line-height:1.6;
-  background:var(--c-accent-soft); border-radius:8px;
+  background:var(--c-note-bg); border-radius:8px;
   padding:var(--sp-2) var(--sp-3); margin-bottom:var(--sp-3);
 }
 .ph{ padding:var(--sp-2) 0; border-bottom:1px solid var(--c-line); }
@@ -991,7 +1046,7 @@ html{ font-size:clamp(16px, 4.2vw, 18px); }
   .app.has-map main{ grid-row:2; }
   #daymap iframe{
     flex:1; width:100%; min-height:240px; border:0;
-    border-radius:var(--r-card); background:var(--c-accent-soft);
+    border-radius:var(--r-card); background:var(--c-alt-soft);
   }
   /* 地圖上方：「全選」＋每一點一顆（前一晚的住宿排第一）。點名字只看那一點，勾選框決定畫不畫進路線。
      做得比一般按鈕小：一天十個地點時，44px 高的按鈕會把地圖擠到剩 250px。
@@ -1017,7 +1072,7 @@ html{ font-size:clamp(16px, 4.2vw, 18px); }
   .dm-chip.is-off button{ color:var(--c-text-dim); text-decoration:line-through; }
   .daymap-empty{
     margin:0; padding:var(--sp-4); border-radius:var(--r-card);
-    background:var(--c-accent-soft); color:var(--c-text-dim); font-size:var(--fs-sm);
+    background:var(--c-alt-soft); color:var(--c-text-dim); font-size:var(--fs-sm);
   }
   /* 有地圖時，景點與住宿卡片點了會切換地圖。用外圈陰影標示，不動左邊框——那是「現在進行到哪」在用的 */
   .app.has-map .card[data-mapq]{ cursor:pointer; }
@@ -1088,7 +1143,16 @@ footer > a{ display:inline-block; padding:14px 0; margin:-14px 0; }
    看不出是一塊按鈕，所以提亮到 #647736（白字 4.96、對卡片 3.39）。 */
 :root[data-scheme="dark"][data-theme="snow"]  { --c-bg:#10141A; --c-surface:#1A2029; --c-accent:#1E3A52; --c-accent-soft:#2C3749; --c-on-accent:#A8D4F5; --deco-op:.30; }
 :root[data-scheme="dark"][data-theme="sakura"]{ --c-bg:#191215; --c-surface:#241A20; --c-accent:#4E2436; --c-accent-soft:#3C2A36; --c-on-accent:#F7B9CE; --deco-op:.30; }
-:root[data-scheme="dark"][data-theme="maple"] { --c-bg:#17120F; --c-surface:#221C18; --c-accent:#4A2A20; --c-accent-soft:#3A2D26; --c-on-accent:#F3B9A6; --c-pop:#647736; --deco-op:.28; }
+:root[data-scheme="dark"][data-theme="maple"] { --c-bg:#17120F; --c-surface:#221C18; --c-accent:#4A2A20; --c-accent-soft:#3A2D26; --c-on-accent:#F3B9A6; --c-pop:#647736; --deco-op:.28;
+  /* 淺色那組的深色版。淡底一律比卡片亮（區別度 ≥ 1.2），文字 ≥ 4.5:1；
+     時間膠囊翻成淺底深字，跟淺色模式的墨色膠囊一樣是全卡最重的那一小塊 */
+  --c-alt:#6FB7BD; --c-alt-text:#8FCDD2; --c-alt-soft:#213A3C;
+  --c-link-line:#6FB7BD; --c-link-text:#8FCDD2;
+  --c-note-bg:#362C24; --c-lodge-bg:#2C251A; --c-lodge-line:#5A4A30;
+  --c-time-bg:#D6C8B5; --c-time-fg:#221C18;
+  --c-warn:#E07A66; --c-warn-text:#F3B9A6; --c-warn-soft:#432824;
+  --k-see:#273022; --k-food:#432824; --k-shop:#3A3020;
+  --ic-move:#6FB7BD; --ic-see:#9DBB88; --ic-shop:#E0B263; --ic-stay:#E8A58C; --ic-warn:#F3B9A6; }
 :root[data-scheme="dark"][data-theme="ocean"] { --c-bg:#0E1617; --c-surface:#182224; --c-accent:#1C3F44; --c-accent-soft:#27373A; --c-on-accent:#9EDCE3; --deco-op:.30; }
 :root[data-scheme="dark"][data-theme="city"]  { --c-bg:#14141C; --c-surface:#1E1E29; --c-accent:#2E2A55; --c-accent-soft:#302F42; --c-on-accent:#C3BEF0; --deco-op:.18; }
 
@@ -1099,7 +1163,7 @@ footer > a{ display:inline-block; padding:14px 0; margin:-14px 0; }
 [data-scheme="dark"] .btn, [data-scheme="dark"] .skip{ color:var(--c-bg); }
 [data-scheme="dark"] .btn-theme{ color:var(--c-on-solid); }
 [data-scheme="dark"] .btn-plain, [data-scheme="dark"] .btn-naver,
-[data-scheme="dark"] .btn-booking, [data-scheme="dark"] .btn-map{ color:var(--c-text); }
+[data-scheme="dark"] .btn-booking, [data-scheme="dark"] .btn-map{ color:var(--c-link-text); }
 [data-scheme="dark"] .btn-route{ color:var(--c-on-accent); }
 /* 選取中的分頁是 --c-accent-strong 實心，深色模式下那是淺色，字翻成底色 */
 [data-scheme="dark"] .nav-item[aria-selected="true"]{ color:var(--c-bg); }
@@ -1396,8 +1460,18 @@ const subjectHTML = t => {
   const m = String(t ?? "").match(/^(.+?)(（[^（）]+）)$/);
   return m ? `${esc(m[1])}<span class="subject-note">${esc(m[2])}</span>` : esc(t);
 };
-const notesHTML = n => (n && n.length)
-  ? `<div class="note-box">${n.map(iconText).join("<br>")}</div>` : "";
+/* ⚠️ 開頭的句子是重要提醒：連續的幾句拆成自己一個 .note-box.warn，順序照資料不變。
+   原本跟其他說明擠在同一個框裡，只差開頭一個小圖示，掃過去看不出哪句不能錯過 */
+const isWarnNote = s => /^\u26A0/.test(String(s ?? ""));
+const notesHTML = n => {
+  if (!n || !n.length) return "";
+  const runs = [];
+  for (const s of n){
+    const w = isWarnNote(s), last = runs[runs.length - 1];
+    if (last && last.w === w) last.items.push(s); else runs.push({ w, items:[s] });
+  }
+  return runs.map(r => `<div class="note-box${r.w ? " warn" : ""}">${r.items.map(iconText).join("<br>")}</div>`).join("");
+};
 
 /* ── 清單項目與勾選狀態 ──────────────────────
    項目可以是字串，也可以是 { text, url, note, img }。 */
@@ -1592,7 +1666,7 @@ const fmtStay = n => {
 const MODE_TAG = { driving:["car","車程"], walking:["person-simple-walk","步行"], transit:["train","搭車"], bicycling:["bicycle","騎車"] };
 const modeTag = m => { const [n, t] = MODE_TAG[m] || ["train", "交通"]; return ic(n) + t; };
 const travelTag = b => b.travel
-  ? `<span class="stay">${modeTag(b.mode)} ${fmtStay(b.travel)}</span>` : "";
+  ? `<span class="stay move">${modeTag(b.mode)} ${fmtStay(b.travel)}</span>` : "";
 const stayTag = b => {
   const v = (b.stay || 0) - (b.travel || 0);
   return v > 0 ? `<span class="stay">${ic("hourglass-medium")}停留 ${fmtStay(v)}</span>` : "";

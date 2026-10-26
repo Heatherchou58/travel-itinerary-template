@@ -1894,8 +1894,9 @@ def run(trip: str) -> bool:
                   return .2126 * f(r) + .7152 * f(g) + .0722 * f(b); };
                 const nums = c => c.match(/[0-9.]+/g).map(Number);
                 const out = [];
-                for (const el of document.querySelectorAll('#main .note-box, #main .src, #main .wx-day')){
-                  const card = el.closest('.card');
+                for (const el of document.querySelectorAll('#main .note-box, #main .src, #main .wx-day, #main .stay.move, #main .chk-group h3, #main .card.lodge')){
+                  // 住宿卡本身就是一張卡片，要跟頁面底色比
+                  const card = el.matches('.card') ? document.body : el.closest('.card');
                   if (!card || !el.checkVisibility()) continue;
                   const a = lum(nums(getComputedStyle(el).backgroundColor));
                   const b = lum(nums(getComputedStyle(card).backgroundColor));
@@ -1964,6 +1965,58 @@ def run(trip: str) -> bool:
                 page.wait_for_timeout(300)
                 unlabeled += [f"{tab}：{x}" for x in page.evaluate(UX_PROBE)["label"]]
             r.check("UI 規則：電腦版輸入框也都有看得見的標籤", not unlabeled, "；".join(sorted(set(unlabeled))[:4]) or "各分頁都過")
+            ctx.close()
+
+            # 配色：⚠️ 開頭的句子拆成自己的提醒框（.note-box.warn），一般說明框裡不能再混著提醒。
+            # 用圖示判斷：⚠ 是唯一會換成 warning 圖示的 emoji（EMOJI_IC），文字比對換了行程就不準
+            ctx = browser.new_context(viewport={"width": 375, "height": 812})
+            page = ctx.new_page()
+            page.goto(base)
+            page.wait_for_load_state("networkidle")
+            mixed, warn_boxes, warn_bad = [], 0, []
+            tabs = page.locator(".nav-item")
+            for i in range(tabs.count()):
+                tab = tabs.nth(i).inner_text().split("\n")[0]
+                tabs.nth(i).click()
+                page.wait_for_timeout(200)
+                res = page.evaluate("""() => ({
+                  mixed: document.querySelectorAll('#main .note-box:not(.warn) > .ic-warn').length,
+                  boxes: [...document.querySelectorAll('#main .note-box.warn')].filter(e => e.checkVisibility()).length,
+                  bad: [...document.querySelectorAll('#main .note-box.warn')]
+                         .filter(e => !(e.firstElementChild && e.firstElementChild.matches('.ic-warn'))).length,
+                })""")
+                if res["mixed"]: mixed.append(f"{tab} {res['mixed']} 句")
+                if res["bad"]: warn_bad.append(f"{tab} {res['bad']} 個")
+                warn_boxes += res["boxes"]
+            r.check("配色：⚠️ 提醒拆成獨立的提醒框，不混在一般說明裡", not mixed and not warn_bad and warn_boxes > 0,
+                    f"提醒框 {warn_boxes} 個" + (f"；混在說明裡：{'、'.join(mixed)}" if mixed else "")
+                    + (f"；提醒框開頭不是提醒圖示：{'、'.join(warn_bad)}" if warn_bad else ""))
+
+            # 配色：湖水藍、森林綠、米黃這些是楓葉主題自己的顏色。共用版面只認 token，
+            # 別的主題沒指定就退回它自己的主色——換成其他主題後，畫面上不能出現這幾個顏色
+            MAPLE_ONLY = """() => {
+              const ban = ['63, 137, 144', '44, 98, 104', '217, 233, 231', '82, 107, 70', '228, 235, 220',
+                           '248, 240, 227', '248, 238, 220', '245, 218, 214', '243, 227, 199',
+                           '111, 183, 189', '143, 205, 210', '33, 58, 60', '54, 44, 36', '44, 37, 26'];
+              const hit = new Set();
+              for (const el of document.querySelectorAll('header, header *, .sidenav *, #main, #main *')){
+                const cs = getComputedStyle(el);
+                for (const v of [cs.color, cs.backgroundColor, cs.borderLeftColor, cs.borderTopColor])
+                  for (const b of ban) if (v.includes(`(${b}`)) hit.add(`${el.className.baseVal ?? el.className} ${b}`);
+              }
+              return [...hit];
+            }"""
+            leaks = []
+            for scheme in ("light", "dark"):
+                for theme in ("snow", "sakura", "ocean", "city"):
+                    page.evaluate(f"document.documentElement.dataset.scheme = '{scheme}'; document.documentElement.dataset.theme = '{theme}'")
+                    for day in ("d1", "d2", "info"):
+                        if page.locator(f"#tab-{day}").count():
+                            page.locator(f"#tab-{day}").click()
+                            page.wait_for_timeout(100)
+                            leaks += [f"{scheme}/{theme}/{day}：{x}" for x in page.evaluate(MAPLE_ONLY)]
+            r.check("配色：楓葉主題的第二層顏色不會出現在其他主題", not leaks,
+                    "；".join(sorted(set(leaks))[:4]) or "四個主題 × 淺色深色都沒有")
             ctx.close()
 
             browser.close()
