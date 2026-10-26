@@ -687,6 +687,9 @@ def run(trip: str) -> bool:
             # 停留(分) 含交通，卡片要扣掉——不扣的話門司港會顯示停留 3 小時 50 分
             r.check("交通：停留扣掉交通（90 − 20）", "停留 1 小時 10 分" in otext)
             r.check("交通：沒有把總時間當成停留", "停留 1 小時 30 分" not in otext)
+            # 左上角是「抵達」時間：資料的 time 是從上一站出發（11:30），加上步行 20 分
+            r.check("時間：卡片左上角是抵達時間（出發 11:30＋步行 20 分）",
+                    opera.locator(".time").inner_text() == "11:50", opera.locator(".time").inner_text())
             r.check("營業時間：獨立一列", "09:00–17:00、週二休" in otext)
             r.check("費用：獨立一列", "A$43（可刷卡）" in otext)
             tel = opera.locator("a.tel")
@@ -1141,8 +1144,11 @@ def run(trip: str) -> bool:
             r.check("在路上：標「前往中」與預計抵達時刻",
                     nowc.count() == 1 and "上色見熊野座神社" in nowc.inner_text() and "前往中" in line and "11:55" in line,
                     f"「{line}」")
-            r.check("在路上：卡片左上角還是出發時間（這張卡片開始的時間）",
-                    nowc.count() == 1 and nowc.locator(".time").inner_text() == "11:05")
+            # 卡片左上角是「抵達」時間，要跟「前往中 · 預計 HH:MM 抵達」的時刻一樣
+            arrive = re.search(r"預計 (\d{2}:\d{2}) 抵達", line)
+            r.check("在路上：卡片左上角就是抵達時間（跟「預計抵達」一致）",
+                    nowc.count() == 1 and bool(arrive) and nowc.locator(".time").inner_text() == arrive.group(1),
+                    nowc.locator(".time").inner_text() if nowc.count() else "")
             ctx.close()
 
             # 東京 06:00：當天第一項（金鱗湖 07:00）還沒開始，應標成「接下來」

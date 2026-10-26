@@ -1604,6 +1604,14 @@ const fmtMin = n => n >= 60 ? `${Math.floor(n / 60)} 小時${n % 60 ? ` ${n % 60
 const slotAttrs = b => toMin(b.time) === null ? ""
   : ` data-start="${toMin(b.time)}" data-stay="${Number(b.stay) || 0}" data-travel="${Number(b.travel) || 0}"`;
 const nowSlot   = b => toMin(b.time) === null ? "" : `<div class="now-line" hidden></div>`;
+/* 卡片左上角＝「抵達這裡」的時間（使用者定的）。資料裡的 time 是這一列的開始：Excel 用
+   「上一列時間＋上一列停留」推算，而停留含開車或走過去的時間（第十一節），所以 time 其實是
+   「從上一站出發」——要加上 travel 才是抵達。Excel 的時間欄與公式不動，只在網站上換算。
+   地鐵卡是移動本身，時間維持「開始搭車」。 */
+const timeTag = b => {
+  const t = toMin(b.time);
+  return b.time ? `<span class="time">${esc(t === null ? b.time : toHHMM(t + (Number(b.travel) || 0)))}</span>` : "";
+};
 
 /* 卡片在地圖上的位置：沿用「🗺️ 地圖」按鈕的查詢——builder 已經用「當地語標題＋地點」
    組好，右側地圖與按鈕找到的才會是同一個地方。自己貼的短網址（maps.app.goo.gl）
@@ -1695,7 +1703,7 @@ const RENDERERS = {
     </div></div>`,
 
   stop: b => `<div class="card"${slotAttrs(b)}${mapAttrs(b)}>
-    ${nowSlot(b)}${b.time ? `<span class="time">${esc(b.time)}</span>` : ""}${travelTag(b)}${stayTag(b)}
+    ${nowSlot(b)}${timeTag(b)}${travelTag(b)}${stayTag(b)}
     <h2 class="subject">${ic(KIND[b.kind] || KIND.sight)}${esc(b.title)}${localSpan(b.titleLocal)}</h2>
     ${b.place ? `<div class="meta">${ic("map-pin")}${esc(b.place)}${localSpan(b.placeLocal)}</div>` : ""}${factsHTML(b)}
     ${notesHTML(b.notes)}${secretHTML(b)}${introHTML(b.intro, b.photo, b.title)}${linksHTML(b.links)}</div>`,
@@ -1721,7 +1729,7 @@ const RENDERERS = {
     ${notesHTML(b.notes)}${linksHTML(b.links)}</div>`,
 
   lodging: b => `<div class="card lodge"${slotAttrs(b)}${mapAttrs(b)}>
-    ${nowSlot(b)}<div><span class="ttag">${ic("bed")}住宿</span>${b.time ? `<span class="time">${esc(b.time)}</span>` : ""}${travelTag(b)}${stayTag(b)}</div>
+    ${nowSlot(b)}<div><span class="ttag">${ic("bed")}住宿</span>${timeTag(b)}${travelTag(b)}${stayTag(b)}</div>
     <h2 class="subject">${esc(b.title)}${localSpan(b.titleLocal)}</h2>
     ${b.address ? `<div class="meta">${ic("map-pin")}${esc(b.address)}</div>` : ""}${factsHTML(b)}
     ${(b.notes && b.notes.length)
@@ -1729,7 +1737,7 @@ const RENDERERS = {
     ${secretHTML(b)}${linksHTML(b.links)}</div>`,
 
   options: b => `<div class="card"${mapAttrs((b.choices || []).find(c => mapQuery(c)) || {})}>
-    ${b.time ? `<span class="time">${esc(b.time)}</span>` : ""}${stayTag(b)}
+    ${timeTag(b)}${stayTag(b)}
     <h2 class="subject">${subjectHTML(b.title)}</h2>
     ${b.place ? `<div class="meta">${ic("map-pin")}${esc(b.place)}${localSpan(b.placeLocal)}</div>` : ""}
     ${(b.choices||[]).map(c => `<div class="choice">
@@ -1959,7 +1967,7 @@ function markNow(){
     const s = +c.dataset.start;
     if (n.minutes >= ends[i]) c.classList.add("is-past");
     else if (n.minutes >= s)  { if (!cur) cur = { card: c, end: ends[i], arrive: s + +(c.dataset.travel || 0) }; }
-    else if (!next)           next = { card: c, start: s };
+    else if (!next)           next = { card: c, start: s, arrive: s + +(c.dataset.travel || 0) };
   });
 
   const show = (card, cls, text) => {
@@ -1970,7 +1978,9 @@ function markNow(){
   /* 卡片的時間是「出發」（這一列從離開上一站開始），前段是在路上：還沒到就標「前往中」 */
   if (cur && n.minutes < cur.arrive) show(cur.card, "is-now", `前往中 · 預計 ${toHHMM(cur.arrive)} 抵達`);
   else if (cur)  show(cur.card, "is-now",  `現在 · 還有 ${fmtMin(cur.end - n.minutes)}（預計 ${toHHMM(cur.end)} 離開）`);
-  else if (next) show(next.card, "is-next", `接下來 · ${fmtMin(next.start - n.minutes)}後開始（${toHHMM(next.start)}）`);
+  else if (next) show(next.card, "is-next", next.arrive > next.start
+    ? `接下來 · ${fmtMin(next.start - n.minutes)}後出發（預計 ${toHHMM(next.arrive)} 抵達）`
+    : `接下來 · ${fmtMin(next.start - n.minutes)}後開始（${toHHMM(next.start)}）`);
 
   /* 開啟網站時捲到目前位置。只做第一次，之後自己切分頁就不要再被拉走。 */
   if (firstNowPaint){
