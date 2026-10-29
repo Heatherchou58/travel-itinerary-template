@@ -804,6 +804,11 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 
 /* ── 選項（多選一） ───────────────────── */
 .choice{ border:1px solid var(--c-line); border-radius:10px; padding:var(--sp-3); margin-top:var(--sp-2); }
+/* 只有一顆按鈕：放右邊、垂直置中，省掉按鈕獨佔的那一行。兩顆以上維持放在下面——
+   375px 手機上文字欄只剩約 180px，再擠第二顆按鈕標題會折成好幾行 */
+.choice.one-link{ display:flex; align-items:center; gap:var(--sp-3); }
+.choice.one-link .choice-main{ flex:1; min-width:0; }
+.choice.one-link .btn{ margin:0; flex:0 0 auto; }
 .subject-note{ font-size:var(--fs-sm); font-weight:400; color:var(--c-text-dim); }
 .choice .tag{
   display:inline-block; background:var(--c-accent); color:var(--c-on-accent); font-size:var(--fs-xs);
@@ -3934,10 +3939,10 @@ const RENDERERS = {
     ${timeTag(b)}${stayTag(b)}
     <h2 class="subject">${subjectHTML(b.title)}</h2>
     ${b.place ? `<div class="meta">${ic("map-pin")}${esc(b.place)}${localSpan(b.placeLocal)}</div>` : ""}
-    ${(b.choices||[]).map(c => `<div class="choice">
-      <span class="tag">${esc(c.label)}</span>
+    ${(b.choices||[]).map(c => `<div class="choice${(c.links || []).length === 1 ? " one-link" : ""}">
+      <div class="choice-main"><span class="tag">${esc(c.label)}</span>
       <div><strong>${esc(c.title)}</strong>${localSpan(c.titleLocal)}</div>
-      ${c.note ? `<div class="meta">${iconText(c.note)}</div>` : ""}
+      ${c.note ? `<div class="meta">${iconText(c.note)}</div>` : ""}</div>
       ${linksHTML(c.links)}</div>`).join("")}</div>`,
 
   checklist: b => {

@@ -77,7 +77,10 @@ SWAP_TRIP = {
                        {"name": "Central", "nameLocal": "Central Station", "active": True}]},
             {"type": "options", "time": "18:00", "title": "晚餐二選一（也可以兩家都吃）",
              "place": "Darling Harbour",
-             "choices": [{"title": "海鮮市場"}, {"title": "牛排館"}]},
+             # 只有一顆按鈕的選項按鈕放右邊，兩顆以上的放下面
+             "choices": [{"title": "海鮮市場", "links": [{"label": "地圖", "url": "https://example.com/m", "style": "map"}]},
+                         {"title": "牛排館", "links": [{"label": "地圖", "url": "https://example.com/s", "style": "map"},
+                                                     {"label": "訂位", "url": "https://example.com/r", "style": "booking"}]}]},
             {"type": "lodging", "title": "測試飯店", "address": "1 Test St",
              "notes": ["含早餐"], "stay": 15, "travel": 15, "mode": "driving",
              "hours": "Check-in 15:00／退房 10:00"},
@@ -711,6 +714,21 @@ def run(trip: str) -> bool:
             r.check("電話：那一列不比其他資訊列高", row_h[0] <= row_h[1] + 2, f"電話 {row_h[0]}px／營業時間 {row_h[1]}px")
             hotel = page.locator("#main .card.lodge", has_text="測試飯店")
             htext = hotel.inner_text()
+            # 二選一：只有一顆按鈕就放在右邊（手機寬度也是），兩顆以上維持在下面
+            CHOICE_GEO = """c => { const t = c.querySelector('.choice-main').getBoundingClientRect();
+                const bs = [...c.querySelectorAll('.btn')].map(b => b.getBoundingClientRect());
+                return { right: bs.every(b => b.left >= t.right), below: bs.every(b => b.top >= t.bottom - 1),
+                         textW: Math.round(t.width), btnH: Math.round(Math.min(...bs.map(b => b.height))) }; }"""
+            for vw in (1280, 375):
+                cctx = browser.new_context(viewport={"width": vw, "height": 900})
+                cp = cctx.new_page()
+                cp.goto(swap); cp.wait_for_load_state("networkidle"); cp.wait_for_timeout(400)
+                one = cp.locator(".choice", has_text="海鮮市場").evaluate(CHOICE_GEO)
+                two = cp.locator(".choice", has_text="牛排館").evaluate(CHOICE_GEO)
+                r.check(f"二選一（寬 {vw}）：只有一顆按鈕放右邊、兩顆以上放下面",
+                        one["right"] and not one["below"] and two["below"] and one["btnH"] >= 44,
+                        f"一顆 {one}／兩顆 {two}")
+                cctx.close()
             hleg = hotel.locator("xpath=preceding-sibling::*[1][contains(@class,'leg')]")
             r.check("住宿：交通也在卡片上方", hleg.count() == 1 and "車程 15 分" in hleg.inner_text())
             r.check("住宿：交通等於總時間時不顯示停留", "停留" not in htext)
