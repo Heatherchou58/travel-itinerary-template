@@ -2013,24 +2013,46 @@ def run(trip: str) -> bool:
             page = ctx.new_page()
             page.goto(base)
             page.wait_for_load_state("networkidle")
-            mixed, warn_boxes, warn_bad = [], 0, []
+            mixed, warn_boxes, warn_bad, dup, order = [], 0, [], [], []
             tabs = page.locator(".nav-item")
             for i in range(tabs.count()):
                 tab = tabs.nth(i).inner_text().split("\n")[0]
                 tabs.nth(i).click()
                 page.wait_for_timeout(200)
-                res = page.evaluate("""() => ({
-                  mixed: document.querySelectorAll('#main .note-box:not(.warn) > .ic-warn').length,
-                  boxes: [...document.querySelectorAll('#main .note-box.warn')].filter(e => e.checkVisibility()).length,
-                  bad: [...document.querySelectorAll('#main .note-box.warn')]
-                         .filter(e => !(e.firstElementChild && e.firstElementChild.matches('.ic-warn'))).length,
-                })""")
+                res = page.evaluate("""() => {
+                  const out = { mixed: 0, boxes: 0, bad: 0, dup: [], order: [] };
+                  out.mixed = document.querySelectorAll('#main .note-box:not(.warn) > .ic-warn').length;
+                  for (const w of document.querySelectorAll('#main .note-box.warn')){
+                    if (w.checkVisibility()) out.boxes++;
+                    if (!(w.firstElementChild && w.firstElementChild.matches('.ic-warn'))) out.bad++;
+                  }
+                  // 卡片層級的說明框：直接掛在 .card 底下的那些（交通卡每一站自己的提醒不算）
+                  for (const card of document.querySelectorAll('#main .card')){
+                    const own = [...card.children].filter(e => e.matches('.note-box'));
+                    const plain = own.filter(e => !e.classList.contains('warn'));
+                    const warn = own.filter(e => e.classList.contains('warn'));
+                    const name = (card.querySelector('.subject') || {}).textContent || '(無標題)';
+                    if (plain.length > 1 || warn.length > 1)
+                      out.dup.push(`${name.trim().slice(0, 14)} 說明 ${plain.length}／提醒 ${warn.length}`);
+                    // 順序固定：說明在上、提醒在下
+                    if (plain.length && warn.length && own.indexOf(plain[0]) > own.indexOf(warn[0]))
+                      out.order.push(name.trim().slice(0, 14));
+                  }
+                  return out;
+                }""")
                 if res["mixed"]: mixed.append(f"{tab} {res['mixed']} 句")
                 if res["bad"]: warn_bad.append(f"{tab} {res['bad']} 個")
                 warn_boxes += res["boxes"]
+                dup += [f"{tab}：{x}" for x in res["dup"]]
+                order += [f"{tab}：{x}" for x in res["order"]]
             r.check("配色：⚠️ 提醒拆成獨立的提醒框，不混在一般說明裡", not mixed and not warn_bad and warn_boxes > 0,
                     f"提醒框 {warn_boxes} 個" + (f"；混在說明裡：{'、'.join(mixed)}" if mixed else "")
                     + (f"；提醒框開頭不是提醒圖示：{'、'.join(warn_bad)}" if warn_bad else ""))
+            # 使用者明確不要：同一張卡片出現兩個說明框。說明與提醒各最多一個，說明在上
+            r.check("說明框：一張卡片最多一個說明框＋一個提醒框", not dup,
+                    "；".join(sorted(set(dup))[:4]) or "各分頁都過")
+            r.check("說明框：提醒框一律在說明框下面", not order,
+                    "；".join(sorted(set(order))[:4]) or "各分頁都過")
 
             # 配色：湖水藍、森林綠、米黃這些是楓葉主題自己的顏色。共用版面只認 token，
             # 別的主題沒指定就退回它自己的主色——換成其他主題後，畫面上不能出現這幾個顏色

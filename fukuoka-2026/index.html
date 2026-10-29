@@ -810,9 +810,12 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 .choice.one-link .choice-main{ flex:1; min-width:0; }
 .choice.one-link .btn{ margin:0; flex:0 0 auto; }
 .subject-note{ font-size:var(--fs-sm); font-weight:400; color:var(--c-text-dim); }
+/* A／B 直接接在店名前面、同一行（使用者要的）：原本自己佔一行，每個選項都多一列高度。
+   vertical-align 讓小字的標籤對齊店名的視覺中線，不是文字基線 */
 .choice .tag{
   display:inline-block; background:var(--c-accent); color:var(--c-on-accent); font-size:var(--fs-xs);
-  font-weight:700; padding:1px var(--sp-2); border-radius:5px; margin-bottom:var(--sp-1);
+  font-weight:700; padding:1px var(--sp-2); border-radius:5px;
+  margin-right:var(--sp-2); vertical-align:.06em;
 }
 
 /* ── 勾選清單 ─────────────────────────── */
@@ -3640,18 +3643,15 @@ const subjectHTML = t => {
   const m = String(t ?? "").match(/^(.+?)(（[^（）]+）)$/);
   return m ? `${esc(m[1])}<span class="subject-note">${esc(m[2])}</span>` : esc(t);
 };
-/* ⚠️ 開頭的句子是重要提醒：連續的幾句拆成自己一個 .note-box.warn，順序照資料不變。
-   原本跟其他說明擠在同一個框裡，只差開頭一個小圖示，掃過去看不出哪句不能錯過 */
+/* 一張卡片最多兩個框：說明框（上）與提醒框（下），⚠️ 開頭的句子全部收進提醒框。
+   不管資料怎麼排都只有這兩個——原本是照資料把連續的同類併成一塊，
+   「說明→⚠️→說明」就會長出三塊，同一張卡片出現兩個說明框（使用者明確不要）。
+   提醒放最後、緊接著按鈕：資料裡多半本來就寫在最後，這樣多數卡片的順序不變。 */
 const isWarnNote = s => /^\u26A0/.test(String(s ?? ""));
-const notesHTML = n => {
-  if (!n || !n.length) return "";
-  const runs = [];
-  for (const s of n){
-    const w = isWarnNote(s), last = runs[runs.length - 1];
-    if (last && last.w === w) last.items.push(s); else runs.push({ w, items:[s] });
-  }
-  return runs.map(r => `<div class="note-box${r.w ? " warn" : ""}">${r.items.map(iconText).join("<br>")}</div>`).join("");
-};
+const noteBox = (items, cls) => items.length
+  ? `<div class="note-box${cls}">${items.map(iconText).join("<br>")}</div>` : "";
+const notesHTML = n => (n && n.length)
+  ? noteBox(n.filter(s => !isWarnNote(s)), "") + noteBox(n.filter(isWarnNote), " warn") : "";
 
 /* ── 清單項目與勾選狀態 ──────────────────────
    項目可以是字串，也可以是 { text, url, note, img }。 */
@@ -3942,8 +3942,8 @@ const RENDERERS = {
     <h2 class="subject">${subjectHTML(b.title)}</h2>
     ${b.place ? `<div class="meta">${ic("map-pin")}${esc(b.place)}${localSpan(b.placeLocal)}</div>` : ""}
     ${(b.choices||[]).map(c => `<div class="choice${(c.links || []).length === 1 ? " one-link" : ""}">
-      <div class="choice-main"><span class="tag">${esc(c.label)}</span>
-      <div><strong>${esc(c.title)}</strong>${localSpan(c.titleLocal)}</div>
+      <div class="choice-main">
+      <div><span class="tag">${esc(c.label)}</span><strong>${esc(c.title)}</strong>${localSpan(c.titleLocal)}</div>
       ${c.note ? `<div class="meta">${iconText(c.note)}</div>` : ""}</div>
       ${linksHTML(c.links)}</div>`).join("")}</div>`,
 
