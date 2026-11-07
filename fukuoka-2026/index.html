@@ -3732,15 +3732,13 @@ const state = {
   expenses: saved.expenses || [],
   board: saved.board || [],         // 留言板：所有人都看得到，所以跟記帳一樣會同步
   owners: saved.owners || {},       // 名字 → 登記的裝置。要擋別台冒用，就得讓所有人都看得到
-  queue: saved.queue || [],         // 記帳的待傳旗標（記帳仍然是整份文件）
-  subOps: saved.subOps || [],       // 子集合的待傳動作 [{ col, op, id, data }]，見 pushSub()
+  queue: saved.queue || [],
   me: LS.get(`${KEY}:me`) || null
 };
 const persist = () => LS.set(KEY, JSON.stringify({
   checks: state.checks, shopping: state.shopping, cards: state.cards,
   cardOrder: state.cardOrder,
-  expenses: state.expenses, board: state.board, owners: state.owners,
-  queue: state.queue, subOps: state.subOps
+  expenses: state.expenses, board: state.board, owners: state.owners, queue: state.queue
 }));
 
 /* ── 同步狀態顯示 ── */
@@ -5508,15 +5506,13 @@ document.getElementById("main").addEventListener("click", e => {
     const i = state.board.findIndex(x => x.id === bdel.dataset.bdel);
     if (i < 0) return;
     const [gone] = state.board.splice(i, 1);
-    const { id: goneId, ...goneData } = gone;        // id 是文件名稱，不重複存進內容
-    persist(); pushSub({ col:"messages", op:"del", id: goneId }); paintBoard();
-    /* 留言是同步的：誤觸 ✕ 會讓這則從所有人的裝置上消失，給 6 秒復原。
-       復原就是把同一份文件再寫回去（pushSub 會把那筆待刪的動作換掉） */
+    persist(); push({ type:"board" }); paintBoard();
+    /* 留言是同步的：誤觸 ✕ 會讓這則從所有人的裝置上消失，給 6 秒復原 */
     toast("已刪除你的留言", 6000, {
       label: "復原",
       run(){
         state.board.splice(Math.min(i, state.board.length), 0, gone);
-        persist(); pushSub({ col:"messages", op:"set", id: goneId, data: goneData }); paintBoard();
+        persist(); push({ type:"board" }); paintBoard();
       }
     });
     return;
@@ -5694,7 +5690,7 @@ function renderBoard(){
       <textarea class="input" id="bd-text" rows="3" placeholder="例：我先到飯店了，行李可以先放櫃檯">${esc(bdDraft)}</textarea>
       <p class="f-err" id="bd-text-err" hidden></p></div>
     <button class="btn btn-full" id="bd-add">送出留言</button>
-    <div class="meta meta-foot">送出後所有人的裝置都會看到。離線時先留在這台裝置，連上網路會自動補送。</div>
+    <div class="meta meta-foot">送出後所有人的裝置都會看到。離線時先留在這台裝置，連上網路會自動補送——兩個人同時離線留言的話，後補送的那邊可能會蓋掉對方的。</div>
   </div>` : "") + `
 
   <div class="card"><h2 class="subject">所有留言</h2>
@@ -5794,19 +5790,14 @@ function registerDevice(takeover){
   saveDevice({ id, name, by });
   state.me = by; LS.set(`${KEY}:me`, by);   // 記帳頁的「我是誰」跟著登記走，兩頁不要各說各話
   const seen = [...new Set([...((owner && owner.seen) || []), id])];
-  const rec = { devId: id, dev: name, at: Date.now(), seen };
-  state.owners = { ...state.owners, [by]: rec };
-  pushSub({ col:"owners", op:"set", id: by, data: rec });
+  state.owners = { ...state.owners, [by]: { devId: id, dev: name, at: Date.now(), seen } };
   /* 同一台裝置改登記成別的名字時，要把舊名字讓出來——
      不然一台裝置會同時佔住兩個名字，真正的本人就登記不進來了 */
   for (const k of Object.keys(state.owners))
-    if (k !== by && state.owners[k].devId === id){
-      delete state.owners[k];
-      pushSub({ col:"owners", op:"del", id: k });
-    }
+    if (k !== by && state.owners[k].devId === id) delete state.owners[k];
 
   bdEdit = false;
-  persist(); renderDay(current);
+  persist(); push({ type:"owners" }); renderDay(current);
   toast(`已登記：${by} · ${name}`);
 }
 
@@ -5821,87 +5812,38 @@ function addMessage(){
   const text = el.value.trim();
   if (fieldErrors(["bd-text"], text ? [] : [["bd-text", "請填寫留言內容"]])) return;
 
-  /* uid 現在不拿來擋任何事（擋的是裝置登記），但留著：之後若要讓 Rules
-     在伺服器端認人，就不用再回頭補一次舊資料 */
-  const id = crypto.randomUUID();
-  const msg = { by: device.by, text, at: Date.now(),
-                dev: device.name, devId: device.id, uid: uid || null };
-  state.board.push({ id, ...msg });
+  state.board.push({ id: crypto.randomUUID(), by: device.by, text, at: Date.now(),
+                     dev: device.name, devId: device.id });
   bdDraft = ""; el.value = "";
   markBoardSeen();                       // 自己送的不算未讀
-  persist(); pushSub({ col:"messages", op:"set", id, data: msg }); paintBoard();
+  persist(); push({ type: "board" }); paintBoard();
   toast("已送出留言");
 }
 
 /* ── 離線優先同步 ── */
 let db = null, uid = null;
-
-/* 記帳：整份 shared/state 覆寫（沒動它）。 */
 function push(change){
   state.queue.push({ ...change, at: Date.now() });
   persist();
   flush();
 }
-
-/* 留言與裝置登記：子集合，一則／一個名字各一份文件。
-   原本跟記帳擠在 shared/state 的陣列欄位裡，而 flush() 是整份覆寫——
-   兩個人各自離線留言，先後上線時後傳的那個會把前一個的整批蓋掉，
-   而且沒有人會發現。一份文件一個動作就不會互相覆蓋，文件也不會跟著旅程一直長大。
-
-   同一份文件的舊動作直接換掉：刪了又按「復原」，只要留最後那一個。 */
-function pushSub(op){
-  state.subOps = state.subOps.filter(o => !(o.col === op.col && o.id === op.id));
-  state.subOps.push(op);
-  persist();
-  flush();
-}
-
-/* 遠端的結果 ＋ 本機還沒傳出去的動作。沒有這一步，剛送出的留言會在
-   snapshot 回來的那一瞬間消失、等傳完才又出現。
-   也因為有這一步，收遠端資料時不必像記帳那樣「有待傳就整批忽略」——
-   訊號不好的時候照樣看得到別人的留言。 */
-function boardFromRemote(rows){
-  const del = new Set(state.subOps
-    .filter(o => o.col === "messages" && o.op === "del").map(o => o.id));
-  const out = rows.filter(m => !del.has(m.id));
-  for (const o of state.subOps)
-    if (o.col === "messages" && o.op === "set" && !out.some(m => m.id === o.id))
-      out.push({ id: o.id, ...o.data });
-  return out;
-}
-function ownersFromRemote(map){
-  const out = { ...map };
-  for (const o of state.subOps){
-    if (o.col !== "owners") continue;
-    if (o.op === "del") delete out[o.id]; else out[o.id] = o.data;
-  }
-  return out;
-}
-
 async function flush(){
   if (!db || !navigator.onLine){
-    const n = state.queue.length + state.subOps.length;
+    const n = state.queue.length;
     setSync(db ? "offline" : "local", db ? (n ? `離線中（${n} 筆待傳）` : "離線中") : "單機模式");
     return;
   }
-  if (!state.queue.length && !state.subOps.length){ setSync("ok","已同步"); return; }
+  if (!state.queue.length){ setSync("ok","已同步"); return; }
   try{
-    const { doc, setDoc, deleteDoc } =
-      await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
-    /* 一次一份文件，各寫各的。成功一筆就從佇列拿掉一筆，中途失敗不會重送已經成功的 */
-    while (state.subOps.length){
-      const o = state.subOps[0];
-      const ref = doc(db, "trips", M.tripId, o.col, o.id);
-      if (o.op === "del") await deleteDoc(ref); else await setDoc(ref, o.data);
-      state.subOps.shift(); persist();
-    }
-    if (state.queue.length){
-      await setDoc(doc(db, "trips", M.tripId, "shared", "state"), {
-        expenses: state.expenses, updatedAt: Date.now()
-      });
-      state.queue = []; persist();
-    }
-    setSync("ok","已同步");
+    const { doc, setDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    /* 記帳、留言、裝置登記都寫在同一份文件的不同欄位，整份覆寫。
+       已知的代價：兩個人各自離線留言、先後上線，後傳的那個會把前一個的留言蓋掉。
+       使用者看過這個風險並且選擇這樣（留言表單底下有一行字寫給使用者看）。
+       要改成「一則一份文件」的子集合之前，先問使用者——不要自己動手。 */
+    await setDoc(doc(db, "trips", M.tripId, "shared", "state"), {
+      expenses: state.expenses, board: state.board, owners: state.owners, updatedAt: Date.now()
+    });
+    state.queue = []; persist(); setSync("ok","已同步");
   }catch(e){
     console.error("同步失敗：", e);
     setSync("error", "同步失敗");
@@ -5918,7 +5860,7 @@ async function initFirebase(){
   try{
     const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js");
     const { getAuth, signInAnonymously } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js");
-    const { getFirestore, doc, collection, onSnapshot } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    const { getFirestore, doc, onSnapshot } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
     const app = initializeApp(FIREBASE_CONFIG);
     const cred = await signInAnonymously(getAuth(app));
     uid = cred.user.uid;
@@ -5926,29 +5868,16 @@ async function initFirebase(){
     /* 成員名稱不在這裡問。prompt() 若不被支援會丟錯，整個初始化就掉進
        catch 顯示「雲端連線失敗」——即使登入與 Firestore 其實都成功了；
        使用者按取消也沒有第二次機會。改用記帳頁的「我是誰」選擇器。 */
-    /* 記帳：一份文件、整份覆寫，所以本地有未傳資料時要整批忽略，不然會被遠端蓋掉 */
     onSnapshot(doc(db, "trips", M.tripId, "shared", "state"), snap => {
       const d = snap.data();
-      if (!d || state.queue.length) return;
+      if (!d || state.queue.length) return;   // 本地有未傳資料時不覆蓋
       /* 刻意不碰 state.checks / shopping / cards：這些清單都是各自的，
          遠端殘留的舊值要忽略。 */
       state.expenses = d.expenses || [];
+      state.board = d.board || [];
+      state.owners = d.owners || {};
       persist(); renderDay(current);
-    });
-    /* 留言：一則一份文件。待傳的動作疊在遠端結果上面就好，不用整批忽略 */
-    onSnapshot(collection(db, "trips", M.tripId, "messages"), snap => {
-      state.board = boardFromRemote(snap.docs.map(x => ({ id: x.id, ...x.data() })));
-      persist();
-      if (current === "board") renderDay(current);
-      boardChanged();
-    });
-    /* 裝置登記：一個名字一份文件 */
-    onSnapshot(collection(db, "trips", M.tripId, "owners"), snap => {
-      const map = {};
-      for (const x of snap.docs) map[x.id] = x.data();
-      state.owners = ownersFromRemote(map);
-      persist();
-      if (current === "board") renderDay(current);
+      boardChanged();   // 分頁上的未讀數與「有新留言」的提示
     });
     flush();
   }catch(e){

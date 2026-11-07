@@ -691,11 +691,11 @@ def run(trip: str) -> bool:
             r.check("留言板：登記之後才出現留言表單", page.locator("#bd-add").count() == 1)
             r.check("留言板：記帳頁的「我是誰」跟著登記走",
                     page.evaluate("localStorage.getItem('trip:kyushu-fukuoka-2026:me')") == "白")
-            subops = page.evaluate(
+            queued = page.evaluate(
                 "JSON.parse(localStorage.getItem('trip:kyushu-fukuoka-2026') || '{}')"
-                ".subOps?.map(o => o.col + ':' + o.op) ?? []")
-            r.check("留言板：登記會上傳（別台才知道這個名字被佔住了）", "owners:set" in subops,
-                    f"待傳動作 {subops}")
+                ".queue?.map(q => q.type) ?? []")
+            r.check("留言板：登記會上傳（別台才知道這個名字被佔住了）", "owners" in queued,
+                    f"佇列內容 {queued}")
 
             # 送出：出現在清單上，帶著留言者與時間
             page.locator("#bd-text").fill("離線測試留言")
@@ -723,18 +723,16 @@ def run(trip: str) -> bool:
             r.check("留言板：送出後輸入框清空", page.locator("#bd-text").input_value() == "")
             r.check("留言板：沒有 JS 例外", not errors, "; ".join(errors[:2]))
 
-            # 留言會上傳（打包清單才是只存本機，見 2b），但走的是「一則一份文件」那條路。
-            # 如果哪天又被塞回記帳那條整份覆寫的佇列，兩個人離線各自留言就會互相蓋掉。
-            subops = page.evaluate(
-                "JSON.parse(localStorage.getItem('trip:kyushu-fukuoka-2026') || '{}')"
-                ".subOps?.map(o => o.col + ':' + o.op) ?? []")
+            # 留言跟記帳一樣會上傳（打包清單才是只存本機，見 2b），走的是同一條
+            # 「整份文件覆寫」的路。代價寫在 CLAUDE.md 第五節，使用者已經接受。
             queued = page.evaluate(
                 "JSON.parse(localStorage.getItem('trip:kyushu-fukuoka-2026') || '{}')"
                 ".queue?.map(q => q.type) ?? []")
-            r.check("留言板：留言排進待傳（一則一份文件）", "messages:set" in subops,
-                    f"待傳動作 {subops}")
-            r.check("留言板：留言不會走記帳那條整份覆寫的佇列", "board" not in queued,
+            r.check("留言板：留言會進同步佇列（跟記帳同一類）", "board" in queued,
                     f"佇列內容 {queued}")
+            # 那個代價要寫在畫面上給使用者看，不能只活在 CLAUDE.md 裡
+            r.check("留言板：表單底下寫明離線留言可能被覆蓋",
+                    "蓋掉對方" in page.locator("#main").inner_text())
 
             page.reload()
             page.wait_for_load_state("domcontentloaded")
@@ -756,16 +754,6 @@ def run(trip: str) -> bool:
             page.wait_for_timeout(400)
             r.check("留言板：按「復原」留言回來",
                     page.locator(".bd-item", has_text="離線測試留言").count() == 1)
-            # 刪了又復原＝同一份文件兩個動作，只能留最後那一個，不然會先寫回去再被刪掉
-            r.check("留言板：同一則的待傳動作只留最後一個", page.evaluate("""() => {
-                      const ops = JSON.parse(localStorage.getItem('trip:kyushu-fukuoka-2026')
-                                             || '{}').subOps || [];
-                      const keys = ops.map(o => o.col + '/' + o.id);
-                      return keys.length === new Set(keys).size;
-                    }"""),
-                    page.evaluate("JSON.stringify((JSON.parse(localStorage.getItem("
-                                  "'trip:kyushu-fukuoka-2026')||'{}').subOps||[])"
-                                  ".map(o => o.col + ':' + o.op))"))
 
             # 打到一半的留言不能被重畫弄掉（別人送留言時 onSnapshot 會整頁重畫）
             page.locator("#bd-text").fill("打到一半的留言")
