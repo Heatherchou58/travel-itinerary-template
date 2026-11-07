@@ -83,7 +83,12 @@ SWAP_TRIP = {
                                                      {"label": "訂位", "url": "https://example.com/r", "style": "booking"}]}]},
             {"type": "lodging", "title": "測試飯店", "address": "1 Test St",
              "notes": ["含早餐"], "stay": 15, "travel": 15, "mode": "driving",
-             "hours": "Check-in 15:00／退房 10:00"},
+             "hours": "Check-in 15:00／退房 10:00",
+             # 地圖按鈕用 place ID 釘住：右側的嵌入地圖要用 ID 查，不能只給名稱
+             # （名稱解析不出來的話整條路線會退成世界地圖，九州的 ORIX 踩過）
+             "links": [{"label": "地圖", "style": "map",
+                        "url": "https://www.google.com/maps/search/?api=1&query=%E6%B8%AC%E8%A9%A6%E9%A3%AF%E5%BA%97%2C%201%20Test%20St"
+                               "&query_place_id=TEST_PID_HOTEL"}]},
         ]},
         {"id": "d2", "nav": "D2 回程", "date": "2027-07-02", "title": "Day 2 - 回家", "blocks": [
             {"type": "weather"},
@@ -1371,6 +1376,32 @@ def run(trip: str) -> bool:
             # 住宿卡片自己有 1px 邊框，高亮用 shorthand 才壓得過
             w = page.evaluate("getComputedStyle(document.querySelector('#main .card.is-now')).borderLeftWidth")
             r.check("目前項目的高亮邊框是 4px", w == "4px", f"實際 {w}")
+            # 旅行當天的「在 Google 地圖開啟今天的路線」：不帶起點（Google 地圖就從裝置的現在位置出發），
+            # 已經過去的站不帶——跟上面「現在進行到哪」同一套判斷。進行中的那一站還要帶（可能還在路上）
+            from urllib.parse import urlparse as _up, parse_qs as _pq
+            link = page.locator(".daymap-open")
+            href = link.get_attribute("href") if link.count() else ""
+            lq = _pq(_up(href).query)
+            r.check("旅行當天：今天的路線從現在位置出發（不帶起點）",
+                    link.count() == 1 and "origin" not in lq and lq.get("travelmode") == ["driving"], href[:90])
+            r.check("旅行當天：跳過已經過去的站，從進行中的那一站開始",
+                    lq.get("waypoints", [""])[0].startswith("上色見熊野座神社")
+                    and "金鱗湖" not in href and "草千里" not in href, lq.get("waypoints", [""])[0][:60])
+            r.check("旅行當天：終點還是今晚的住宿", lq.get("destination") == ["亀の井ホテル 阿蘇, 熊本縣阿蘇市"],
+                    str(lq.get("destination")))
+            ctx.close()
+
+            # 東京 06:00，D4 還沒開始：從現在位置出發，原本的第一站（前一晚的住宿）不帶，第一個途經點是金鱗湖
+            ctx, page = at("2026-11-16T21:00:00Z")
+            href = page.locator(".daymap-open").get_attribute("href") or ""
+            lq = _pq(_up(href).query)
+            r.check("旅行當天（還沒出門）：不帶起點，第一站是當天第一個景點",
+                    "origin" not in lq and lq.get("waypoints", [""])[0].startswith("金鱗湖"), href[:120])
+            # 別天的分頁：照舊從那天的第一站出發（出發前規劃時現在位置在台灣，規劃不出來）
+            page.locator(".nav-item", has_text="D5").first.click(); page.wait_for_timeout(300)
+            href = page.locator(".daymap-open").get_attribute("href") or ""
+            r.check("旅行當天：看別天的分頁時，那天的連結照舊從第一站出發",
+                    _pq(_up(href).query).get("origin") == ["亀の井ホテル 阿蘇, 熊本縣阿蘇市"], href[:120])
             ctx.close()
 
             # 東京 11:40：已經從草千里出發、還沒到上色見熊野座神社（11:30 出發、交通 50 分）
@@ -1558,6 +1589,9 @@ def run(trip: str) -> bool:
                 c = browser.new_context(viewport={"width": width, "height": 900})
                 c.route("**/maps/embed/**", lambda rt: rt.abort())
                 pg = c.new_page()
+                # 固定在不是任何一趟行程的日子：旅行當天的連結會改從現在位置出發（第 7c 段另外測），
+                # 不固定的話在九州行程期間跑測試，D2 那條會因為「今天就是 D2」而失敗
+                pg.clock.set_fixed_time("2026-10-01T03:00:00Z")
                 errs = []
                 pg.on("pageerror", lambda e: errs.append(str(e)))
                 pg.goto(url)
@@ -1575,7 +1609,8 @@ def run(trip: str) -> bool:
             r.check("地圖：帶金鑰", qs.get("key") == ["TEST_EMBED_KEY"])
             # 第一天：雪梨歌劇院（沒有地圖連結，退回當地語標題＋地點）→ 測試飯店
             r.check("地圖：起點是當天第一站", qs.get("origin") == ["Sydney Opera House, Bennelong Point"], str(qs.get("origin")))
-            r.check("地圖：終點是當天最後一站（住宿）", qs.get("destination") == ["測試飯店, 1 Test St"], str(qs.get("destination")))
+            r.check("地圖：終點是當天最後一站（住宿），地圖按鈕釘了 place ID 就用 ID 查",
+                    qs.get("destination") == ["place_id:TEST_PID_HOTEL"], str(qs.get("destination")))
             r.check("地圖：當天有開車就畫開車路線", qs.get("mode") == ["driving"], str(qs.get("mode")))
             mb, db = page.locator("main").bounding_box(), dm.bounding_box()
             r.check("地圖（寬 1400）：在行程右邊的第三欄", db["x"] > mb["x"] + mb["width"] - 1,
@@ -1583,6 +1618,10 @@ def run(trip: str) -> bool:
             href = page.locator(".daymap-open").get_attribute("href") or ""
             r.check("地圖：「在 Google 地圖開啟」是同一條路線",
                     "maps/dir/?api=1" in href and "travelmode=driving" in href and "Sydney" in href, href[:80])
+            hq = parse_qs(urlparse(href).query)
+            r.check("地圖：「在 Google 地圖開啟」不是旅行當天，從第一站出發、終點用名稱",
+                    hq.get("origin") == ["Sydney Opera House, Bennelong Point"]
+                    and hq.get("destination") == ["測試飯店, 1 Test St"], href[:120])
 
             # 地圖上方的地點按鈕：點名字只看那一點、再點一次回到路線；勾選框決定畫不畫進路線，
             # 「全選」沒全選就全部勾起來、已經全選就全部取消；二選一共用號碼、一次只勾一個。
@@ -1604,7 +1643,7 @@ def run(trip: str) -> bool:
             dinner = page.locator("#main .card[data-mapq]").nth(1)
             hotel = page.locator("#main .card[data-mapq]").nth(2)
             O, S, K, H = 0, 1, 2, 3   # 歌劇院、海鮮市場、牛排館（二選一）、飯店
-            OPERA, HOTEL = "Sydney Opera House, Bennelong Point", "測試飯店, 1 Test St"
+            OPERA = "Sydney Opera House, Bennelong Point"
             r.check("地點按鈕：第一天沒有前一晚的住宿；二選一共用一個號碼",
                     chips.all_inner_texts() == ["① 雪梨歌劇院", "② 海鮮市場", "② 牛排館", "③ 測試飯店"],
                     "／".join(chips.all_inner_texts()))
@@ -1641,7 +1680,8 @@ def run(trip: str) -> bool:
             page.wait_for_timeout(200)
             r.check("點卡片：點卡片裡的按鈕不會切換地圖", map_q()[0] == "directions", str(map_q()))
             hotel.focus(); page.keyboard.press("Enter"); page.wait_for_timeout(200)
-            r.check("點卡片：用鍵盤也能選（Enter）", map_q() == ("place", HOTEL) and pressed(H), str(map_q()))
+            r.check("點卡片：用鍵盤也能選（Enter）；釘了 place ID 的點用 ID 標",
+                    map_q() == ("place", "place_id:TEST_PID_HOTEL") and pressed(H), str(map_q()))
             hotel.locator(".subject").click(); page.wait_for_timeout(200)
 
             # 勾選
@@ -1768,13 +1808,15 @@ def run(trip: str) -> bool:
                     leg() == ("directions", "transit", E, D, "")
                     and chips.nth(0).get_attribute("aria-pressed") == "true", str(leg()))
 
-            # 當天幾點起床：當天第一個行程往前一小時，一條小的放在當天最上面（不是卡片）
+            # 當天幾點起床：當天第一個行程往前一小時，一條小的緊接在第一段行程上面（不是卡片）。
+            # 「在 Google 地圖開啟今天的路線」在它上方，不能夾在起床與第一段行程中間（使用者指定）
+            WAKE_SPOT = """() => { const w = document.querySelector('#main .wake-line');
+                return !!w && !!w.previousElementSibling?.classList.contains('daymap-open')
+                    && !!w.nextElementSibling?.matches('.leg, .card'); }"""
             page.locator(".nav-item").nth(0).click(); page.wait_for_timeout(300)
             wake = page.locator("#main .wake-line")
-            r.check("起床時間：一條放在當天最上面，不在卡片裡",
-                    wake.count() == 1 and page.evaluate(
-                        "() => document.querySelector('#main').firstElementChild"
-                        ".classList.contains('wake-line')")
+            r.check("起床時間：緊接在第一段行程上面、地圖連結在它上方，不在卡片裡",
+                    wake.count() == 1 and page.evaluate(WAKE_SPOT)
                     and page.locator("#main .card .wake-line").count() == 0,
                     f"{wake.count()} 條")
             r.check("起床時間：第一個行程（10:00）的前一小時",
@@ -1786,6 +1828,9 @@ def run(trip: str) -> bool:
                     wake.count() == 1 and "09:00" in wake.inner_text()
                     and "10:00 出門・戊站" in wake.inner_text(),
                     wake.inner_text() if wake.count() else "")
+            r.check("起床時間：要先出門的日子，緊接在交通時間那條上面",
+                    page.evaluate(WAKE_SPOT) and page.evaluate(
+                        "() => document.querySelector('#main .wake-line').nextElementSibling.classList.contains('leg')"))
             r.check("搭車日：沒有 JS 例外", not errs, "；".join(errs))
             ctx.close()
 

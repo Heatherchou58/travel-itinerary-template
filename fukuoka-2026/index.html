@@ -676,7 +676,7 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 }
 /* 重要提醒（⚠️ 開頭的句子由 notesHTML 拆出來）：淡底＋左側色條，不只是換字色 */
 .note-box.warn{ background:var(--c-warn-soft); border-left:3px solid var(--c-warn); }
-/* 當天幾點起床：放在當天最上面，是實用資訊不是提醒，所以用第二強調色不是楓葉紅 */
+/* 當天幾點起床：緊接在第一段行程上面，是實用資訊不是提醒，所以用第二強調色不是楓葉紅 */
 .wake-line{
   display:flex; align-items:center; margin:0 0 var(--sp-3);
   font-size:var(--fs-sm); font-weight:700; color:var(--c-alt-text);
@@ -3919,6 +3919,13 @@ function mapQuery(b){
   try { q = m ? (new URL(m.url).searchParams.get("query") || "") : ""; } catch {}
   return q || [b.titleLocal || b.title, b.place || b.address].filter(Boolean).join(", ");
 }
+/* 地圖按鈕用 query_place_id 釘住的地點（名稱會列出一串的才釘，見 CLAUDE.md 第十五節）。
+   右側的嵌入地圖只給名稱的話，Google 可能解析不出來，整條路線退成一張世界地圖
+   （「オリックスレンタカー 博多駅博多口店」踩過），所以有 ID 就用 ID */
+function mapPlaceId(b){
+  const m = (b.links || []).find(l => l.style === "map");
+  try { return m ? (new URL(m.url).searchParams.get("query_place_id") || "") : ""; } catch { return ""; }
+}
 const mapAttrs = b => {
   const q = mapQuery(b);
   return q ? ` data-mapq="${esc(q)}" data-mapt="${esc(b.title || q)}"` : "";
@@ -3981,7 +3988,8 @@ const factsHTML = b =>
   (b.fee   ? `<div class="meta">${ic("currency-jpy")}${esc(b.fee)}</div>` : "") +
   (b.tel   ? `<div class="meta"><a class="tel" href="tel:${esc(telHref(b.tel))}">${ic("phone")}${esc(b.tel)}</a></div>` : "");
 
-/* 當天幾點起床：當天第一個行程往前一小時（使用者指定），一條小的放在當天最上面。
+/* 當天幾點起床：當天第一個行程往前一小時（使用者指定），一條小的緊接在當天第一段行程上面——
+   「在 Google 地圖開啟今天的路線」放在它上方，不夾在起床與第一段行程中間（使用者指定）。
    第一個行程的 time 就是離開住處的時間（要先出門的話是出門時間），所以直接減 60 分。
    只有「早上開始」的日子才寫：抵達日的第一個行程是晚上落地（這趟是 20:00），
    往前推會變成「19:00 起床」——那天根本不是在飯店醒來的。中午以後開始的日子一律不寫。 */
@@ -4289,6 +4297,7 @@ function renderBlock(b){
 let current = TRIP_DATA.days[0].id;
 let mapFocus = null;   // { day, v, p }：右側地圖只看當天第 v 站（地點 p）
 const mapSkip = {};    // 每天取消勾選、不畫進路線的點（Set，見 skipOf）。換天保留，重新整理就全部恢復
+let dayLink = null;    // 「在 Google 地圖開啟」要用的路線：paintDayMap 算好，paintDayLink 畫
 function renderDay(id){
   if (id !== current) mapFocus = null;   // 換一天就回到整條路線
   current = id;
@@ -4343,7 +4352,7 @@ function markNow(){
     btn.classList.toggle("is-today", !!(d && d.date === n.date));
   });
 
-  if (!day || day.date !== n.date) return;     // 不是今天就不標任何東西
+  if (!day || day.date !== n.date){ paintDayLink(); return; }   // 不是今天就不標任何東西（過了午夜，連結也要回到從第一站出發）
 
   /* 結束時間：有填停留就用它，沒填就接到下一個項目的開始時間，
      最後一項沒得接就給 2 小時。否則住宿這種沒填停留的會立刻變「已結束」。 */
@@ -4372,6 +4381,7 @@ function markNow(){
   else if (next) show(next.card, "is-next", next.arrive > next.start
     ? `接下來 · ${fmtMin(next.start - n.minutes)}後出發（預計 ${toHHMM(next.arrive)} 抵達）`
     : `接下來 · ${fmtMin(next.start - n.minutes)}後開始（${toHHMM(next.start)}）`);
+  paintDayLink();      // 今天的路線跳過已經過去的站：剛才標好的 is-past 就是依據
 
   /* 開啟網站時捲到目前位置。只做第一次，之後自己切分頁就不要再被拉走。 */
   if (firstNowPaint){
@@ -4594,9 +4604,10 @@ function dayMapPoints(day){
      兩次（出門再回飯店）——路線照 visits 畫。二選一是一個 visit 帶幾個候選點（alts）。
      cardVisit[k]：當天第 k 張有地點的卡片是第幾個 visit。 */
   const pts = [], visits = [], cardVisit = [];
+  /* id：地圖按鈕釘住的 place ID（見 mapPlaceId），同一個地方只要有一張卡片釘過就用它 */
   const ptOf = (q, title, extra) => {
     const i = pts.findIndex(p => placeKey(p.q) === placeKey(q));
-    if (i >= 0) return i;
+    if (i >= 0){ if (extra.id && !pts[i].id) pts[i].id = extra.id; return i; }
     pts.push({ q, title: title || q, ...extra });
     return pts.length - 1;
   };
@@ -4609,7 +4620,7 @@ function dayMapPoints(day){
      那天沒有住宿（第一天、搭夜班機）就不加 */
   const before = TRIP_DATA.days.slice(0, TRIP_DATA.days.indexOf(day)).reverse().find(d => d.date);
   const stay = before && [...(before.blocks || [])].reverse().find(b => b.type === "lodging" && mapQuery(b));
-  if (stay) go({ p: ptOf(mapQuery(stay), stay.title, { start: true }) });
+  if (stay) go({ p: ptOf(mapQuery(stay), stay.title, { start: true, id: mapPlaceId(stay) }) });
   let alt = 0;
   for (const b of day.blocks || []){
     /* mode：怎麼到這一站（卡片上的交通方式） */
@@ -4617,12 +4628,12 @@ function dayMapPoints(day){
       const cs = (b.choices || []).filter(c => mapQuery(c));   // 跟卡片上的 mapAttrs 一致
       if (!cs.length) continue;
       alt++;
-      cardVisit.push(go({ alts: cs.map(c => ptOf(mapQuery(c), c.title, { alt })), mode: b.mode }));
+      cardVisit.push(go({ alts: cs.map(c => ptOf(mapQuery(c), c.title, { alt, id: mapPlaceId(c) })), mode: b.mode }));
     }
     if (b.type !== "stop" && b.type !== "lodging") continue;
     const q = mapQuery(b);
     if (!q) continue;                                   // 跟 mapAttrs 一樣，沒地點的卡片不算
-    const p = ptOf(q, b.title);
+    const p = ptOf(q, b.title, { id: mapPlaceId(b) });
     /* 同一間飯店的入住卡與住宿卡合併後，按鈕用住宿卡的名字（飯店名），不用「Check-in・放行李」 */
     if (b.type === "lodging" && !pts[p].start) pts[p].title = b.title || pts[p].title;
     cardVisit.push(go({ p, mode: b.mode }));
@@ -4650,12 +4661,14 @@ function paintDayMap(day){
   const on = !!(M.mapsEmbedKey && pts.length && DESKTOP.matches);
   app.classList.toggle("has-map", on);
   const skip = day ? skipOf(day.id, pts) : new Set();
-  const seq = [];   // 路線依序經過的點：取消勾選的跳過，連續同一點只算一次
-  for (const vis of visits){
+  /* 路線依序經過的點：取消勾選的跳過，連續同一點只算一次。
+     v 是它屬於第幾個 visit——旅行當天的連結靠它跳過已經過去的站（paintDayLink） */
+  const seq = [];
+  visits.forEach((vis, v) => {
     const p = chosen(vis, skip);
-    if (p !== undefined && p !== seq[seq.length - 1]) seq.push(p);
-  }
-  const route = seq.map(p => pts[p].q).slice(0, 22);   // 起點＋20 個途經點＋終點
+    if (p !== undefined && p !== (seq[seq.length - 1] || {}).p) seq.push({ p, v });
+  });
+  const route = seq.slice(0, 22).map(x => x.p);   // 起點＋20 個途經點＋終點
   const focus = on && mapFocus && mapFocus.day === day.id && visits[mapFocus.v] && pts[mapFocus.p] ? mapFocus : null;
   /* 沒開車的日子點了某一站：看「從上一站怎麼去」（取消勾選的站跳過），交通方式用那張卡片的。
      開車的日子點了只標位置。當天第一站沒有上一站，也只標位置 */
@@ -4664,31 +4677,12 @@ function paintDayMap(day){
     let u = focus.v - 1, from;
     while (u >= 0 && (from = chosen(visits[u], skip)) === undefined) u--;
     if (u >= 0 && from !== focus.p)
-      leg = { pts: [pts[from].q, pts[focus.p].q], mode: visits[focus.v].mode || "transit" };
+      leg = { pts: [from, focus.p], mode: visits[focus.v].mode || "transit" };
   }
+  dayLink = seq.length ? { day: day.id, pts, visits, cardVisit, seq, leg, mode } : null;
+  paintDayLink();
 
-  /* 同一條路線開到 Google 地圖：可以拖曳、看路況。不用金鑰，所以沒填嵌入金鑰的
-     網站也有；取消勾選的點這裡也不帶。手機也有：手機上通常是用 Google 地圖 App 開，
-     途經點上限跟電腦一樣是 9 個；沒裝 App、用手機瀏覽器開的話只認前 3 個（Google 的限制）。
-     Google 地圖的大眾運輸也不能加途經點（會說無法規劃），所以沒開車的日子整天用步行開；
-     點了某一站就改開那一段，用大眾運輸，可以直接拿來導航。
-     放在 #main 裡：renderDay 每次都會整個換掉 #main，不會留下舊的；
-     但視窗寬度改變時只重跑這裡，所以先把舊的拿掉。 */
   const main = document.getElementById("main");
-  main.querySelector(".daymap-open")?.remove();
-  if (route.length){
-    const [lp, lm] = leg ? [leg.pts, leg.mode] : [route, mode === "driving" ? "driving" : "walking"];
-    const via = lp.slice(1, -1).slice(0, 9);
-    const href = lp.length === 1
-      ? `https://www.google.com/maps/search/?api=1&query=${e(lp[0])}`
-      : `https://www.google.com/maps/dir/?api=1&travelmode=${lm}` +
-        `&origin=${e(lp[0])}&destination=${e(lp[lp.length - 1])}` +
-        (via.length ? `&waypoints=${via.map(e).join("|")}` : "");
-    /* 插在起床那一條後面：那一條是當天最先發生的事，要排在最上面 */
-    const wakeEl = main.querySelector(".wake-line");
-    (wakeEl || main).insertAdjacentHTML(wakeEl ? "afterend" : "afterbegin",
-      `<a class="daymap-open" href="${esc(href)}" target="_blank" rel="noopener">在 Google 地圖開啟${leg ? "這一段" : "今天的路線"}${ic("arrow-square-out")}</a>`);
-  }
   main.querySelectorAll(".card[data-mapq]").forEach((c, k) => {
     const vis = visits[cardVisit[k]];
     c.classList.toggle("map-focus", !!focus && !!vis && (vis.p === focus.p || (vis.alts || []).includes(focus.p)));
@@ -4724,8 +4718,10 @@ function paintDayMap(day){
   if (was) pick.querySelector(was.all !== undefined ? "[data-all]"
     : was.skip !== undefined ? `[data-skip="${was.skip}"]` : `[data-p="${was.p}"]`)?.focus();
 
-  /* 全部取消勾選：沒有東西可畫，收起地圖、改成一行提示 */
-  const show = leg ? leg.pts : focus ? [pts[focus.p].q] : route;
+  /* 全部取消勾選：沒有東西可畫，收起地圖、改成一行提示。
+     地圖按鈕釘了 place ID 的地點用 ID 查（見 mapPlaceId），其他用名稱 */
+  const at = p => pts[p].id ? `place_id:${pts[p].id}` : pts[p].q;
+  const show = (leg ? leg.pts : focus ? [focus.p] : route).map(at);
   const frame = box.querySelector("iframe");
   frame.hidden = !show.length;
   box.querySelector(".daymap-empty").hidden = !!show.length;
@@ -4739,6 +4735,56 @@ function paintDayMap(day){
       (show.length > 2 ? `&waypoints=${show.slice(1, -1).map(e).join("|")}` : "");
   /* 同一天重畫（例如購物清單增刪）網址沒變就不要重設，否則地圖會整個重新載入 */
   if (frame.getAttribute("src") !== src) frame.setAttribute("src", src);
+}
+/* 同一條路線開到 Google 地圖：可以拖曳、看路況。不用金鑰，所以沒填嵌入金鑰的
+   網站也有；取消勾選的點這裡也不帶。手機也有：手機上通常是用 Google 地圖 App 開，
+   途經點上限跟電腦一樣是 9 個；沒裝 App、用手機瀏覽器開的話只認前 3 個（Google 的限制）。
+   Google 地圖的大眾運輸也不能加途經點（會說無法規劃），所以沒開車的日子整天用步行開、
+   只剩一站時才用大眾運輸；點了某一站就改開那一段，用大眾運輸，可以直接拿來導航。
+   旅行當天（那一天的日期＝目的地的今天）：不帶起點，Google 地圖就從裝置的現在位置出發，
+   原本的第一站（前一晚的住宿）不帶；而且跳過已經過去的站——跟「現在進行到哪」同一套判斷
+   （卡片的 is-past），所以 markNow 每 30 秒會重畫一次。出發前規劃時現在位置在台灣，
+   Google 規劃不出來，所以其他日子照舊從第一站出發（使用者決定）。
+   放在 #main 最上面（起床那一條的上方）：renderDay 每次都會整個換掉 #main，不會留下舊的 */
+function paintDayLink(){
+  const main = document.getElementById("main");
+  let a = main.querySelector(".daymap-open");
+  const L = dayLink && dayLink.day === current ? dayLink : null;
+  if (!L){ a?.remove(); return; }
+  const day = TRIP_DATA.days.find(d => d.id === L.day);
+  const e = encodeURIComponent, q = p => L.pts[p].q;
+  let lp, lm, here = false;
+  if (L.leg){ lp = L.leg.pts.map(q); lm = L.leg.mode; }
+  else {
+    let s = L.seq;
+    if (day.date === nowAtDestination().date){
+      here = true;
+      /* 第一張還沒過去的卡片是第幾個 visit；全部都過了就只剩最後一站（回住處） */
+      const k = [...main.querySelectorAll(".card[data-mapq]")].map(c => c.classList.contains("is-past")).lastIndexOf(true) + 1;
+      const from = k < L.cardVisit.length ? L.cardVisit[k] : L.visits.length - 1;
+      s = s.filter(x => x.v >= from);
+      if (!s.length) s = L.seq.slice(-1);
+    }
+    lp = s.map(x => q(x.p));
+  }
+  const via = (here ? lp.slice(0, -1) : lp.slice(1, -1)).slice(0, 9);
+  if (!L.leg) lm = L.mode === "driving" ? "driving" : via.length ? "walking" : "transit";
+  const href = lp.length === 1 && !here
+    ? `https://www.google.com/maps/search/?api=1&query=${e(lp[0])}`
+    : `https://www.google.com/maps/dir/?api=1&travelmode=${lm}` +
+      (here ? "" : `&origin=${e(lp[0])}`) + `&destination=${e(lp[lp.length - 1])}` +
+      (via.length ? `&waypoints=${via.map(e).join("|")}` : "");
+  const label = L.leg ? "這一段" : "今天的路線";
+  if (!a){
+    main.insertAdjacentHTML("afterbegin", `<a class="daymap-open" target="_blank" rel="noopener"></a>`);
+    a = main.firstElementChild;
+  }
+  /* 每 30 秒會跑一次：沒變就不動，鍵盤焦點在上面也不會被打斷 */
+  if (a.getAttribute("href") !== href) a.setAttribute("href", href);
+  if (a.dataset.label !== label){
+    a.dataset.label = label;
+    a.innerHTML = `在 Google 地圖開啟${label}${ic("arrow-square-out")}`;
+  }
 }
 /* 視窗從手機寬度拉到電腦寬度時補載，反過來就收起 */
 DESKTOP.addEventListener("change", () => paintDayMap(TRIP_DATA.days.find(d => d.id === current)));
