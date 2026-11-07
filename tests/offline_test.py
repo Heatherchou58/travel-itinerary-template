@@ -406,25 +406,44 @@ def swap_trip_data(path: Path, trip: dict) -> None:
 
 # 留言板的種子資料：第 12 段的 UI 探針只量「畫面上真的有的元素」，留言板空著的話
 # 留言列（.bd-who／.bd-at／.bd-text）與 ✕ 的觸控範圍根本量不到。
-# 一則自己的（有 ✕）、一則旅伴的（沒有 ✕），兩個分支都要在畫面上。
+# 三則都要在畫面上，三個分支才量得到：
+#   自己這台送的（有 ✕）、旅伴送的（沒有 ✕）、沒登記過的裝置送的（標成可疑）。
+# 另外要連「這台裝置的登記」一起放進去，不然畫面停在登記表單、根本沒有留言表單。
 BOARD_ME = "白"
+BOARD_DEV_ID = "11111111-2222-3333-4444-555555555555"
+BOARD_DEV_NAME = "白的 iPhone"
+BOARD_OLD_ID = "99999999-8888-7777-6666-555555555555"   # 同一個人換手機以前那台
+BOARD_OTHER_ID = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"  # 旅伴那台
+BOARD_GHOST_ID = "00000000-0000-0000-0000-000000000000"  # 沒登記過：要被標出來
 BOARD_SEED = [
     {"id": "seed-mine", "by": BOARD_ME, "text": "我先到飯店了，行李可以先放櫃檯",
-     "at": 1763200800000},
+     "at": 1763200800000, "dev": BOARD_DEV_NAME, "devId": BOARD_DEV_ID},
     {"id": "seed-other", "by": "周", "text": "收到，我大概 20:30 到\n先去吃一蘭",
-     "at": 1763204400000},
+     "at": 1763204400000, "dev": "周的 Android 手機", "devId": BOARD_OTHER_ID},
+    {"id": "seed-ghost", "by": BOARD_ME, "text": "這一則不是白那台裝置送出的",
+     "at": 1763208000000, "dev": "不明的瀏覽器", "devId": BOARD_GHOST_ID},
 ]
+BOARD_OWNERS = {
+    # seen 裡有舊的那台：換過手機，以前的留言不該被標成可疑
+    BOARD_ME: {"devId": BOARD_DEV_ID, "dev": BOARD_DEV_NAME, "at": 1763200000000,
+               "seen": [BOARD_OLD_ID, BOARD_DEV_ID]},
+    "周": {"devId": BOARD_OTHER_ID, "dev": "周的 Android 手機", "at": 1763200000000,
+           "seen": [BOARD_OTHER_ID]},
+}
 
 
 def seed_board(page) -> None:
-    """把留言寫進本機再重新整理（副本已停用 Firebase，不會被遠端蓋掉）。"""
-    page.evaluate("""([rows, me]) => {
+    """把留言與裝置登記寫進本機再重新整理（副本已停用 Firebase，不會被遠端蓋掉）。"""
+    page.evaluate("""([rows, owners, me, dev]) => {
         const k = 'trip:kyushu-fukuoka-2026';
         const d = JSON.parse(localStorage.getItem(k) || '{}');
         d.board = rows;
+        d.owners = owners;
         localStorage.setItem(k, JSON.stringify(d));
         localStorage.setItem(k + ':me', me);
-    }""", [BOARD_SEED, BOARD_ME])
+        localStorage.setItem(k + ':device', JSON.stringify(dev));
+    }""", [BOARD_SEED, BOARD_OWNERS, BOARD_ME,
+           {"id": BOARD_DEV_ID, "name": BOARD_DEV_NAME, "by": BOARD_ME}])
     page.reload()
     page.wait_for_load_state("networkidle")
     page.wait_for_timeout(500)
@@ -632,6 +651,7 @@ def run(trip: str) -> bool:
 
             # 3b ── 留言板 ───────────────────────────────────
             # 留言是「所有人都看得到」，所以跟記帳同一類：會進同步佇列、刪除給 6 秒復原。
+            # 署名來自「這台裝置的登記」：一個名字只認一台裝置，別台選同一個名字會被擋。
             # 仍然是離線狀態——旅途中訊號不好本來就是常態，留言要先留在本機。
             page.get_by_role("tab", name=re.compile("留言板")).click()
             page.wait_for_timeout(500)
@@ -639,38 +659,52 @@ def run(trip: str) -> bool:
                     page.locator("#nav-tools #tab-board").count() == 1
                     and page.locator("#nav-prep #tab-board").count() == 0
                     and page.locator("#nav #tab-board").count() == 0)
-            r.check("留言板：還沒有留言時說清楚", "還沒有留言" in page.locator("#main").inner_text())
+            r.check("留言板：還沒登記的裝置只能看，沒有留言表單",
+                    page.locator("#bd-reg").count() == 1 and page.locator("#bd-add").count() == 0)
+            r.check("留言板：裝置名稱有自動帶入偵測到的機種",
+                    page.locator("#bd-dev").input_value().strip() != "",
+                    f"帶入「{page.locator('#bd-dev').input_value()}」")
 
-            # 什麼都沒填就送出：兩個欄位都在底下報錯，不跳 alert（全站已經沒有 alert()）
+            # 什麼都沒選、名字也清掉 → 兩欄都在底下報錯，不跳 alert（全站已經沒有 alert()）
             said.clear()
-            page.locator("#bd-add").click()
+            page.locator("#bd-dev").fill("")
+            page.locator("#bd-reg").click()
             page.wait_for_timeout(300)
-            r.check("留言板：沒填就送出不跳 alert", not said, "／".join(said))
+            r.check("留言板：登記沒填不跳 alert", not said, "／".join(said))
             r.check("留言板：沒選「我是誰」時錯誤寫在欄位底下",
                     page.locator("#bd-me-err").is_visible()
                     and "你是誰" in page.locator("#bd-me-err").inner_text(),
                     page.locator("#bd-me-err").inner_text())
-            r.check("留言板：沒填內容時錯誤也寫在欄位底下",
-                    page.locator("#bd-text-err").is_visible()
-                    and "留言" in page.locator("#bd-text-err").inner_text(),
-                    page.locator("#bd-text-err").inner_text())
+            r.check("留言板：裝置名稱空白時錯誤也寫在欄位底下",
+                    page.locator("#bd-dev-err").is_visible()
+                    and "名字" in page.locator("#bd-dev-err").inner_text(),
+                    page.locator("#bd-dev-err").inner_text())
             r.check("留言板：沒填的欄位標成 aria-invalid、用 describedby 綁住錯誤",
-                    page.locator("#bd-text").get_attribute("aria-invalid") == "true"
-                    and page.locator("#bd-text").get_attribute("aria-describedby") == "bd-text-err")
+                    page.locator("#bd-dev").get_attribute("aria-invalid") == "true"
+                    and page.locator("#bd-dev").get_attribute("aria-describedby") == "bd-dev-err")
             r.check("留言板：焦點移到第一個沒填的欄位（我是誰）",
-                    page.evaluate("document.activeElement.name") == "me",
+                    page.evaluate("document.activeElement.name") == "bdme",
                     page.evaluate("document.activeElement.id || document.activeElement.name"))
 
-            # 選了「我是誰」之後，只剩內容沒填：上一輪的錯誤要收掉，焦點換到內容
-            # chip 裡的 radio 是藏起來的（opacity:0;width:0），要點看得見的 label
+            # 登記這台裝置（chip 裡的 radio 是藏起來的，要點看得見的 label）
             page.locator('#bd-me .chip:has(input[value="白"])').click()
-            page.wait_for_timeout(200)
-            page.locator("#bd-add").click()
-            page.wait_for_timeout(300)
-            r.check("留言板：選了「我是誰」之後那一條錯誤收掉",
-                    not page.locator("#bd-me-err").is_visible()
-                    and page.locator("#bd-text-err").is_visible())
-            r.check("留言板：焦點移到留言內容", page.evaluate("document.activeElement.id") == "bd-text")
+            page.locator("#bd-dev").fill("白的測試機")
+            page.locator("#bd-reg").click()
+            page.wait_for_timeout(500)
+            r.check("留言板：登記成功有提示", "已登記" in page.locator("#toast").inner_text(),
+                    page.locator("#toast").inner_text())
+            r.check("留言板：登記後卡片上寫著是誰的哪一台",
+                    "白" in page.locator(".bd-reg").inner_text()
+                    and "白的測試機" in page.locator(".bd-reg").inner_text(),
+                    page.locator(".bd-reg").inner_text())
+            r.check("留言板：登記之後才出現留言表單", page.locator("#bd-add").count() == 1)
+            r.check("留言板：記帳頁的「我是誰」跟著登記走",
+                    page.evaluate("localStorage.getItem('trip:kyushu-fukuoka-2026:me')") == "白")
+            queued = page.evaluate(
+                "JSON.parse(localStorage.getItem('trip:kyushu-fukuoka-2026') || '{}')"
+                ".queue?.map(q => q.type) ?? []")
+            r.check("留言板：登記會上傳（別台才知道這個名字被佔住了）", "owners" in queued,
+                    f"佇列內容 {queued}")
 
             # 送出：出現在清單上，帶著留言者與時間
             page.locator("#bd-text").fill("離線測試留言")
@@ -687,15 +721,27 @@ def run(trip: str) -> bool:
             r.check("留言板：留言帶著時間（目的地時區）",
                     re.search(r"\d{1,2}/\d{1,2}\s+\d{1,2}:\d{2}", mine.locator(".bd-at").inner_text())
                     is not None, mine.locator(".bd-at").inner_text())
+            saved_msg = page.evaluate(
+                "JSON.parse(localStorage.getItem('trip:kyushu-fukuoka-2026')||'{}')"
+                ".board.find(m => m.text === '離線測試留言')")
+            r.check("留言板：留言記下了是從哪一台裝置送出的",
+                    saved_msg.get("dev") == "白的測試機" and bool(saved_msg.get("devId")),
+                    f"dev={saved_msg.get('dev')} devId={str(saved_msg.get('devId'))[:8]}…")
+            r.check("留言板：平常不在留言上顯示裝置（只有異常時才標）",
+                    "白的測試機" not in mine.inner_text(), mine.inner_text())
             r.check("留言板：送出後輸入框清空", page.locator("#bd-text").input_value() == "")
             r.check("留言板：沒有 JS 例外", not errors, "; ".join(errors[:2]))
 
-            # 留言跟記帳一樣會上傳。打包清單才是只存本機（見 2b）——這兩條合起來守住同步的範圍
+            # 留言跟記帳一樣會上傳（打包清單才是只存本機，見 2b），走的是同一條
+            # 「整份文件覆寫」的路。代價寫在 CLAUDE.md 第五節，使用者已經接受。
             queued = page.evaluate(
                 "JSON.parse(localStorage.getItem('trip:kyushu-fukuoka-2026') || '{}')"
                 ".queue?.map(q => q.type) ?? []")
             r.check("留言板：留言會進同步佇列（跟記帳同一類）", "board" in queued,
                     f"佇列內容 {queued}")
+            # 那個代價要寫在畫面上給使用者看，不能只活在 CLAUDE.md 裡
+            r.check("留言板：表單底下寫明離線留言可能被覆蓋",
+                    "蓋掉對方" in page.locator("#main").inner_text())
 
             page.reload()
             page.wait_for_load_state("domcontentloaded")
@@ -718,14 +764,6 @@ def run(trip: str) -> bool:
             r.check("留言板：按「復原」留言回來",
                     page.locator(".bd-item", has_text="離線測試留言").count() == 1)
 
-            # ✕ 只畫在自己的留言上。Firebase 是匿名登入，擋不住任何人，這條只是防誤觸
-            r.check("留言板：自己的留言有 ✕",
-                    page.locator(".bd-item", has_text="離線測試留言").locator(".bd-del").count() == 1)
-            page.locator('#bd-me .chip:has(input[value="周"])').click()
-            page.wait_for_timeout(300)
-            r.check("留言板：換成別人之後，那一則就沒有 ✕ 了",
-                    page.locator(".bd-item", has_text="離線測試留言").locator(".bd-del").count() == 0)
-
             # 打到一半的留言不能被重畫弄掉（別人送留言時 onSnapshot 會整頁重畫）
             page.locator("#bd-text").fill("打到一半的留言")
             page.wait_for_timeout(200)
@@ -736,6 +774,122 @@ def run(trip: str) -> bool:
             r.check("留言板：重畫之後打到一半的留言還在",
                     page.locator("#bd-text").input_value() == "打到一半的留言",
                     page.locator("#bd-text").input_value())
+
+            # 3d ── 有新留言的提示 ─────────────────────────────
+            # 副本停用了 Firebase，收不到真的推播，所以用「注入＋重新整理」模擬收到別人的留言
+            def open_other_tab():
+                page.reload()
+                page.wait_for_load_state("domcontentloaded")
+                page.wait_for_timeout(1200)
+                page.locator(".nav-item").first.click()   # 停在別的分頁，徽章才有意義
+                page.wait_for_timeout(300)
+
+            page.evaluate("""() => {
+                const k = 'trip:kyushu-fukuoka-2026';
+                const d = JSON.parse(localStorage.getItem(k) || '{}');
+                const now = Date.now();
+                d.board = [...(d.board || []),
+                  { id:'new-1', by:'周', text:'我到車站了',   at: now,
+                    dev:'周的手機', devId:'zhou-dev' },
+                  { id:'new-2', by:'陳', text:'我大概晚十分鐘', at: now + 1000,
+                    dev:'陳的手機', devId:'chen-dev' }];
+                localStorage.setItem(k, JSON.stringify(d));
+            }""")
+            open_other_tab()
+            badge = page.locator("#tab-board .bd-badge")
+            r.check("新留言提示：分頁上出現未讀數",
+                    badge.is_visible() and badge.inner_text().strip() == "2",
+                    f"看到「{badge.inner_text()}」" if badge.count() else "沒有徽章")
+            r.check("新留言提示：讀螢幕唸得出幾則",
+                    "2 則新留言" in (page.locator("#tab-board").get_attribute("aria-label") or ""),
+                    page.locator("#tab-board").get_attribute("aria-label"))
+            # 徽章本身要對輔助技術隱藏，不然分頁名稱會被唸成「留言板 2」
+            r.check("新留言提示：徽章不重複唸一次數字",
+                    badge.get_attribute("aria-hidden") == "true")
+            page.get_by_role("tab", name=re.compile("留言板")).click()
+            page.wait_for_timeout(400)
+            r.check("新留言提示：進去看過就不見了", not badge.is_visible())
+            r.check("新留言提示：看過之後分頁名稱也恢復原樣",
+                    not page.locator("#tab-board").get_attribute("aria-label"),
+                    page.locator("#tab-board").get_attribute("aria-label"))
+            open_other_tab()
+            r.check("新留言提示：看過之後重新整理不會又冒出來", not badge.is_visible())
+
+            # 自己送的不算未讀，不然每打一則自己的分頁上就多一個紅點
+            page.evaluate("""() => {
+                const k = 'trip:kyushu-fukuoka-2026';
+                const d = JSON.parse(localStorage.getItem(k) || '{}');
+                const dev = JSON.parse(localStorage.getItem(k + ':device'));
+                d.board = [...(d.board || []), { id:'mine-later', by: dev.by,
+                  text:'我自己後來補的', at: Date.now() + 60000, dev: dev.name, devId: dev.id }];
+                localStorage.setItem(k, JSON.stringify(d));
+            }""")
+            open_other_tab()
+            r.check("新留言提示：自己送的不算未讀", not badge.is_visible(),
+                    badge.inner_text() if badge.is_visible() else "")
+
+            # 3c ── 一個名字只認一台裝置 ──────────────────────
+            # 換一個裝置編號＝模擬「另一台裝置」，名字沒變。
+            # 使用者要的是前端直接擋下來，但換手機的人不能因此被鎖在外面，
+            # 所以擋的同時要給一條「改用這台」的明路。
+            page.evaluate("""() => {
+                const k = 'trip:kyushu-fukuoka-2026:device';
+                const d = JSON.parse(localStorage.getItem(k));
+                localStorage.setItem(k, JSON.stringify({ ...d, id: 'another-device-0001' }));
+            }""")
+            page.reload()
+            page.wait_for_load_state("domcontentloaded")
+            page.wait_for_timeout(1200)
+            page.get_by_role("tab", name=re.compile("留言板")).click()
+            page.wait_for_timeout(400)
+            r.check("裝置登記：名字登記在別台時，這台不能留言",
+                    page.locator("#bd-add").count() == 0)
+            r.check("裝置登記：卡片上說清楚名字在哪一台",
+                    page.locator("#main .card > .note-box.warn").count() == 1
+                    and "不能用這個名字留言" in page.locator("#main .note-box.warn").inner_text(),
+                    page.locator("#main .note-box.warn").inner_text()[:40])
+            page.locator("#bd-redo").click()
+            page.wait_for_timeout(300)
+            page.locator('#bd-me .chip:has(input[value="白"])').click()
+            page.locator("#bd-reg").click()
+            page.wait_for_timeout(400)
+            r.check("裝置登記：別台選同一個名字會被擋下來",
+                    page.locator("#bd-me-err").is_visible()
+                    and "已經登記在" in page.locator("#bd-me-err").inner_text()
+                    and page.locator("#bd-add").count() == 0,
+                    page.locator("#bd-me-err").inner_text())
+            r.check("裝置登記：擋下來的同時給一條「改用這台」",
+                    page.locator("#bd-take").is_visible())
+            page.locator("#bd-take").click()
+            page.wait_for_timeout(500)
+            r.check("裝置登記：按「改用這台」之後就能留言了",
+                    page.locator("#bd-add").count() == 1)
+            # 換手機以前送的留言不該整批變成「可疑」——比的是歷來登記過的裝置（seen）
+            r.check("裝置登記：接手之後，自己以前的留言不會被誤標",
+                    page.locator(".bd-item.is-odd").count() == 0,
+                    f"{page.locator('.bd-item.is-odd').count()} 則被標成可疑")
+
+            # 前端擋不住直接寫雲端的人，所以沒登記過的裝置送出的留言要看得出來
+            page.evaluate("""() => {
+                const k = 'trip:kyushu-fukuoka-2026';
+                const d = JSON.parse(localStorage.getItem(k) || '{}');
+                d.board = [...(d.board || []), { id: 'forged-1', by: '白', text: '這則是別人冒名寫的',
+                    at: Date.now(), dev: '不明的瀏覽器', devId: 'never-registered-9999' }];
+                localStorage.setItem(k, JSON.stringify(d));
+            }""")
+            page.reload()
+            page.wait_for_load_state("domcontentloaded")
+            page.wait_for_timeout(1200)
+            page.get_by_role("tab", name=re.compile("留言板")).click()
+            page.wait_for_timeout(400)
+            odd = page.locator(".bd-item.is-odd")
+            r.check("裝置登記：沒登記過的裝置送出的留言會被標出來",
+                    odd.count() == 1 and "不是「白」登記的裝置" in odd.inner_text(),
+                    odd.inner_text().replace("\n", " ") if odd.count() else "沒有標出來")
+            r.check("裝置登記：標出來的那則不給 ✕（不是這台送的）",
+                    odd.locator(".bd-del").count() == 0)
+            r.check("裝置登記：自己的留言照樣有 ✕",
+                    page.locator(".bd-item", has_text="離線測試留言").locator(".bd-del").count() == 1)
             ctx.close()
 
             # 4 ── 鍵盤操作看得見 focus ──────────────────────
@@ -2101,9 +2255,20 @@ def run(trip: str) -> bool:
             r.check("留言板：UI 規則量到的是有留言的清單（不是空的）",
                     page.locator("#main .bd-item").count() == len(BOARD_SEED)
                     and page.locator("#main .bd-del").count() == 1
-                    and page.locator("#main .bd-del").first.is_visible(),
+                    and page.locator("#main .bd-del").first.is_visible()
+                    # 可疑那一則也要在畫面上，.bd-odd 的對比才量得到
+                    and page.locator("#main .bd-item.is-odd").count() == 1
+                    and page.locator("#main #bd-add").count() == 1,
                     f"{page.locator('#main .bd-item').count()} 則、"
-                    f"{page.locator('#main .bd-del').count()} 顆 ✕")
+                    f"{page.locator('#main .bd-del').count()} 顆 ✕、"
+                    f"{page.locator('#main .bd-item.is-odd').count()} 則可疑")
+            # 剛剛點進留言板會把未讀清掉，但下面的探針要量分頁上那顆徽章的對比，所以還原
+            page.evaluate("localStorage.setItem('trip:kyushu-fukuoka-2026:bdseen', '0')")
+            page.reload()
+            page.wait_for_load_state("networkidle")
+            page.wait_for_timeout(500)
+            r.check("留言板：UI 規則也量得到分頁上的未讀數",
+                    page.locator("#tab-board .bd-badge").is_visible())
             UX_PROBE = """() => {
                 const vis = e => e.checkVisibility() && e.getBoundingClientRect().width > 0;
                 const nums = c => c.match(/[0-9.]+/g).map(Number);
