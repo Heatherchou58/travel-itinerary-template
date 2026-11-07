@@ -146,11 +146,14 @@ for (const day of T.days) {
     R.getCell(7).value = b.title;
     R.getCell(8).value = b._mt ? "" : (b.titleLocal || "");
     R.getCell(9).value = b.place || b.address || "";
-    /* 交通卡的「說明」第一行是路線、第二行是時間（parse.js 的讀法），沒有其他備註 */
-    if (b.type === "transit" && !b.line && b.duration)
-      throw new Error(`${day.nav}「${b.title}」：交通卡有時間卻沒有路線，寫回 Excel 會錯位`);
+    /* 交通卡的「說明」是照位置讀的（parse.js）：第一行路線、第二行時間、第三行起是這張卡的說明。
+       路線可以是空的——線名有時候寫在某一站的出口說明裡。但是空行在 Excel 的儲存格裡存不住
+       （前導換行寫進去再讀出來就不見了，整欄往上錯一格，時間會被當成路線），
+       所以空的那一格改寫「—」佔位，parse 讀回來再還原成空的。 */
+    const tnote = [b.line || "", b.duration || "", ...(b.notes || [])];
+    while (tnote.length && !tnote[tnote.length - 1]) tnote.pop();   // 尾端是空的就不用佔位
     R.getCell(10).value = b.type === "transit"
-      ? [b.line, b.duration].filter(Boolean).join("\n")
+      ? tnote.map((x, n) => (n < 2 && !x ? "—" : x)).join("\n")
       : (b.notes || []).join("\n");
     R.getCell(11).value = b.intro || "";
 
@@ -396,9 +399,14 @@ const opts = X => (X.days || []).filter(d => /^D\d+/.test(d.nav)).flatMap(d => (
 ok("二選一一致", opts(T).join("\n") === opts(B).join("\n"), opts(T).length + " 張");
 const rides = X => (X.days || []).filter(d => /^D\d+/.test(d.nav)).flatMap(d => (d.blocks || [])
   .filter(b => b.type === "transit")
-  .map(b => JSON.stringify([b.time, b.title, b.line || "", b.duration || "", b.stay ?? null,
+  .map(b => JSON.stringify([b.time, b.title, b.line || "", b.duration || "", b.stay ?? null, b.notes || [],
     (b.steps || []).map(st => [st.name, st.nameLocal || "", !!st.active, st.exit || "", st.note || ""])])));
-ok("交通卡一致", rides(T).join("\n") === rides(B).join("\n"), rides(T).length + " 張");
+const rideT = rides(T), rideB = rides(B);
+const rideAt = rideT.findIndex((x, n) => x !== rideB[n]);
+ok("交通卡一致", rideAt < 0 && rideT.length === rideB.length,
+   rideAt < 0 ? rideT.length + " 張"
+             : "\n     寫出去 " + (rideT[rideAt] || "（沒有）")
+               + "\n     讀回來 " + (rideB[rideAt] || "（沒有）"));
 ok("機器翻譯的當地語已留空",
    flat(B).filter((x, n) => a[n]?._mt).every(x => !x.titleLocal));
 

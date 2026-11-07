@@ -334,10 +334,16 @@ export function parseGrids(book){
       if (s(r[col])) facts[key] = s(r[col]);
     let b;
     if (bt === "transit"){
+      /* 交通卡的說明是照位置讀的：第一行路線、第二行時間、第三行起是這張卡的說明。
+         路線可以是空的（線名有時候寫在某一站的出口說明裡），所以這裡不能用 lines()——
+         它會把空行濾掉，時間就被當成路線讀進來，整欄往上錯一格。 */
+      const fixed = s(r["說明／備註"]) ? s(r["說明／備註"]).split(/\r?\n/).map(x => x.trim()) : [];
+      const blank = x => (x === "—" ? "" : x || "");   /* 「—」是「這一格沒有東西」的佔位 */
+      const rest = fixed.slice(2).filter(Boolean);
       b = { type:"transit", time, title: s(r["標題"]) || "交通",
             /* 總耗時由網站從 stay 算出來放在時間旁邊，這裡不再自動補「約 X 分」，否則會重複顯示 */
-            line: notes[0] || "", duration: notes[1] || "",
-            steps: [], links, stay, mode: curMode };
+            line: blank(fixed[0]), duration: blank(fixed[1]),
+            steps: [], links, ...(rest.length ? { notes: rest } : {}), stay, mode: curMode };
     } else if (bt === "lodging"){
       b = { type:"lodging", time, title: s(r["標題"]) || "住宿", titleLocal: s(r["當地語"]),
             address: s(r["地點"]), notes, links, stay, mode: curMode };

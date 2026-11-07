@@ -481,8 +481,21 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
   border:1px solid var(--c-line); border-radius:10px;
   padding:var(--sp-3); margin-top:var(--sp-3);
 }
-.cc-head{ display:flex; align-items:flex-start; gap:var(--sp-2); }
-.cc-name{ flex:1; font-weight:700; font-size:var(--fs-md); }
+/* 抬頭：卡名＋右邊一排動作鍵（往上、往下、移除）。手機放不下三顆鍵加卡名，
+   所以整排鍵自己換到下一行——用 flex-wrap，不用斷點：卡名要排得下 220px 才留在同一行，
+   平板與電腦版寬得下就併回一行 */
+.cc-head{ display:flex; flex-wrap:wrap; align-items:flex-start; gap:var(--sp-2); }
+.cc-name{ flex:1 1 220px; font-weight:700; font-size:var(--fs-md); }
+.cc-acts{ display:flex; align-items:flex-start; gap:var(--sp-2); margin-left:auto; flex:0 0 auto; }
+/* 第一張沒有「往上」、最後一張沒有「往下」，少一顆鍵整排就比別張窄，換行的時機也跟著不一樣
+   （同一份清單裡有的併在卡名那行、有的換行）。用等寬的佔位補回來，每張卡片的鍵都對齊 */
+.cc-gap{ width:44px; flex:0 0 auto; }
+.cc-move{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:44px; height:44px; padding:0; flex:0 0 auto;
+  border:1px solid var(--c-border); border-radius:10px;
+  background:var(--c-surface); color:var(--c-text); cursor:pointer;
+}
 .cc-rate{
   margin-left:var(--sp-2); padding:1px var(--sp-2); border-radius:var(--r-pill);
   background:var(--c-alt-soft); color:var(--c-alt-text); font-size:var(--fs-xs);
@@ -620,7 +633,7 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 .meta-foot{ margin-top:var(--sp-2); }
 /* 圖示：Phosphor regular 的 SVG，跟著文字的顏色與字級走，全站一個尺寸（1.15em） */
 .ic{ display:inline-block; width:1.15em; height:1.15em; flex:0 0 auto; vertical-align:-.2em; margin-right:.3em; fill:currentColor; }
-.fl-mid .ic, .shop-x .ic, .exp-del .ic, .wx-day .ic{ margin-right:0; }
+.fl-mid .ic, .shop-x .ic, .exp-del .ic, .wx-day .ic, .cc-move .ic{ margin-right:0; }
 .daymap-open .ic{ margin:0 0 0 .3em; }
 .wx-emoji .ic{ width:2.6rem; height:2.6rem; margin:0; vertical-align:0; color:var(--c-on-accent); }
 /* 圖示按語意上色（ui-ux-pro-max icon-style-consistent：同一套圖示、同一類同一色）。
@@ -1226,6 +1239,8 @@ SOFTWARE.
 <symbol id="i-bed" viewBox="0 0 256 256"><path d="M216,72H32V48a8,8,0,0,0-16,0V208a8,8,0,0,0,16,0V176H240v32a8,8,0,0,0,16,0V112A40,40,0,0,0,216,72ZM32,88h72v72H32Zm88,72V88h96a24,24,0,0,1,24,24v48Z"/></symbol>
 <symbol id="i-bicycle" viewBox="0 0 256 256"><path d="M208,112a47.81,47.81,0,0,0-16.93,3.09L165.93,72H192a8,8,0,0,1,8,8,8,8,0,0,0,16,0,24,24,0,0,0-24-24H152a8,8,0,0,0-6.91,12l11.65,20H99.26L82.91,60A8,8,0,0,0,76,56H48a8,8,0,0,0,0,16H71.41L85.12,95.51,69.41,117.06a48.13,48.13,0,1,0,12.92,9.44l11.59-15.9L125.09,164A8,8,0,1,0,138.91,156l-30.32-52h57.48l11.19,19.17A48,48,0,1,0,208,112ZM80,160a32,32,0,1,1-20.21-29.74l-18.25,25a8,8,0,1,0,12.92,9.42l18.25-25A31.88,31.88,0,0,1,80,160Zm128,32a32,32,0,0,1-22.51-54.72L201.09,164A8,8,0,1,0,214.91,156L199.3,129.21A32,32,0,1,1,208,192Z"/></symbol>
 <symbol id="i-calendar-check" viewBox="0 0 256 256"><path d="M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM72,48v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V80H48V48ZM208,208H48V96H208V208Zm-38.34-85.66a8,8,0,0,1,0,11.32l-48,48a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L116,164.69l42.34-42.35A8,8,0,0,1,169.66,122.34Z"/></symbol>
+<symbol id="i-caret-down" viewBox="0 0 256 256"><path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"/></symbol>
+<symbol id="i-caret-up" viewBox="0 0 256 256"><path d="M213.66,165.66a8,8,0,0,1-11.32,0L128,91.31,53.66,165.66a8,8,0,0,1-11.32-11.32l80-80a8,8,0,0,1,11.32,0l80,80A8,8,0,0,1,213.66,165.66Z"/></symbol>
 <symbol id="i-camera" viewBox="0 0 256 256"><path d="M208,56H180.28L166.65,35.56A8,8,0,0,0,160,32H96a8,8,0,0,0-6.65,3.56L75.71,56H48A24,24,0,0,0,24,80V192a24,24,0,0,0,24,24H208a24,24,0,0,0,24-24V80A24,24,0,0,0,208,56Zm8,136a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V80a8,8,0,0,1,8-8H80a8,8,0,0,0,6.66-3.56L100.28,48h55.43l13.63,20.44A8,8,0,0,0,176,72h32a8,8,0,0,1,8,8ZM128,88a44,44,0,1,0,44,44A44.05,44.05,0,0,0,128,88Zm0,72a28,28,0,1,1,28-28A28,28,0,0,1,128,160Z"/></symbol>
 <symbol id="i-car" viewBox="0 0 256 256"><path d="M240,104H229.2L201.42,41.5A16,16,0,0,0,186.8,32H69.2a16,16,0,0,0-14.62,9.5L26.8,104H16a8,8,0,0,0,0,16h8v80a16,16,0,0,0,16,16H64a16,16,0,0,0,16-16V184h96v16a16,16,0,0,0,16,16h24a16,16,0,0,0,16-16V120h8a8,8,0,0,0,0-16ZM69.2,48H186.8l24.89,56H44.31ZM64,200H40V184H64Zm128,0V184h24v16Zm24-32H40V120H216ZM56,144a8,8,0,0,1,8-8H80a8,8,0,0,1,0,16H64A8,8,0,0,1,56,144Zm112,0a8,8,0,0,1,8-8h16a8,8,0,0,1,0,16H176A8,8,0,0,1,168,144Z"/></symbol>
 <symbol id="i-chart-bar" viewBox="0 0 256 256"><path d="M224,200h-8V40a8,8,0,0,0-8-8H152a8,8,0,0,0-8,8V80H96a8,8,0,0,0-8,8v40H48a8,8,0,0,0-8,8v64H32a8,8,0,0,0,0,16H224a8,8,0,0,0,0-16ZM160,48h40V200H160ZM104,96h40V200H104ZM56,144H88v56H56Z"/></symbol>
@@ -1419,12 +1434,14 @@ const state = {
   checks: saved.checks || {},       // 個人清單（打包、個人購物）：只存本機
   shopping: saved.shopping || {},   // 購物清單：只存本機（flush 只同步記帳）
   cards: saved.cards || {},         // 信用卡額度追蹤：每人刷多少是自己的事，只存本機
+  cardOrder: saved.cardOrder || [], // 信用卡排序：同上，A 手機排過不該動到 B 手機
   expenses: saved.expenses || [],
   queue: saved.queue || [],
   me: LS.get(`${KEY}:me`) || null
 };
 const persist = () => LS.set(KEY, JSON.stringify({
   checks: state.checks, shopping: state.shopping, cards: state.cards,
+  cardOrder: state.cardOrder,
   expenses: state.expenses, queue: state.queue
 }));
 
@@ -1713,6 +1730,43 @@ function wakeFor(day){
 const wakeHTML = b => b.wake
   ? `<div class="meta wake">${ic("alarm")}明天 <b>${esc(b.wake.at)}</b> 起床（${esc(b.wake.go)} ${b.wake.out ? "出門・" : ""}${esc(b.wake.what)}）</div>` : "";
 
+/* ── 信用卡的排序 ─────────────────────────
+   順序只存本機（`state.cardOrder`，跟「出發前已刷」一樣）：誰先刷哪張是個人的決定，
+   A 手機排過不該動到 B 手機。flush() 只送 expenses、onSnapshot 也只收 expenses，
+   所以這裡不用另外擋。
+   沒排過的照 Excel 的順序；之後在 Excel 加的新卡排在最後，不會插進已經排好的順序裡。 */
+const ccSort = items => {
+  const at = new Map((state.cardOrder || []).map((n, i) => [n, i]));
+  return items
+    .map((c, i) => ({ c, k: at.has(c.name) ? at.get(c.name) : at.size + i }))
+    .sort((a, b) => a.k - b.k).map(x => x.c);
+};
+const ccItems = () => TRIP_DATA.days.flatMap(d => d.blocks || [])
+  .filter(b => b.type === "cards").flatMap(b => b.items || []);
+/* 往上／往下移一格。只在「看得見的卡片」之間換位子，存回去的卻是完整順序——
+   被移除（隱藏）的卡片還留在順序裡，還原之後才不會跑到最後面。 */
+function moveCard(name, dir){
+  const order = ccSort(ccItems()).map(c => c.name);
+  const shown = order.filter(n => !(state.cards[n] || {}).hidden);
+  const i = shown.indexOf(name), j = i + dir;
+  if (i < 0 || j < 0 || j >= shown.length) return false;
+  order.splice(order.indexOf(name), 1);
+  const at = order.indexOf(shown[j]);
+  order.splice(dir < 0 ? at : at + 1, 0, name);
+  state.cardOrder = order;
+  return true;
+}
+/* 第一張沒有「往上」、最後一張沒有「往下」：畫出來卻按不動的鍵只會讓人以為壞了。
+   只有圖示，所以名稱靠 aria-label，而且帶上「目前第幾張」——移完焦點留在原地，
+   讀螢幕的人聽得到新的位置 */
+const ccMoveBtn = (name, dir, i, n) => {
+  const up = dir === "up";
+  if (up ? i === 0 : i === n - 1) return `<span class="cc-gap" aria-hidden="true"></span>`;
+  return `<button class="cc-move" type="button" data-move="${dir}" data-card="${esc(name)}" `
+       + `aria-label="${up ? "往上移" : "往下移"} ${esc(name)}（目前第 ${i + 1} 張，共 ${n} 張）">`
+       + `${ic(up ? "caret-up" : "caret-down")}</button>`;
+};
+
 const RENDERERS = {
   flight: b => `<div class="card flight">
     <div class="fl-head">
@@ -1808,14 +1862,14 @@ const RENDERERS = {
      額度 = 回饋上限 ÷ 加碼%，例如每月上限 500 點、加碼 8% → NT$6,250。
      已刷金額與登錄狀態只存這台裝置，每個人刷多少是自己的事。 */
   cards: b => {
-    const all = b.items || [];
+    const all = ccSort(b.items || []);
     const shown = all.filter(c => !(state.cards[c.name] || {}).hidden);
     const hiddenCount = all.length - shown.length;
     const today = nowAtDestination().date;
 
     return `<div class="card"><h2 class="subject">${iconText(b.title || "信用卡")}</h2>
       ${notesHTML(b.notes)}
-      ${shown.map(c => {
+      ${shown.map((c, i) => {
         const s      = state.cards[c.name] || {};
         const spent  = Number(s.spent) || 0;
         const quota  = Number(c.quota) || 0;
@@ -1825,7 +1879,10 @@ const RENDERERS = {
         return `<div class="cc" data-card="${esc(c.name)}" data-quota="${quota}">
           <div class="cc-head">
             <div class="cc-name">${esc(c.name)}${c.rate ? `<span class="cc-rate">${esc(String(c.rate))}%</span>` : ""}</div>
-            <button class="cc-x" data-hide="${esc(c.name)}" type="button">移除</button>
+            <div class="cc-acts">
+              ${ccMoveBtn(c.name, "up", i, shown.length)}${ccMoveBtn(c.name, "down", i, shown.length)}
+              <button class="cc-x" data-hide="${esc(c.name)}" type="button">移除</button>
+            </div>
           </div>
           ${c.regions ? `<div class="meta">${esc(c.regions)}</div>` : ""}
           ${c.until ? `<div class="meta${expired ? " cc-expired" : ""}">活動到期日 ${esc(c.until)}${expired ? "　已過期" : ""}</div>` : ""}
@@ -1909,8 +1966,7 @@ const RENDERERS = {
     ).join("")}</div>`,
 
   emergency: b => `<div class="card"><h2 class="subject">${ic("first-aid")}緊急資訊</h2>
-    ${b && b.country ? `<div class="src">${esc(b.country)}${b.countryCode ? `（${esc(b.countryCode)}）` : ""}
-      ${b.auto ? `　前 ${b.auto} 筆為當地官方緊急號碼` : ""}<br>
+    ${b && b.country ? `<div class="src">${esc(b.country)}${b.countryCode ? `（${esc(b.countryCode)}）` : ""}${b.auto ? ` 前 ${b.auto} 筆為當地官方緊急號碼` : ""}<br>
       出發前請再確認一次，號碼可能更動。</div>` : ""}
     ${(TRIP_DATA.emergency||[]).map(e => `<div class="phrase"><span>${esc(e.label)}</span>
       <span>${e.tel ? `<a href="tel:${esc(e.value)}">${esc(e.value)}</a>` : esc(e.value)}</span></div>`).join("")}</div>`,
@@ -3014,6 +3070,18 @@ document.getElementById("main").addEventListener("click", e => {
   const ask = e.target.closest("[data-vault-ask]");
   if (ask) return askVault(ask);
   if (e.target.closest("[data-vault-lock]")) return lockVault();
+  /* 排序：重畫之後整個 DOM 都換掉，焦點會掉回 body，連按好幾下就得重新找按鈕。
+     把焦點放回同一張卡片的同一顆鍵；移到頭尾那顆會消失，就改聚焦剩下的那顆 */
+  const mv = e.target.closest("[data-move]");
+  if (mv){
+    const name = mv.dataset.card;
+    if (!moveCard(name, mv.dataset.move === "up" ? -1 : 1)) return;
+    persist(); renderDay(current);
+    const cc = [...document.querySelectorAll(".cc")].find(el => el.dataset.card === name);
+    const back = cc && (cc.querySelector(`[data-move="${mv.dataset.move}"]`) || cc.querySelector("[data-move]"));
+    if (back) back.focus();
+    return;
+  }
   /* 移除只隱藏在這台裝置，隨時可以還原——誤觸不該讓一張卡永久消失 */
   const hide = e.target.closest("[data-hide]");
   if (hide){

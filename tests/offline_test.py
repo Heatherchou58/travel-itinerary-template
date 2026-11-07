@@ -765,6 +765,40 @@ def run(trip: str) -> bool:
                         "(JSON.parse(localStorage.getItem('trip:swaptest-2027')||'{}').queue||[])"
                         ".map(q => q.type).join(',')"))
 
+            # 排序：誰先刷哪張是個人的決定，只存本機（A 手機排過不該動到 B 手機）
+            names = "() => [...document.querySelectorAll('#main .cc')].map(e => e.dataset.card)"
+            before = page.evaluate(names)
+            r.check("信用卡：第一張沒有往上鍵、最後一張沒有往下鍵",
+                    page.evaluate("""() => { const cs = [...document.querySelectorAll('#main .cc')];
+                      return !cs[0].querySelector('[data-move=up]')
+                          && !cs[cs.length - 1].querySelector('[data-move=down]'); }"""))
+            page.locator("#main .cc").first.locator('[data-move="down"]').click()
+            page.wait_for_timeout(300)
+            after = page.evaluate(names)
+            r.check("信用卡：往下移一格會跟下一張換位置",
+                    after[0] == before[1] and after[1] == before[0] and after[2:] == before[2:],
+                    f"{before} → {after}")
+            # 重畫整頁會讓焦點掉回 body，連按好幾下就得重新找按鈕
+            focus = page.evaluate("() => ({ move: document.activeElement.dataset.move || '',"
+                                  " card: document.activeElement.dataset.card || '' })")
+            r.check("信用卡：移完焦點留在同一顆鍵（可以連按）",
+                    focus["move"] == "down" and focus["card"] == before[0], str(focus))
+            r.check("信用卡：排序不進同步佇列（只存本機）",
+                    "cards" not in page.evaluate(
+                        "(JSON.parse(localStorage.getItem('trip:swaptest-2027')||'{}').queue||[])"
+                        ".map(q => q.type).join(',')"))
+            r.check("信用卡：排序存進本機",
+                    page.evaluate("() => (JSON.parse(localStorage.getItem('trip:swaptest-2027')||'{}')"
+                                  ".cardOrder||[]).join(',')") == ",".join(after),
+                    page.evaluate("() => (JSON.parse(localStorage.getItem('trip:swaptest-2027')||'{}')"
+                                  ".cardOrder||[]).join(',')"))
+            page.reload()
+            page.wait_for_load_state("networkidle")
+            page.locator(".nav-item").nth(1).click()
+            page.wait_for_timeout(400)
+            r.check("信用卡：重新整理後順序還在", page.evaluate(names) == after,
+                    f"{page.evaluate(names)}")
+
             # 購物清單與優惠券（同一個元件，也在第二天）
             r.check("購物：兩個群組都渲染", page.locator(".shop-g").count() == 2,
                     f"{page.locator('.shop-g').count()} 組")
