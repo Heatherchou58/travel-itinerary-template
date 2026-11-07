@@ -691,11 +691,11 @@ def run(trip: str) -> bool:
             r.check("留言板：登記之後才出現留言表單", page.locator("#bd-add").count() == 1)
             r.check("留言板：記帳頁的「我是誰」跟著登記走",
                     page.evaluate("localStorage.getItem('trip:kyushu-fukuoka-2026:me')") == "白")
-            queued = page.evaluate(
+            subops = page.evaluate(
                 "JSON.parse(localStorage.getItem('trip:kyushu-fukuoka-2026') || '{}')"
-                ".queue?.map(q => q.type) ?? []")
-            r.check("留言板：登記會上傳（別台才知道這個名字被佔住了）", "owners" in queued,
-                    f"佇列內容 {queued}")
+                ".subOps?.map(o => o.col + ':' + o.op) ?? []")
+            r.check("留言板：登記會上傳（別台才知道這個名字被佔住了）", "owners:set" in subops,
+                    f"待傳動作 {subops}")
 
             # 送出：出現在清單上，帶著留言者與時間
             page.locator("#bd-text").fill("離線測試留言")
@@ -723,11 +723,17 @@ def run(trip: str) -> bool:
             r.check("留言板：送出後輸入框清空", page.locator("#bd-text").input_value() == "")
             r.check("留言板：沒有 JS 例外", not errors, "; ".join(errors[:2]))
 
-            # 留言跟記帳一樣會上傳。打包清單才是只存本機（見 2b）
+            # 留言會上傳（打包清單才是只存本機，見 2b），但走的是「一則一份文件」那條路。
+            # 如果哪天又被塞回記帳那條整份覆寫的佇列，兩個人離線各自留言就會互相蓋掉。
+            subops = page.evaluate(
+                "JSON.parse(localStorage.getItem('trip:kyushu-fukuoka-2026') || '{}')"
+                ".subOps?.map(o => o.col + ':' + o.op) ?? []")
             queued = page.evaluate(
                 "JSON.parse(localStorage.getItem('trip:kyushu-fukuoka-2026') || '{}')"
                 ".queue?.map(q => q.type) ?? []")
-            r.check("留言板：留言會進同步佇列（跟記帳同一類）", "board" in queued,
+            r.check("留言板：留言排進待傳（一則一份文件）", "messages:set" in subops,
+                    f"待傳動作 {subops}")
+            r.check("留言板：留言不會走記帳那條整份覆寫的佇列", "board" not in queued,
                     f"佇列內容 {queued}")
 
             page.reload()
@@ -750,6 +756,16 @@ def run(trip: str) -> bool:
             page.wait_for_timeout(400)
             r.check("留言板：按「復原」留言回來",
                     page.locator(".bd-item", has_text="離線測試留言").count() == 1)
+            # 刪了又復原＝同一份文件兩個動作，只能留最後那一個，不然會先寫回去再被刪掉
+            r.check("留言板：同一則的待傳動作只留最後一個", page.evaluate("""() => {
+                      const ops = JSON.parse(localStorage.getItem('trip:kyushu-fukuoka-2026')
+                                             || '{}').subOps || [];
+                      const keys = ops.map(o => o.col + '/' + o.id);
+                      return keys.length === new Set(keys).size;
+                    }"""),
+                    page.evaluate("JSON.stringify((JSON.parse(localStorage.getItem("
+                                  "'trip:kyushu-fukuoka-2026')||'{}').subOps||[])"
+                                  ".map(o => o.col + ':' + o.op))"))
 
             # 打到一半的留言不能被重畫弄掉（別人送留言時 onSnapshot 會整頁重畫）
             page.locator("#bd-text").fill("打到一半的留言")
@@ -761,6 +777,59 @@ def run(trip: str) -> bool:
             r.check("留言板：重畫之後打到一半的留言還在",
                     page.locator("#bd-text").input_value() == "打到一半的留言",
                     page.locator("#bd-text").input_value())
+
+            # 3d ── 有新留言的提示 ─────────────────────────────
+            # 副本停用了 Firebase，收不到真的推播，所以用「注入＋重新整理」模擬收到別人的留言
+            def open_other_tab():
+                page.reload()
+                page.wait_for_load_state("domcontentloaded")
+                page.wait_for_timeout(1200)
+                page.locator(".nav-item").first.click()   # 停在別的分頁，徽章才有意義
+                page.wait_for_timeout(300)
+
+            page.evaluate("""() => {
+                const k = 'trip:kyushu-fukuoka-2026';
+                const d = JSON.parse(localStorage.getItem(k) || '{}');
+                const now = Date.now();
+                d.board = [...(d.board || []),
+                  { id:'new-1', by:'周', text:'我到車站了',   at: now,
+                    dev:'周的手機', devId:'zhou-dev' },
+                  { id:'new-2', by:'陳', text:'我大概晚十分鐘', at: now + 1000,
+                    dev:'陳的手機', devId:'chen-dev' }];
+                localStorage.setItem(k, JSON.stringify(d));
+            }""")
+            open_other_tab()
+            badge = page.locator("#tab-board .bd-badge")
+            r.check("新留言提示：分頁上出現未讀數",
+                    badge.is_visible() and badge.inner_text().strip() == "2",
+                    f"看到「{badge.inner_text()}」" if badge.count() else "沒有徽章")
+            r.check("新留言提示：讀螢幕唸得出幾則",
+                    "2 則新留言" in (page.locator("#tab-board").get_attribute("aria-label") or ""),
+                    page.locator("#tab-board").get_attribute("aria-label"))
+            # 徽章本身要對輔助技術隱藏，不然分頁名稱會被唸成「留言板 2」
+            r.check("新留言提示：徽章不重複唸一次數字",
+                    badge.get_attribute("aria-hidden") == "true")
+            page.get_by_role("tab", name=re.compile("留言板")).click()
+            page.wait_for_timeout(400)
+            r.check("新留言提示：進去看過就不見了", not badge.is_visible())
+            r.check("新留言提示：看過之後分頁名稱也恢復原樣",
+                    not page.locator("#tab-board").get_attribute("aria-label"),
+                    page.locator("#tab-board").get_attribute("aria-label"))
+            open_other_tab()
+            r.check("新留言提示：看過之後重新整理不會又冒出來", not badge.is_visible())
+
+            # 自己送的不算未讀，不然每打一則自己的分頁上就多一個紅點
+            page.evaluate("""() => {
+                const k = 'trip:kyushu-fukuoka-2026';
+                const d = JSON.parse(localStorage.getItem(k) || '{}');
+                const dev = JSON.parse(localStorage.getItem(k + ':device'));
+                d.board = [...(d.board || []), { id:'mine-later', by: dev.by,
+                  text:'我自己後來補的', at: Date.now() + 60000, dev: dev.name, devId: dev.id }];
+                localStorage.setItem(k, JSON.stringify(d));
+            }""")
+            open_other_tab()
+            r.check("新留言提示：自己送的不算未讀", not badge.is_visible(),
+                    badge.inner_text() if badge.is_visible() else "")
 
             # 3c ── 一個名字只認一台裝置 ──────────────────────
             # 換一個裝置編號＝模擬「另一台裝置」，名字沒變。
@@ -2123,6 +2192,13 @@ def run(trip: str) -> bool:
                     f"{page.locator('#main .bd-item').count()} 則、"
                     f"{page.locator('#main .bd-del').count()} 顆 ✕、"
                     f"{page.locator('#main .bd-item.is-odd').count()} 則可疑")
+            # 剛剛點進留言板會把未讀清掉，但下面的探針要量分頁上那顆徽章的對比，所以還原
+            page.evaluate("localStorage.setItem('trip:kyushu-fukuoka-2026:bdseen', '0')")
+            page.reload()
+            page.wait_for_load_state("networkidle")
+            page.wait_for_timeout(500)
+            r.check("留言板：UI 規則也量得到分頁上的未讀數",
+                    page.locator("#tab-board .bd-badge").is_visible())
             UX_PROBE = """() => {
                 const vis = e => e.checkVisibility() && e.getBoundingClientRect().width > 0;
                 const nums = c => c.match(/[0-9.]+/g).map(Number);

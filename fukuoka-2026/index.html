@@ -994,6 +994,17 @@ textarea.input{ min-height:88px; line-height:1.5; resize:vertical; }
    但照第六節的習慣明寫一條，之後有人給它 display 也不會破功 */
 #bd-take-wrap{ margin-top:var(--sp-2); }
 #bd-take-wrap[hidden]{ display:none; }
+/* 分頁上的新留言數。選取中的分頁底色就是楓葉紅，徽章要反過來才看得見
+   （跟 .btn 在深色模式要翻過來是同一類問題） */
+.bd-badge{
+  display:inline-flex; align-items:center; justify-content:center;
+  min-width:18px; height:18px; margin-left:var(--sp-1); padding:0 5px;
+  border-radius:var(--r-pill); background:var(--c-accent-strong); color:var(--c-on-solid);
+  font-size:var(--fs-xs); font-weight:700; line-height:1; font-variant-numeric:tabular-nums;
+}
+/* 自己設了 display，[hidden] 藏不掉（第六節） */
+.bd-badge[hidden]{ display:none; }
+.nav-item[aria-selected="true"] .bd-badge{ background:var(--c-on-solid); color:var(--c-accent-strong); }
 
 /* ── 同步狀態 ─────────────────────────── */
 /* 連線狀態固定在左下角。原本在右上角，但它是 position:fixed、z-index 比
@@ -1261,6 +1272,12 @@ footer > a{ display:inline-block; padding:14px 0; margin:-14px 0; }
 [data-scheme="dark"] .btn-route{ color:var(--c-on-accent); }
 /* 選取中的分頁是 --c-accent-strong 實心，深色模式下那是淺色，字翻成底色 */
 [data-scheme="dark"] .nav-item[aria-selected="true"]{ color:var(--c-bg); }
+/* 新留言的徽章同一個坑：底是 --c-accent-strong，深色模式下那是淺色，
+   白字疊上去只有 1.71:1。選取中的分頁底本身就是那個淺色，所以徽章要反過來變深底 */
+[data-scheme="dark"] .bd-badge{ color:var(--c-bg); }
+[data-scheme="dark"] .nav-item[aria-selected="true"] .bd-badge{
+  background:var(--c-bg); color:var(--c-accent-strong);
+}
 /* 勾選框：--c-accent 在深色模式是「底色」用的深色，拿來當勾勾會看不見 */
 [data-scheme="dark"] .chk input, [data-scheme="dark"] .vault-remember input{ accent-color:var(--c-on-accent); }
 /* 天氣格的分隔線原本是黑色半透明，在深底上等於沒有 */
@@ -3715,13 +3732,15 @@ const state = {
   expenses: saved.expenses || [],
   board: saved.board || [],         // 留言板：所有人都看得到，所以跟記帳一樣會同步
   owners: saved.owners || {},       // 名字 → 登記的裝置。要擋別台冒用，就得讓所有人都看得到
-  queue: saved.queue || [],
+  queue: saved.queue || [],         // 記帳的待傳旗標（記帳仍然是整份文件）
+  subOps: saved.subOps || [],       // 子集合的待傳動作 [{ col, op, id, data }]，見 pushSub()
   me: LS.get(`${KEY}:me`) || null
 };
 const persist = () => LS.set(KEY, JSON.stringify({
   checks: state.checks, shopping: state.shopping, cards: state.cards,
   cardOrder: state.cardOrder,
-  expenses: state.expenses, board: state.board, owners: state.owners, queue: state.queue
+  expenses: state.expenses, board: state.board, owners: state.owners,
+  queue: state.queue, subOps: state.subOps
 }));
 
 /* ── 同步狀態顯示 ── */
@@ -4326,6 +4345,8 @@ function renderDay(id){
      不該混進「回去改試算表、重新產生網站」這種出發前才做的事。
      （Open-Meteo 的授權標示留在 footer，所有分頁都要有。）*/
   document.getElementById("edit-bar").hidden = id !== "d0";
+  if (id === "board") markBoardSeen();   // 進去看過了，分頁上的未讀數歸零
+  paintBoardBadge();
   paintForecast();
   paintVaults();        // 記住密語的話，卡片上的私人資料在這裡自動解開（解密是非同步的）
   paintUserImages();    // 購物清單裡自己加的圖片從 IndexedDB 讀出來（非同步）
@@ -4427,6 +4448,7 @@ function buildNav(){
   group("nav-tools", "旅途工具", tools);
   group("nav",       "每日行程", days);
   // .nav-aux 不整列藏起來：配色切換鍵也在這一列，兩組都沒有項目時它仍然要在
+  paintBoardBadge();   // 重建導覽會把徽章一起沖掉
   navEdges();
 }
 
@@ -5486,13 +5508,15 @@ document.getElementById("main").addEventListener("click", e => {
     const i = state.board.findIndex(x => x.id === bdel.dataset.bdel);
     if (i < 0) return;
     const [gone] = state.board.splice(i, 1);
-    persist(); push({ type:"board" }); paintBoard();
-    /* 留言是同步的：誤觸 ✕ 會讓這則從所有人的裝置上消失，給 6 秒復原 */
+    const { id: goneId, ...goneData } = gone;        // id 是文件名稱，不重複存進內容
+    persist(); pushSub({ col:"messages", op:"del", id: goneId }); paintBoard();
+    /* 留言是同步的：誤觸 ✕ 會讓這則從所有人的裝置上消失，給 6 秒復原。
+       復原就是把同一份文件再寫回去（pushSub 會把那筆待刪的動作換掉） */
     toast("已刪除你的留言", 6000, {
       label: "復原",
       run(){
         state.board.splice(Math.min(i, state.board.length), 0, gone);
-        persist(); push({ type:"board" }); paintBoard();
+        persist(); pushSub({ col:"messages", op:"set", id: goneId, data: goneData }); paintBoard();
       }
     });
     return;
@@ -5685,6 +5709,52 @@ function paintBoard(){
   if (list) list.innerHTML = boardListHTML();
 }
 
+/* ── 有新留言的提示 ──
+   手機上這一列不黏在頂端，捲下去就看不到徽章了，所以另外補一個 toast。
+   「看過了」只存本機（每台裝置各自算未讀），不同步。 */
+const SEENKEY = `${KEY}:bdseen`;
+let bdSeen = Number(LS.get(SEENKEY)) || 0;
+let bdFirstSnap = true;
+
+/* 自己送的不算未讀——不然每打一則自己的分頁上就多一個紅點 */
+const bdUnread = () => state.board.filter(m =>
+  (m.at || 0) > bdSeen && !(device && m.devId === device.id)).length;
+
+function markBoardSeen(){
+  const newest = state.board.reduce((n, m) => Math.max(n, m.at || 0), 0);
+  if (newest > bdSeen){ bdSeen = newest; LS.set(SEENKEY, String(bdSeen)); }
+}
+
+function paintBoardBadge(){
+  const tab = document.getElementById("tab-board");
+  if (!tab) return;
+  let b = tab.querySelector(".bd-badge");
+  if (!b){
+    b = document.createElement("span");
+    /* 徽章對輔助技術隱藏，改用整顆分頁的 aria-label 唸出來——
+       光一個「3」接在分頁名稱後面，讀螢幕聽起來像分頁叫「留言板 3」 */
+    b.className = "bd-badge"; b.setAttribute("aria-hidden", "true");
+    tab.append(b);
+  }
+  const n = bdUnread();
+  b.textContent = n > 99 ? "99+" : String(n);
+  b.hidden = !n;
+  const name = (tab.querySelector(".nav-main") || {}).textContent || "留言板";
+  if (n) tab.setAttribute("aria-label", `${name.trim()}，${n} 則新留言`);
+  else   tab.removeAttribute("aria-label");
+}
+
+/* 遠端的留言有變動時呼叫。第一次（開網站時收到的那一批）不提示，
+   不然每次開網站都會跳一個「有 N 則新留言」。 */
+function boardChanged(){
+  const n = bdUnread();
+  if (bdFirstSnap) bdFirstSnap = false;
+  else if (n && current !== "board")
+    toast(`有 ${n} 則新留言`, 6000, { label: "看看", run(){ renderDay("board"); } });
+  if (current === "board") markBoardSeen();
+  paintBoardBadge();
+}
+
 /* 欄位底下報錯的共用寫法（跟記帳同一套；全站已經沒有 alert()）。
    errs 是 [欄位 id, 訊息]，回傳有沒有錯。 */
 function fieldErrors(ids, errs){
@@ -5724,14 +5794,19 @@ function registerDevice(takeover){
   saveDevice({ id, name, by });
   state.me = by; LS.set(`${KEY}:me`, by);   // 記帳頁的「我是誰」跟著登記走，兩頁不要各說各話
   const seen = [...new Set([...((owner && owner.seen) || []), id])];
-  state.owners = { ...state.owners, [by]: { devId: id, dev: name, at: Date.now(), seen } };
+  const rec = { devId: id, dev: name, at: Date.now(), seen };
+  state.owners = { ...state.owners, [by]: rec };
+  pushSub({ col:"owners", op:"set", id: by, data: rec });
   /* 同一台裝置改登記成別的名字時，要把舊名字讓出來——
      不然一台裝置會同時佔住兩個名字，真正的本人就登記不進來了 */
   for (const k of Object.keys(state.owners))
-    if (k !== by && state.owners[k].devId === id) delete state.owners[k];
+    if (k !== by && state.owners[k].devId === id){
+      delete state.owners[k];
+      pushSub({ col:"owners", op:"del", id: k });
+    }
 
   bdEdit = false;
-  persist(); push({ type:"owners" }); renderDay(current);
+  persist(); renderDay(current);
   toast(`已登記：${by} · ${name}`);
 }
 
@@ -5746,33 +5821,87 @@ function addMessage(){
   const text = el.value.trim();
   if (fieldErrors(["bd-text"], text ? [] : [["bd-text", "請填寫留言內容"]])) return;
 
-  state.board.push({ id: crypto.randomUUID(), by: device.by, text, at: Date.now(),
-                     dev: device.name, devId: device.id });
+  /* uid 現在不拿來擋任何事（擋的是裝置登記），但留著：之後若要讓 Rules
+     在伺服器端認人，就不用再回頭補一次舊資料 */
+  const id = crypto.randomUUID();
+  const msg = { by: device.by, text, at: Date.now(),
+                dev: device.name, devId: device.id, uid: uid || null };
+  state.board.push({ id, ...msg });
   bdDraft = ""; el.value = "";
-  persist(); push({ type: "board" }); paintBoard();
+  markBoardSeen();                       // 自己送的不算未讀
+  persist(); pushSub({ col:"messages", op:"set", id, data: msg }); paintBoard();
   toast("已送出留言");
 }
 
 /* ── 離線優先同步 ── */
 let db = null, uid = null;
+
+/* 記帳：整份 shared/state 覆寫（沒動它）。 */
 function push(change){
   state.queue.push({ ...change, at: Date.now() });
   persist();
   flush();
 }
+
+/* 留言與裝置登記：子集合，一則／一個名字各一份文件。
+   原本跟記帳擠在 shared/state 的陣列欄位裡，而 flush() 是整份覆寫——
+   兩個人各自離線留言，先後上線時後傳的那個會把前一個的整批蓋掉，
+   而且沒有人會發現。一份文件一個動作就不會互相覆蓋，文件也不會跟著旅程一直長大。
+
+   同一份文件的舊動作直接換掉：刪了又按「復原」，只要留最後那一個。 */
+function pushSub(op){
+  state.subOps = state.subOps.filter(o => !(o.col === op.col && o.id === op.id));
+  state.subOps.push(op);
+  persist();
+  flush();
+}
+
+/* 遠端的結果 ＋ 本機還沒傳出去的動作。沒有這一步，剛送出的留言會在
+   snapshot 回來的那一瞬間消失、等傳完才又出現。
+   也因為有這一步，收遠端資料時不必像記帳那樣「有待傳就整批忽略」——
+   訊號不好的時候照樣看得到別人的留言。 */
+function boardFromRemote(rows){
+  const del = new Set(state.subOps
+    .filter(o => o.col === "messages" && o.op === "del").map(o => o.id));
+  const out = rows.filter(m => !del.has(m.id));
+  for (const o of state.subOps)
+    if (o.col === "messages" && o.op === "set" && !out.some(m => m.id === o.id))
+      out.push({ id: o.id, ...o.data });
+  return out;
+}
+function ownersFromRemote(map){
+  const out = { ...map };
+  for (const o of state.subOps){
+    if (o.col !== "owners") continue;
+    if (o.op === "del") delete out[o.id]; else out[o.id] = o.data;
+  }
+  return out;
+}
+
 async function flush(){
   if (!db || !navigator.onLine){
-    const n = state.queue.length;
+    const n = state.queue.length + state.subOps.length;
     setSync(db ? "offline" : "local", db ? (n ? `離線中（${n} 筆待傳）` : "離線中") : "單機模式");
     return;
   }
-  if (!state.queue.length){ setSync("ok","已同步"); return; }
+  if (!state.queue.length && !state.subOps.length){ setSync("ok","已同步"); return; }
   try{
-    const { doc, setDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
-    await setDoc(doc(db, "trips", M.tripId, "shared", "state"), {
-      expenses: state.expenses, board: state.board, owners: state.owners, updatedAt: Date.now()
-    });
-    state.queue = []; persist(); setSync("ok","已同步");
+    const { doc, setDoc, deleteDoc } =
+      await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    /* 一次一份文件，各寫各的。成功一筆就從佇列拿掉一筆，中途失敗不會重送已經成功的 */
+    while (state.subOps.length){
+      const o = state.subOps[0];
+      const ref = doc(db, "trips", M.tripId, o.col, o.id);
+      if (o.op === "del") await deleteDoc(ref); else await setDoc(ref, o.data);
+      state.subOps.shift(); persist();
+    }
+    if (state.queue.length){
+      await setDoc(doc(db, "trips", M.tripId, "shared", "state"), {
+        expenses: state.expenses, updatedAt: Date.now()
+      });
+      state.queue = []; persist();
+    }
+    setSync("ok","已同步");
   }catch(e){
     console.error("同步失敗：", e);
     setSync("error", "同步失敗");
@@ -5789,7 +5918,7 @@ async function initFirebase(){
   try{
     const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js");
     const { getAuth, signInAnonymously } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js");
-    const { getFirestore, doc, onSnapshot } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    const { getFirestore, doc, collection, onSnapshot } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
     const app = initializeApp(FIREBASE_CONFIG);
     const cred = await signInAnonymously(getAuth(app));
     uid = cred.user.uid;
@@ -5797,14 +5926,29 @@ async function initFirebase(){
     /* 成員名稱不在這裡問。prompt() 若不被支援會丟錯，整個初始化就掉進
        catch 顯示「雲端連線失敗」——即使登入與 Firestore 其實都成功了；
        使用者按取消也沒有第二次機會。改用記帳頁的「我是誰」選擇器。 */
+    /* 記帳：一份文件、整份覆寫，所以本地有未傳資料時要整批忽略，不然會被遠端蓋掉 */
     onSnapshot(doc(db, "trips", M.tripId, "shared", "state"), snap => {
       const d = snap.data();
-      if (!d || state.queue.length) return;   // 本地有未傳資料時不覆蓋
-      /* 刻意不碰 state.checks：打包清單是各自的，遠端殘留的舊值要忽略。 */
+      if (!d || state.queue.length) return;
+      /* 刻意不碰 state.checks / shopping / cards：這些清單都是各自的，
+         遠端殘留的舊值要忽略。 */
       state.expenses = d.expenses || [];
-      state.board = d.board || [];
-      state.owners = d.owners || {};
       persist(); renderDay(current);
+    });
+    /* 留言：一則一份文件。待傳的動作疊在遠端結果上面就好，不用整批忽略 */
+    onSnapshot(collection(db, "trips", M.tripId, "messages"), snap => {
+      state.board = boardFromRemote(snap.docs.map(x => ({ id: x.id, ...x.data() })));
+      persist();
+      if (current === "board") renderDay(current);
+      boardChanged();
+    });
+    /* 裝置登記：一個名字一份文件 */
+    onSnapshot(collection(db, "trips", M.tripId, "owners"), snap => {
+      const map = {};
+      for (const x of snap.docs) map[x.id] = x.data();
+      state.owners = ownersFromRemote(map);
+      persist();
+      if (current === "board") renderDay(current);
     });
     flush();
   }catch(e){

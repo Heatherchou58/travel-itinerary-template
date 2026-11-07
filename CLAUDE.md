@@ -64,7 +64,28 @@ CSS、renderer、同步邏輯都適用。只有 `TRIP_DATA` 是該趟專屬的�
 
 每個人的打包進度本來就不一樣。`flush()` 不要把 `checks` 寫上去，`onSnapshot` 也不要用遠端的值覆蓋本機的。
 
-會同步的兩種都寫進 **同一份文件** `trips/<tripId>/shared/state` 的不同欄位，所以加留言板**不需要動 Firestore Security Rules**（除非規則用了 `hasOnly([...])` 這種欄位白名單）。
+### 寫到哪、怎麼寫
+
+| 資料 | 位置 | 寫法 |
+|---|---|---|
+| 記帳 | `trips/<id>/shared/state` 的 `expenses` | 整份文件覆寫（`push()` → `state.queue`） |
+| 留言 | `trips/<id>/messages/<msgId>`，**一則一份文件** | 一次一份（`pushSub()` → `state.subOps`） |
+| 裝置登記 | `trips/<id>/owners/<名字>`，一個名字一份 | 同上 |
+
+**留言不能搬回 `shared/state` 的陣列欄位。** 原本是那樣寫的，而 `flush()` 是整份覆寫：兩個人各自離線留言、先後上線，後傳的那個會把前一個的整批蓋掉，而且沒有人會發現——旅途中訊號斷斷續續，這件事幾乎一定會發生。一則一份文件之後各寫各的，文件也不會跟著旅程一直長大。測試有一條在守（「留言不會走記帳那條整份覆寫的佇列」）。
+
+也因為是一份一份寫，收遠端資料時**不必**像記帳那樣「本地有待傳就整批忽略」：`boardFromRemote()` 把待傳的動作疊在遠端結果上面就好，所以訊號不好的時候照樣收得到別人的留言。
+
+`pushSub()` 會把同一份文件的舊動作換掉——刪了又按「復原」只能留最後那一個，不然會先寫回去再被刪掉。
+
+**Firestore Security Rules 要跟著加這兩段**（保留你原本的白名單條件，只是多兩個路徑）：
+
+```
+match /trips/{tripId}/messages/{msgId} { allow read, write: if <原本的條件>; }
+match /trips/{tripId}/owners/{member}  { allow read, write: if <原本的條件>; }
+```
+
+沒加的話留言板會一直顯示「同步失敗」——規則預設拒絕沒有明文允許的路徑，`shared/state` 那一條管不到子集合。
 
 ### 留言者是誰：裝置登記
 
