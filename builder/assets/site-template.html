@@ -669,6 +669,12 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 }
 /* 重要提醒（⚠️ 開頭的句子由 notesHTML 拆出來）：淡底＋左側色條，不只是換字色 */
 .note-box.warn{ background:var(--c-warn-soft); border-left:3px solid var(--c-warn); }
+/* 當天幾點起床：放在當天最上面，是實用資訊不是提醒，所以用第二強調色不是楓葉紅 */
+.wake-line{
+  display:flex; align-items:center; margin:0 0 var(--sp-3);
+  font-size:var(--fs-sm); font-weight:700; color:var(--c-alt-text);
+}
+.wake-line b{ font-size:var(--fs-md); margin:0 .15em; }
 .note-box + .note-box{ margin-top:var(--sp-2); }
 
 /* ── 景點介紹（預設收合）─────────────────
@@ -1734,20 +1740,22 @@ const factsHTML = b =>
   (b.fee   ? `<div class="meta">${ic("currency-jpy")}${esc(b.fee)}</div>` : "") +
   (b.tel   ? `<div class="meta"><a class="tel" href="tel:${esc(telHref(b.tel))}">${ic("phone")}${esc(b.tel)}</a></div>` : "");
 
-/* 隔天幾點起床：隔天第一個行程出發前半小時，寫在今天最後一張地點卡片上（通常是住宿）。
-   第一個行程的 time 就是離開住處的時間（要先出門的話是出門時間），所以直接減 30 分。
-   最後一天沒有隔天，不寫。 */
+/* 當天幾點起床：當天第一個行程往前一小時（使用者指定），一條小的放在當天最上面。
+   第一個行程的 time 就是離開住處的時間（要先出門的話是出門時間），所以直接減 60 分。
+   只有「早上開始」的日子才寫：抵達日的第一個行程是晚上落地（這趟是 20:00），
+   往前推會變成「19:00 起床」——那天根本不是在飯店醒來的。中午以後開始的日子一律不寫。 */
+const WAKE_LEAD = 60, WAKE_LATEST = 12 * 60;
 function wakeFor(day){
   if (!day.date) return null;
-  const next = TRIP_DATA.days.slice(TRIP_DATA.days.indexOf(day) + 1).find(d => d.date);
-  const first = next && (next.blocks || []).find(b => toMin(b.time) !== null);
-  if (!first) return null;
-  const t = toMin(first.time);
-  return { at: toHHMM((t + 1440 - 30) % 1440), go: toHHMM(t),
+  const first = (day.blocks || []).find(b => toMin(b.time) !== null);
+  const t = first && toMin(first.time);
+  if (t === null || t === undefined || t >= WAKE_LATEST) return null;
+  return { at: toHHMM((t + 1440 - WAKE_LEAD) % 1440), go: toHHMM(t),
            out: (Number(first.travel) || 0) > 0, what: first.title || first.line || "" };
 }
-const wakeHTML = b => b.wake
-  ? `<div class="meta wake">${ic("alarm")}明天 <b>${esc(b.wake.at)}</b> 起床（${esc(b.wake.go)} ${b.wake.out ? "出門・" : ""}${esc(b.wake.what)}）</div>` : "";
+/* 不是卡片：它只是一句提醒，做成卡片會跟真正的行程搶位置 */
+const wakeHTML = w => w
+  ? `<div class="wake-line">${ic("alarm")}<b>${esc(w.at)}</b> 起床（${esc(w.go)} ${w.out ? "出門・" : ""}${esc(w.what)}）</div>` : "";
 
 /* ── 信用卡的排序 ─────────────────────────
    順序只存本機（`state.cardOrder`，跟「出發前已刷」一樣）：誰先刷哪張是個人的決定，
@@ -1842,7 +1850,7 @@ const RENDERERS = {
   stop: b => `${legHTML(b)}<div class="card"${slotAttrs(b)}${mapAttrs(b)}>
     ${nowSlot(b)}${timeTag(b)}${stayTag(b)}
     <h2 class="subject">${ic(KIND[b.kind] || KIND.sight)}${esc(b.title)}${localSpan(b.titleLocal)}</h2>
-    ${b.place ? `<div class="meta">${ic("map-pin")}${esc(b.place)}${localSpan(b.placeLocal)}</div>` : ""}${factsHTML(b)}${wakeHTML(b)}
+    ${b.place ? `<div class="meta">${ic("map-pin")}${esc(b.place)}${localSpan(b.placeLocal)}</div>` : ""}${factsHTML(b)}
     ${notesHTML(b.notes)}${secretHTML(b)}${introHTML(b.intro, b.photo, b.title)}${linksHTML(b.links)}</div>`,
 
   /* 總耗時跟其他卡片的「停留」一樣放在時間旁邊，由 stay 算出來 */
@@ -1868,7 +1876,7 @@ const RENDERERS = {
   lodging: b => `${legHTML(b)}<div class="card lodge"${slotAttrs(b)}${mapAttrs(b)}>
     ${nowSlot(b)}<div><span class="ttag">${ic("bed")}住宿</span>${timeTag(b)}${stayTag(b)}</div>
     <h2 class="subject">${esc(b.title)}${localSpan(b.titleLocal)}</h2>
-    ${b.address ? `<div class="meta">${ic("map-pin")}${esc(b.address)}</div>` : ""}${factsHTML(b)}${wakeHTML(b)}
+    ${b.address ? `<div class="meta">${ic("map-pin")}${esc(b.address)}</div>` : ""}${factsHTML(b)}
     ${(b.notes && b.notes.length)
       ? `<div class="info">${b.notes.map(n => `<div>${iconText(n)}</div>`).join("")}</div>` : ""}
     ${secretHTML(b)}${linksHTML(b.links)}</div>`,
@@ -2042,11 +2050,8 @@ function renderDay(id){
   if (id !== current) mapFocus = null;   // 換一天就回到整條路線
   current = id;
   const day = TRIP_DATA.days.find(d => d.id === id);
-  /* 隔天起床時間掛在今天最後一張地點卡片（景點或住宿）上 */
-  const wake = wakeFor(day);
-  const lastPlace = wake ? day.blocks.map(b => b.type === "stop" || b.type === "lodging").lastIndexOf(true) : -1;
   document.getElementById("main").innerHTML =
-    day.blocks.map((b, i) => renderBlock(i === lastPlace ? { ...b, wake } : b)).join("");
+    wakeHTML(wakeFor(day)) + day.blocks.map(renderBlock).join("");
   /* 分頁與內容的對應（APG tabs）：三組各是一個 tablist，每組只留一個 Tab 停留點——
      有選取中的就是它，沒有就是那組的第一顆（roving tabindex）。只讓「全站選取中的那一顆」
      能 Tab 到的話，另外兩組會整組跳過、用鍵盤進不去；全部都能 Tab 到的話，光跨過十一顆
@@ -2436,7 +2441,9 @@ function paintDayMap(day){
       : `https://www.google.com/maps/dir/?api=1&travelmode=${lm}` +
         `&origin=${e(lp[0])}&destination=${e(lp[lp.length - 1])}` +
         (via.length ? `&waypoints=${via.map(e).join("|")}` : "");
-    main.insertAdjacentHTML("afterbegin",
+    /* 插在起床那一條後面：那一條是當天最先發生的事，要排在最上面 */
+    const wakeEl = main.querySelector(".wake-line");
+    (wakeEl || main).insertAdjacentHTML(wakeEl ? "afterend" : "afterbegin",
       `<a class="daymap-open" href="${esc(href)}" target="_blank" rel="noopener">在 Google 地圖開啟${leg ? "這一段" : "今天的路線"}${ic("arrow-square-out")}</a>`);
   }
   main.querySelectorAll(".card[data-mapq]").forEach((c, k) => {

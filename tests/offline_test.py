@@ -1625,14 +1625,23 @@ def run(trip: str) -> bool:
                     leg() == ("directions", "transit", E, D, "")
                     and chips.nth(0).get_attribute("aria-pressed") == "true", str(leg()))
 
-            # 隔天幾點起床：寫在前一天最後一張卡片（住宿）上，隔天第一個行程出門前半小時
-            r.check("起床時間：最後一天不寫（沒有隔天）", page.locator("#main .wake").count() == 0)
+            # 當天幾點起床：當天第一個行程往前一小時，一條小的放在當天最上面（不是卡片）
             page.locator(".nav-item").nth(0).click(); page.wait_for_timeout(300)
-            wake = page.locator("#main .wake")
-            r.check("起床時間：寫在前一天最後一張卡片上、只有一行",
-                    wake.count() == 1 and page.locator("#main .card").last.locator(".wake").count() == 1)
-            r.check("起床時間：隔天第一個行程出門（10:00）前半小時",
-                    wake.count() == 1 and "明天 09:30 起床" in wake.inner_text() and "10:00 出門・戊站" in wake.inner_text(),
+            wake = page.locator("#main .wake-line")
+            r.check("起床時間：一條放在當天最上面，不在卡片裡",
+                    wake.count() == 1 and page.evaluate(
+                        "() => document.querySelector('#main').firstElementChild"
+                        ".classList.contains('wake-line')")
+                    and page.locator("#main .card .wake-line").count() == 0,
+                    f"{wake.count()} 條")
+            r.check("起床時間：第一個行程（10:00）的前一小時",
+                    wake.count() == 1 and "09:00" in wake.inner_text(),
+                    wake.inner_text() if wake.count() else "")
+            page.locator(".nav-item").nth(1).click(); page.wait_for_timeout(300)
+            wake = page.locator("#main .wake-line")
+            r.check("起床時間：要先出門的日子照出門時間算",
+                    wake.count() == 1 and "09:00" in wake.inner_text()
+                    and "10:00 出門・戊站" in wake.inner_text(),
                     wake.inner_text() if wake.count() else "")
             r.check("搭車日：沒有 JS 例外", not errs, "；".join(errs))
             ctx.close()
@@ -2123,6 +2132,33 @@ def run(trip: str) -> bool:
                     "；".join(sorted(set(dup))[:4]) or "各分頁都過")
             r.check("說明框：提醒框一律在說明框下面", not order,
                     "；".join(sorted(set(order))[:4]) or "各分頁都過")
+
+            # 起床那一條：寫出來的日子都要是「出發前整整一小時」，而且出發在中午前。
+            # 中午以後才開始的日子不寫——抵達日的第一個行程是晚上落地，往前推會變成
+            # 「19:00 起床」，那天根本不是在飯店醒來的。這條會抓到把判斷拿掉的改動
+            wake_bad, wake_seen = [], 0
+            tabs = page.locator(".nav-item")
+            for i in range(tabs.count()):
+                tab = tabs.nth(i).inner_text().split("\n")[0]
+                tabs.nth(i).click()
+                page.wait_for_timeout(200)
+                w = page.locator("#main .wake-line")
+                if not w.count():
+                    continue
+                wake_seen += 1
+                txt = w.inner_text()
+                hhmm = __import__("re").findall(r"\d{1,2}:\d{2}", txt)
+                if len(hhmm) < 2:
+                    wake_bad.append(f"{tab}：讀不到兩個時間（{txt}）")
+                    continue
+                mins = [int(x.split(":")[0]) * 60 + int(x.split(":")[1]) for x in hhmm[:2]]
+                if (mins[1] - mins[0]) % 1440 != 60:
+                    wake_bad.append(f"{tab}：{hhmm[0]} → {hhmm[1]} 不是整整一小時")
+                if mins[1] >= 12 * 60:
+                    wake_bad.append(f"{tab}：出發 {hhmm[1]} 已經過中午，不該寫起床")
+            r.check("起床時間：每天都是出發前一小時，而且只寫早上開始的日子",
+                    not wake_bad and wake_seen > 0,
+                    "；".join(wake_bad[:3]) or f"{wake_seen} 天有寫")
 
             # 配色：湖水藍、森林綠、米黃這些是楓葉主題自己的顏色。共用版面只認 token，
             # 別的主題沒指定就退回它自己的主色——換成其他主題後，畫面上不能出現這幾個顏色
