@@ -765,39 +765,75 @@ def run(trip: str) -> bool:
                         "(JSON.parse(localStorage.getItem('trip:swaptest-2027')||'{}').queue||[])"
                         ".map(q => q.type).join(',')"))
 
-            # 排序：誰先刷哪張是個人的決定，只存本機（A 手機排過不該動到 B 手機）
+            # 排序：三條線的把手可以直接拖；鍵盤走上下鍵（WCAG 2.5.7：拖曳一定要有不用拖的替代方式）。
+            # 順序只存本機——誰先刷哪張是個人的決定，A 手機排過不該動到 B 手機
             names = "() => [...document.querySelectorAll('#main .cc')].map(e => e.dataset.card)"
+            store = ("() => (JSON.parse(localStorage.getItem('trip:swaptest-2027')||'{}')"
+                     ".cardOrder||[]).join(',')")
+            midof = """(i) => { const cs = [...document.querySelectorAll('#main .cc')];
+                        const b = cs[i < 0 ? cs.length + i : i].getBoundingClientRect();
+                        return b.top + b.height / 2; }"""
+
+            def drag_card(name, to_y=None, over=None):
+                """把 name 那張的把手拖到畫面的 to_y；over 是「拖到第幾張的中線上面」。
+                   先把它捲進畫面——在視窗外的話抓不到把手，拖了也不會動。"""
+                page.evaluate("""(n) => [...document.querySelectorAll('#main .cc')]
+                          .find(e => e.dataset.card === n).scrollIntoView({ block: "center" })""", name)
+                page.wait_for_timeout(150)
+                if over is not None:
+                    to_y = page.evaluate(midof, over) - 12
+                g = page.evaluate("""(n) => { const cc = [...document.querySelectorAll('#main .cc')]
+                            .find(e => e.dataset.card === n);
+                          const r = cc.querySelector('[data-grip]').getBoundingClientRect();
+                          return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; }""", name)
+                page.mouse.move(g["x"], g["y"])
+                page.mouse.down()
+                page.mouse.move(g["x"], to_y, steps=16)
+                page.wait_for_timeout(150)
+                n = page.locator("#main .cc.is-dragging").count()
+                page.mouse.up()
+                page.wait_for_timeout(300)
+                return n
+
             before = page.evaluate(names)
-            r.check("信用卡：第一張沒有往上鍵、最後一張沒有往下鍵",
-                    page.evaluate("""() => { const cs = [...document.querySelectorAll('#main .cc')];
-                      return !cs[0].querySelector('[data-move=up]')
-                          && !cs[cs.length - 1].querySelector('[data-move=down]'); }"""))
-            page.locator("#main .cc").first.locator('[data-move="down"]').click()
-            page.wait_for_timeout(300)
+            r.check("信用卡：每張卡片都有排序把手",
+                    page.locator("#main [data-grip]").count() == len(before),
+                    f"{page.locator('#main [data-grip]').count()}／{len(before)} 張")
+            # 一路拖到最後面。刻意跨過好幾張：只拖一格的話，拖曳中途被中斷也看不出來
+            # （設過 setPointerCapture 的元素一搬動就會丟 lostpointercapture，踩過一次）
+            lifted = drag_card(before[0], page.evaluate(midof, -1) + 12)
             after = page.evaluate(names)
-            r.check("信用卡：往下移一格會跟下一張換位置",
-                    after[0] == before[1] and after[1] == before[0] and after[2:] == before[2:],
+            r.check("信用卡：把手可以一路拖到最後面", after == before[1:] + [before[0]],
                     f"{before} → {after}")
-            # 重畫整頁會讓焦點掉回 body，連按好幾下就得重新找按鈕
-            focus = page.evaluate("() => ({ move: document.activeElement.dataset.move || '',"
-                                  " card: document.activeElement.dataset.card || '' })")
-            r.check("信用卡：移完焦點留在同一顆鍵（可以連按）",
-                    focus["move"] == "down" and focus["card"] == before[0], str(focus))
+            r.check("信用卡：拖的時候那張會浮起來", lifted == 1, f"{lifted} 張 is-dragging")
             r.check("信用卡：排序不進同步佇列（只存本機）",
                     "cards" not in page.evaluate(
                         "(JSON.parse(localStorage.getItem('trip:swaptest-2027')||'{}').queue||[])"
                         ".map(q => q.type).join(',')"))
-            r.check("信用卡：排序存進本機",
-                    page.evaluate("() => (JSON.parse(localStorage.getItem('trip:swaptest-2027')||'{}')"
-                                  ".cardOrder||[]).join(',')") == ",".join(after),
-                    page.evaluate("() => (JSON.parse(localStorage.getItem('trip:swaptest-2027')||'{}')"
-                                  ".cardOrder||[]).join(',')"))
+            r.check("信用卡：排序存進本機", page.evaluate(store) == ",".join(after),
+                    page.evaluate(store))
             page.reload()
             page.wait_for_load_state("networkidle")
             page.locator(".nav-item").nth(1).click()
             page.wait_for_timeout(400)
             r.check("信用卡：重新整理後順序還在", page.evaluate(names) == after,
                     f"{page.evaluate(names)}")
+            # 也要能往上拖（拖到第一張的中線上面）
+            drag_card(after[1], over=0)
+            up = page.evaluate(names)
+            r.check("信用卡：把手也能往上拖", up == [after[1], after[0], after[2]], f"{after} → {up}")
+            # 不用拖也要能排：把手聚焦後按上鍵
+            page.evaluate("""(n) => [...document.querySelectorAll('#main .cc')]
+                      .find(e => e.dataset.card === n).querySelector('[data-grip]').focus()""", after[0])
+            page.keyboard.press("ArrowUp")
+            page.wait_for_timeout(300)
+            r.check("信用卡：上下鍵也能排（拖曳的替代方式）", page.evaluate(names) == after,
+                    f"{page.evaluate(names)}")
+            # 重畫整頁會讓焦點掉回 body，連按好幾下就得重新找把手
+            focus = page.evaluate("() => ({ grip: document.activeElement.hasAttribute('data-grip'),"
+                                  " card: document.activeElement.dataset.card || '' })")
+            r.check("信用卡：移完焦點留在把手（可以連按）",
+                    focus["grip"] and focus["card"] == after[0], str(focus))
 
             # 購物清單與優惠券（同一個元件，也在第二天）
             r.check("購物：兩個群組都渲染", page.locator(".shop-g").count() == 2,

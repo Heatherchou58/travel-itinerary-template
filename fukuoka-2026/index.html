@@ -487,14 +487,22 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 .cc-head{ display:flex; flex-wrap:wrap; align-items:flex-start; gap:var(--sp-2); }
 .cc-name{ flex:1 1 220px; font-weight:700; font-size:var(--fs-md); }
 .cc-acts{ display:flex; align-items:flex-start; gap:var(--sp-2); margin-left:auto; flex:0 0 auto; }
-/* 第一張沒有「往上」、最後一張沒有「往下」，少一顆鍵整排就比別張窄，換行的時機也跟著不一樣
-   （同一份清單裡有的併在卡名那行、有的換行）。用等寬的佔位補回來，每張卡片的鍵都對齊 */
-.cc-gap{ width:44px; flex:0 0 auto; }
-.cc-move{
+/* 排序把手：按住直接拖。touch-action:none 是必要的——不關掉的話，手機上這一下會被
+   當成捲動頁面，拖不動卡片。鍵盤與輔助技術走上下鍵（WCAG 2.5.7 要求拖曳一定要有
+   不用拖的替代方式），名稱與目前第幾張都寫在 aria-label 裡。 */
+.cc-grip{
   display:inline-flex; align-items:center; justify-content:center;
   width:44px; height:44px; padding:0; flex:0 0 auto;
   border:1px solid var(--c-border); border-radius:10px;
-  background:var(--c-surface); color:var(--c-text); cursor:pointer;
+  background:var(--c-surface); color:var(--c-text-dim);
+  cursor:grab; touch-action:none;
+}
+.cc-grip:active{ cursor:grabbing; }
+/* 拖著的那張浮起來一階（跟提示、連線狀態同一階），並蓋住下面的卡片 */
+.cc.is-dragging{
+  position:relative; z-index:2; cursor:grabbing;
+  box-shadow:var(--shadow-pop); background:var(--c-surface);
+  user-select:none; -webkit-user-select:none;
 }
 .cc-rate{
   margin-left:var(--sp-2); padding:1px var(--sp-2); border-radius:var(--r-pill);
@@ -633,7 +641,7 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 .meta-foot{ margin-top:var(--sp-2); }
 /* 圖示：Phosphor regular 的 SVG，跟著文字的顏色與字級走，全站一個尺寸（1.15em） */
 .ic{ display:inline-block; width:1.15em; height:1.15em; flex:0 0 auto; vertical-align:-.2em; margin-right:.3em; fill:currentColor; }
-.fl-mid .ic, .shop-x .ic, .exp-del .ic, .wx-day .ic, .cc-move .ic{ margin-right:0; }
+.fl-mid .ic, .shop-x .ic, .exp-del .ic, .wx-day .ic, .cc-grip .ic{ margin-right:0; }
 .daymap-open .ic{ margin:0 0 0 .3em; }
 .wx-emoji .ic{ width:2.6rem; height:2.6rem; margin:0; vertical-align:0; color:var(--c-on-accent); }
 /* 圖示按語意上色（ui-ux-pro-max icon-style-consistent：同一套圖示、同一類同一色）。
@@ -738,7 +746,14 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 .btn:active{ opacity:.85; }
 
 /* ── 航班卡 ───────────────────────────── */
-.flight{ border:1px solid var(--c-alt); }
+/* 左邊一條線是航空公司的識別色（見程式裡的 AIRLINE）。認不出來的航空公司退回主題色，
+   線一樣在，所以看起來不會像少了一塊。
+   這是第十四節「不用品牌色」的例外，使用者指定的：地圖、訂房那些鍵每張卡片都有，
+   各用各的品牌色會整頁花掉；航班卡一趟只有兩三張，而且是在認「這是哪一家的班機」。
+   識別色本身多半太淡，當文字會看不清楚，所以文字另外用同色系深一階的（都算過 ≥ 4.5:1）。 */
+.flight{ border:1px solid var(--c-alt); border-left-width:4px; border-left-color:var(--c-alt); }
+.flight.fl-brand{ border-left-color:var(--air); }
+.flight.fl-brand .fl-air, .flight.fl-brand .fl-air b{ color:var(--air-on); }
 .fl-head{
   display:flex; justify-content:space-between; align-items:baseline;
   font-size:var(--fs-xs); color:var(--c-text-dim); margin-bottom:var(--sp-3);
@@ -1198,6 +1213,11 @@ footer > a{ display:inline-block; padding:14px 0; margin:-14px 0; }
 /* 「看介紹」那條鋪的照片：深色模式的字是淺的，照片要壓更暗才不會吃掉對比
    （照片最亮處以純白計，疊完仍有 6:1 以上） */
 [data-scheme="dark"] .intro.has-photo summary::after{ opacity:.15; }
+/* 航空公司的識別色：淺色模式用壓深過的版本（淡色在白底上看不出來），
+   深色模式可以用原本的識別色，在深底上反而夠亮 */
+[data-scheme="dark"] .flight.fl-brand{ border-left-color:var(--air-dark); }
+[data-scheme="dark"] .flight.fl-brand .fl-air,
+[data-scheme="dark"] .flight.fl-brand .fl-air b{ color:var(--air-on-dark); }
 /* 楓葉：淺色模式的深紅在深底上幾乎看不見，換成亮一階的秋色——仍然是 .12–.30 的透明度，不會搶眼 */
 [data-scheme="dark"] .leaves i{ --lc:#C9654C; }
 [data-scheme="dark"] .leaves i:nth-child(3n+2){ --lc:#D9914E; }
@@ -1239,8 +1259,6 @@ SOFTWARE.
 <symbol id="i-bed" viewBox="0 0 256 256"><path d="M216,72H32V48a8,8,0,0,0-16,0V208a8,8,0,0,0,16,0V176H240v32a8,8,0,0,0,16,0V112A40,40,0,0,0,216,72ZM32,88h72v72H32Zm88,72V88h96a24,24,0,0,1,24,24v48Z"/></symbol>
 <symbol id="i-bicycle" viewBox="0 0 256 256"><path d="M208,112a47.81,47.81,0,0,0-16.93,3.09L165.93,72H192a8,8,0,0,1,8,8,8,8,0,0,0,16,0,24,24,0,0,0-24-24H152a8,8,0,0,0-6.91,12l11.65,20H99.26L82.91,60A8,8,0,0,0,76,56H48a8,8,0,0,0,0,16H71.41L85.12,95.51,69.41,117.06a48.13,48.13,0,1,0,12.92,9.44l11.59-15.9L125.09,164A8,8,0,1,0,138.91,156l-30.32-52h57.48l11.19,19.17A48,48,0,1,0,208,112ZM80,160a32,32,0,1,1-20.21-29.74l-18.25,25a8,8,0,1,0,12.92,9.42l18.25-25A31.88,31.88,0,0,1,80,160Zm128,32a32,32,0,0,1-22.51-54.72L201.09,164A8,8,0,1,0,214.91,156L199.3,129.21A32,32,0,1,1,208,192Z"/></symbol>
 <symbol id="i-calendar-check" viewBox="0 0 256 256"><path d="M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM72,48v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V80H48V48ZM208,208H48V96H208V208Zm-38.34-85.66a8,8,0,0,1,0,11.32l-48,48a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L116,164.69l42.34-42.35A8,8,0,0,1,169.66,122.34Z"/></symbol>
-<symbol id="i-caret-down" viewBox="0 0 256 256"><path d="M213.66,101.66l-80,80a8,8,0,0,1-11.32,0l-80-80A8,8,0,0,1,53.66,90.34L128,164.69l74.34-74.35a8,8,0,0,1,11.32,11.32Z"/></symbol>
-<symbol id="i-caret-up" viewBox="0 0 256 256"><path d="M213.66,165.66a8,8,0,0,1-11.32,0L128,91.31,53.66,165.66a8,8,0,0,1-11.32-11.32l80-80a8,8,0,0,1,11.32,0l80,80A8,8,0,0,1,213.66,165.66Z"/></symbol>
 <symbol id="i-camera" viewBox="0 0 256 256"><path d="M208,56H180.28L166.65,35.56A8,8,0,0,0,160,32H96a8,8,0,0,0-6.65,3.56L75.71,56H48A24,24,0,0,0,24,80V192a24,24,0,0,0,24,24H208a24,24,0,0,0,24-24V80A24,24,0,0,0,208,56Zm8,136a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V80a8,8,0,0,1,8-8H80a8,8,0,0,0,6.66-3.56L100.28,48h55.43l13.63,20.44A8,8,0,0,0,176,72h32a8,8,0,0,1,8,8ZM128,88a44,44,0,1,0,44,44A44.05,44.05,0,0,0,128,88Zm0,72a28,28,0,1,1,28-28A28,28,0,0,1,128,160Z"/></symbol>
 <symbol id="i-car" viewBox="0 0 256 256"><path d="M240,104H229.2L201.42,41.5A16,16,0,0,0,186.8,32H69.2a16,16,0,0,0-14.62,9.5L26.8,104H16a8,8,0,0,0,0,16h8v80a16,16,0,0,0,16,16H64a16,16,0,0,0,16-16V184h96v16a16,16,0,0,0,16,16h24a16,16,0,0,0,16-16V120h8a8,8,0,0,0,0-16ZM69.2,48H186.8l24.89,56H44.31ZM64,200H40V184H64Zm128,0V184h24v16Zm24-32H40V120H216ZM56,144a8,8,0,0,1,8-8H80a8,8,0,0,1,0,16H64A8,8,0,0,1,56,144Zm112,0a8,8,0,0,1,8-8h16a8,8,0,0,1,0,16H176A8,8,0,0,1,168,144Z"/></symbol>
 <symbol id="i-chart-bar" viewBox="0 0 256 256"><path d="M224,200h-8V40a8,8,0,0,0-8-8H152a8,8,0,0,0-8,8V80H96a8,8,0,0,0-8,8v40H48a8,8,0,0,0-8,8v64H32a8,8,0,0,0,0,16H224a8,8,0,0,0,0-16ZM160,48h40V200H160ZM104,96h40V200H104ZM56,144H88v56H56Z"/></symbol>
@@ -1264,6 +1282,7 @@ SOFTWARE.
 <symbol id="i-hourglass-medium" viewBox="0 0 256 256"><path d="M200,75.64V40a16,16,0,0,0-16-16H72A16,16,0,0,0,56,40V76a16.07,16.07,0,0,0,6.4,12.8L114.67,128,62.4,167.2A16.07,16.07,0,0,0,56,180v36a16,16,0,0,0,16,16H184a16,16,0,0,0,16-16V180.36a16.09,16.09,0,0,0-6.35-12.77L141.27,128l52.38-39.6A16.05,16.05,0,0,0,200,75.64ZM72,40H184V75.64L178.23,80H77.33L72,76Zm56,78L98.67,96h58.4Zm56,98H72V180l48-36v24a8,8,0,0,0,16,0V144.08l48,36.28Z"/></symbol>
 <symbol id="i-house" viewBox="0 0 256 256"><path d="M219.31,108.68l-80-80a16,16,0,0,0-22.62,0l-80,80A15.87,15.87,0,0,0,32,120v96a8,8,0,0,0,8,8h64a8,8,0,0,0,8-8V160h32v56a8,8,0,0,0,8,8h64a8,8,0,0,0,8-8V120A15.87,15.87,0,0,0,219.31,108.68ZM208,208H160V152a8,8,0,0,0-8-8H104a8,8,0,0,0-8,8v56H48V120l80-80,80,80Z"/></symbol>
 <symbol id="i-info" viewBox="0 0 256 256"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm16-40a8,8,0,0,1-8,8,16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40A8,8,0,0,1,144,176ZM112,84a12,12,0,1,1,12,12A12,12,0,0,1,112,84Z"/></symbol>
+<symbol id="i-list" viewBox="0 0 256 256"><path d="M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128ZM40,72H216a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16ZM216,184H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Z"/></symbol>
 <symbol id="i-lock-simple" viewBox="0 0 256 256"><path d="M208,80H176V56a48,48,0,0,0-96,0V80H48A16,16,0,0,0,32,96V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V96A16,16,0,0,0,208,80ZM96,56a32,32,0,0,1,64,0V80H96ZM208,208H48V96H208V208Z"/></symbol>
 <symbol id="i-map-pin" viewBox="0 0 256 256"><path d="M128,64a40,40,0,1,0,40,40A40,40,0,0,0,128,64Zm0,64a24,24,0,1,1,24-24A24,24,0,0,1,128,128Zm0-112a88.1,88.1,0,0,0-88,88c0,31.4,14.51,64.68,42,96.25a254.19,254.19,0,0,0,41.45,38.3,8,8,0,0,0,9.18,0A254.19,254.19,0,0,0,174,200.25c27.45-31.57,42-64.85,42-96.25A88.1,88.1,0,0,0,128,16Zm0,206c-16.53-13-72-60.75-72-118a72,72,0,0,1,144,0C200,161.23,144.53,209,128,222Z"/></symbol>
 <symbol id="i-map-trifold" viewBox="0 0 256 256"><path d="M228.92,49.69a8,8,0,0,0-6.86-1.45L160.93,63.52,99.58,32.84a8,8,0,0,0-5.52-.6l-64,16A8,8,0,0,0,24,56V200a8,8,0,0,0,9.94,7.76l61.13-15.28,61.35,30.68A8.15,8.15,0,0,0,160,224a8,8,0,0,0,1.94-.24l64-16A8,8,0,0,0,232,200V56A8,8,0,0,0,228.92,49.69ZM104,52.94l48,24V203.06l-48-24ZM40,62.25l48-12v127.5l-48,12Zm176,131.5-48,12V78.25l48-12Z"/></symbol>
@@ -3914,19 +3933,52 @@ function moveCard(name, dir){
   state.cardOrder = order;
   return true;
 }
-/* 第一張沒有「往上」、最後一張沒有「往下」：畫出來卻按不動的鍵只會讓人以為壞了。
-   只有圖示，所以名稱靠 aria-label，而且帶上「目前第幾張」——移完焦點留在原地，
-   讀螢幕的人聽得到新的位置 */
-const ccMoveBtn = (name, dir, i, n) => {
-  const up = dir === "up";
-  if (up ? i === 0 : i === n - 1) return `<span class="cc-gap" aria-hidden="true"></span>`;
-  return `<button class="cc-move" type="button" data-move="${dir}" data-card="${esc(name)}" `
-       + `aria-label="${up ? "往上移" : "往下移"} ${esc(name)}（目前第 ${i + 1} 張，共 ${n} 張）">`
-       + `${ic(up ? "caret-up" : "caret-down")}</button>`;
+/* 排序把手。只有圖示，所以名稱靠 aria-label，而且帶上「目前第幾張」——
+   移完焦點留在原地，讀螢幕的人聽得到新的位置。 */
+const ccGrip = (name, i, n) =>
+  `<button class="cc-grip" type="button" data-grip data-card="${esc(name)}" `
+  + `aria-label="調整順序：${esc(name)}（目前第 ${i + 1} 張，共 ${n} 張）。按住拖曳，或用上下鍵移動">`
+  + `${ic("list")}</button>`;
+
+/* 畫面上看得到的順序 → 存回完整順序。被移除（隱藏）的卡片不在畫面上，把它插回原本
+   跟著的那一張後面，還原之後才不會全部掉到最後。沒有變動就回 false，不用重畫。 */
+function setCardOrder(shown){
+  const full = ccSort(ccItems()).map(c => c.name);
+  const out = [...shown];
+  for (const h of full.filter(n => !shown.includes(n))){
+    const prev = full.slice(0, full.indexOf(h)).reverse().find(n => out.includes(n));
+    out.splice(prev ? out.indexOf(prev) + 1 : 0, 0, h);
+  }
+  if (out.join("\n") === full.join("\n")) return false;
+  state.cardOrder = out;
+  return true;
+}
+/* 重畫之後整個 DOM 都換掉，焦點會掉回 body，連按上下鍵就得重新找。把焦點放回同一張的把手 */
+const focusGrip = name => {
+  const cc = [...document.querySelectorAll(".cc")].find(el => el.dataset.card === name);
+  const g = cc && cc.querySelector("[data-grip]");
+  if (g) g.focus();
+};
+
+/* ── 航空公司的識別色 ─────────────────────
+   用航班編號前兩碼（IATA 代碼）對，不是用公司名字——名字每趟行程寫法不一樣
+   （「EVA AIR」「長榮航空」），代碼不會變。對不到的就不上色。
+     bar／barDark  那條線：淺色模式要壓深（識別色多半太淡，白底上看不出來），深色模式用原色
+     on／onDark    文字：同色系再深／亮一階，淺色底與深色卡片上都算過 ≥ 4.5:1
+   長榮的綠取自官網頁首 logo 的主色（www.evaair.com，6182 個像素都是它）。
+   虎航取自官網的樣式表，不是官方色票——要換成正確的值改這裡一行就好。 */
+const AIRLINE = {
+  BR: { bar:"#009840", barDark:"#009840", on:"#00702F", onDark:"#3FBF72" },   /* 長榮航空 */
+  IT: { bar:"#C57614", barDark:"#FAA836", on:"#8A5A12", onDark:"#E0B263" },   /* 台灣虎航 */
+};
+const airOf = code => AIRLINE[String(code || "").slice(0, 2).toUpperCase()];
+const airStyle = code => {
+  const a = airOf(code);
+  return a ? ` style="--air:${a.bar};--air-dark:${a.barDark};--air-on:${a.on};--air-on-dark:${a.onDark}"` : "";
 };
 
 const RENDERERS = {
-  flight: b => `<div class="card flight">
+  flight: b => `<div class="card flight${airOf(b.code) ? " fl-brand" : ""}"${airStyle(b.code)}>
     <div class="fl-head">
       <span class="fl-air">${esc(b.airline)} <b>${esc(b.code)}</b></span>
       <span>${esc(niceDate(b.date))}</span>
@@ -4038,7 +4090,7 @@ const RENDERERS = {
           <div class="cc-head">
             <div class="cc-name">${esc(c.name)}${c.rate ? `<span class="cc-rate">${esc(String(c.rate))}%</span>` : ""}</div>
             <div class="cc-acts">
-              ${ccMoveBtn(c.name, "up", i, shown.length)}${ccMoveBtn(c.name, "down", i, shown.length)}
+              ${ccGrip(c.name, i, shown.length)}
               <button class="cc-x" data-hide="${esc(c.name)}" type="button">移除</button>
             </div>
           </div>
@@ -5224,22 +5276,82 @@ document.getElementById("main").addEventListener("submit", async e => {
   }
 });
 
+/* ── 信用卡排序：拖曳與鍵盤 ─────────────────
+   手機上 HTML5 的 dragstart/drop 不會觸發，所以用 pointer 事件（滑鼠、觸控、觸控筆同一套）。
+   拖的時候只搬 DOM、不重畫——重畫會把正在拖的那個元素換掉，手指就跟它斷了；
+   放開才寫回順序並重畫一次。 */
+let ccDrag = null;
+const ccList = cc => [...cc.parentElement.querySelectorAll(":scope > .cc")];
+
+document.getElementById("main").addEventListener("pointerdown", e => {
+  const grip = e.target.closest("[data-grip]");
+  if (!grip || e.button) return;
+  const cc = grip.closest(".cc");
+  if (!cc) return;
+  e.preventDefault();                       // 不要順便選到文字
+  /* 不用 setPointerCapture：拖的時候會把這張卡片搬到別的位置（insertBefore），
+     瀏覽器會判定捕捉的元素被移動而丟出 lostpointercapture，第一次換位就把拖曳結束掉。
+     改成全部掛在 window 上收，不需要捕捉也收得到。 */
+  cc.classList.add("is-dragging");
+  ccDrag = { cc, grip, id: e.pointerId, y: e.clientY, raf: 0 };
+  ccDrag.raf = requestAnimationFrame(ccEdgeScroll);
+});
+
+/* 拖到畫面上下緣時自己捲動——九張卡片比一個畫面高，不捲就只能一次拖一點點 */
+function ccEdgeScroll(){
+  if (!ccDrag) return;
+  const pad = 72, y = ccDrag.y, h = window.innerHeight;
+  if (y < pad) window.scrollBy(0, -Math.ceil((pad - y) / 5));
+  else if (y > h - pad) window.scrollBy(0, Math.ceil((y - (h - pad)) / 5));
+  ccDrag.raf = requestAnimationFrame(ccEdgeScroll);
+}
+
+window.addEventListener("pointermove", e => {
+  if (!ccDrag || e.pointerId !== ccDrag.id) return;
+  ccDrag.y = e.clientY;
+  const { cc } = ccDrag;
+  /* 「插在第一張中線還在指標下面的卡片前面」——直接由指標位置算出該在哪一格，
+     不是「越過中線就跟隔壁換」。換過之後每張卡片的位置都會變，用「越過就換」的寫法
+     同一次移動會連續觸發好幾次，一下就滑過頭（卡片高度不一樣時特別明顯）。
+     這種算法同樣的指標位置永遠得到同樣的結果，不會來回跳。只動 DOM，順序等放開才存。 */
+  const target = ccList(cc).find(el => {
+    if (el === cc) return false;
+    const r = el.getBoundingClientRect();
+    return e.clientY < r.top + r.height / 2;
+  });
+  if (target !== cc.nextElementSibling || !target)
+    cc.parentElement.insertBefore(cc, target || null);
+});
+
+/* 結束一定要掛在 window：拖的時候正在搬動的就是把手所在的那張卡片，
+   事件掛在 #main 上有機會收不到（手機模擬實測就是放開了卻沒存檔）。 */
+function ccDragEnd(){
+  if (!ccDrag) return;
+  const { cc, raf } = ccDrag;
+  cancelAnimationFrame(raf);
+  ccDrag = null;
+  cc.classList.remove("is-dragging");
+  const name = cc.dataset.card;
+  if (!setCardOrder(ccList(cc).map(el => el.dataset.card))) return;
+  persist(); renderDay(current); focusGrip(name);
+}
+for (const t of ["pointerup", "pointercancel"]) window.addEventListener(t, ccDragEnd);
+
+/* 不用拖的替代方式（WCAG 2.5.7）：把手聚焦後用上下鍵。讀螢幕的人也是走這條 */
+document.getElementById("main").addEventListener("keydown", e => {
+  const grip = e.target.closest("[data-grip]");
+  if (!grip) return;
+  const dir = e.key === "ArrowUp" ? -1 : e.key === "ArrowDown" ? 1 : 0;
+  if (!dir) return;
+  e.preventDefault();
+  if (!moveCard(grip.dataset.card, dir)) return;
+  persist(); renderDay(current); focusGrip(grip.dataset.card);
+});
+
 document.getElementById("main").addEventListener("click", e => {
   const ask = e.target.closest("[data-vault-ask]");
   if (ask) return askVault(ask);
   if (e.target.closest("[data-vault-lock]")) return lockVault();
-  /* 排序：重畫之後整個 DOM 都換掉，焦點會掉回 body，連按好幾下就得重新找按鈕。
-     把焦點放回同一張卡片的同一顆鍵；移到頭尾那顆會消失，就改聚焦剩下的那顆 */
-  const mv = e.target.closest("[data-move]");
-  if (mv){
-    const name = mv.dataset.card;
-    if (!moveCard(name, mv.dataset.move === "up" ? -1 : 1)) return;
-    persist(); renderDay(current);
-    const cc = [...document.querySelectorAll(".cc")].find(el => el.dataset.card === name);
-    const back = cc && (cc.querySelector(`[data-move="${mv.dataset.move}"]`) || cc.querySelector("[data-move]"));
-    if (back) back.focus();
-    return;
-  }
   /* 移除只隱藏在這台裝置，隨時可以還原——誤觸不該讓一張卡永久消失 */
   const hide = e.target.closest("[data-hide]");
   if (hide){
