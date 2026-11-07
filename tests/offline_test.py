@@ -81,6 +81,10 @@ SWAP_TRIP = {
              "choices": [{"title": "海鮮市場", "links": [{"label": "地圖", "url": "https://example.com/m", "style": "map"}]},
                          {"title": "牛排館", "links": [{"label": "地圖", "url": "https://example.com/s", "style": "map"},
                                                      {"label": "訂位", "url": "https://example.com/r", "style": "booking"}]}]},
+            # 跨過午夜：23:30 ＋ 90 分 = 隔天 01:00。只印 01:00 會看起來像倒退。
+            # 故意用交通卡——它不帶地點，才不會多跑進電腦版地圖的地點列裡
+            {"type": "transit", "time": "23:30", "title": "深夜巴士", "line": "N1 線", "stay": 90,
+             "steps": [{"name": "Night Depot", "active": True}, {"name": "Airport", "active": True}]},
             {"type": "lodging", "title": "測試飯店", "address": "1 Test St",
              "notes": ["含早餐"], "stay": 15, "travel": 15, "mode": "driving",
              "hours": "Check-in 15:00／退房 10:00"},
@@ -835,6 +839,31 @@ def run(trip: str) -> bool:
             # 左上角是「抵達」時間：資料的 time 是從上一站出發（11:30），加上步行 20 分
             r.check("時間：卡片左上角是抵達時間（出發 11:30＋步行 20 分）",
                     opera.locator(".time").inner_text() == "11:50", opera.locator(".time").inner_text())
+            # 預計離開＝ time + stay。stay 含交通，所以它同時也是下一張卡片的出發時刻。
+            # 這裡用控制得住的置換資料驗確切數字：11:30 ＋ 90 分 = 13:00，而 13:00 正好是
+            # 下面那張交通卡的出發時間——兩者對不起來就表示有一邊漏加或多加了交通
+            oleave = opera.locator(".stay.leave")
+            r.check("時間：卡片上有預計離開時間（出發 11:30＋總共 90 分）",
+                    oleave.count() == 1 and oleave.inner_text() == "離開 13:00",
+                    oleave.inner_text() if oleave.count() else "沒有標籤")
+            r.check("時間：離開時刻就是下一張卡片的出發時刻",
+                    oleave.count() == 1 and oleave.inner_text().endswith(ride.locator(".time").inner_text()),
+                    f"離開 {oleave.inner_text() if oleave.count() else '—'}／下一張出發 {ride.locator('.time').inner_text()}")
+            # 地鐵卡是移動本身，停下來的那一刻叫「抵達」不叫「離開」（13:00 ＋ 25 分）
+            rleave = ride.locator(".stay.leave")
+            r.check("交通卡：到站時刻寫「抵達」不寫「離開」",
+                    rleave.count() == 1 and rleave.inner_text() == "抵達 13:25",
+                    rleave.inner_text() if rleave.count() else "沒有標籤")
+            # 沒填停留就算不出離開時間——不要留一個空白或 NaN 的標籤
+            dinner = page.locator("#main .card", has_text="海鮮市場")
+            r.check("時間：沒填停留的卡片不出現離開時間",
+                    dinner.locator(".time").count() == 1 and dinner.locator(".stay.leave").count() == 0,
+                    f"{dinner.locator('.stay.leave').count()} 個標籤")
+            # 跨過午夜要標「隔天」，不然 23:30 ＋ 90 分會印成「離開 01:00」，看起來像倒退
+            late = page.locator("#main .card", has_text="深夜巴士").locator(".stay.leave")
+            r.check("時間：跨過午夜的時刻標「隔天」",
+                    late.count() == 1 and late.inner_text() == "抵達 隔天 01:00",
+                    late.inner_text() if late.count() else "沒有標籤")
             r.check("營業時間：獨立一列", "09:00–17:00、週二休" in otext)
             r.check("費用：獨立一列", "A$43（可刷卡）" in otext)
             tel = opera.locator("a.tel")
@@ -870,6 +899,10 @@ def run(trip: str) -> bool:
             hleg = hotel.locator("xpath=preceding-sibling::*[1][contains(@class,'leg')]")
             r.check("住宿：交通也在卡片上方", hleg.count() == 1 and "車程 15 分" in hleg.inner_text())
             r.check("住宿：交通等於總時間時不顯示停留", "停留" not in htext)
+            # 整列都在路上（純停留 0）：抵達就等於離開，同一排印兩個一樣的時刻只會更亂
+            r.check("住宿：沒有停留就不留一個空的離開時間",
+                    hotel.locator(".stay.leave").count() == 0,
+                    f"{hotel.locator('.stay.leave').count()} 個標籤")
             r.check("住宿：營業時間（入住退房）獨立一列", "Check-in 15:00／退房 10:00" in htext)
 
             # 信用卡回饋額度（在第二天）
@@ -1338,8 +1371,12 @@ def run(trip: str) -> bool:
             r.check("目前行程：剛好標出一張卡片", nowc.count() == 1, f"{nowc.count()} 張")
             r.check("目前行程：標在上色見熊野座神社上", "上色見熊野座神社" in nowc.inner_text())
             line = page.locator("#main .card.is-now .now-line").inner_text()
-            r.check("目前行程：顯示剩餘時間與離開時刻",
-                    "還有 30 分" in line and "13:05" in line, f"「{line}」")
+            # 這一行只留它獨有的那半句（還剩多久）。幾點離開改印在卡片上，兩個地方都寫
+            # 就會在同一張卡片上出現兩次 13:05
+            r.check("目前行程：顯示還剩多久", "還有 30 分" in line, f"「{line}」")
+            r.check("目前行程：離開時刻改由卡片本身顯示，標記列不重複",
+                    nowc.locator(".stay.leave").inner_text() == "離開 13:05" and "13:05" not in line,
+                    f"卡片「{nowc.locator('.stay.leave').inner_text()}」／標記列「{line}」")
             r.check("已結束的項目有淡化", page.locator("#main .card.is-past").count() >= 2,
                     f"{page.locator('#main .card.is-past').count()} 張")
             r.check("自動跳到今天的分頁",
@@ -2313,6 +2350,65 @@ def run(trip: str) -> bool:
             r.check("起床時間：每天都是出發前一小時，而且只寫早上開始的日子",
                     not wake_bad and wake_seen > 0,
                     "；".join(wake_bad[:3]) or f"{wake_seen} 天有寫")
+
+            # 預計離開時間：真的行程每一天、每一張卡片都掃一次。
+            # 一、卡片自己要自洽：離開 − 抵達 ＝ 卡片上那個停留（交通卡是總耗時）。
+            #     time + stay 跟 (time+travel) + (stay−travel) 是同一個數，所以這條等於在驗
+            #     「交通有沒有被重複加一次」——漏算或多算交通的話，這裡會差掉整段車程。
+            # 二、往後接得上：離開之後再走 .leg 的交通時間，就該是下一張卡片的抵達時間。
+            #     行程表允許中間留一點空檔，所以只抓「倒退超過 5 分」；D5 的 18:32 還完車、
+            #     晚餐卡片寫 18:30 出發，是資料本身排的 2 分鐘重疊，不是算錯。
+            LEAVE_SWEEP = r"""() => {
+              const hhmm = t => { const m = /(\d{1,2}):(\d{2})/.exec(t || ""); return m ? +m[1] * 60 + +m[2] : null; };
+              const dur  = t => { const s = t || "", h = /(\d+)\s*小時/.exec(s),
+                                  n = /(\d+)\s*分/.exec(s.replace(/\d+\s*小時/, ""));
+                                  return (h ? +h[1] * 60 : 0) + (n ? +n[1] : 0); };
+              const out = { bad: [], gaps: [], seen: 0 };
+              let prev = null;                     // 上一張卡片的 { leave, name }
+              for (const c of document.querySelectorAll("#main .card")){
+                const name = ((c.querySelector(".subject") || {}).textContent || "(無標題)").trim().slice(0, 12);
+                const tEl = c.querySelector(".time"), lEl = c.querySelector(".stay.leave"),
+                      sEl = c.querySelector(".stay:not(.leave)");
+                const sib = c.previousElementSibling;
+                const leg = sib && sib.classList.contains("leg") ? dur(sib.textContent) : 0;
+                if (!tEl){ prev = null; continue; }
+                const arrive = hhmm(tEl.textContent);
+                if (!lEl){
+                  // 沒有離開時間的，一定是因為算不出來（沒填停留）——有停留卻沒有就是漏畫了
+                  if (sEl && !/總耗時/.test(sEl.textContent))
+                    out.bad.push(`${name}：有「${sEl.textContent.trim()}」卻沒有離開時間`);
+                  prev = null;
+                  continue;
+                }
+                out.seen++;
+                const leave = hhmm(lEl.textContent) + (/隔天/.test(lEl.textContent) ? 1440 : 0);
+                const stay  = dur(sEl ? sEl.textContent : "");
+                if (!sEl || leave - arrive !== stay)
+                  out.bad.push(`${name}：抵達 ${tEl.textContent} ＋「${(sEl || {}).textContent || "沒有停留"}」`
+                               + ` 對不上「${lEl.textContent}」`);
+                if (prev !== null && prev.leave + leg !== arrive)
+                  out.gaps.push({ over: prev.leave + leg - arrive, from: prev.name, to: name,
+                                  at: tEl.textContent });
+                prev = { leave, name };
+              }
+              return out;
+            }"""
+            leave_bad, leave_seen, leave_over = [], 0, []
+            for i in range(tabs.count()):
+                tab = tabs.nth(i).inner_text().split("\n")[0]
+                tabs.nth(i).click()
+                page.wait_for_timeout(200)
+                res = page.evaluate(LEAVE_SWEEP)
+                leave_bad += [f"{tab}：{x}" for x in res["bad"]]
+                leave_seen += res["seen"]
+                leave_over += [g for g in res["gaps"] if g["over"] > 0]
+            r.check("離開時間：離開 − 抵達 就是卡片上的停留（交通只算一次）",
+                    not leave_bad and leave_seen > 0,
+                    "；".join(leave_bad[:3]) or f"{leave_seen} 張卡片都對得起來")
+            worst = max((g["over"] for g in leave_over), default=0)
+            where = "、".join(f"{g['from']} → {g['to']}（{g['at']}）" for g in leave_over if g["over"] == worst)
+            r.check("離開時間：接得上下一張卡片的抵達時間（不會倒退）", worst <= 5,
+                    f"最多重疊 {worst} 分：{where}" if leave_over else "每一段都剛好接上")
 
             # 配色：湖水藍、森林綠、米黃這些是楓葉主題自己的顏色。共用版面只認 token，
             # 別的主題沒指定就退回它自己的主色——換成其他主題後，畫面上不能出現這幾個顏色
