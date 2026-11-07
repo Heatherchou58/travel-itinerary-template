@@ -398,7 +398,7 @@ export function parseGrids(book){
     const byList = new Map();
     packT.rows.forEach(r => {
       const ln = s(r["清單名稱"]) || "清單";
-      const cat = s(r["分類"]) || "項目";
+      const cat = s(r["分類"]);   // 留空就是沒有小標題（網站不畫空的群組名）
       const item = s(r["項目"]);
       if (!item) return;
       if (!byList.has(ln)) byList.set(ln, { page:"", groups:new Map() });

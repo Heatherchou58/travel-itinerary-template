@@ -1593,7 +1593,7 @@ const TRIP_DATA = {
           "title": "🧾 日本免稅新制",
           "groups": [
             {
-              "name": "日本免稅 2026-11-01 改制（你整趟都適用新制）",
+              "name": "",
               "items": [
                 {
                   "text": "知道店內要付「含稅價」，不是當場免稅",
@@ -3954,7 +3954,7 @@ const RENDERERS = {
     return `<div class="card" data-chk="${esc(b.key)}">
       <h2 class="subject">${iconText(b.title||"清單")}
         <span class="chk-progress">${done}/${total}</span></h2>
-      ${(b.groups||[]).map(g => `<div class="chk-group"><h3>${esc(g.name)}</h3>
+      ${(b.groups||[]).map(g => `<div class="chk-group">${g.name ? `<h3>${esc(g.name)}</h3>` : ""}
         ${g.items.map(it=>{
           const k = chkKey(b, it);
           /* 項目可以是字串，也可以是物件：
