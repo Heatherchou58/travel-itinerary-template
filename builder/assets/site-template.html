@@ -598,7 +598,10 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
    會被下面的 display:inline-flex 蓋掉，收起來的膠囊仍會露出一小條色塊。 */
 .now-line[hidden]{ display:none; }
 .now-line{
-  display:inline-flex; align-items:center; margin-bottom:var(--sp-2);
+  /* 自己佔一行（width 收到內容寬，不是整條橫槓）。原本是 inline-flex，會跟下面那排
+     「抵達・停留・離開」擠在同一行，375px 剛好把「離開 HH:MM」擠到第二行去。
+     這一條是當下的狀態，跟那排時間本來就不是同一組資訊，分開反而好讀。 */
+  display:flex; width:fit-content; align-items:center; margin-bottom:var(--sp-2);
   padding:3px var(--sp-3); border-radius:var(--r-pill);
   background:var(--c-accent); color:var(--c-on-accent);
   font-size:var(--fs-xs); font-weight:700;
@@ -624,6 +627,10 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
   background:var(--c-alt-soft); color:var(--c-alt-text); font-weight:700;
 }
 .stay.move .ic{ color:inherit; }
+/* 預計幾點離開：跟「停留」同一排、同一階——抵達、停留、離開讀起來是同一組。
+   不另外給底色或圖示，這一排只留時間膠囊（抵達）一個重點；時刻本身用正文色加粗，
+   掃過去就看得到幾點要走，前面的「離開」兩個字維持次要色。 */
+.stay.leave b{ font-weight:700; color:var(--c-text); }
 /* 兩張卡片中間的交通：左邊一條虛線接上下兩張卡片，標籤沿用上面的淡底。
    上面吃掉一半卡片間距，跟上下兩張卡片各留 8px 左右，看得出是夾在中間的 */
 .leg{
@@ -1779,6 +1786,25 @@ const stayTag = b => {
   const v = (b.stay || 0) - (b.travel || 0);
   return v > 0 ? `<span class="stay">${ic("hourglass-medium")}停留 ${fmtStay(v)}</span>` : "";
 };
+/* 預計幾點離開＝ time + stay。stay 是「這一列總共佔掉多久」（含交通，第十一節），
+   所以 time + stay 剛好就是下一列的 time——卡片上的離開時刻跟下一張的出發時刻一定對得起來。
+   算不出來的不畫標籤，不要留一個 NaN 或空白的膠囊：
+     ・沒有 time（沒排時間的項目）
+     ・沒有 stay（當天最後一晚的住宿、最後一張「辦理登機」都是 null）
+     ・純停留是 0（整列都在路上）——抵達就等於離開，同一排印兩個一樣的時刻只會更亂
+   跨過午夜的加註「隔天」，不然 23:30 + 90 分會印成「離開 01:00」看起來像倒退。 */
+const leaveMin = b => {
+  const t = toMin(b.time), stay = Number(b.stay) || 0;
+  if (t === null || stay <= 0) return null;
+  const end = t + stay;
+  return end > t + (Number(b.travel) || 0) ? end : null;
+};
+const atClock = n => (n >= 1440 ? "隔天 " : "") + toHHMM(n);
+/* 地鐵卡是移動本身，停下來的那一刻叫「抵達」不叫「離開」，所以字可以換 */
+const leaveTag = (b, word = "離開") => {
+  const end = leaveMin(b);
+  return end === null ? "" : `<span class="stay leave">${word} <b>${atClock(end)}</b></span>`;
+};
 /* 營業時間、費用、電話各自一列，不塞進說明欄：格式才會統一，電話也才能點了就撥 */
 const telHref = t => String(t).replace(/[^\d+]/g, "");
 const factsHTML = b =>
@@ -1895,14 +1921,14 @@ const RENDERERS = {
     </div></div>`,
 
   stop: b => `${legHTML(b)}<div class="card"${slotAttrs(b)}${mapAttrs(b)}>
-    ${nowSlot(b)}${timeTag(b)}${stayTag(b)}
+    ${nowSlot(b)}${timeTag(b)}${stayTag(b)}${leaveTag(b)}
     <h2 class="subject">${ic(KIND[b.kind] || KIND.sight)}${esc(b.title)}${localSpan(b.titleLocal)}</h2>
     ${b.place ? `<div class="meta">${ic("map-pin")}${esc(b.place)}${localSpan(b.placeLocal)}</div>` : ""}${factsHTML(b)}
     ${notesHTML(b.notes)}${secretHTML(b)}${introHTML(b.intro, b.photo, b.title)}${linksHTML(b.links)}</div>`,
 
   /* 總耗時跟其他卡片的「停留」一樣放在時間旁邊，由 stay 算出來 */
   transit: b => `<div class="card">
-    ${b.time ? `<span class="time">${esc(b.time)}</span>` : ""}${b.stay ? `<span class="stay">${ic("timer")}總耗時約 ${fmtStay(b.stay)}</span>` : ""}
+    ${b.time ? `<span class="time">${esc(b.time)}</span>` : ""}${b.stay ? `<span class="stay">${ic("timer")}總耗時約 ${fmtStay(b.stay)}</span>` : ""}${leaveTag(b, "抵達")}
     <h2 class="subject">${esc(b.title)}</h2>
     ${b.line ? `<div class="meta">${ic("subway")}${esc(b.line)}</div>` : ""}
     ${b.duration ? `<div class="meta">${ic("timer")}${esc(b.duration)}</div>` : ""}
@@ -1921,7 +1947,7 @@ const RENDERERS = {
     ${notesHTML(b.notes)}${linksHTML(b.links)}</div>`,
 
   lodging: b => `${legHTML(b)}<div class="card lodge"${slotAttrs(b)}${mapAttrs(b)}>
-    ${nowSlot(b)}<div><span class="ttag">${ic("bed")}住宿</span>${timeTag(b)}${stayTag(b)}</div>
+    ${nowSlot(b)}<div><span class="ttag">${ic("bed")}住宿</span>${timeTag(b)}${stayTag(b)}${leaveTag(b)}</div>
     <h2 class="subject">${esc(b.title)}${localSpan(b.titleLocal)}</h2>
     ${b.address ? `<div class="meta">${ic("map-pin")}${esc(b.address)}</div>` : ""}${factsHTML(b)}
     ${(b.notes && b.notes.length)
@@ -1929,7 +1955,7 @@ const RENDERERS = {
     ${secretHTML(b)}${linksHTML(b.links)}</div>`,
 
   options: b => `<div class="card"${mapAttrs((b.choices || []).find(c => mapQuery(c)) || {})}>
-    ${timeTag(b)}${stayTag(b)}
+    ${timeTag(b)}${stayTag(b)}${leaveTag(b)}
     <h2 class="subject">${subjectHTML(b.title)}</h2>
     ${b.place ? `<div class="meta">${ic("map-pin")}${esc(b.place)}${localSpan(b.placeLocal)}</div>` : ""}
     ${(b.choices||[]).map(c => `<div class="choice${(c.links || []).length === 1 ? " one-link" : ""}">
@@ -2175,7 +2201,8 @@ function markNow(){
   };
   /* 卡片的時間是「出發」（這一列從離開上一站開始），前段是在路上：還沒到就標「前往中」 */
   if (cur && n.minutes < cur.arrive) show(cur.card, "is-now", `前往中 · 預計 ${toHHMM(cur.arrive)} 抵達`);
-  else if (cur)  show(cur.card, "is-now",  `現在 · 還有 ${fmtMin(cur.end - n.minutes)}（預計 ${toHHMM(cur.end)} 離開）`);
+  /* 幾點離開已經印在卡片上（.stay.leave），這一行只留它獨有的那半句：還剩多久 */
+  else if (cur)  show(cur.card, "is-now",  `現在 · 還有 ${fmtMin(cur.end - n.minutes)}`);
   else if (next) show(next.card, "is-next", next.arrive > next.start
     ? `接下來 · ${fmtMin(next.start - n.minutes)}後出發（預計 ${toHHMM(next.arrive)} 抵達）`
     : `接下來 · ${fmtMin(next.start - n.minutes)}後開始（${toHHMM(next.start)}）`);
