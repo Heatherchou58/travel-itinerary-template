@@ -393,7 +393,9 @@ const customMap = X => flat(X).flatMap(x => (x.links || [])
 ok("自訂地圖連結保留", customMap(T).join() === customMap(B).join());
 const opts = X => (X.days || []).filter(d => /^D\d+/.test(d.nav)).flatMap(d => (d.blocks || [])
   .filter(b => b.type === "options")
-  .map(b => JSON.stringify([b.time, b.title, b.place || "", b.stay ?? null, (b.choices || []).map(c =>
+  .map(b => JSON.stringify([b.time, b.title, b.place || "", b.stay ?? null,
+    (b.links || []).filter(l => l.style !== "route" && !/\/maps\/search\//.test(l.url || "")).map(l => l.url),
+    (b.choices || []).map(c =>
     [c.label, c.title, c.titleLocal || "", c.note || "",
      (c.links || []).filter(l => !/\/maps\/search\//.test(l.url || "")).map(l => l.url)])])));
 ok("二選一一致", opts(T).join("\n") === opts(B).join("\n"), opts(T).length + " 張");

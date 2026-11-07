@@ -857,6 +857,13 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 .choice.one-link{ display:flex; align-items:center; gap:var(--sp-3); }
 .choice.one-link .choice-main{ flex:1; min-width:0; }
 .choice.one-link .btn{ margin:0; flex:0 0 auto; }
+/* 選項卡自己的按鈕：標題列右上角。space-between 讓它在標題右邊；寬度不夠時整顆掉到標題下面、
+   靠左，不去擠標題（標題不能被擠斷） */
+.opt-head{ display:flex; flex-wrap:wrap; align-items:flex-start; justify-content:space-between; gap:var(--sp-2) var(--sp-3); }
+.opt-head-main{ flex:1 1 11em; min-width:0; }
+.opt-links{ flex:0 0 auto; }
+.opt-links .btn{ margin:0 var(--sp-2) 0 0; }
+.opt-links .btn:last-child{ margin-right:0; }
 .subject-note{ font-size:var(--fs-sm); font-weight:400; color:var(--c-text-dim); }
 /* A／B 直接接在店名前面、同一行（使用者要的）：原本自己佔一行，每個選項都多一列高度。
    vertical-align 讓小字的標籤對齊店名的視覺中線，不是文字基線 */
@@ -2660,17 +2667,12 @@ const TRIP_DATA = {
               "label": "A",
               "title": "千穂の家（流水素麵）",
               "titleLocal": "千穂の家 元祖流しそうめん",
-              "note": "流水素麵據說是昭和三〇年代在這裡想出來的，引高千穗峽玉垂瀑布的湧泉進竹管・就在高千穗峽入口，吃完直接走散策道・10:00–16:00、通年營業・流水素麵 ¥700／山女鹽烤 ¥800・車可以停高千穗神社的免費停車場，走下來 14 分，下午的高千穗神社就在車旁邊",
+              "note": "流水素麵據說是昭和三〇年代在這裡想出來的，引高千穗峽玉垂瀑布的湧泉進竹管・就在高千穗峽入口，吃完直接走散策道・10:00–16:00、通年營業・流水素麵 ¥700／山女鹽烤 ¥800・車停高千穗神社的免費停車場（右上的按鈕），走下來 14 分，下午的神社就在車旁",
               "links": [
                 {
                   "label": "🗺️ 地圖",
                   "url": "https://www.google.com/maps/search/?api=1&query=%E5%8D%83%E7%A9%82%E3%81%AE%E5%AE%B6%20%E5%85%83%E7%A5%96%E6%B5%81%E3%81%97%E3%81%9D%E3%81%86%E3%82%81%E3%82%93%2C%20%E5%AE%AE%E5%B4%8E%E7%B8%A3%E9%AB%98%E5%8D%83%E7%A9%97%E7%94%BA%E3%83%BB%E9%AB%98%E5%8D%83%E7%A9%97%E5%B3%BD%E5%85%A5%E5%8F%A3",
                   "style": "map"
-                },
-                {
-                  "label": "🅿️ 免費停車場",
-                  "url": "https://maps.app.goo.gl/zhUqceMtSrMF7nGH9",
-                  "style": "booking"
                 }
               ]
             },
@@ -2688,7 +2690,13 @@ const TRIP_DATA = {
               ]
             }
           ],
-          "links": [],
+          "links": [
+            {
+              "label": "🅿️ 免費停車場",
+              "url": "https://maps.app.goo.gl/zhUqceMtSrMF7nGH9",
+              "style": "booking"
+            }
+          ],
           "stay": 107,
           "mode": "driving",
           "travel": 47
@@ -2874,8 +2882,9 @@ const TRIP_DATA = {
           "titleLocal": "柳川 川下り",
           "place": "福岡縣柳川市",
           "notes": [
-          "車停松月乘船場前的免費停車場",
+          "車停乘船場旁的免費停車場（官網列兩個，三柱神社那個最近）",
           "10:25 到，搭 10:40 那班（每小時 :10 與 :40 開船，開船前 10 分鐘要買好票，先上官網預約最穩）；船程約 60 分到御花",
+          "趕不上 10:30 報到就改 11:10 那班，午餐順延 30 分、太宰府少逛 30 分",
           "こたつ舟（暖桌船）12 月才開始，11 月船上會冷",
           "⚠️ 船是單程，終點在 3 公里外——車留在乘船場，吃完午餐要回來拿（見太宰府那張）"
         ],
@@ -2884,6 +2893,11 @@ const TRIP_DATA = {
               "label": "🗺️ 地圖",
               "url": "https://www.google.com/maps/search/?api=1&query=%E6%9D%BE%E6%9C%88%E4%B9%97%E8%88%B9%E5%A0%B4",
               "style": "map"
+            },
+            {
+              "label": "🅿️ 免費停車場",
+              "url": "https://maps.app.goo.gl/u6sEyi9QGxMWkiLk8",
+              "style": "booking"
             },
             {
               "label": "🚗 從上一站",
@@ -2943,7 +2957,7 @@ const TRIP_DATA = {
           "titleLocal": "太宰府天満宮",
           "place": "福岡縣太宰府市",
           "notes": [
-          "先回松月乘船場拿車：若松屋走 2 分到御花前搭計程車，約 8 分、約 ¥1,300",
+          "先回松月乘船場拿車：若松屋走 2 分到御花前搭計程車，車程約 6 分、約 ¥1,300（官網寫的價錢）",
           "想省錢可改搭本城町觀光停車場免費接駁車（走 7 分），13:00、14:00 開，沒有 13:30 那班",
           "參道推薦：天山 太宰府布丁、かさの家 梅枝餅"
         ],
@@ -4223,15 +4237,21 @@ const RENDERERS = {
       ? `<div class="info">${b.notes.map(n => `<div>${iconText(n)}</div>`).join("")}</div>` : ""}
     ${secretHTML(b)}${linksHTML(b.links)}</div>`,
 
-  options: b => `<div class="card"${mapAttrs((b.choices || []).find(c => mapQuery(c)) || {})}>
+  /* 選項卡自己的按鈕（b.links，例如整頓飯共用的停車場）放在標題列右上角；沒有就維持原本的樣子 */
+  options: b => {
+    const head = `<h2 class="subject">${subjectHTML(b.title)}</h2>
+    ${b.place ? `<div class="meta">${ic("map-pin")}${esc(b.place)}${localSpan(b.placeLocal)}</div>` : ""}`;
+    return `<div class="card"${mapAttrs((b.choices || []).find(c => mapQuery(c)) || {})}>
     ${timeTag(b)}${stayTag(b)}${leaveTag(b)}
-    <h2 class="subject">${subjectHTML(b.title)}</h2>
-    ${b.place ? `<div class="meta">${ic("map-pin")}${esc(b.place)}${localSpan(b.placeLocal)}</div>` : ""}
+    ${(b.links || []).length
+      ? `<div class="opt-head"><div class="opt-head-main">${head}</div><div class="opt-links">${linksHTML(b.links)}</div></div>`
+      : head}
     ${(b.choices||[]).map(c => `<div class="choice${(c.links || []).length === 1 ? " one-link" : ""}">
       <div class="choice-main">
       <div><span class="tag">${esc(c.label)}</span><strong>${esc(c.title)}</strong>${localSpan(c.titleLocal)}</div>
       ${c.note ? `<div class="meta">${iconText(c.note)}</div>` : ""}</div>
-      ${linksHTML(c.links)}</div>`).join("")}</div>`,
+      ${linksHTML(c.links)}</div>`).join("")}</div>`;
+  },
 
   checklist: b => {
     const total = (b.groups||[]).reduce((n,g)=>n+g.items.length,0);

@@ -857,6 +857,13 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 .choice.one-link{ display:flex; align-items:center; gap:var(--sp-3); }
 .choice.one-link .choice-main{ flex:1; min-width:0; }
 .choice.one-link .btn{ margin:0; flex:0 0 auto; }
+/* 選項卡自己的按鈕：標題列右上角。space-between 讓它在標題右邊；寬度不夠時整顆掉到標題下面、
+   靠左，不去擠標題（標題不能被擠斷） */
+.opt-head{ display:flex; flex-wrap:wrap; align-items:flex-start; justify-content:space-between; gap:var(--sp-2) var(--sp-3); }
+.opt-head-main{ flex:1 1 11em; min-width:0; }
+.opt-links{ flex:0 0 auto; }
+.opt-links .btn{ margin:0 var(--sp-2) 0 0; }
+.opt-links .btn:last-child{ margin-right:0; }
 .subject-note{ font-size:var(--fs-sm); font-weight:400; color:var(--c-text-dim); }
 /* A／B 直接接在店名前面、同一行（使用者要的）：原本自己佔一行，每個選項都多一列高度。
    vertical-align 讓小字的標籤對齊店名的視覺中線，不是文字基線 */
@@ -1984,15 +1991,21 @@ const RENDERERS = {
       ? `<div class="info">${b.notes.map(n => `<div>${iconText(n)}</div>`).join("")}</div>` : ""}
     ${secretHTML(b)}${linksHTML(b.links)}</div>`,
 
-  options: b => `<div class="card"${mapAttrs((b.choices || []).find(c => mapQuery(c)) || {})}>
+  /* 選項卡自己的按鈕（b.links，例如整頓飯共用的停車場）放在標題列右上角；沒有就維持原本的樣子 */
+  options: b => {
+    const head = `<h2 class="subject">${subjectHTML(b.title)}</h2>
+    ${b.place ? `<div class="meta">${ic("map-pin")}${esc(b.place)}${localSpan(b.placeLocal)}</div>` : ""}`;
+    return `<div class="card"${mapAttrs((b.choices || []).find(c => mapQuery(c)) || {})}>
     ${timeTag(b)}${stayTag(b)}${leaveTag(b)}
-    <h2 class="subject">${subjectHTML(b.title)}</h2>
-    ${b.place ? `<div class="meta">${ic("map-pin")}${esc(b.place)}${localSpan(b.placeLocal)}</div>` : ""}
+    ${(b.links || []).length
+      ? `<div class="opt-head"><div class="opt-head-main">${head}</div><div class="opt-links">${linksHTML(b.links)}</div></div>`
+      : head}
     ${(b.choices||[]).map(c => `<div class="choice${(c.links || []).length === 1 ? " one-link" : ""}">
       <div class="choice-main">
       <div><span class="tag">${esc(c.label)}</span><strong>${esc(c.title)}</strong>${localSpan(c.titleLocal)}</div>
       ${c.note ? `<div class="meta">${iconText(c.note)}</div>` : ""}</div>
-      ${linksHTML(c.links)}</div>`).join("")}</div>`,
+      ${linksHTML(c.links)}</div>`).join("")}</div>`;
+  },
 
   checklist: b => {
     const total = (b.groups||[]).reduce((n,g)=>n+g.items.length,0);

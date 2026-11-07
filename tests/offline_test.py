@@ -77,6 +77,8 @@ SWAP_TRIP = {
                        {"name": "Central", "nameLocal": "Central Station", "active": True}]},
             {"type": "options", "time": "18:00", "title": "晚餐二選一（也可以兩家都吃）",
              "place": "Darling Harbour",
+             # 選項卡自己的按鈕（整頓飯共用的，例如停車場）：放在標題列右上角
+             "links": [{"label": "停車場", "url": "https://example.com/parking", "style": "booking"}],
              # 只有一顆按鈕的選項按鈕放右邊，兩顆以上的放下面
              "choices": [{"title": "海鮮市場", "links": [{"label": "地圖", "url": "https://example.com/m", "style": "map"}]},
                          {"title": "牛排館", "links": [{"label": "地圖", "url": "https://example.com/s", "style": "map"},
@@ -1054,6 +1056,20 @@ def run(trip: str) -> bool:
                 r.check(f"二選一（寬 {vw}）：只有一顆按鈕放右邊、兩顆以上放下面",
                         one["right"] and not one["below"] and two["below"] and one["btnH"] >= 44,
                         f"一顆 {one}／兩顆 {two}")
+                # 選項卡自己的按鈕：標題列右上角，不在任何一個選項裡面；寬度不夠就整顆掉到標題下面，
+                # 不能把標題擠斷（使用者明確不要）、也不能超出卡片
+                head = cp.locator(".card", has_text="海鮮市場").evaluate("""c => {
+                    const h = c.querySelector('.opt-head'); if (!h) return null;
+                    const main = h.querySelector('.opt-head-main'), m = main.getBoundingClientRect();
+                    const b = h.querySelector('.opt-links .btn').getBoundingClientRect(), cr = c.getBoundingClientRect();
+                    return { right: b.left >= m.right - 1, inside: b.right <= cr.right + .5 && b.left >= cr.left,
+                             btnH: Math.round(b.height), clipped: main.scrollWidth > main.clientWidth + 1,
+                             inChoice: !!h.closest('.choice'), title: !!main.querySelector('h2.subject') }; }""")
+                r.check(f"選項卡的按鈕（寬 {vw}）：在標題列、不在選項裡、不超出卡片、標題沒被擠斷、≥44px",
+                        bool(head) and head["inside"] and not head["inChoice"] and not head["clipped"]
+                        and head["title"] and head["btnH"] >= 44, f"{head}")
+                if vw == 1280:
+                    r.check("選項卡的按鈕（電腦寬）：在標題的右邊（右上角）", bool(head) and head["right"], f"{head}")
                 cctx.close()
             hleg = hotel.locator("xpath=preceding-sibling::*[1][contains(@class,'leg')]")
             r.check("住宿：交通也在卡片上方", hleg.count() == 1 and "車程 15 分" in hleg.inner_text())
