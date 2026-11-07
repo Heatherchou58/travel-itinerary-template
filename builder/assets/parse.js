@@ -591,6 +591,9 @@ export function parseGrids(book){
          不用橫向捲過七天才找得到。購物排在記帳前面：買東西跟花錢是同一件事的前後腳 */
       { id:"shop",   nav:"🛍️ 購物", blocks: [shopping].filter(Boolean) },
       { id:"wallet", nav:"💰 記帳", blocks:[{ type:"expenses" }] },
+      /* 留言板不吃 Excel 的任何資料，固定產生一個空分頁：留言是旅途中才寫的，
+         而且跟記帳一樣要同步給所有人（網站程式裡的 state.board） */
+      { id:"board",  nav:"💬 留言板", blocks:[{ type:"board" }] },
       ...days
     ].filter(d => d.blocks.length),
     phrases, emergency

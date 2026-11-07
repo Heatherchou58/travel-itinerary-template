@@ -341,9 +341,16 @@ header .subtitle{ font-size:var(--fs-sm); color:var(--c-text-dim); margin:0 0 va
    手機上一排三塊：準備（左）、工具（中）、配色切換（右）。space-between 讓工具落在中間，
    不再貼著右邊。 */
 .sidenav{ display:contents; }   /* 手機：拆開，日期列才能單獨黏在 .app 頂端（包在 div 裡的話只能黏在 div 範圍內） */
+/* flex-wrap：旅途工具變成三顆（購物、記帳、留言板）之後，375px 的一排放不下了——
+   量過是「準備 138 ＋ 工具 224 ＋ 切換 44」，可用的只有 327px，超出 63px。
+   收窄內距或間距都救不了：間距一縮到 8px 以下就違反「觸控目標彼此 ≥ 8px」，
+   拿掉圖示雖然塞得進去，但輔助入口的「圖示＋文字」是這一列的辨識方式。
+   所以讓它折行：窄螢幕上第一列是準備資訊，第二列是旅途工具＋切換鍵。
+   這一列不黏在頂端，捲一下就過去了，多出來的高度只影響第一屏。
+   DOM 順序仍然等於畫面順序（WCAG 2.4.3），電腦版是直排、不受影響。 */
 .nav-aux{
-  display:flex; justify-content:space-between; align-items:center; gap:var(--sp-2);
-  padding:0 var(--sp-4) var(--sp-2);
+  display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center;
+  gap:var(--sp-2); padding:0 var(--sp-4) var(--sp-2);
 }
 .nav-group{ display:flex; gap:var(--sp-2); }
 /* 沒有項目的群組整組藏起來。自己設了 display 的元素 hidden 屬性藏不掉（第六節），要明寫 */
@@ -641,7 +648,7 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 .meta-foot{ margin-top:var(--sp-2); }
 /* 圖示：Phosphor regular 的 SVG，跟著文字的顏色與字級走，全站一個尺寸（1.15em） */
 .ic{ display:inline-block; width:1.15em; height:1.15em; flex:0 0 auto; vertical-align:-.2em; margin-right:.3em; fill:currentColor; }
-.fl-mid .ic, .shop-x .ic, .exp-del .ic, .wx-day .ic, .cc-grip .ic{ margin-right:0; }
+.fl-mid .ic, .shop-x .ic, .exp-del .ic, .bd-del .ic, .wx-day .ic, .cc-grip .ic{ margin-right:0; }
 .daymap-open .ic{ margin:0 0 0 .3em; }
 .wx-emoji .ic{ width:2.6rem; height:2.6rem; margin:0; vertical-align:0; color:var(--c-on-accent); }
 /* 圖示按語意上色（ui-ux-pro-max icon-style-consistent：同一套圖示、同一類同一色）。
@@ -945,6 +952,36 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 }
 .settle{ display:flex; justify-content:space-between; padding:var(--sp-2) 0; font-size:var(--fs-sm); }
 .settle b{ color:var(--c-on-accent); }
+
+/* ── 留言板 ───────────────────────────── */
+/* 多行輸入：.input 只給單行高度，留言要一眼看得到三四行。字級沿用 .input 的 16px
+   （小於 16px iPhone 會放大整個畫面），高度由 rows 決定，使用者還能自己拉長 */
+textarea.input{ min-height:88px; line-height:1.5; resize:vertical; }
+.bd-list{ margin-top:var(--sp-2); }
+.bd-item{
+  display:flex; justify-content:space-between; align-items:flex-start; gap:var(--sp-2);
+  padding:var(--sp-2) 0; border-bottom:1px solid var(--c-line);
+}
+.bd-item:last-child{ border-bottom:none; }
+.bd-body{ flex:1; min-width:0; }
+/* 留言者是這一列最先要認出來的，比內容粗一階；時間是次要資訊，小一階又淡一階 */
+.bd-who{ font-size:var(--fs-sm); font-weight:700; }
+.bd-at{
+  margin-left:var(--sp-2); font-size:var(--fs-xs); font-weight:400;
+  color:var(--c-text-dim); font-variant-numeric:tabular-nums;
+}
+/* 留言是使用者自己打的字：換行要留著（pre-wrap），貼進來的長網址要能斷行，
+   不然 375px 會被撐出橫向捲動 */
+.bd-text{
+  margin:2px 0 0; font-size:var(--fs-sm); line-height:1.6;
+  white-space:pre-wrap; overflow-wrap:anywhere;
+}
+/* 跟記帳的 ✕ 同一顆：本身只有約 20px 寬，不補到 44px 就點不到 */
+.bd-del{
+  flex:0 0 auto; border:none; background:none; color:var(--c-danger); cursor:pointer;
+  font-size:var(--fs-sm); padding:0 var(--sp-1);
+  min-height:44px; min-width:44px;
+}
 
 /* ── 同步狀態 ─────────────────────────── */
 /* 連線狀態固定在左下角。原本在右上角，但它是 position:fixed、z-index 比
@@ -1734,6 +1771,15 @@ const TRIP_DATA = {
       "blocks": [
         {
           "type": "expenses"
+        }
+      ]
+    },
+    {
+      "id": "board",
+      "nav": "💬 留言板",
+      "blocks": [
+        {
+          "type": "board"
         }
       ]
     },
@@ -3651,17 +3697,18 @@ const load = () => { try{ return JSON.parse(LS.get(KEY)) || {}; }catch{ return {
 const saved = load();
 const state = {
   checks: saved.checks || {},       // 個人清單（打包、個人購物）：只存本機
-  shopping: saved.shopping || {},   // 購物清單：只存本機（flush 只同步記帳）
+  shopping: saved.shopping || {},   // 購物清單：只存本機（flush 只同步記帳與留言板）
   cards: saved.cards || {},         // 信用卡額度追蹤：每人刷多少是自己的事，只存本機
   cardOrder: saved.cardOrder || [], // 信用卡排序：同上，A 手機排過不該動到 B 手機
   expenses: saved.expenses || [],
+  board: saved.board || [],         // 留言板：所有人都看得到，所以跟記帳一樣會同步
   queue: saved.queue || [],
   me: LS.get(`${KEY}:me`) || null
 };
 const persist = () => LS.set(KEY, JSON.stringify({
   checks: state.checks, shopping: state.shopping, cards: state.cards,
   cardOrder: state.cardOrder,
-  expenses: state.expenses, queue: state.queue
+  expenses: state.expenses, board: state.board, queue: state.queue
 }));
 
 /* ── 同步狀態顯示 ── */
@@ -3953,7 +4000,7 @@ const wakeHTML = w => w
 
 /* ── 信用卡的排序 ─────────────────────────
    順序只存本機（`state.cardOrder`，跟「出發前已刷」一樣）：誰先刷哪張是個人的決定，
-   A 手機排過不該動到 B 手機。flush() 只送 expenses、onSnapshot 也只收 expenses，
+   A 手機排過不該動到 B 手機。flush() 只送 expenses 與 board、onSnapshot 也只收這兩個，
    所以這裡不用另外擋。
    沒排過的照 Excel 的順序；之後在 Excel 加的新卡排在最後，不會插進已經排好的順序裡。 */
 const ccSort = items => {
@@ -4225,7 +4272,9 @@ const RENDERERS = {
     ${(TRIP_DATA.emergency||[]).map(e => `<div class="phrase"><span>${esc(e.label)}</span>
       <span>${e.tel ? `<a href="tel:${esc(e.value)}">${esc(e.value)}</a>` : esc(e.value)}</span></div>`).join("")}</div>`,
 
-  expenses: () => renderExpenses()
+  expenses: () => renderExpenses(),
+
+  board: () => renderBoard()
 };
 
 function renderBlock(b){
@@ -4351,7 +4400,7 @@ function buildNav(){
       `<span class="nav-main">${iconText(d.nav)}</span>${sub(d)}</button>`;
   /* 分三組：有日期的是每日行程；沒日期的再分「旅途工具」（購物、記帳）與「準備資訊」（其餘）。
      用 builder 固定給的 id 判斷，不靠分頁名稱——名稱每趟行程會不一樣 */
-  const TOOLS = new Set(["shop", "wallet"]);
+  const TOOLS = new Set(["shop", "wallet", "board"]);
   const days  = TRIP_DATA.days.filter(d => d.date);
   const tools = TRIP_DATA.days.filter(d => !d.date && TOOLS.has(d.id));
   const prep  = TRIP_DATA.days.filter(d => !d.date && !TOOLS.has(d.id));
@@ -5142,6 +5191,7 @@ document.getElementById("main").addEventListener("change", e => {
   if (e.target.name === "me"){
     state.me = e.target.value;
     LS.set(`${KEY}:me`, state.me);
+    paintBoard();   // ✕ 只畫在自己的留言上，換了「我是誰」整份清單要跟著重畫
     return;
   }
   if (e.target.id === "e-local"){
@@ -5153,6 +5203,8 @@ document.getElementById("main").addEventListener("change", e => {
 
 /* 購物清單的備註與金額：同樣就地存，不重新渲染，否則輸入框會失焦。 */
 document.getElementById("main").addEventListener("input", e => {
+  /* 留言草稿：存在變數裡，重畫時才接得回來（renderBoard 會把它填回 textarea） */
+  if (e.target.id === "bd-text"){ bdDraft = e.target.value; return; }
   const note = e.target.closest("[data-snote]");
   const amt  = e.target.closest("[data-samt]");
   if (!note && !amt) return;
@@ -5406,9 +5458,28 @@ document.getElementById("main").addEventListener("click", e => {
     for (const k of Object.keys(state.cards)) delete state.cards[k].hidden;
     persist(); renderDay(current); return;
   }
+  if (e.target.id === "bd-add") return addMessage();
   if (e.target.id === "e-add")  return addExpense();
   if (e.target.id === "e-csv")  return exportDetail();
   if (e.target.id === "e-csv2") return exportSettle();
+  /* 購物是 data-sdel、記帳是 data-del、留言是 data-bdel：三個分開寫，不然 #main 上的
+     處理器會互相誤認——原本購物與記帳都叫 data-del，刪一筆會順便動到另一邊 */
+  const bdel = e.target.closest("[data-bdel]");
+  if (bdel){
+    const i = state.board.findIndex(x => x.id === bdel.dataset.bdel);
+    if (i < 0) return;
+    const [gone] = state.board.splice(i, 1);
+    persist(); push({ type:"board" }); paintBoard();
+    /* 留言是同步的：誤觸 ✕ 會讓這則從所有人的裝置上消失，給 6 秒復原 */
+    toast("已刪除你的留言", 6000, {
+      label: "復原",
+      run(){
+        state.board.splice(Math.min(i, state.board.length), 0, gone);
+        persist(); push({ type:"board" }); paintBoard();
+      }
+    });
+    return;
+  }
   const del = e.target.closest("[data-del]");
   if (del){
     const i = state.expenses.findIndex(x => x.id === del.dataset.del);
@@ -5463,6 +5534,101 @@ function addExpense(){
   toast(`已記下「${item}」 ${M.money.home} ${fmt(home)}`);
 }
 
+/* ── 留言板 ─────────────────────────────────────
+   「每個人都可以留言、每個人都看得到全部的留言」，所以跟記帳同一類：走
+   push() → flush() 寫進 Firestore 的同一份文件、再由 onSnapshot 收回來。
+   （checks／shopping／cards 才是刻意只存本機的——那些本來就各人各一份。）
+
+   留言者沿用記帳頁的「我是誰」（state.me）：網站沒有身分概念（Firebase 是匿名登入），
+   而成員名單與這個選擇器本來就有，只是以前只偷偷寫進花費的 createdBy、沒顯示出來。
+   兩頁共用同一組 name="me" 的 radio，改一邊另一邊跟著變。 */
+
+/* 留言時間照目的地的時區顯示：旅途中打開網站，想知道的是「當地幾點說的」。
+   用裝置自己的時區在台日之間會差一小時，看起來就像沒人回話。 */
+const bdWhen = t => {
+  const d = new Date(t);
+  if (!t || isNaN(d)) return "";
+  return new Intl.DateTimeFormat("zh-TW", {
+    timeZone: M.place.timezone, month: "numeric", day: "numeric",
+    hour: "2-digit", minute: "2-digit", hour12: false
+  }).format(d);
+};
+
+/* 打到一半的留言。onSnapshot 收到別人的留言會整頁重畫（renderDay），
+   草稿存在外面才不會連自己正在打的字一起被洗掉。 */
+let bdDraft = "";
+
+function boardListHTML(){
+  /* 新的排在上面：手機上不用先捲過十幾則舊留言才看到最新的（跟花費明細同一個方向） */
+  const rows = [...state.board].sort((a, b) => b.at - a.at);
+  if (!rows.length) return `<div class="meta">還沒有留言。</div>`;
+  return rows.map(m => `<div class="bd-item">
+      <div class="bd-body">
+        <div class="bd-who">${esc(m.by)}<span class="bd-at">${esc(bdWhen(m.at))}</span></div>
+        <p class="bd-text">${esc(m.text)}</p>
+      </div>
+      ${m.by && m.by === state.me
+        ? `<button class="bd-del" data-bdel="${esc(m.id)}" aria-label="刪除你的留言「${esc(String(m.text).slice(0, 12))}」">${ic("x")}</button>`
+        : ""}
+    </div>`).join("");
+}
+
+function renderBoard(){
+  const members = M.members;
+  return `<div class="card">
+    <h2 class="subject" id="bd-me-l">我是誰</h2>
+    <div class="field"><div class="chips" id="bd-me" role="group" aria-labelledby="bd-me-l">
+      ${members.map(m => `<label class="chip"><input type="radio" name="me" value="${esc(m)}"${state.me === m ? " checked" : ""}>${esc(m)}</label>`).join("")}
+    </div><p class="f-err" id="bd-me-err" hidden></p></div>
+    <div class="note-box">跟記帳頁是同一個選擇，只存在這台裝置。留言會用這個名字署名。</div>
+  </div>
+  <div class="card">
+    <h2 class="subject">${ic("chat-circle-dots")}留言給大家</h2>
+    <div class="field"><label for="bd-text">留言內容</label>
+      <textarea class="input" id="bd-text" rows="3" placeholder="例：我先到飯店了，行李可以先放櫃檯">${esc(bdDraft)}</textarea>
+      <p class="f-err" id="bd-text-err" hidden></p></div>
+    <button class="btn btn-full" id="bd-add">送出留言</button>
+    <div class="meta meta-foot">送出後所有人的裝置都會看到。離線時先留在這台裝置，連上網路會自動補送。</div>
+  </div>
+
+  <div class="card"><h2 class="subject">所有留言</h2>
+    <div class="bd-list">${boardListHTML()}</div>
+    <div class="meta meta-foot">✕ 只出現在你自己的留言上。刪掉會從所有人的裝置上消失，有 6 秒可以復原。</div>
+  </div>`;
+}
+
+/* 只重畫留言清單，不重畫整頁：renderDay 會把打到一半的留言與捲動位置一起弄掉 */
+function paintBoard(){
+  const list = document.querySelector("#main .bd-list");
+  if (list) list.innerHTML = boardListHTML();
+}
+
+function addMessage(){
+  const el = document.getElementById("bd-text");
+  const text = el.value.trim();
+  /* 錯誤寫在欄位底下、用 aria-describedby 綁住、焦點移到第一個沒填的（跟記帳同一套；
+     全站已經沒有 alert()）。沒選「我是誰」也算沒填：留言沒有署名就不知道是誰說的。 */
+  const errs = [];
+  if (!state.me) errs.push(["bd-me",   "請先選擇你是誰，留言才知道是誰說的"]);
+  if (!text)     errs.push(["bd-text", "請填寫留言內容"]);
+  for (const id of ["bd-me", "bd-text"]){
+    const field = document.getElementById(id), msg = document.getElementById(`${id}-err`);
+    const hit = errs.find(x => x[0] === id);
+    msg.hidden = !hit; msg.textContent = hit ? hit[1] : "";
+    if (hit){ field.setAttribute("aria-invalid", "true"); field.setAttribute("aria-describedby", msg.id); }
+    else    { field.removeAttribute("aria-invalid"); field.removeAttribute("aria-describedby"); }
+  }
+  if (errs.length){
+    const first = document.getElementById(errs[0][0]);
+    (first.matches("input, textarea, select") ? first : first.querySelector("input"))?.focus();
+    return;
+  }
+  state.board.push({ id: crypto.randomUUID(), by: state.me, text, at: Date.now() });
+  bdDraft = ""; el.value = "";
+  persist(); push({ type: "board" }); paintBoard();
+  toast("已送出留言");
+}
+
 /* ── 離線優先同步 ── */
 let db = null, uid = null;
 function push(change){
@@ -5480,7 +5646,7 @@ async function flush(){
   try{
     const { doc, setDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
     await setDoc(doc(db, "trips", M.tripId, "shared", "state"), {
-      expenses: state.expenses, updatedAt: Date.now()
+      expenses: state.expenses, board: state.board, updatedAt: Date.now()
     });
     state.queue = []; persist(); setSync("ok","已同步");
   }catch(e){
@@ -5512,6 +5678,7 @@ async function initFirebase(){
       if (!d || state.queue.length) return;   // 本地有未傳資料時不覆蓋
       /* 刻意不碰 state.checks：打包清單是各自的，遠端殘留的舊值要忽略。 */
       state.expenses = d.expenses || [];
+      state.board = d.board || [];
       persist(); renderDay(current);
     });
     flush();

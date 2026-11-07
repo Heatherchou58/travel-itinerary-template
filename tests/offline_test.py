@@ -111,6 +111,7 @@ SWAP_TRIP = {
                      {"name": "托買的東西", "who": "媽媽"}]},
              ]},
             {"type": "expenses"},
+            {"type": "board"},
         ]},
     ],
     "phrases": [{"local": "How much?", "zh": "多少錢？"}],
@@ -394,6 +395,36 @@ def swap_trip_data(path: Path, trip: dict) -> None:
                     encoding="utf-8")
 
 
+# 留言板的種子資料：第 12 段的 UI 探針只量「畫面上真的有的元素」，留言板空著的話
+# 留言列（.bd-who／.bd-at／.bd-text）與 ✕ 的觸控範圍根本量不到。
+# 一則自己的（有 ✕）、一則旅伴的（沒有 ✕），兩個分支都要在畫面上。
+BOARD_ME = "白"
+BOARD_SEED = [
+    {"id": "seed-mine", "by": BOARD_ME, "text": "我先到飯店了，行李可以先放櫃檯",
+     "at": 1763200800000},
+    {"id": "seed-other", "by": "周", "text": "收到，我大概 20:30 到\n先去吃一蘭",
+     "at": 1763204400000},
+]
+
+
+def seed_board(page) -> None:
+    """把留言寫進本機再重新整理（副本已停用 Firebase，不會被遠端蓋掉）。"""
+    page.evaluate("""([rows, me]) => {
+        const k = 'trip:kyushu-fukuoka-2026';
+        const d = JSON.parse(localStorage.getItem(k) || '{}');
+        d.board = rows;
+        localStorage.setItem(k, JSON.stringify(d));
+        localStorage.setItem(k + ':me', me);
+    }""", [BOARD_SEED, BOARD_ME])
+    page.reload()
+    page.wait_for_load_state("networkidle")
+    page.wait_for_timeout(500)
+    got = page.evaluate("JSON.parse(localStorage.getItem('trip:kyushu-fukuoka-2026')||'{}')"
+                        ".board?.length ?? 0")
+    if got != len(BOARD_SEED):
+        sys.exit(f"注入留言失敗（讀回 {got} 則）：UI 探針會量到一個空清單，每條都假通過")
+
+
 def serve(root: Path) -> int:
     """在背景起一個靜態伺服器，回傳實際使用的埠號（0 = 讓系統挑）。"""
     class Quiet(http.server.SimpleHTTPRequestHandler):
@@ -589,6 +620,113 @@ def run(trip: str) -> bool:
             page.locator("#toast .toast-act").click()
             page.wait_for_timeout(400)
             r.check("記帳：按「復原」項目回來", page.locator(".exp-item", has_text="復原測試").count() == 1)
+
+            # 3b ── 留言板 ───────────────────────────────────
+            # 留言是「所有人都看得到」，所以跟記帳同一類：會進同步佇列、刪除給 6 秒復原。
+            # 仍然是離線狀態——旅途中訊號不好本來就是常態，留言要先留在本機。
+            page.get_by_role("tab", name=re.compile("留言板")).click()
+            page.wait_for_timeout(500)
+            r.check("留言板：分頁在「旅途工具」那一組（跟購物、記帳同一組）",
+                    page.locator("#nav-tools #tab-board").count() == 1
+                    and page.locator("#nav-prep #tab-board").count() == 0
+                    and page.locator("#nav #tab-board").count() == 0)
+            r.check("留言板：還沒有留言時說清楚", "還沒有留言" in page.locator("#main").inner_text())
+
+            # 什麼都沒填就送出：兩個欄位都在底下報錯，不跳 alert（全站已經沒有 alert()）
+            said.clear()
+            page.locator("#bd-add").click()
+            page.wait_for_timeout(300)
+            r.check("留言板：沒填就送出不跳 alert", not said, "／".join(said))
+            r.check("留言板：沒選「我是誰」時錯誤寫在欄位底下",
+                    page.locator("#bd-me-err").is_visible()
+                    and "你是誰" in page.locator("#bd-me-err").inner_text(),
+                    page.locator("#bd-me-err").inner_text())
+            r.check("留言板：沒填內容時錯誤也寫在欄位底下",
+                    page.locator("#bd-text-err").is_visible()
+                    and "留言" in page.locator("#bd-text-err").inner_text(),
+                    page.locator("#bd-text-err").inner_text())
+            r.check("留言板：沒填的欄位標成 aria-invalid、用 describedby 綁住錯誤",
+                    page.locator("#bd-text").get_attribute("aria-invalid") == "true"
+                    and page.locator("#bd-text").get_attribute("aria-describedby") == "bd-text-err")
+            r.check("留言板：焦點移到第一個沒填的欄位（我是誰）",
+                    page.evaluate("document.activeElement.name") == "me",
+                    page.evaluate("document.activeElement.id || document.activeElement.name"))
+
+            # 選了「我是誰」之後，只剩內容沒填：上一輪的錯誤要收掉，焦點換到內容
+            # chip 裡的 radio 是藏起來的（opacity:0;width:0），要點看得見的 label
+            page.locator('#bd-me .chip:has(input[value="白"])').click()
+            page.wait_for_timeout(200)
+            page.locator("#bd-add").click()
+            page.wait_for_timeout(300)
+            r.check("留言板：選了「我是誰」之後那一條錯誤收掉",
+                    not page.locator("#bd-me-err").is_visible()
+                    and page.locator("#bd-text-err").is_visible())
+            r.check("留言板：焦點移到留言內容", page.evaluate("document.activeElement.id") == "bd-text")
+
+            # 送出：出現在清單上，帶著留言者與時間
+            page.locator("#bd-text").fill("離線測試留言")
+            page.locator("#bd-add").click()
+            page.wait_for_timeout(500)
+            r.check("留言板：送出成功有提示", "已送出留言" in page.locator("#toast").inner_text(),
+                    page.locator("#toast").inner_text())
+            # 一律讀 #main 的 innerText，不要用 page.content()（CLAUDE.md 第六節）
+            r.check("留言板：送出的留言出現在清單上",
+                    "離線測試留言" in page.locator("#main").inner_text())
+            mine = page.locator(".bd-item", has_text="離線測試留言")
+            r.check("留言板：留言帶著留言者", "白" in mine.locator(".bd-who").inner_text(),
+                    mine.locator(".bd-who").inner_text())
+            r.check("留言板：留言帶著時間（目的地時區）",
+                    re.search(r"\d{1,2}/\d{1,2}\s+\d{1,2}:\d{2}", mine.locator(".bd-at").inner_text())
+                    is not None, mine.locator(".bd-at").inner_text())
+            r.check("留言板：送出後輸入框清空", page.locator("#bd-text").input_value() == "")
+            r.check("留言板：沒有 JS 例外", not errors, "; ".join(errors[:2]))
+
+            # 留言跟記帳一樣會上傳。打包清單才是只存本機（見 2b）——這兩條合起來守住同步的範圍
+            queued = page.evaluate(
+                "JSON.parse(localStorage.getItem('trip:kyushu-fukuoka-2026') || '{}')"
+                ".queue?.map(q => q.type) ?? []")
+            r.check("留言板：留言會進同步佇列（跟記帳同一類）", "board" in queued,
+                    f"佇列內容 {queued}")
+
+            page.reload()
+            page.wait_for_load_state("domcontentloaded")
+            page.wait_for_timeout(1200)
+            page.get_by_role("tab", name=re.compile("留言板")).click()
+            page.wait_for_timeout(500)
+            r.check("留言板：重新整理後留言還在",
+                    "離線測試留言" in page.locator("#main").inner_text())
+
+            # 誤刪可以復原：留言是同步的，誤觸 ✕ 會讓所有人的裝置上都少一則
+            page.locator(".bd-item", has_text="離線測試留言").locator(".bd-del").click()
+            page.wait_for_timeout(400)
+            r.check("留言板：刪除後留言消失",
+                    page.locator(".bd-item", has_text="離線測試留言").count() == 0)
+            r.check("留言板：刪除的提示有「復原」可以按",
+                    page.locator("#toast .toast-act").is_visible()
+                    and "復原" in page.locator("#toast .toast-act").inner_text())
+            page.locator("#toast .toast-act").click()
+            page.wait_for_timeout(400)
+            r.check("留言板：按「復原」留言回來",
+                    page.locator(".bd-item", has_text="離線測試留言").count() == 1)
+
+            # ✕ 只畫在自己的留言上。Firebase 是匿名登入，擋不住任何人，這條只是防誤觸
+            r.check("留言板：自己的留言有 ✕",
+                    page.locator(".bd-item", has_text="離線測試留言").locator(".bd-del").count() == 1)
+            page.locator('#bd-me .chip:has(input[value="周"])').click()
+            page.wait_for_timeout(300)
+            r.check("留言板：換成別人之後，那一則就沒有 ✕ 了",
+                    page.locator(".bd-item", has_text="離線測試留言").locator(".bd-del").count() == 0)
+
+            # 打到一半的留言不能被重畫弄掉（別人送留言時 onSnapshot 會整頁重畫）
+            page.locator("#bd-text").fill("打到一半的留言")
+            page.wait_for_timeout(200)
+            page.get_by_role("tab", name=re.compile("記帳")).click()
+            page.wait_for_timeout(300)
+            page.get_by_role("tab", name=re.compile("留言板")).click()
+            page.wait_for_timeout(300)
+            r.check("留言板：重畫之後打到一半的留言還在",
+                    page.locator("#bd-text").input_value() == "打到一半的留言",
+                    page.locator("#bd-text").input_value())
             ctx.close()
 
             # 4 ── 鍵盤操作看得見 focus ──────────────────────
@@ -737,6 +875,11 @@ def run(trip: str) -> bool:
             # 信用卡回饋額度（在第二天）
             page.locator(".nav-item").nth(1).click()
             page.wait_for_timeout(400)
+            # 留言板也在第二天。留言是空的，但渲染過就會有這句——
+            # 漏掉 renderer 的話 renderBlock 會改畫錯誤卡片，這條就會失敗
+            r.check("置換 TRIP_DATA：board 留言板 有渲染",
+                    "還沒有留言" in page.locator("#main").inner_text()
+                    and page.locator("#main .bd-list").count() == 1)
             r.check("信用卡：三張都渲染", page.locator(".cc").count() == 3,
                     f"{page.locator('.cc').count()} 張")
             r.check("信用卡：沒有額度的不畫進度條",
@@ -1870,6 +2013,15 @@ def run(trip: str) -> bool:
             page.goto(base)
             page.wait_for_load_state("networkidle")
             page.wait_for_timeout(800)
+            seed_board(page)   # 留言板空的話，下面的探針量不到留言列與 ✕
+            page.get_by_role("tab", name=re.compile("留言板")).click()
+            page.wait_for_timeout(300)
+            r.check("留言板：UI 規則量到的是有留言的清單（不是空的）",
+                    page.locator("#main .bd-item").count() == len(BOARD_SEED)
+                    and page.locator("#main .bd-del").count() == 1
+                    and page.locator("#main .bd-del").first.is_visible(),
+                    f"{page.locator('#main .bd-item').count()} 則、"
+                    f"{page.locator('#main .bd-del').count()} 顆 ✕")
             UX_PROBE = """() => {
                 const vis = e => e.checkVisibility() && e.getBoundingClientRect().width > 0;
                 const nums = c => c.match(/[0-9.]+/g).map(Number);
@@ -2004,6 +2156,7 @@ def run(trip: str) -> bool:
             page.goto(base)
             page.wait_for_load_state("networkidle")
             page.wait_for_timeout(500)
+            seed_board(page)
             # 深色模式特有的第二條：面跟面要分得開。上面那支探針只量文字，量不到
             # 「說明框的底色跟卡片底色幾乎一樣」——使用者是看畫面才發現的，當時
             # 區別度只有 1.02（1.00 ＝ 完全同色）。
@@ -2076,6 +2229,7 @@ def run(trip: str) -> bool:
             page = ctx.new_page()
             page.goto(base)
             page.wait_for_load_state("networkidle")
+            seed_board(page)
             unlabeled = []
             tabs = page.locator(".nav-item")
             for i in range(tabs.count()):
