@@ -2511,6 +2511,23 @@ def run(trip: str) -> bool:
                 if locked:          # 記帳：鎖著的密碼框與解開後的表單都要過同一組規則
                     unlock_wallet(page)
                     ux_pass(tab)
+            # 信用卡「修改總額」的鉛筆鍵要貼在「已計入」右邊，金額大了也一樣。
+            # 那一行原本會折行：金額到千位，文字＋44px 的鍵就超過 375px，鍵掉到下一行，
+            # 每張卡片多 30 幾 px。只用 $0 量的話看不出來（踩過一次），所以刻意加到六位數
+            page.locator("#tab-info").click()
+            page.wait_for_timeout(300)
+            cc_big = page.locator("#main .cc:has(.cc-add-input)").first
+            if cc_big.count():
+                cc_big.locator(".cc-add-input").fill("123456")
+                cc_big.locator(".cc-add-btn").click()
+                page.wait_for_timeout(200)
+                pen = cc_big.locator(".cc-fix").bounding_box()
+                used = cc_big.locator(".cc-used").bounding_box()
+                same_row = (pen and used and pen["y"] < used["y"] + used["height"]
+                            and used["y"] < pen["y"] + pen["height"])
+                r.check("信用卡：金額六位數時，鉛筆鍵仍然跟「已計入」同一行（375px）", bool(same_row),
+                        f"已計入 y={used and round(used['y'])}–{used and round(used['y'] + used['height'])}，"
+                        f"鍵 y={pen and round(pen['y'])}–{pen and round(pen['y'] + pen['height'])}")
             for k, label in [("contrast", "文字對比 ≥ 4.5:1（大字 3:1）"), ("target", "觸控目標 ≥ 44×44px"),
                              ("spacing", "觸控目標之間 ≥ 8px"), ("alt", "圖片都有替代文字"),
                              ("heading", "標題層級不跳級"), ("emoji", "介面不用 emoji 當圖示（網站標題除外）"),

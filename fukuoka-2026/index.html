@@ -539,8 +539,11 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 .cc-row{ display:flex; flex-wrap:wrap; align-items:flex-end; gap:var(--sp-2); margin-top:var(--sp-3); }
 .cc-row .f-lbl{ flex:1 1 10em; min-width:0; }
 .cc-row .btn{ margin:0; flex:0 0 auto; }
-.cc-used-row{ display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:var(--sp-2); margin-top:var(--sp-2); }
-.cc-used-row .cc-used{ margin-top:0; }
+/* 不折行：金額到千位以上，「已計入…／額度…」加上 44px 的鉛筆鍵就超過 375px 那一行。
+   折行的話鍵會掉到下一行（每張卡片多 30 幾 px、九張就一大截），所以改成文字自己在框裡換行，
+   鍵永遠貼在右邊 */
+.cc-used-row{ display:flex; align-items:center; gap:var(--sp-2); margin-top:var(--sp-2); }
+.cc-used-row .cc-used{ margin-top:0; flex:1; min-width:0; }
 .cc-bar{
   height:6px; border-radius:3px; background:var(--c-line);
   margin-top:var(--sp-3); overflow:hidden;
