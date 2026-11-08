@@ -511,9 +511,12 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
   box-shadow:var(--shadow-pop); background:var(--c-surface);
   user-select:none; -webkit-user-select:none;
 }
+/* 回饋%是這張卡「現在該不該拿出來刷」的關鍵數字，使用者要求放大、加粗——
+   比卡名本身還顯眼才對 */
 .cc-rate{
-  margin-left:var(--sp-2); padding:1px var(--sp-2); border-radius:var(--r-pill);
-  background:var(--c-alt-soft); color:var(--c-alt-text); font-size:var(--fs-xs);
+  margin-left:var(--sp-2); padding:2px var(--sp-3); border-radius:var(--r-pill);
+  background:var(--c-alt-soft); color:var(--c-alt-text); font-size:var(--fs-xl); font-weight:700;
+  display:inline-block; vertical-align:middle;
 }
 .cc-x, .cc-restore, .shop-restore{
   flex:0 0 auto; min-height:44px; padding:0 var(--sp-3);
@@ -523,9 +526,13 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 }
 .cc-restore, .shop-restore{ width:100%; margin-top:var(--sp-3); }
 .cc-expired{ color:var(--c-danger); font-weight:700; }
-.cc-field{ display:flex; align-items:center; gap:var(--sp-3); margin-top:var(--sp-3); }
-.cc-field span{ flex:0 0 auto; font-size:var(--fs-sm); color:var(--c-text-dim); }
-.cc-field .input{ flex:1; min-width:0; }
+/* 「加入這筆」「修改總額」共用同一種排版：標籤在上、輸入框與按鈕同一行貼齊底部——
+   跟 .vault-form 同一套版面語言 */
+.cc-row{ display:flex; flex-wrap:wrap; align-items:flex-end; gap:var(--sp-2); margin-top:var(--sp-3); }
+.cc-row .f-lbl{ flex:1 1 10em; min-width:0; }
+.cc-row .btn{ margin:0; flex:0 0 auto; }
+.cc-used-row{ display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:var(--sp-2); margin-top:var(--sp-2); }
+.cc-used-row .cc-used{ margin-top:0; }
 .cc-bar{
   height:6px; border-radius:3px; background:var(--c-line);
   margin-top:var(--sp-3); overflow:hidden;
@@ -4325,6 +4332,81 @@ const focusGrip = name => {
   if (g) g.focus();
 };
 
+/* ── 信用卡的已刷金額：累加，不是覆寫 ─────────────
+   使用者要求：旅程當下一筆一筆刷的，不會每次都湊整數，所以「加入」只把這一筆
+   累加進已計入的總額，輸入框清空、游標留在原地方便連打下一筆。
+   要大幅度訂正（忘了登好幾筆、重算）才用「修改總額」直接覆寫；平常不用它。
+   兩個動作都是就地改 DOM，不整頁重畫——跟拖曳排序、購物備註同一個理由：
+   重畫會把其他卡片正在打的金額、游標都弄丟。 */
+const ccBox = name => [...document.querySelectorAll(".cc")].find(el => el.dataset.card === name);
+
+function refreshCard(name){
+  const box = ccBox(name);
+  if (!box) return;
+  const quota = Number(box.dataset.quota) || 0;
+  const spent = Number((state.cards[name] || {}).spent) || 0;
+  const left  = Math.max(0, quota - spent);
+  const bar = box.querySelector(".cc-bar i");
+  if (bar) bar.style.width = (quota ? Math.min(100, Math.round(spent / quota * 100)) : 0) + "%";
+  const used = box.querySelector(".cc-used");
+  if (used) used.textContent = `已計入 ${M.money.home}$${fmt(spent)}／額度 ${M.money.home}$${fmt(quota)}`;
+  const leftEl = box.querySelector(".cc-left");
+  if (leftEl){
+    leftEl.textContent = `剩餘 ${M.money.home}$${fmt(left)}`;
+    leftEl.classList.toggle("cc-full", left === 0);
+  }
+}
+
+function addCardSpent(name){
+  const box = ccBox(name);
+  const input = box && box.querySelector(".cc-add-input");
+  if (!input) return;
+  const amt = Math.round(Number(input.value));
+  if (!amt || amt <= 0){ input.focus(); return; }
+  const before = Number((state.cards[name] || {}).spent) || 0;
+  state.cards[name] = { ...(state.cards[name] || {}), spent: before + amt };
+  persist();
+  input.value = "";
+  refreshCard(name);
+  input.focus();
+  toast(`「${name}」已加入 ${M.money.home}$${fmt(amt)}`, 6000, {
+    label: "復原",
+    run(){
+      state.cards[name] = { ...(state.cards[name] || {}), spent: before };
+      persist(); refreshCard(name);
+    }
+  });
+}
+
+const cardFixRowHTML = (name, spent) => `<div class="cc-row cc-fix-row">
+    <label class="f-lbl">已計入的總額<input class="input cc-fix-input" type="number" inputmode="numeric"
+           min="0" step="1" data-card="${esc(name)}" value="${spent}"></label>
+    <button class="btn cc-fix-ok" type="button" data-card="${esc(name)}">確定</button>
+    <button class="btn btn-plain cc-fix-cancel" type="button">取消</button>
+  </div>`;
+
+function toggleCardFix(name){
+  const box = ccBox(name);
+  if (!box) return;
+  const open = box.querySelector(".cc-fix-row");
+  if (open){ open.remove(); return; }
+  const spent = Number((state.cards[name] || {}).spent) || 0;
+  box.querySelector(".cc-used-row").insertAdjacentHTML("afterend", cardFixRowHTML(name, spent));
+  const input = box.querySelector(".cc-fix-input");
+  input.focus(); input.select();
+}
+
+function confirmCardFix(name){
+  const box = ccBox(name);
+  const input = box && box.querySelector(".cc-fix-input");
+  if (!input) return;
+  const spent = Math.max(0, Math.round(Number(input.value)) || 0);
+  state.cards[name] = { ...(state.cards[name] || {}), spent };
+  persist();
+  box.querySelector(".cc-fix-row")?.remove();
+  refreshCard(name);
+}
+
 /* ── 航空公司的識別色 ─────────────────────
    用航班編號前兩碼（IATA 代碼）對，不是用公司名字——名字每趟行程寫法不一樣
    （「EVA AIR」「長榮航空」），代碼不會變。對不到的就不上色。
@@ -4468,11 +4550,17 @@ const RENDERERS = {
           ${c.regions ? `<div class="meta">${esc(c.regions)}</div>` : ""}
           ${c.until ? `<div class="meta${expired ? " cc-expired" : ""}">活動到期日 ${esc(c.until)}${expired ? "　已過期" : ""}</div>` : ""}
           ${quota ? `
-            <label class="cc-field"><span>出發前已刷</span>
-              <input class="input cc-spent" type="number" inputmode="numeric" min="0"
-                     data-card="${esc(c.name)}" value="${spent || ""}" placeholder="0"></label>
+            <div class="cc-row">
+              <label class="f-lbl">這筆刷了多少<input class="input cc-add-input" type="number" inputmode="numeric"
+                     min="0" step="1" data-card="${esc(c.name)}" placeholder="輸入金額，自動加總"></label>
+              <button class="btn btn-plain cc-add-btn" type="button" data-card="${esc(c.name)}">加入</button>
+            </div>
             <div class="cc-bar"><i style="width:${pct}%"></i></div>
-            <div class="meta cc-used">已計入 ${esc(M.money.home)}$${fmt(spent)}／額度 ${esc(M.money.home)}$${fmt(quota)}</div>
+            <div class="cc-used-row">
+              <div class="meta cc-used">已計入 ${esc(M.money.home)}$${fmt(spent)}／額度 ${esc(M.money.home)}$${fmt(quota)}</div>
+              <button class="cc-x" type="button" data-cc-fix="${esc(c.name)}"
+                      aria-label="直接修改「${esc(c.name)}」已計入的總額">${ic("pencil-simple")}修改總額</button>
+            </div>
             <div class="cc-left${left ? "" : " cc-full"}">剩餘 ${esc(M.money.home)}$${fmt(left)}</div>
           ` : `<div class="meta">這張沒有回饋上限，不用算額度</div>`}
           ${c.register ? `<label class="chk cc-reg"><input type="checkbox" data-reg="${esc(c.name)}"${s.done ? " checked" : ""}><span>已完成銀行活動登錄</span></label>` : ""}
@@ -5585,28 +5673,6 @@ document.getElementById("main").addEventListener("input", e => {
   persist();
 });
 
-/* 信用卡的已刷金額：就地更新進度條與剩餘，不重新渲染整頁——
-   重畫的話每打一個字輸入框就會失焦。 */
-document.getElementById("main").addEventListener("input", e => {
-  const el = e.target.closest(".cc-spent");
-  if (!el) return;
-  const box   = el.closest(".cc");
-  const name  = el.dataset.card;
-  const quota = Number(box.dataset.quota) || 0;
-  const spent = Math.max(0, Number(el.value) || 0);
-  state.cards[name] = { ...(state.cards[name] || {}), spent };
-  persist();
-
-  const left = Math.max(0, quota - spent);
-  box.querySelector(".cc-bar i").style.width =
-    (quota ? Math.min(100, Math.round(spent / quota * 100)) : 0) + "%";
-  box.querySelector(".cc-used").textContent =
-    `已計入 ${M.money.home}$${fmt(spent)}／額度 ${M.money.home}$${fmt(quota)}`;
-  const leftEl = box.querySelector(".cc-left");
-  leftEl.textContent = `剩餘 ${M.money.home}$${fmt(left)}`;
-  leftEl.classList.toggle("cc-full", left === 0);
-});
-
 /* 已經加好的項目補一張圖 */
 document.getElementById("main").addEventListener("change", e => {
   const f = e.target.closest("[data-simg]");
@@ -5803,6 +5869,12 @@ for (const t of ["pointerup", "pointercancel"]) window.addEventListener(t, ccDra
 
 /* 不用拖的替代方式（WCAG 2.5.7）：把手聚焦後用上下鍵。讀螢幕的人也是走這條 */
 document.getElementById("main").addEventListener("keydown", e => {
+  if (e.key === "Enter" && e.target.closest(".cc-add-input")){
+    e.preventDefault(); return addCardSpent(e.target.dataset.card);
+  }
+  if (e.key === "Enter" && e.target.closest(".cc-fix-input")){
+    e.preventDefault(); return confirmCardFix(e.target.dataset.card);
+  }
   const grip = e.target.closest("[data-grip]");
   if (!grip) return;
   const dir = e.key === "ArrowUp" ? -1 : e.key === "ArrowDown" ? 1 : 0;
@@ -5832,6 +5904,16 @@ document.getElementById("main").addEventListener("click", e => {
   if (e.target.id === "bd-take") return registerDevice(true);   // 這是我的新手機
   if (e.target.id === "bd-redo"){ bdEdit = true; renderDay(current); return; }
   if (e.target.closest("#e-lock")) return lockWallet();
+  const ccAdd = e.target.closest(".cc-add-btn");
+  if (ccAdd) return addCardSpent(ccAdd.dataset.card);
+  const ccFixToggle = e.target.closest("[data-cc-fix]");
+  if (ccFixToggle) return toggleCardFix(ccFixToggle.dataset.ccFix);
+  const ccFixOk = e.target.closest(".cc-fix-ok");
+  if (ccFixOk) return confirmCardFix(ccFixOk.dataset.card);
+  if (e.target.closest(".cc-fix-cancel")){
+    e.target.closest(".cc")?.querySelector(".cc-fix-row")?.remove();
+    return;
+  }
   if (e.target.id === "e-add")  return addExpense();
   if (e.target.id === "e-csv")  return exportDetail();
   if (e.target.id === "e-csv2") return exportSettle();

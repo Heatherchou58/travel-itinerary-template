@@ -1161,21 +1161,96 @@ def run(trip: str) -> bool:
             r.check("信用卡：未過期的不標",
                     page.locator('.cc[data-card="有額度卡"] .cc-expired').count() == 0)
 
+            # 信用卡：累計（使用者要求——旅程當下一筆一筆刷的，不會每次都湊整數，
+            # 「加入」只把這一筆累加進已計入的總額；要大幅訂正才用「修改總額」直接覆寫。
+            # 回饋%要比以前顯眼（使用者要求字放大）。
             quota_card = page.locator('.cc[data-card="有額度卡"]')
-            inp = quota_card.locator(".cc-spent")
-            inp.click()
-            inp.type("2000", delay=30)
-            page.wait_for_timeout(300)
-            # 整頁重畫的話輸入框會失焦，這是不重畫的全部理由
-            r.check("信用卡：輸入時輸入框不失焦",
-                    page.evaluate("document.activeElement.classList.contains('cc-spent')"))
-            r.check("信用卡：剩餘額度正確（額度 5000 − 已刷 2000）",
-                    "3,000" in quota_card.locator(".cc-left").inner_text(),
-                    quota_card.locator(".cc-left").inner_text())
-            r.check("信用卡：進度條寬度正確",
+            expired_card = page.locator('.cc[data-card="過期卡"]')   # 也有額度(1000)，借來測「不會互相干擾」
+            add_in = quota_card.locator(".cc-add-input")
+            add_btn = quota_card.locator(".cc-add-btn")
+
+            r.check("信用卡：回饋%字比卡名還大（使用者要求放大）",
+                    float(quota_card.locator(".cc-rate").evaluate("e => getComputedStyle(e).fontSize"
+                                                                   ".replace('px','')"))
+                    > float(quota_card.locator(".cc-name").evaluate("e => getComputedStyle(e).fontSize"
+                                                                     ".replace('px','')")))
+
+            add_in.click(); add_in.type("2000", delay=30)
+            add_btn.click()
+            page.wait_for_timeout(200)
+            r.check("信用卡：加入第一筆後已計入正確（0 + 2000）",
+                    "2,000" in quota_card.locator(".cc-used").inner_text()
+                    and "3,000" in quota_card.locator(".cc-left").inner_text(),
+                    quota_card.locator(".cc-used").inner_text())
+            r.check("信用卡：進度條寬度正確（2000／5000）",
                     quota_card.locator(".cc-bar i").evaluate("e => e.style.width") == "40%",
                     quota_card.locator(".cc-bar i").evaluate("e => e.style.width"))
-            r.check("信用卡：已刷金額不進同步佇列",
+            r.check("信用卡：加入後輸入框清空、游標留在原地（方便連打下一筆）",
+                    add_in.input_value() == ""
+                    and page.evaluate("document.activeElement.classList.contains('cc-add-input')"))
+
+            # 累計：第二筆要「加上去」，不是覆寫成新值——這是這次改動的重點
+            add_in.fill("500")
+            add_in.press("Enter")   # 也測 Enter 鍵能送出，不是只有按鈕
+            page.wait_for_timeout(200)
+            r.check("信用卡：第二筆是累加（2000 + 500 = 2500），不是覆寫",
+                    "2,500" in quota_card.locator(".cc-used").inner_text(),
+                    quota_card.locator(".cc-used").inner_text())
+
+            # 誤刪可以復原：加入也一樣——金額打錯很容易發生
+            r.check("信用卡：加入後有提示、可以復原",
+                    page.locator("#toast .toast-act").is_visible()
+                    and "復原" in page.locator("#toast .toast-act").inner_text()
+                    and "500" in page.locator("#toast").inner_text(),
+                    page.locator("#toast").inner_text())
+            page.locator("#toast .toast-act").click()
+            page.wait_for_timeout(200)
+            r.check("信用卡：按「復原」只退回上一筆（回到 2000，不是歸零）",
+                    "2,000" in quota_card.locator(".cc-used").inner_text(),
+                    quota_card.locator(".cc-used").inner_text())
+
+            add_btn.click()   # 輸入框這時是空的
+            page.wait_for_timeout(150)
+            r.check("信用卡：空白按「加入」不會動（不會加進 0）",
+                    "2,000" in quota_card.locator(".cc-used").inner_text(),
+                    quota_card.locator(".cc-used").inner_text())
+
+            # 不整頁重畫：在別張卡片打到一半的金額，加這張的時候不能被洗掉
+            expired_in = expired_card.locator(".cc-add-input")
+            expired_in.click(); expired_in.type("999", delay=30)
+            add_in.click(); add_in.fill("300"); add_btn.click()
+            page.wait_for_timeout(200)
+            r.check("信用卡：加入一張卡不會洗掉別張卡還沒送出的輸入",
+                    expired_in.input_value() == "999", expired_in.input_value())
+            r.check("信用卡：累加到 2300", "2,300" in quota_card.locator(".cc-used").inner_text(),
+                    quota_card.locator(".cc-used").inner_text())
+
+            # 修改總額：少數要大幅度訂正才用，平常用「加入」就好
+            r.check("信用卡：一開始沒有「修改總額」的輸入框", quota_card.locator(".cc-fix-input").count() == 0)
+            quota_card.locator("[data-cc-fix]").click()
+            page.wait_for_timeout(150)
+            fix_in = quota_card.locator(".cc-fix-input")
+            r.check("信用卡：「修改總額」展開，預填目前的總額",
+                    fix_in.is_visible() and fix_in.input_value() == "2300", fix_in.input_value())
+            fix_in.fill("1200")
+            quota_card.locator(".cc-fix-cancel").click()
+            page.wait_for_timeout(150)
+            r.check("信用卡：取消不會改到總額", "2,300" in quota_card.locator(".cc-used").inner_text()
+                    and quota_card.locator(".cc-fix-input").count() == 0,
+                    quota_card.locator(".cc-used").inner_text())
+
+            quota_card.locator("[data-cc-fix]").click()
+            page.wait_for_timeout(150)
+            quota_card.locator(".cc-fix-input").fill("1200")
+            quota_card.locator(".cc-fix-ok").click()
+            page.wait_for_timeout(150)
+            r.check("信用卡：修改總額是覆寫，不是累加（變成 1200，不是 2300+1200）",
+                    "1,200" in quota_card.locator(".cc-used").inner_text()
+                    and "3,800" in quota_card.locator(".cc-left").inner_text()
+                    and quota_card.locator(".cc-fix-input").count() == 0,
+                    quota_card.locator(".cc-used").inner_text())
+
+            r.check("信用卡：已刷金額不進同步佇列（只存本機）",
                     "cards" not in page.evaluate(
                         "(JSON.parse(localStorage.getItem('trip:swaptest-2027')||'{}').queue||[])"
                         ".map(q => q.type).join(',')"))
