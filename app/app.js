@@ -1,0 +1,2652 @@
+/* ═══════════════════════════════════════════════
+   旅遊行程網站的程式——所有行程共用這一份
+   ═══════════════════════════════════════════════
+   index.html 只放資料：TRIP_DATA 與 FIREBASE_CONFIG 寫在經典的 <script> 裡
+  （不是 module），頂層 const 是全域的，這支模組直接讀這兩個名字。
+   builder 產生網站時會把這支與 app.css 內嵌回 index.html，產出來的網站
+   仍然是單一 HTML（見 CLAUDE.md 第一節）。 */
+
+/* 圖示：Phosphor Icons 2.1.1（regular），取代 emoji 當圖示（ui-ux-pro-max：no-emoji-icons）。
+     要加圖示：從 https://unpkg.com/@phosphor-icons/core@2.1.1/assets/regular/<名稱>.svg 取 path，
+     包成 <symbol id="i-名稱"> 放進來，程式裡用 ic("名稱")。
+
+MIT License
+
+Copyright (c) 2023 Phosphor Icons
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+*/
+document.body.insertAdjacentHTML("afterbegin", `<svg xmlns="http://www.w3.org/2000/svg" style="display:none" aria-hidden="true">
+<symbol id="i-airplane-tilt" viewBox="0 0 256 256"><path d="M185.33,114.21l29.14-27.42.17-.17a32,32,0,0,0-45.26-45.26c0,.06-.11.11-.17.17L141.79,70.67l-83-30.2a8,8,0,0,0-8.39,1.86l-24,24a8,8,0,0,0,1.22,12.31l63.89,42.59L76.69,136H56a8,8,0,0,0-5.65,2.34l-24,24A8,8,0,0,0,29,175.42l36.82,14.73,14.7,36.75.06.16a8,8,0,0,0,13.18,2.47l23.87-23.88A8,8,0,0,0,120,200V179.31l14.76-14.76,42.59,63.89a8,8,0,0,0,12.31,1.22l24-24a8,8,0,0,0,1.86-8.39Zm-.07,97.23-42.59-63.88A8,8,0,0,0,136.8,144c-.27,0-.53,0-.79,0a8,8,0,0,0-5.66,2.35l-24,24A8,8,0,0,0,104,176v20.69L90.93,209.76,79.43,181A8,8,0,0,0,75,176.57l-28.74-11.5L59.32,152H80a8,8,0,0,0,5.66-2.34l24-24a8,8,0,0,0-1.22-12.32L44.56,70.74l13.5-13.49,83.22,30.26a8,8,0,0,0,8.56-2L180.78,52.6A16,16,0,0,1,203.4,75.23l-32.87,30.93a8,8,0,0,0-2,8.56l30.26,83.22Z"/></symbol>
+<symbol id="i-alarm" viewBox="0 0 256 256"><path d="M128,40a96,96,0,1,0,96,96A96.11,96.11,0,0,0,128,40Zm0,176a80,80,0,1,1,80-80A80.09,80.09,0,0,1,128,216ZM61.66,37.66l-32,32A8,8,0,0,1,18.34,58.34l32-32A8,8,0,0,1,61.66,37.66Zm176,32a8,8,0,0,1-11.32,0l-32-32a8,8,0,0,1,11.32-11.32l32,32A8,8,0,0,1,237.66,69.66ZM184,128a8,8,0,0,1,0,16H128a8,8,0,0,1-8-8V80a8,8,0,0,1,16,0v48Z"/></symbol>
+<symbol id="i-arrow-square-out" viewBox="0 0 256 256"><path d="M224,104a8,8,0,0,1-16,0V59.32l-66.33,66.34a8,8,0,0,1-11.32-11.32L196.68,48H152a8,8,0,0,1,0-16h64a8,8,0,0,1,8,8Zm-40,24a8,8,0,0,0-8,8v72H48V80h72a8,8,0,0,0,0-16H48A16,16,0,0,0,32,80V208a16,16,0,0,0,16,16H176a16,16,0,0,0,16-16V136A8,8,0,0,0,184,128Z"/></symbol>
+<symbol id="i-arrows-clockwise" viewBox="0 0 256 256"><path d="M224,48V96a8,8,0,0,1-8,8H168a8,8,0,0,1,0-16h28.69L182.06,73.37a79.56,79.56,0,0,0-56.13-23.43h-.45A79.52,79.52,0,0,0,69.59,72.71,8,8,0,0,1,58.41,61.27a96,96,0,0,1,135,.79L208,76.69V48a8,8,0,0,1,16,0ZM186.41,183.29a80,80,0,0,1-112.47-.66L59.31,168H88a8,8,0,0,0,0-16H40a8,8,0,0,0-8,8v48a8,8,0,0,0,16,0V179.31l14.63,14.63A95.43,95.43,0,0,0,130,222.06h.53a95.36,95.36,0,0,0,67.07-27.33,8,8,0,0,0-11.18-11.44Z"/></symbol>
+<symbol id="i-bed" viewBox="0 0 256 256"><path d="M216,72H32V48a8,8,0,0,0-16,0V208a8,8,0,0,0,16,0V176H240v32a8,8,0,0,0,16,0V112A40,40,0,0,0,216,72ZM32,88h72v72H32Zm88,72V88h96a24,24,0,0,1,24,24v48Z"/></symbol>
+<symbol id="i-bicycle" viewBox="0 0 256 256"><path d="M208,112a47.81,47.81,0,0,0-16.93,3.09L165.93,72H192a8,8,0,0,1,8,8,8,8,0,0,0,16,0,24,24,0,0,0-24-24H152a8,8,0,0,0-6.91,12l11.65,20H99.26L82.91,60A8,8,0,0,0,76,56H48a8,8,0,0,0,0,16H71.41L85.12,95.51,69.41,117.06a48.13,48.13,0,1,0,12.92,9.44l11.59-15.9L125.09,164A8,8,0,1,0,138.91,156l-30.32-52h57.48l11.19,19.17A48,48,0,1,0,208,112ZM80,160a32,32,0,1,1-20.21-29.74l-18.25,25a8,8,0,1,0,12.92,9.42l18.25-25A31.88,31.88,0,0,1,80,160Zm128,32a32,32,0,0,1-22.51-54.72L201.09,164A8,8,0,1,0,214.91,156L199.3,129.21A32,32,0,1,1,208,192Z"/></symbol>
+<symbol id="i-calendar-check" viewBox="0 0 256 256"><path d="M208,32H184V24a8,8,0,0,0-16,0v8H88V24a8,8,0,0,0-16,0v8H48A16,16,0,0,0,32,48V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V48A16,16,0,0,0,208,32ZM72,48v8a8,8,0,0,0,16,0V48h80v8a8,8,0,0,0,16,0V48h24V80H48V48ZM208,208H48V96H208V208Zm-38.34-85.66a8,8,0,0,1,0,11.32l-48,48a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L116,164.69l42.34-42.35A8,8,0,0,1,169.66,122.34Z"/></symbol>
+<symbol id="i-camera" viewBox="0 0 256 256"><path d="M208,56H180.28L166.65,35.56A8,8,0,0,0,160,32H96a8,8,0,0,0-6.65,3.56L75.71,56H48A24,24,0,0,0,24,80V192a24,24,0,0,0,24,24H208a24,24,0,0,0,24-24V80A24,24,0,0,0,208,56Zm8,136a8,8,0,0,1-8,8H48a8,8,0,0,1-8-8V80a8,8,0,0,1,8-8H80a8,8,0,0,0,6.66-3.56L100.28,48h55.43l13.63,20.44A8,8,0,0,0,176,72h32a8,8,0,0,1,8,8ZM128,88a44,44,0,1,0,44,44A44.05,44.05,0,0,0,128,88Zm0,72a28,28,0,1,1,28-28A28,28,0,0,1,128,160Z"/></symbol>
+<symbol id="i-car" viewBox="0 0 256 256"><path d="M240,104H229.2L201.42,41.5A16,16,0,0,0,186.8,32H69.2a16,16,0,0,0-14.62,9.5L26.8,104H16a8,8,0,0,0,0,16h8v80a16,16,0,0,0,16,16H64a16,16,0,0,0,16-16V184h96v16a16,16,0,0,0,16,16h24a16,16,0,0,0,16-16V120h8a8,8,0,0,0,0-16ZM69.2,48H186.8l24.89,56H44.31ZM64,200H40V184H64Zm128,0V184h24v16Zm24-32H40V120H216ZM56,144a8,8,0,0,1,8-8H80a8,8,0,0,1,0,16H64A8,8,0,0,1,56,144Zm112,0a8,8,0,0,1,8-8h16a8,8,0,0,1,0,16H176A8,8,0,0,1,168,144Z"/></symbol>
+<symbol id="i-chart-bar" viewBox="0 0 256 256"><path d="M224,200h-8V40a8,8,0,0,0-8-8H152a8,8,0,0,0-8,8V80H96a8,8,0,0,0-8,8v40H48a8,8,0,0,0-8,8v64H32a8,8,0,0,0,0,16H224a8,8,0,0,0,0-16ZM160,48h40V200H160ZM104,96h40V200H104ZM56,144H88v56H56Z"/></symbol>
+<symbol id="i-chat-circle-dots" viewBox="0 0 256 256"><path d="M140,128a12,12,0,1,1-12-12A12,12,0,0,1,140,128ZM84,116a12,12,0,1,0,12,12A12,12,0,0,0,84,116Zm88,0a12,12,0,1,0,12,12A12,12,0,0,0,172,116Zm60,12A104,104,0,0,1,79.12,219.82L45.07,231.17a16,16,0,0,1-20.24-20.24l11.35-34.05A104,104,0,1,1,232,128Zm-16,0A88,88,0,1,0,51.81,172.06a8,8,0,0,1,.66,6.54L40,216,77.4,203.53a7.85,7.85,0,0,1,2.53-.42,8,8,0,0,1,4,1.08A88,88,0,0,0,216,128Z"/></symbol>
+<symbol id="i-circle-half" viewBox="0 0 256 256"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm8,16.37a86.4,86.4,0,0,1,16,3V212.67a86.4,86.4,0,0,1-16,3Zm32,9.26a87.81,87.81,0,0,1,16,10.54V195.83a87.81,87.81,0,0,1-16,10.54ZM40,128a88.11,88.11,0,0,1,80-87.63V215.63A88.11,88.11,0,0,1,40,128Zm160,50.54V77.46a87.82,87.82,0,0,1,0,101.08Z"/></symbol>
+<symbol id="i-clock" viewBox="0 0 256 256"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm64-88a8,8,0,0,1-8,8H128a8,8,0,0,1-8-8V72a8,8,0,0,1,16,0v48h48A8,8,0,0,1,192,128Z"/></symbol>
+<symbol id="i-cloud" viewBox="0 0 256 256"><path d="M160,40A88.09,88.09,0,0,0,81.29,88.67,64,64,0,1,0,72,216h88a88,88,0,0,0,0-176Zm0,160H72a48,48,0,0,1,0-96c1.1,0,2.2,0,3.29.11A88,88,0,0,0,72,128a8,8,0,0,0,16,0,72,72,0,1,1,72,72Z"/></symbol>
+<symbol id="i-cloud-fog" viewBox="0 0 256 256"><path d="M120,208H72a8,8,0,0,1,0-16h48a8,8,0,0,1,0,16Zm64-16H160a8,8,0,0,0,0,16h24a8,8,0,0,0,0-16Zm-24,32H104a8,8,0,0,0,0,16h56a8,8,0,0,0,0-16Zm72-124a76.08,76.08,0,0,1-76,76H76A52,52,0,0,1,76,72a53.26,53.26,0,0,1,8.92.76A76.08,76.08,0,0,1,232,100Zm-16,0A60.06,60.06,0,0,0,96,96.46a8,8,0,0,1-16-.92q.21-3.66.77-7.23A38.11,38.11,0,0,0,76,88a36,36,0,0,0,0,72h80A60.07,60.07,0,0,0,216,100Z"/></symbol>
+<symbol id="i-cloud-lightning" viewBox="0 0 256 256"><path d="M156,16A76.2,76.2,0,0,0,84.92,64.76,53.26,53.26,0,0,0,76,64a52,52,0,0,0,0,104h37.87L97.14,195.88A8,8,0,0,0,104,208h25.87l-16.73,27.88a8,8,0,0,0,13.72,8.24l24-40A8,8,0,0,0,144,192H118.13l14.4-24H156a76,76,0,0,0,0-152Zm0,136H76a36,36,0,0,1,0-72,38.11,38.11,0,0,1,4.78.31q-.56,3.57-.77,7.23a8,8,0,0,0,16,.92A60.06,60.06,0,1,1,156,152Z"/></symbol>
+<symbol id="i-cloud-rain" viewBox="0 0 256 256"><path d="M158.66,196.44l-32,48a8,8,0,1,1-13.32-8.88l32-48a8,8,0,0,1,13.32,8.88ZM232,92a76.08,76.08,0,0,1-76,76H132.28l-29.62,44.44a8,8,0,1,1-13.32-8.88L113.05,168H76A52,52,0,0,1,76,64a53.26,53.26,0,0,1,8.92.76A76.08,76.08,0,0,1,232,92Zm-16,0A60.06,60.06,0,0,0,96,88.46a8,8,0,0,1-16-.92q.21-3.66.77-7.23A38.11,38.11,0,0,0,76,80a36,36,0,0,0,0,72h80A60.07,60.07,0,0,0,216,92Z"/></symbol>
+<symbol id="i-cloud-snow" viewBox="0 0 256 256"><path d="M88,196a12,12,0,1,1-12-12A12,12,0,0,1,88,196Zm28,4a12,12,0,1,0,12,12A12,12,0,0,0,116,200Zm48-16a12,12,0,1,0,12,12A12,12,0,0,0,164,184ZM68,224a12,12,0,1,0,12,12A12,12,0,0,0,68,224Zm88,0a12,12,0,1,0,12,12A12,12,0,0,0,156,224ZM232,92a76.08,76.08,0,0,1-76,76H76A52,52,0,0,1,76,64a53.26,53.26,0,0,1,8.92.76A76.08,76.08,0,0,1,232,92Zm-16,0A60.06,60.06,0,0,0,96,88.46a8,8,0,0,1-16-.92q.21-3.66.77-7.23A38.11,38.11,0,0,0,76,80a36,36,0,0,0,0,72h80A60.07,60.07,0,0,0,216,92Z"/></symbol>
+<symbol id="i-cloud-sun" viewBox="0 0 256 256"><path d="M164,72a76.2,76.2,0,0,0-20.26,2.73,55.63,55.63,0,0,0-9.41-11.54l9.51-13.57a8,8,0,1,0-13.11-9.18L121.22,54A55.9,55.9,0,0,0,96,48c-.58,0-1.16,0-1.74,0L91.37,31.71a8,8,0,1,0-15.75,2.77L78.5,50.82A56.1,56.1,0,0,0,55.23,65.67L41.61,56.14a8,8,0,1,0-9.17,13.11L46,78.77A55.55,55.55,0,0,0,40,104c0,.57,0,1.15,0,1.72L23.71,108.6a8,8,0,0,0,1.38,15.88,8.24,8.24,0,0,0,1.39-.12l16.32-2.88a55.74,55.74,0,0,0,5.86,12.42A52,52,0,0,0,84,224h80a76,76,0,0,0,0-152ZM56,104a40,40,0,0,1,72.54-23.24,76.26,76.26,0,0,0-35.62,40,52.14,52.14,0,0,0-31,4.17A40,40,0,0,1,56,104ZM164,208H84a36,36,0,1,1,4.78-71.69c-.37,2.37-.63,4.79-.77,7.23a8,8,0,0,0,16,.92,58.91,58.91,0,0,1,1.88-11.81c0-.16.09-.32.12-.48A60.06,60.06,0,1,1,164,208Z"/></symbol>
+<symbol id="i-compass" viewBox="0 0 256 256"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216ZM172.42,72.84l-64,32a8.05,8.05,0,0,0-3.58,3.58l-32,64A8,8,0,0,0,80,184a8.1,8.1,0,0,0,3.58-.84l64-32a8.05,8.05,0,0,0,3.58-3.58l32-64a8,8,0,0,0-10.74-10.74ZM138,138,97.89,158.11,118,118l40.15-20.07Z"/></symbol>
+<symbol id="i-credit-card" viewBox="0 0 256 256"><path d="M224,48H32A16,16,0,0,0,16,64V192a16,16,0,0,0,16,16H224a16,16,0,0,0,16-16V64A16,16,0,0,0,224,48Zm0,16V88H32V64Zm0,128H32V104H224v88Zm-16-24a8,8,0,0,1-8,8H168a8,8,0,0,1,0-16h32A8,8,0,0,1,208,168Zm-64,0a8,8,0,0,1-8,8H120a8,8,0,0,1,0-16h16A8,8,0,0,1,144,168Z"/></symbol>
+<symbol id="i-currency-jpy" viewBox="0 0 256 256"><path d="M206.19,53.07,144.88,128H176a8,8,0,0,1,0,16H136v16h40a8,8,0,0,1,0,16H136v40a8,8,0,0,1-16,0V176H80a8,8,0,0,1,0-16h40V144H80a8,8,0,0,1,0-16h31.12L49.81,53.07A8,8,0,0,1,62.19,42.93L128,123.37l65.81-80.44a8,8,0,1,1,12.38,10.14Z"/></symbol>
+<symbol id="i-download-simple" viewBox="0 0 256 256"><path d="M224,144v64a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V144a8,8,0,0,1,16,0v56H208V144a8,8,0,0,1,16,0Zm-101.66,5.66a8,8,0,0,0,11.32,0l40-40a8,8,0,0,0-11.32-11.32L136,124.69V32a8,8,0,0,0-16,0v92.69L93.66,98.34a8,8,0,0,0-11.32,11.32Z"/></symbol>
+<symbol id="i-first-aid" viewBox="0 0 256 256"><path d="M216,88H168V40a16,16,0,0,0-16-16H104A16,16,0,0,0,88,40V88H40a16,16,0,0,0-16,16v48a16,16,0,0,0,16,16H88v48a16,16,0,0,0,16,16h48a16,16,0,0,0,16-16V168h48a16,16,0,0,0,16-16V104A16,16,0,0,0,216,88Zm0,64H160a8,8,0,0,0-8,8v56H104V160a8,8,0,0,0-8-8H40V104H96a8,8,0,0,0,8-8V40h48V96a8,8,0,0,0,8,8h56Z"/></symbol>
+<symbol id="i-fork-knife" viewBox="0 0 256 256"><path d="M72,88V40a8,8,0,0,1,16,0V88a8,8,0,0,1-16,0ZM216,40V224a8,8,0,0,1-16,0V176H152a8,8,0,0,1-8-8,268.75,268.75,0,0,1,7.22-56.88c9.78-40.49,28.32-67.63,53.63-78.47A8,8,0,0,1,216,40ZM200,53.9c-32.17,24.57-38.47,84.42-39.7,106.1H200ZM119.89,38.69a8,8,0,1,0-15.78,2.63L112,88.63a32,32,0,0,1-64,0l7.88-47.31a8,8,0,1,0-15.78-2.63l-8,48A8.17,8.17,0,0,0,32,88a48.07,48.07,0,0,0,40,47.32V224a8,8,0,0,0,16,0V135.32A48.07,48.07,0,0,0,128,88a8.17,8.17,0,0,0-.11-1.31Z"/></symbol>
+<symbol id="i-globe" viewBox="0 0 256 256"><path d="M128,24h0A104,104,0,1,0,232,128,104.12,104.12,0,0,0,128,24Zm88,104a87.61,87.61,0,0,1-3.33,24H174.16a157.44,157.44,0,0,0,0-48h38.51A87.61,87.61,0,0,1,216,128ZM102,168H154a115.11,115.11,0,0,1-26,45A115.27,115.27,0,0,1,102,168Zm-3.9-16a140.84,140.84,0,0,1,0-48h59.88a140.84,140.84,0,0,1,0,48ZM40,128a87.61,87.61,0,0,1,3.33-24H81.84a157.44,157.44,0,0,0,0,48H43.33A87.61,87.61,0,0,1,40,128ZM154,88H102a115.11,115.11,0,0,1,26-45A115.27,115.27,0,0,1,154,88Zm52.33,0H170.71a135.28,135.28,0,0,0-22.3-45.6A88.29,88.29,0,0,1,206.37,88ZM107.59,42.4A135.28,135.28,0,0,0,85.29,88H49.63A88.29,88.29,0,0,1,107.59,42.4ZM49.63,168H85.29a135.28,135.28,0,0,0,22.3,45.6A88.29,88.29,0,0,1,49.63,168Zm98.78,45.6a135.28,135.28,0,0,0,22.3-45.6h35.66A88.29,88.29,0,0,1,148.41,213.6Z"/></symbol>
+<symbol id="i-hand-pointing" viewBox="0 0 256 256"><path d="M196,88a27.86,27.86,0,0,0-13.35,3.39A28,28,0,0,0,144,74.7V44a28,28,0,0,0-56,0v80l-3.82-6.13A28,28,0,0,0,35.73,146l4.67,8.23C74.81,214.89,89.05,240,136,240a88.1,88.1,0,0,0,88-88V116A28,28,0,0,0,196,88Zm12,64a72.08,72.08,0,0,1-72,72c-37.63,0-47.84-18-81.68-77.68l-4.69-8.27,0-.05A12,12,0,0,1,54,121.61a11.88,11.88,0,0,1,6-1.6,12,12,0,0,1,10.41,6,1.76,1.76,0,0,0,.14.23l18.67,30A8,8,0,0,0,104,152V44a12,12,0,0,1,24,0v68a8,8,0,0,0,16,0V100a12,12,0,0,1,24,0v20a8,8,0,0,0,16,0v-4a12,12,0,0,1,24,0Z"/></symbol>
+<symbol id="i-hourglass-medium" viewBox="0 0 256 256"><path d="M200,75.64V40a16,16,0,0,0-16-16H72A16,16,0,0,0,56,40V76a16.07,16.07,0,0,0,6.4,12.8L114.67,128,62.4,167.2A16.07,16.07,0,0,0,56,180v36a16,16,0,0,0,16,16H184a16,16,0,0,0,16-16V180.36a16.09,16.09,0,0,0-6.35-12.77L141.27,128l52.38-39.6A16.05,16.05,0,0,0,200,75.64ZM72,40H184V75.64L178.23,80H77.33L72,76Zm56,78L98.67,96h58.4Zm56,98H72V180l48-36v24a8,8,0,0,0,16,0V144.08l48,36.28Z"/></symbol>
+<symbol id="i-house" viewBox="0 0 256 256"><path d="M219.31,108.68l-80-80a16,16,0,0,0-22.62,0l-80,80A15.87,15.87,0,0,0,32,120v96a8,8,0,0,0,8,8h64a8,8,0,0,0,8-8V160h32v56a8,8,0,0,0,8,8h64a8,8,0,0,0,8-8V120A15.87,15.87,0,0,0,219.31,108.68ZM208,208H160V152a8,8,0,0,0-8-8H104a8,8,0,0,0-8,8v56H48V120l80-80,80,80Z"/></symbol>
+<symbol id="i-info" viewBox="0 0 256 256"><path d="M128,24A104,104,0,1,0,232,128,104.11,104.11,0,0,0,128,24Zm0,192a88,88,0,1,1,88-88A88.1,88.1,0,0,1,128,216Zm16-40a8,8,0,0,1-8,8,16,16,0,0,1-16-16V128a8,8,0,0,1,0-16,16,16,0,0,1,16,16v40A8,8,0,0,1,144,176ZM112,84a12,12,0,1,1,12,12A12,12,0,0,1,112,84Z"/></symbol>
+<symbol id="i-list" viewBox="0 0 256 256"><path d="M224,128a8,8,0,0,1-8,8H40a8,8,0,0,1,0-16H216A8,8,0,0,1,224,128ZM40,72H216a8,8,0,0,0,0-16H40a8,8,0,0,0,0,16ZM216,184H40a8,8,0,0,0,0,16H216a8,8,0,0,0,0-16Z"/></symbol>
+<symbol id="i-lock-simple" viewBox="0 0 256 256"><path d="M208,80H176V56a48,48,0,0,0-96,0V80H48A16,16,0,0,0,32,96V208a16,16,0,0,0,16,16H208a16,16,0,0,0,16-16V96A16,16,0,0,0,208,80ZM96,56a32,32,0,0,1,64,0V80H96ZM208,208H48V96H208V208Z"/></symbol>
+<symbol id="i-map-pin" viewBox="0 0 256 256"><path d="M128,64a40,40,0,1,0,40,40A40,40,0,0,0,128,64Zm0,64a24,24,0,1,1,24-24A24,24,0,0,1,128,128Zm0-112a88.1,88.1,0,0,0-88,88c0,31.4,14.51,64.68,42,96.25a254.19,254.19,0,0,0,41.45,38.3,8,8,0,0,0,9.18,0A254.19,254.19,0,0,0,174,200.25c27.45-31.57,42-64.85,42-96.25A88.1,88.1,0,0,0,128,16Zm0,206c-16.53-13-72-60.75-72-118a72,72,0,0,1,144,0C200,161.23,144.53,209,128,222Z"/></symbol>
+<symbol id="i-map-trifold" viewBox="0 0 256 256"><path d="M228.92,49.69a8,8,0,0,0-6.86-1.45L160.93,63.52,99.58,32.84a8,8,0,0,0-5.52-.6l-64,16A8,8,0,0,0,24,56V200a8,8,0,0,0,9.94,7.76l61.13-15.28,61.35,30.68A8.15,8.15,0,0,0,160,224a8,8,0,0,0,1.94-.24l64-16A8,8,0,0,0,232,200V56A8,8,0,0,0,228.92,49.69ZM104,52.94l48,24V203.06l-48-24ZM40,62.25l48-12v127.5l-48,12Zm176,131.5-48,12V78.25l48-12Z"/></symbol>
+<symbol id="i-moon" viewBox="0 0 256 256"><path d="M233.54,142.23a8,8,0,0,0-8-2,88.08,88.08,0,0,1-109.8-109.8,8,8,0,0,0-10-10,104.84,104.84,0,0,0-52.91,37A104,104,0,0,0,136,224a103.09,103.09,0,0,0,62.52-20.88,104.84,104.84,0,0,0,37-52.91A8,8,0,0,0,233.54,142.23ZM188.9,190.34A88,88,0,0,1,65.66,67.11a89,89,0,0,1,31.4-26A106,106,0,0,0,96,56,104.11,104.11,0,0,0,200,160a106,106,0,0,0,14.92-1.06A89,89,0,0,1,188.9,190.34Z"/></symbol>
+<symbol id="i-note-pencil" viewBox="0 0 256 256"><path d="M229.66,58.34l-32-32a8,8,0,0,0-11.32,0l-96,96A8,8,0,0,0,88,128v32a8,8,0,0,0,8,8h32a8,8,0,0,0,5.66-2.34l96-96A8,8,0,0,0,229.66,58.34ZM124.69,152H104V131.31l64-64L188.69,88ZM200,76.69,179.31,56,192,43.31,212.69,64ZM224,128v80a16,16,0,0,1-16,16H48a16,16,0,0,1-16-16V48A16,16,0,0,1,48,32h80a8,8,0,0,1,0,16H48V208H208V128a8,8,0,0,1,16,0Z"/></symbol>
+<symbol id="i-pencil-simple" viewBox="0 0 256 256"><path d="M227.31,73.37,182.63,28.68a16,16,0,0,0-22.63,0L36.69,152A15.86,15.86,0,0,0,32,163.31V208a16,16,0,0,0,16,16H92.69A15.86,15.86,0,0,0,104,219.31L227.31,96a16,16,0,0,0,0-22.63ZM92.69,208H48V163.31l88-88L180.69,120ZM192,108.68,147.31,64l24-24L216,84.68Z"/></symbol>
+<symbol id="i-person-simple-walk" viewBox="0 0 256 256"><path d="M152,80a32,32,0,1,0-32-32A32,32,0,0,0,152,80Zm0-48a16,16,0,1,1-16,16A16,16,0,0,1,152,32Zm64,112a8,8,0,0,1-8,8c-35.31,0-52.95-17.81-67.12-32.12-2.74-2.77-5.36-5.4-8-7.84l-13.43,30.88,37.2,26.57A8,8,0,0,1,160,176v56a8,8,0,0,1-16,0V180.12l-31.07-22.2L79.34,235.19A8,8,0,0,1,72,240a7.84,7.84,0,0,1-3.19-.67,8,8,0,0,1-4.15-10.52l54.08-124.37c-9.31-1.65-20.92,1.2-34.7,8.58a163.88,163.88,0,0,0-30.57,21.77,8,8,0,0,1-10.95-11.66c2.5-2.35,61.69-57.23,98.72-25.08,3.83,3.32,7.48,7,11,10.57C166.19,122.7,179.36,136,208,136A8,8,0,0,1,216,144Z"/></symbol>
+<symbol id="i-phone" viewBox="0 0 256 256"><path d="M222.37,158.46l-47.11-21.11-.13-.06a16,16,0,0,0-15.17,1.4,8.12,8.12,0,0,0-.75.56L134.87,160c-15.42-7.49-31.34-23.29-38.83-38.51l20.78-24.71c.2-.25.39-.5.57-.77a16,16,0,0,0,1.32-15.06l0-.12L97.54,33.64a16,16,0,0,0-16.62-9.52A56.26,56.26,0,0,0,32,80c0,79.4,64.6,144,144,144a56.26,56.26,0,0,0,55.88-48.92A16,16,0,0,0,222.37,158.46ZM176,208A128.14,128.14,0,0,1,48,80,40.2,40.2,0,0,1,82.87,40a.61.61,0,0,0,0,.12l21,47L83.2,111.86a6.13,6.13,0,0,0-.57.77,16,16,0,0,0-1,15.7c9.06,18.53,27.73,37.06,46.46,46.11a16,16,0,0,0,15.75-1.14,8.44,8.44,0,0,0,.74-.56L168.89,152l47,21.05h0s.08,0,.11,0A40.21,40.21,0,0,1,176,208Z"/></symbol>
+<symbol id="i-receipt" viewBox="0 0 256 256"><path d="M72,104a8,8,0,0,1,8-8h96a8,8,0,0,1,0,16H80A8,8,0,0,1,72,104Zm8,40h96a8,8,0,0,0,0-16H80a8,8,0,0,0,0,16ZM232,56V208a8,8,0,0,1-11.58,7.15L192,200.94l-28.42,14.21a8,8,0,0,1-7.16,0L128,200.94,99.58,215.15a8,8,0,0,1-7.16,0L64,200.94,35.58,215.15A8,8,0,0,1,24,208V56A16,16,0,0,1,40,40H216A16,16,0,0,1,232,56Zm-16,0H40V195.06l20.42-10.22a8,8,0,0,1,7.16,0L96,199.06l28.42-14.22a8,8,0,0,1,7.16,0L160,199.06l28.42-14.22a8,8,0,0,1,7.16,0L216,195.06Z"/></symbol>
+<symbol id="i-shopping-bag" viewBox="0 0 256 256"><path d="M216,40H40A16,16,0,0,0,24,56V200a16,16,0,0,0,16,16H216a16,16,0,0,0,16-16V56A16,16,0,0,0,216,40Zm0,160H40V56H216V200ZM176,88a48,48,0,0,1-96,0,8,8,0,0,1,16,0,32,32,0,0,0,64,0,8,8,0,0,1,16,0Z"/></symbol>
+<symbol id="i-snowflake" viewBox="0 0 256 256"><path d="M223.77,150.09a8,8,0,0,1-5.86,9.68l-24.64,6,6.46,24.11a8,8,0,0,1-5.66,9.8A8.25,8.25,0,0,1,192,200a8,8,0,0,1-7.72-5.93l-7.72-28.8L136,141.86v46.83l21.66,21.65a8,8,0,0,1-11.32,11.32L128,203.31l-18.34,18.35a8,8,0,0,1-11.32-11.32L120,188.69V141.86L79.45,165.27l-7.72,28.8A8,8,0,0,1,64,200a8.25,8.25,0,0,1-2.08-.27,8,8,0,0,1-5.66-9.8l6.46-24.11-24.64-6a8,8,0,0,1,3.82-15.54l29.45,7.23L112,128,71.36,104.54l-29.45,7.23A7.85,7.85,0,0,1,40,112a8,8,0,0,1-1.91-15.77l24.64-6L56.27,66.07a8,8,0,0,1,15.46-4.14l7.72,28.8L120,114.14V67.31L98.34,45.66a8,8,0,0,1,11.32-11.32L128,52.69l18.34-18.35a8,8,0,0,1,11.32,11.32L136,67.31v46.83l40.55-23.41,7.72-28.8a8,8,0,0,1,15.46,4.14l-6.46,24.11,24.64,6A8,8,0,0,1,216,112a7.85,7.85,0,0,1-1.91-.23l-29.45-7.23L144,128l40.64,23.46,29.45-7.23A8,8,0,0,1,223.77,150.09Z"/></symbol>
+<symbol id="i-subway" viewBox="0 0 256 256"><path d="M224,96V208a8,8,0,0,1-16,0V96a56.06,56.06,0,0,0-56-56H104A56.06,56.06,0,0,0,48,96V208a8,8,0,0,1-16,0V96a72.08,72.08,0,0,1,72-72h48A72.08,72.08,0,0,1,224,96Zm-40,0v72a24,24,0,0,1-19.29,23.53l2.45,4.89a8,8,0,0,1-14.32,7.16L147.06,192H108.94l-5.78,11.58a8,8,0,0,1-14.32-7.16l2.45-4.89A24,24,0,0,1,72,168V96A24,24,0,0,1,96,72h64A24,24,0,0,1,184,96ZM88,96v48h80V96a8,8,0,0,0-8-8H96A8,8,0,0,0,88,96Zm32,64v16h16V160ZM96,176h8V160H88v8A8,8,0,0,0,96,176Zm72-8v-8H152v16h8A8,8,0,0,0,168,168Z"/></symbol>
+<symbol id="i-sun" viewBox="0 0 256 256"><path d="M120,40V16a8,8,0,0,1,16,0V40a8,8,0,0,1-16,0Zm72,88a64,64,0,1,1-64-64A64.07,64.07,0,0,1,192,128Zm-16,0a48,48,0,1,0-48,48A48.05,48.05,0,0,0,176,128ZM58.34,69.66A8,8,0,0,0,69.66,58.34l-16-16A8,8,0,0,0,42.34,53.66Zm0,116.68-16,16a8,8,0,0,0,11.32,11.32l16-16a8,8,0,0,0-11.32-11.32ZM192,72a8,8,0,0,0,5.66-2.34l16-16a8,8,0,0,0-11.32-11.32l-16,16A8,8,0,0,0,192,72Zm5.66,114.34a8,8,0,0,0-11.32,11.32l16,16a8,8,0,0,0,11.32-11.32ZM48,128a8,8,0,0,0-8-8H16a8,8,0,0,0,0,16H40A8,8,0,0,0,48,128Zm80,80a8,8,0,0,0-8,8v24a8,8,0,0,0,16,0V216A8,8,0,0,0,128,208Zm112-88H216a8,8,0,0,0,0,16h24a8,8,0,0,0,0-16Z"/></symbol>
+<symbol id="i-thermometer" viewBox="0 0 256 256"><path d="M212,56a28,28,0,1,0,28,28A28,28,0,0,0,212,56Zm0,40a12,12,0,1,1,12-12A12,12,0,0,1,212,96Zm-84,57V88a8,8,0,0,0-16,0v65a32,32,0,1,0,16,0Zm-8,47a16,16,0,1,1,16-16A16,16,0,0,1,120,200Zm40-66V48a40,40,0,0,0-80,0v86a64,64,0,1,0,80,0Zm-40,98a48,48,0,0,1-27.42-87.4A8,8,0,0,0,96,138V48a24,24,0,0,1,48,0v90a8,8,0,0,0,3.42,6.56A48,48,0,0,1,120,232Z"/></symbol>
+<symbol id="i-ticket" viewBox="0 0 256 256"><path d="M232,104a8,8,0,0,0,8-8V64a16,16,0,0,0-16-16H32A16,16,0,0,0,16,64V96a8,8,0,0,0,8,8,24,24,0,0,1,0,48,8,8,0,0,0-8,8v32a16,16,0,0,0,16,16H224a16,16,0,0,0,16-16V160a8,8,0,0,0-8-8,24,24,0,0,1,0-48ZM32,167.2a40,40,0,0,0,0-78.4V64H88V192H32Zm192,0V192H104V64H224V88.8a40,40,0,0,0,0,78.4Z"/></symbol>
+<symbol id="i-timer" viewBox="0 0 256 256"><path d="M128,40a96,96,0,1,0,96,96A96.11,96.11,0,0,0,128,40Zm0,176a80,80,0,1,1,80-80A80.09,80.09,0,0,1,128,216ZM173.66,90.34a8,8,0,0,1,0,11.32l-40,40a8,8,0,0,1-11.32-11.32l40-40A8,8,0,0,1,173.66,90.34ZM96,16a8,8,0,0,1,8-8h48a8,8,0,0,1,0,16H104A8,8,0,0,1,96,16Z"/></symbol>
+<symbol id="i-train" viewBox="0 0 256 256"><path d="M184,24H72A32,32,0,0,0,40,56V184a32,32,0,0,0,32,32h8L65.6,235.2a8,8,0,1,0,12.8,9.6L100,216h56l21.6,28.8a8,8,0,1,0,12.8-9.6L176,216h8a32,32,0,0,0,32-32V56A32,32,0,0,0,184,24ZM56,120V80h64v40Zm80-40h64v40H136ZM72,40H184a16,16,0,0,1,16,16v8H56V56A16,16,0,0,1,72,40ZM184,200H72a16,16,0,0,1-16-16V136H200v48A16,16,0,0,1,184,200ZM96,172a12,12,0,1,1-12-12A12,12,0,0,1,96,172Zm88,0a12,12,0,1,1-12-12A12,12,0,0,1,184,172Z"/></symbol>
+<symbol id="i-wallet" viewBox="0 0 256 256"><path d="M216,64H56a8,8,0,0,1,0-16H192a8,8,0,0,0,0-16H56A24,24,0,0,0,32,56V184a24,24,0,0,0,24,24H216a16,16,0,0,0,16-16V80A16,16,0,0,0,216,64Zm0,128H56a8,8,0,0,1-8-8V78.63A23.84,23.84,0,0,0,56,80H216Zm-48-60a12,12,0,1,1,12,12A12,12,0,0,1,168,132Z"/></symbol>
+<symbol id="i-warning" viewBox="0 0 256 256"><path d="M236.8,188.09,149.35,36.22h0a24.76,24.76,0,0,0-42.7,0L19.2,188.09a23.51,23.51,0,0,0,0,23.72A24.35,24.35,0,0,0,40.55,224h174.9a24.35,24.35,0,0,0,21.33-12.19A23.51,23.51,0,0,0,236.8,188.09ZM222.93,203.8a8.5,8.5,0,0,1-7.48,4.2H40.55a8.5,8.5,0,0,1-7.48-4.2,7.59,7.59,0,0,1,0-7.72L120.52,44.21a8.75,8.75,0,0,1,15,0l87.45,151.87A7.59,7.59,0,0,1,222.93,203.8ZM120,144V104a8,8,0,0,1,16,0v40a8,8,0,0,1-16,0Zm20,36a12,12,0,1,1-12-12A12,12,0,0,1,140,180Z"/></symbol>
+<symbol id="i-x" viewBox="0 0 256 256"><path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"/></symbol>
+</svg>`);
+
+/* ═══════════════════════════════════════════════
+   邏輯層 —— 以下皆不需修改
+   ═══════════════════════════════════════════════ */
+const M = TRIP_DATA.meta;
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c =>
+  ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;" }[c]));
+
+/* ── 安全的本地儲存（沙箱環境不支援時退回記憶體） ── */
+const memStore = new Map();
+const LS = {
+  get(k){ try{ return localStorage.getItem(k); }catch{ return memStore.get(k) ?? null; } },
+  set(k,v){ try{ localStorage.setItem(k,v); }catch{ memStore.set(k,v); } },
+  del(k){ try{ localStorage.removeItem(k); }catch{ memStore.delete(k); } }
+};
+const KEY = `trip:${M.tripId}`;
+
+/* ── 狀態 ── */
+const load = () => { try{ return JSON.parse(LS.get(KEY)) || {}; }catch{ return {}; } };
+const saved = load();
+const state = {
+  checks: saved.checks || {},       // 個人清單（打包、個人購物）：只存本機
+  shopping: saved.shopping || {},   // 購物清單：只存本機（flush 只同步記帳與留言板）
+  cards: saved.cards || {},         // 信用卡額度追蹤：每人刷多少是自己的事，只存本機
+  cardOrder: saved.cardOrder || [], // 信用卡排序：同上，A 手機排過不該動到 B 手機
+  expenses: saved.expenses || [],
+  board: saved.board || [],         // 留言板：所有人都看得到，所以跟記帳一樣會同步
+  owners: saved.owners || {},       // 名字 → 登記的裝置。要擋別台冒用，就得讓所有人都看得到
+  queue: saved.queue || [],
+  me: LS.get(`${KEY}:me`) || null
+};
+const persist = () => LS.set(KEY, JSON.stringify({
+  checks: state.checks, shopping: state.shopping, cards: state.cards,
+  cardOrder: state.cardOrder,
+  expenses: state.expenses, board: state.board, owners: state.owners, queue: state.queue
+}));
+
+/* ── 同步狀態顯示 ── */
+const syncEl = document.getElementById("sync");
+function setSync(s, text){ syncEl.dataset.s = s; syncEl.textContent = text; }
+
+/* ── 渲染分派 ── */
+const linksHTML = (links=[]) => links.map(l =>
+  `<a class="btn btn-${esc(l.style||"plain")}" href="${esc(l.url)}" target="_blank" rel="noopener">${iconText(l.label)}</a>`
+).join("");
+/* 卡片上不顯示當地語（日文）名稱——使用者的決定，中文名稱就夠了。
+   titleLocal／placeLocal／nameLocal 仍然留在 TRIP_DATA 裡：地圖按鈕與電腦版的
+   當日路線都靠「當地語名稱, 地址」去查（mapQuery），把資料拿掉會查不到店。 */
+/* 圖示：頁首的 Phosphor 圖示表（i-名稱）。旁邊都有文字，所以對輔助技術隱藏；
+   只有圖示的按鈕（✕）由按鈕自己的 aria-label 提供名稱 */
+/* 圖示的語意分類，決定它的顏色（CSS 的 .ic-food 等）。對不到的不上色，跟著文字走。 */
+const IC_CAT = {
+  "fork-knife":"food",
+  car:"move", train:"move", subway:"move", "airplane-tilt":"move", bicycle:"move",
+  "person-simple-walk":"move", "map-trifold":"move", "map-pin":"move",
+  bed:"stay", house:"stay",
+  "shopping-bag":"shop", wallet:"shop", "credit-card":"shop", receipt:"shop",
+  "currency-jpy":"shop", ticket:"shop",
+  compass:"see", camera:"see", globe:"see",   /* compass 是景點卡的標題圖示 */
+  warning:"warn", "first-aid":"warn",
+  clock:"time", "hourglass-medium":"time", timer:"time", "calendar-check":"time",
+};
+const ic = name => `<svg class="ic${IC_CAT[name] ? " ic-" + IC_CAT[name] : ""}" aria-hidden="true" focusable="false"><use href="#i-${name}"/></svg>`;
+/* 資料裡（Excel、builder 產生的按鈕文字、說明開頭、分頁名稱）常用 emoji 當圖示。
+   開頭那一個換成對應的 SVG，對不到的直接拿掉——介面上不留 emoji 圖示（ui-ux-pro-max）。
+   資料本身不動，Excel 往返也不受影響。 */
+const EMOJI_IC = {
+  "🗺":"map-trifold", "📍":"map-pin", "🚗":"car", "🚶":"person-simple-walk", "🚆":"train", "🚇":"subway",
+  "🚲":"bicycle", "✈":"airplane-tilt", "🏨":"bed", "🏠":"house", "📅":"calendar-check", "🎟":"ticket",
+  "👉":"hand-pointing", "⚠":"warning", "📝":"note-pencil", "🛍":"shopping-bag", "💰":"wallet", "ℹ":"info",
+  "💳":"credit-card", "🧾":"receipt", "🕘":"clock", "💴":"currency-jpy", "☎":"phone", "⏳":"hourglass-medium",
+  "⏱":"timer", "🧭":"compass", "🍽":"fork-knife", "🔒":"lock-simple", "📷":"camera", "🌡":"thermometer",
+  "💬":"chat-circle-dots", "🆘":"first-aid", "📥":"download-simple", "📊":"chart-bar", "✏":"pencil-simple",
+  "🔄":"arrows-clockwise", "🌐":"globe"
+};
+const iconText = t => {
+  const s = String(t ?? ""), m = s.match(/^(\p{Extended_Pictographic})\uFE0F?\s*/u);
+  return m ? (EMOJI_IC[m[1]] ? ic(EMOJI_IC[m[1]]) : "") + esc(s.slice(m[0].length)) : esc(s);
+};
+/* 二選一的標題常在最後帶一段括號補充（「也可以…」「先回住處…」），字小一點，主標題才突出 */
+const subjectHTML = t => {
+  const m = String(t ?? "").match(/^(.+?)(（[^（）]+）)$/);
+  return m ? `${esc(m[1])}<span class="subject-note">${esc(m[2])}</span>` : esc(t);
+};
+/* 一張卡片最多兩個框：說明框（上）與提醒框（下），⚠️ 開頭的句子全部收進提醒框。
+   不管資料怎麼排都只有這兩個——原本是照資料把連續的同類併成一塊，
+   「說明→⚠️→說明」就會長出三塊，同一張卡片出現兩個說明框（使用者明確不要）。
+   提醒放最後、緊接著按鈕：資料裡多半本來就寫在最後，這樣多數卡片的順序不變。 */
+const isWarnNote = s => /^\u26A0/.test(String(s ?? ""));
+const noteBox = (items, cls) => items.length
+  ? `<div class="note-box${cls}">${items.map(iconText).join("<br>")}</div>` : "";
+const notesHTML = n => (n && n.length)
+  ? noteBox(n.filter(s => !isWarnNote(s)), "") + noteBox(n.filter(isWarnNote), " warn") : "";
+
+/* ── 清單項目與勾選狀態 ──────────────────────
+   項目可以是字串，也可以是 { text, url, note, img }。 */
+const itemText = it => typeof it === "string" ? it : String(it?.text ?? "");
+
+/* 勾選的 key 用「項目文字」而不是陣列索引。購物清單會頻繁增刪，
+   用索引的話在中間插一項，後面所有打勾就整排錯位。 */
+/* 勾選的 key 不含群組名稱：重新分類（把項目搬到別的群組）不該讓打過的勾消失。
+   同一張清單裡文字相同的兩項會共用一個勾——那本來就是同一件東西。 */
+const chkKey = (b, it) => `${b.key}:${itemText(it)}`;
+
+/* ── 購物清單 ────────────────────────────────
+   Excel 給的是「種子」，使用者在網站上的增刪改存在 state.shopping。
+   種子用「群組:名稱」當 id，所以之後用 builder 重新產生網站，
+   Excel 新增的項目會出現、她在網站上加的不會消失、刪掉的也不會跑回來。 */
+const shopBag = () => {
+  const s = state.shopping;
+  if (!s.edits)   s.edits   = {};
+  if (!s.removed) s.removed = [];
+  if (!s.added)   s.added   = [];
+  if (!s.groups)  s.groups  = [];
+  return s;
+};
+
+/* 自己加的圖片（例如優惠券截圖）存在 IndexedDB，不放 localStorage：localStorage 只有
+   5MB 左右，而且整份狀態（含記帳）存在同一個 key——被圖片塞爆的話，連記帳都存不進去。
+   跟購物清單一樣只在這台裝置，不同步。 */
+const imgDB = (() => {
+  let conn;
+  const open = () => conn ||= new Promise((ok, bad) => {
+    const r = indexedDB.open(`${KEY}:img`, 1);
+    r.onupgradeneeded = () => r.result.createObjectStore("img");
+    r.onsuccess = () => ok(r.result);
+    r.onerror = () => bad(r.error);
+  });
+  const run = (mode, fn) => open().then(db => new Promise((ok, bad) => {
+    const t = db.transaction("img", mode), req = fn(t.objectStore("img"));
+    t.oncomplete = () => ok(req.result);
+    t.onerror = t.onabort = () => bad(t.error);
+  }));
+  return {
+    put: (id, blob) => run("readwrite", s => s.put(blob, id)),
+    get: id => run("readonly", s => s.get(id)),
+    del: id => run("readwrite", s => s.delete(id)),
+  };
+})();
+/* 縮到長邊 1600px 再存：手機截圖動輒 3、4MB，縮完幾百 KB，條碼與 QR code 還掃得到。
+   先鋪白底，透明的 PNG 轉 JPEG 才不會變黑。讀不了的格式就存原檔。 */
+async function shrinkImage(file){
+  try{
+    const bmp = await createImageBitmap(file);
+    const k = Math.min(1, 1600 / Math.max(bmp.width, bmp.height));
+    const c = document.createElement("canvas");
+    c.width = Math.round(bmp.width * k); c.height = Math.round(bmp.height * k);
+    const g = c.getContext("2d");
+    g.fillStyle = "#FFFFFF"; g.fillRect(0, 0, c.width, c.height);
+    g.drawImage(bmp, 0, 0, c.width, c.height);
+    return await new Promise(res => c.toBlob(res, "image/jpeg", 0.88)) || file;
+  }catch{ return file; }
+}
+const userImgURL = new Map();   // 同一張圖重畫時沿用同一個網址，不重新讀
+async function paintUserImages(){
+  for (const el of document.querySelectorAll("#main img[data-uimg]")){
+    const id = el.dataset.uimg;
+    if (!userImgURL.has(id)){
+      const blob = await imgDB.get(id).catch(() => null);
+      if (!blob) continue;
+      userImgURL.set(id, URL.createObjectURL(blob));
+    }
+    el.src = el.dataset.zoom = userImgURL.get(id);
+  }
+}
+/* 項目之後補圖或換圖：存進 IndexedDB、在 edits 記一筆。換圖時舊的網址作廢，重畫時重新讀 */
+function dropUserImage(id){
+  imgDB.del(id).catch(() => {});
+  if (userImgURL.has(id)){ URL.revokeObjectURL(userImgURL.get(id)); userImgURL.delete(id); }
+}
+async function attachUserImage(id, file){
+  const s = shopBag();
+  try{ await imgDB.put(id, await shrinkImage(file)); }
+  catch{ toast("這個瀏覽器存不了圖片"); return; }
+  if (userImgURL.has(id)){ URL.revokeObjectURL(userImgURL.get(id)); userImgURL.delete(id); }
+  s.edits[id] = { ...(s.edits[id] || {}), uimg: true };
+  persist(); renderDay(current);
+}
+function detachUserImage(id){
+  const s = shopBag(), a = s.added.find(x => x.id === id);
+  dropUserImage(id);
+  if (a) delete a.uimg;
+  if (s.edits[id]) delete s.edits[id].uimg;
+  persist(); renderDay(current);
+}
+/* 自己貼的連結只收 http／https：javascript: 這種網址點了會在網站裡執行程式。
+   沒打 https:// 的（www.donki.com）幫忙補上。不合格回傳 null */
+function cleanLink(v){
+  v = v.trim();
+  if (!v) return "";
+  try{
+    const u = new URL(/^[a-z][a-z\d+.-]*:/i.test(v) ? v : `https://${v}`);
+    return /^https?:$/.test(u.protocol) ? u.href : null;
+  }catch{ return null; }
+}
+
+/* 把種子與本機資料合併成要渲染的群組。Map 保留插入順序：
+   先種子群組、再使用者自己加的。 */
+function shopGroups(b){
+  const s = shopBag();
+  const out = new Map();
+  for (const g of (b.groups || [])){
+    out.set(g.name, (g.items || []).map(it => {
+      const o = (it && typeof it === "object") ? it : {};
+      const name = String(o.name ?? o.text ?? it ?? "");
+      return { id: `${g.name}:${name}`, group: g.name, name,
+               img: o.img || "", url: o.url || "", who: o.who || "", seed: true };
+    }));
+  }
+  for (const name of s.groups) if (!out.has(name)) out.set(name, []);
+  for (const a of s.added){
+    if (!out.has(a.group)) out.set(a.group, []);
+    out.get(a.group).push({ ...a, seed: false });
+  }
+  for (const [k, arr] of out) out.set(k, arr.filter(x => !s.removed.includes(x.id)));
+  return out;
+}
+
+/* ── 「現在進行到哪」用的時間換算 ──────────────
+   卡片上掛 data-start / data-stay，實際的結束時間由 markNow() 依前後
+   相鄰項目推算：沒填停留時間的項目（例如當天最後的住宿）若直接用
+   start 當結束，會在抵達的那一秒就被判定成「已結束」。 */
+const toMin  = t => { const m = /^(\d{1,2}):(\d{2})$/.exec(String(t ?? "")); return m ? +m[1] * 60 + +m[2] : null; };
+const toHHMM = n => `${String(Math.floor(n / 60) % 24).padStart(2,"0")}:${String(n % 60).padStart(2,"0")}`;
+const fmtMin = n => n >= 60 ? `${Math.floor(n / 60)} 小時${n % 60 ? ` ${n % 60} 分` : ""}` : `${n} 分`;
+/* 沒有時間的項目不參與判斷 */
+const slotAttrs = b => toMin(b.time) === null ? ""
+  : ` data-start="${toMin(b.time)}" data-stay="${Number(b.stay) || 0}" data-travel="${Number(b.travel) || 0}"`;
+const nowSlot   = b => toMin(b.time) === null ? "" : `<div class="now-line" hidden></div>`;
+/* 卡片左上角＝「抵達這裡」的時間（使用者定的）。資料裡的 time 是這一列的開始：Excel 用
+   「上一列時間＋上一列停留」推算，而停留含開車或走過去的時間（第十一節），所以 time 其實是
+   「從上一站出發」——要加上 travel 才是抵達。Excel 的時間欄與公式不動，只在網站上換算。
+   地鐵卡是移動本身，時間維持「開始搭車」。 */
+const timeTag = b => {
+  const t = toMin(b.time);
+  return b.time ? `<span class="time">${esc(t === null ? b.time : toHHMM(t + (Number(b.travel) || 0)))}</span>` : "";
+};
+
+/* 卡片在地圖上的位置：沿用「🗺️ 地圖」按鈕的查詢——builder 已經用「當地語標題＋地點」
+   組好，右側地圖與按鈕找到的才會是同一個地方。自己貼的短網址（maps.app.goo.gl）
+   沒有查詢字串，退回標題＋地點 */
+function mapQuery(b){
+  const m = (b.links || []).find(l => l.style === "map");
+  let q = "";
+  try { q = m ? (new URL(m.url).searchParams.get("query") || "") : ""; } catch {}
+  return q || [b.titleLocal || b.title, b.place || b.address].filter(Boolean).join(", ");
+}
+/* 地圖按鈕用 query_place_id 釘住的地點（名稱會列出一串的才釘，見 CLAUDE.md 第十五節）。
+   右側的嵌入地圖只給名稱的話，Google 可能解析不出來，整條路線退成一張世界地圖
+   （「オリックスレンタカー 博多駅博多口店」踩過），所以有 ID 就用 ID */
+function mapPlaceId(b){
+  const m = (b.links || []).find(l => l.style === "map");
+  try { return m ? (new URL(m.url).searchParams.get("query_place_id") || "") : ""; } catch { return ""; }
+}
+const mapAttrs = b => {
+  const q = mapQuery(b);
+  return q ? ` data-mapq="${esc(q)}" data-mapt="${esc(b.title || q)}"` : "";
+};
+
+/* 景點介紹：預設收合。用原生 <details> 而不是自己寫 JS——免事件綁定、
+   鍵盤可操作、離線沒問題，重新渲染也不會壞。
+   接受字串（以空行或換行分段）或字串陣列，Excel 給的是前者。 */
+/* photo 是 tools/intro-photos.mjs 掛上去的 Wikimedia Commons 自由授權照片。
+   CC BY／BY-SA 要求標示作者與授權，所以照片底下一定附出處，不能拿掉。 */
+const introHTML = (v, photo, alt) => {
+  const parts = (Array.isArray(v) ? v : String(v ?? "").split(/\n+/))
+    .map(x => String(x ?? "").trim()).filter(Boolean);
+  if (!parts.length) return "";
+  const src  = photo && /^img\/[\w\/.-]+$/.test(photo.src || "") ? photo.src : "";
+  const href = photo && /^https?:\/\//i.test(photo.href || "") ? photo.href : "";
+  const credit = src ? `${ic("camera")}${esc(photo.credit || "")}・${esc(photo.license || "")}` : "";
+  /* 文字在上、照片在下，出處緊接在照片底下 */
+  const pic = src ? `<img class="intro-photo" src="${esc(src)}" alt="${esc(alt || "")}" loading="lazy" decoding="async">` : "";
+  const by = !src ? "" : href ? `<a class="photo-credit" href="${esc(href)}" target="_blank" rel="noopener">${credit}</a>`
+                              : `<span class="photo-credit">${credit}</span>`;
+  return `<details class="intro${src ? " has-photo" : ""}"${src ? ` style="--photo:url('${esc(src)}')"` : ""}><summary>看介紹</summary>
+    <div class="intro-body">${parts.map(p => `<p>${iconText(p)}</p>`).join("")}${pic}</div>${by}
+  </details>`;
+};
+
+const WEEK = ["日","一","二","三","四","五","六"];
+const niceDate = d => {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(d || ""));
+  if (!m) return d || "";
+  const dt = new Date(`${d}T00:00:00Z`);
+  return `${Number(m[2])}/${Number(m[3])}（${WEEK[dt.getUTCDay()]}）`;
+};
+
+const KIND = { sight:"compass", meal:"fork-knife", shop:"shopping-bag" };
+const fmtStay = n => {
+  if (!n) return "";
+  if (n < 60) return `${n} 分`;
+  const hh = Math.floor(n / 60), r = n % 60;
+  return r ? `${hh} 小時 ${r} 分` : `${hh} 小時`;
+};
+/* 「停留(分)」是這一列總共佔掉的時間，開車過去的時間也算在裡面——時間欄的公式
+   靠它往下推，所以不能拆。卡片上要扣掉「交通(分)」才是真的停留：不扣的話，
+   門司港會顯示「停留 3 小時 50 分」，其中 1 小時 20 分其實在開車。 */
+/* 圖示要跟 builder 產生的「從上一站」按鈕一致（builder/index.html 的 MODE_ICON） */
+const MODE_TAG = { driving:["car","車程"], walking:["person-simple-walk","步行"], transit:["train","搭車"], bicycling:["bicycle","騎車"] };
+const modeTag = m => { const [n, t] = MODE_TAG[m] || ["train", "交通"]; return ic(n) + t; };
+/* 兩站之間的交通放在兩張卡片中間（.leg），不放在卡片裡：路上花多久是「上一張到這一張」
+   的事，放中間一看就懂；卡片上只留這個地點的抵達時間與停留 */
+const legHTML = b => b.travel
+  ? `<div class="leg"><span class="stay move">${modeTag(b.mode)} ${fmtStay(b.travel)}</span></div>` : "";
+const stayTag = b => {
+  const v = (b.stay || 0) - (b.travel || 0);
+  return v > 0 ? `<span class="stay">${ic("hourglass-medium")}停留 ${fmtStay(v)}</span>` : "";
+};
+/* 預計幾點離開＝ time + stay。stay 是「這一列總共佔掉多久」（含交通，第十一節），
+   所以 time + stay 剛好就是下一列的 time——卡片上的離開時刻跟下一張的出發時刻一定對得起來。
+   算不出來的不畫標籤，不要留一個 NaN 或空白的膠囊：
+     ・沒有 time（沒排時間的項目）
+     ・沒有 stay（當天最後一晚的住宿、最後一張「辦理登機」都是 null）
+     ・純停留是 0（整列都在路上）——抵達就等於離開，同一排印兩個一樣的時刻只會更亂
+   跨過午夜的加註「隔天」，不然 23:30 + 90 分會印成「離開 01:00」看起來像倒退。 */
+const leaveMin = b => {
+  const t = toMin(b.time), stay = Number(b.stay) || 0;
+  if (t === null || stay <= 0) return null;
+  const end = t + stay;
+  return end > t + (Number(b.travel) || 0) ? end : null;
+};
+const atClock = n => (n >= 1440 ? "隔天 " : "") + toHHMM(n);
+/* 地鐵卡是移動本身，停下來的那一刻叫「抵達」不叫「離開」，所以字可以換 */
+const leaveTag = (b, word = "離開") => {
+  const end = leaveMin(b);
+  return end === null ? "" : `<span class="stay leave">${word} <b>${atClock(end)}</b></span>`;
+};
+/* 營業時間、費用、電話各自一列，不塞進說明欄：格式才會統一，電話也才能點了就撥 */
+const telHref = t => String(t).replace(/[^\d+]/g, "");
+const factsHTML = b =>
+  (b.hours ? `<div class="meta">${ic("clock")}${esc(b.hours)}</div>` : "") +
+  (b.fee   ? `<div class="meta">${ic("currency-jpy")}${esc(b.fee)}</div>` : "") +
+  (b.tel   ? `<div class="meta"><a class="tel" href="tel:${esc(telHref(b.tel))}">${ic("phone")}${esc(b.tel)}</a></div>` : "");
+
+/* 當天幾點起床：當天第一個行程往前一小時（使用者指定），一條小的緊接在當天第一段行程上面——
+   「在 Google 地圖開啟今天的路線」放在它上方，不夾在起床與第一段行程中間（使用者指定）。
+   第一個行程的 time 就是離開住處的時間（要先出門的話是出門時間），所以直接減 60 分。
+   只有「早上開始」的日子才寫：抵達日的第一個行程是晚上落地（這趟是 20:00），
+   往前推會變成「19:00 起床」——那天根本不是在飯店醒來的。中午以後開始的日子一律不寫。 */
+const WAKE_LEAD = 60, WAKE_LATEST = 12 * 60;
+function wakeFor(day){
+  if (!day.date) return null;
+  const first = (day.blocks || []).find(b => toMin(b.time) !== null);
+  const t = first && toMin(first.time);
+  if (t === null || t === undefined || t >= WAKE_LATEST) return null;
+  return { at: toHHMM((t + 1440 - WAKE_LEAD) % 1440), go: toHHMM(t),
+           out: (Number(first.travel) || 0) > 0, what: first.title || first.line || "" };
+}
+/* 不是卡片：它只是一句提醒，做成卡片會跟真正的行程搶位置 */
+const wakeHTML = w => w
+  ? `<div class="wake-line">${ic("alarm")}<b>${esc(w.at)}</b> 起床（${esc(w.go)} ${w.out ? "出門・" : ""}${esc(w.what)}）</div>` : "";
+
+/* ── 信用卡的排序 ─────────────────────────
+   順序只存本機（`state.cardOrder`，跟「出發前已刷」一樣）：誰先刷哪張是個人的決定，
+   A 手機排過不該動到 B 手機。flush() 只送 expenses 與 board、onSnapshot 也只收這兩個，
+   所以這裡不用另外擋。
+   沒排過的照 Excel 的順序；之後在 Excel 加的新卡排在最後，不會插進已經排好的順序裡。 */
+const ccSort = items => {
+  const at = new Map((state.cardOrder || []).map((n, i) => [n, i]));
+  return items
+    .map((c, i) => ({ c, k: at.has(c.name) ? at.get(c.name) : at.size + i }))
+    .sort((a, b) => a.k - b.k).map(x => x.c);
+};
+const ccItems = () => TRIP_DATA.days.flatMap(d => d.blocks || [])
+  .filter(b => b.type === "cards").flatMap(b => b.items || []);
+/* 往上／往下移一格。只在「看得見的卡片」之間換位子，存回去的卻是完整順序——
+   被移除（隱藏）的卡片還留在順序裡，還原之後才不會跑到最後面。 */
+function moveCard(name, dir){
+  const order = ccSort(ccItems()).map(c => c.name);
+  const shown = order.filter(n => !(state.cards[n] || {}).hidden);
+  const i = shown.indexOf(name), j = i + dir;
+  if (i < 0 || j < 0 || j >= shown.length) return false;
+  order.splice(order.indexOf(name), 1);
+  const at = order.indexOf(shown[j]);
+  order.splice(dir < 0 ? at : at + 1, 0, name);
+  state.cardOrder = order;
+  return true;
+}
+/* 排序把手。只有圖示，所以名稱靠 aria-label，而且帶上「目前第幾張」——
+   移完焦點留在原地，讀螢幕的人聽得到新的位置。 */
+const ccGrip = (name, i, n) =>
+  `<button class="cc-grip" type="button" data-grip data-card="${esc(name)}" `
+  + `aria-label="調整順序：${esc(name)}（目前第 ${i + 1} 張，共 ${n} 張）。按住拖曳，或用上下鍵移動">`
+  + `${ic("list")}</button>`;
+
+/* 畫面上看得到的順序 → 存回完整順序。被移除（隱藏）的卡片不在畫面上，把它插回原本
+   跟著的那一張後面，還原之後才不會全部掉到最後。沒有變動就回 false，不用重畫。 */
+function setCardOrder(shown){
+  const full = ccSort(ccItems()).map(c => c.name);
+  const out = [...shown];
+  for (const h of full.filter(n => !shown.includes(n))){
+    const prev = full.slice(0, full.indexOf(h)).reverse().find(n => out.includes(n));
+    out.splice(prev ? out.indexOf(prev) + 1 : 0, 0, h);
+  }
+  if (out.join("\n") === full.join("\n")) return false;
+  state.cardOrder = out;
+  return true;
+}
+/* 重畫之後整個 DOM 都換掉，焦點會掉回 body，連按上下鍵就得重新找。把焦點放回同一張的把手 */
+const focusGrip = name => {
+  const cc = [...document.querySelectorAll(".cc")].find(el => el.dataset.card === name);
+  const g = cc && cc.querySelector("[data-grip]");
+  if (g) g.focus();
+};
+
+/* ── 信用卡的已刷金額：累加，不是覆寫 ─────────────
+   使用者要求：旅程當下一筆一筆刷的，不會每次都湊整數，所以「加入」只把這一筆
+   累加進已計入的總額，輸入框清空、游標留在原地方便連打下一筆。
+   要大幅度訂正（忘了登好幾筆、重算）才用「修改總額」直接覆寫；平常不用它。
+   兩個動作都是就地改 DOM，不整頁重畫——跟拖曳排序、購物備註同一個理由：
+   重畫會把其他卡片正在打的金額、游標都弄丟。 */
+const ccBox = name => [...document.querySelectorAll(".cc")].find(el => el.dataset.card === name);
+
+function refreshCard(name){
+  const box = ccBox(name);
+  if (!box) return;
+  const quota = Number(box.dataset.quota) || 0;
+  const spent = Number((state.cards[name] || {}).spent) || 0;
+  const left  = Math.max(0, quota - spent);
+  const bar = box.querySelector(".cc-bar i");
+  if (bar) bar.style.width = (quota ? Math.min(100, Math.round(spent / quota * 100)) : 0) + "%";
+  const used = box.querySelector(".cc-used");
+  if (used) used.textContent = `已計入 ${M.money.home}$${fmt(spent)}／額度 ${M.money.home}$${fmt(quota)}`;
+  const leftEl = box.querySelector(".cc-left");
+  if (leftEl){
+    leftEl.textContent = `剩餘 ${M.money.home}$${fmt(left)}`;
+    leftEl.classList.toggle("cc-full", left === 0);
+  }
+}
+
+function addCardSpent(name){
+  const box = ccBox(name);
+  const input = box && box.querySelector(".cc-add-input");
+  if (!input) return;
+  const amt = Math.round(Number(input.value));
+  if (!amt || amt <= 0){ input.focus(); return; }
+  const before = Number((state.cards[name] || {}).spent) || 0;
+  state.cards[name] = { ...(state.cards[name] || {}), spent: before + amt };
+  persist();
+  input.value = "";
+  refreshCard(name);
+  input.focus();
+  toast(`「${name}」已加入 ${M.money.home}$${fmt(amt)}`, 6000, {
+    label: "復原",
+    run(){
+      state.cards[name] = { ...(state.cards[name] || {}), spent: before };
+      persist(); refreshCard(name);
+    }
+  });
+}
+
+const cardFixRowHTML = (name, spent) => `<div class="cc-row cc-fix-row">
+    <label class="f-lbl">已計入的總額<input class="input cc-fix-input" type="number" inputmode="numeric"
+           min="0" step="1" data-card="${esc(name)}" value="${spent}"></label>
+    <button class="btn cc-fix-ok" type="button" data-card="${esc(name)}">確定</button>
+    <button class="btn btn-plain cc-fix-cancel" type="button">取消</button>
+  </div>`;
+
+function toggleCardFix(name){
+  const box = ccBox(name);
+  if (!box) return;
+  const open = box.querySelector(".cc-fix-row");
+  if (open){ open.remove(); return; }
+  const spent = Number((state.cards[name] || {}).spent) || 0;
+  box.querySelector(".cc-used-row").insertAdjacentHTML("afterend", cardFixRowHTML(name, spent));
+  const input = box.querySelector(".cc-fix-input");
+  input.focus(); input.select();
+}
+
+function confirmCardFix(name){
+  const box = ccBox(name);
+  const input = box && box.querySelector(".cc-fix-input");
+  if (!input) return;
+  const spent = Math.max(0, Math.round(Number(input.value)) || 0);
+  state.cards[name] = { ...(state.cards[name] || {}), spent };
+  persist();
+  box.querySelector(".cc-fix-row")?.remove();
+  refreshCard(name);
+}
+
+/* ── 航空公司的識別色 ─────────────────────
+   用航班編號前兩碼（IATA 代碼）對，不是用公司名字——名字每趟行程寫法不一樣
+   （「EVA AIR」「長榮航空」），代碼不會變。對不到的就不上色。
+     bar／barDark  那條線：淺色模式要壓深（識別色多半太淡，白底上看不出來），深色模式用原色
+     on／onDark    文字：同色系再深／亮一階，淺色底與深色卡片上都算過 ≥ 4.5:1
+   長榮的綠取自官網頁首 logo 的主色（www.evaair.com，6182 個像素都是它）。
+   虎航取自官網的樣式表，不是官方色票——要換成正確的值改這裡一行就好。 */
+const AIRLINE = {
+  BR: { bar:"#009840", barDark:"#009840", on:"#00702F", onDark:"#3FBF72" },   /* 長榮航空 */
+  IT: { bar:"#C57614", barDark:"#FAA836", on:"#8A5A12", onDark:"#E0B263" },   /* 台灣虎航 */
+};
+const airOf = code => AIRLINE[String(code || "").slice(0, 2).toUpperCase()];
+const airStyle = code => {
+  const a = airOf(code);
+  return a ? ` style="--air:${a.bar};--air-dark:${a.barDark};--air-on:${a.on};--air-on-dark:${a.onDark}"` : "";
+};
+
+const RENDERERS = {
+  flight: b => `<div class="card flight${airOf(b.code) ? " fl-brand" : ""}"${airStyle(b.code)}>
+    <div class="fl-head">
+      <span class="fl-air">${esc(b.airline)} <b>${esc(b.code)}</b></span>
+      <span>${esc(niceDate(b.date))}</span>
+    </div>
+    <div class="fl-body">
+      <div class="fl-side">
+        <div class="t">${esc(b.depart)}</div>
+        <div class="p">${esc(b.from)}</div>
+        <div class="g">${esc(b.fromTerminal || "")}</div>
+      </div>
+      <div class="fl-mid"><span>${ic("airplane-tilt")}</span></div>
+      <div class="fl-side end">
+        <div class="t">${esc(b.arrive)}</div>
+        <div class="p">${esc(b.to)}</div>
+        <div class="g">${esc(b.toTerminal || "")}</div>
+      </div>
+    </div></div>`,
+
+  stop: b => `${legHTML(b)}<div class="card"${slotAttrs(b)}${mapAttrs(b)}>
+    ${nowSlot(b)}${timeTag(b)}${stayTag(b)}${leaveTag(b)}
+    <h2 class="subject">${ic(KIND[b.kind] || KIND.sight)}${esc(b.title)}</h2>
+    ${b.place ? `<div class="meta">${ic("map-pin")}${esc(b.place)}</div>` : ""}${factsHTML(b)}
+    ${notesHTML(b.notes)}${secretHTML(b)}${introHTML(b.intro, b.photo, b.title)}${linksHTML(b.links)}</div>`,
+
+  /* 總耗時跟其他卡片的「停留」一樣放在時間旁邊，由 stay 算出來 */
+  transit: b => `<div class="card">
+    ${b.time ? `<span class="time">${esc(b.time)}</span>` : ""}${b.stay ? `<span class="stay">${ic("timer")}總耗時約 ${fmtStay(b.stay)}</span>` : ""}${leaveTag(b, "抵達")}
+    <h2 class="subject">${esc(b.title)}</h2>
+    ${b.line ? `<div class="meta">${ic("subway")}${esc(b.line)}</div>` : ""}
+    ${b.duration ? `<div class="meta">${ic("timer")}${esc(b.duration)}</div>` : ""}
+    <div class="route">${(b.steps||[]).map(s => {
+      const dot = s.via ? "" : `<div class="route-step">
+           <div class="route-dot${s.active ? " on" : ""}"></div>
+           <div class="route-body">
+             <strong>${esc(s.name)}</strong>
+             ${s.exit ? `<div class="exit-note">${iconText(s.exit)}</div>` : ""}
+             ${s.note ? `<div class="note-box warn">${ic("warning")}${esc(s.note)}</div>` : ""}
+           </div></div>`;
+      if (s.via) return `<div class="route-link"><div class="bar"></div><div class="via">${esc(s.via)}</div></div>`;
+      // 站與站之間的線由 .route-step::before 畫到下一站，不另外插連接線
+      return dot;
+    }).join("")}</div>
+    ${notesHTML(b.notes)}${linksHTML(b.links)}</div>`,
+
+  lodging: b => `${legHTML(b)}<div class="card lodge"${slotAttrs(b)}${mapAttrs(b)}>
+    ${nowSlot(b)}<div><span class="ttag">${ic("bed")}住宿</span>${timeTag(b)}${stayTag(b)}${leaveTag(b)}</div>
+    <h2 class="subject">${esc(b.title)}</h2>
+    ${b.address ? `<div class="meta">${ic("map-pin")}${esc(b.address)}</div>` : ""}${factsHTML(b)}
+    ${(b.notes && b.notes.length)
+      ? `<div class="info">${b.notes.map(n => `<div>${iconText(n)}</div>`).join("")}</div>` : ""}
+    ${secretHTML(b)}${linksHTML(b.links)}</div>`,
+
+  /* 選項卡自己的按鈕（b.links，例如整頓飯共用的停車場）放在標題列右上角；沒有就維持原本的樣子 */
+  options: b => {
+    const head = `<h2 class="subject">${subjectHTML(b.title)}</h2>
+    ${b.place ? `<div class="meta">${ic("map-pin")}${esc(b.place)}</div>` : ""}`;
+    return `<div class="card"${mapAttrs((b.choices || []).find(c => mapQuery(c)) || {})}>
+    ${timeTag(b)}${stayTag(b)}${leaveTag(b)}
+    ${(b.links || []).length
+      ? `<div class="opt-head"><div class="opt-head-main">${head}</div><div class="opt-links">${linksHTML(b.links)}</div></div>`
+      : head}
+    ${(b.choices||[]).map(c => `<div class="choice${(c.links || []).length === 1 ? " one-link" : ""}">
+      <div class="choice-main">
+      <div><span class="tag">${esc(c.label)}</span><strong>${esc(c.title)}</strong></div>
+      ${c.note ? `<div class="meta">${iconText(c.note)}</div>` : ""}</div>
+      ${linksHTML(c.links)}</div>`).join("")}</div>`;
+  },
+
+  checklist: b => {
+    const total = (b.groups||[]).reduce((n,g)=>n+g.items.length,0);
+    const done = (b.groups||[]).reduce((n,g)=>
+      n + g.items.filter(it => state.checks[chkKey(b, it)]).length, 0);
+    return `<div class="card" data-chk="${esc(b.key)}">
+      <h2 class="subject">${iconText(b.title||"清單")}
+        <span class="chk-progress">${done}/${total}</span></h2>
+      ${(b.groups||[]).map(g => `<div class="chk-group">${g.name ? `<h3>${esc(g.name)}</h3>` : ""}
+        ${g.items.map(it=>{
+          const k = chkKey(b, it);
+          /* 項目可以是字串，也可以是物件：
+             text 文字、url 旁邊多一顆按鈕、note 補充說明（例如信用卡的登錄條件）*/
+          const o    = (it && typeof it === "object") ? it : {};
+          const text = itemText(it);
+          const url  = String(o.url  || "");
+          const note = String(o.note || "");
+          const label = `<span>${esc(text)}${note ? `<small class="chk-note">${esc(note)}</small>` : ""}</span>`;
+          const box  = `<label class="chk${note ? " has-note" : ""}">` +
+                       `<input type="checkbox" data-k="${esc(k)}"${state.checks[k]?" checked":""}>${label}</label>`;
+          /* 連結刻意放在 <label> 外面。放裡面的話點連結會順便把項目打勾。 */
+          return url
+            ? `<div class="chk-row">${box}<a class="chk-link" href="${esc(url)}" target="_blank" rel="noopener">開啟</a></div>`
+            : box;
+        }).join("")}</div>`).join("")}
+      ${notesHTML(b.notes)}${linksHTML(b.links)}</div>`;
+  },
+
+  /* 信用卡回饋額度追蹤。重點不是「有哪些卡」，而是「這張還能刷多少才到上限」——
+     額度 = 回饋上限 ÷ 加碼%，例如每月上限 500 點、加碼 8% → NT$6,250。
+     已刷金額與登錄狀態只存這台裝置，每個人刷多少是自己的事。 */
+  cards: b => {
+    const all = ccSort(b.items || []);
+    const shown = all.filter(c => !(state.cards[c.name] || {}).hidden);
+    const hiddenCount = all.length - shown.length;
+    const today = nowAtDestination().date;
+
+    return `<div class="card"><h2 class="subject">${iconText(b.title || "信用卡")}</h2>
+      ${notesHTML(b.notes)}
+      ${shown.map((c, i) => {
+        const s      = state.cards[c.name] || {};
+        const spent  = Number(s.spent) || 0;
+        const quota  = Number(c.quota) || 0;
+        const left   = Math.max(0, quota - spent);
+        const pct    = quota ? Math.min(100, Math.round(spent / quota * 100)) : 0;
+        const expired = c.until && c.until < today;
+        return `<div class="cc" data-card="${esc(c.name)}" data-quota="${quota}">
+          <div class="cc-head">
+            <div class="cc-name">${esc(c.name)}${c.rate ? `<span class="cc-rate">${esc(String(c.rate))}%</span>` : ""}</div>
+            <div class="cc-acts">
+              ${ccGrip(c.name, i, shown.length)}
+              <button class="cc-x" data-hide="${esc(c.name)}" type="button">移除</button>
+            </div>
+          </div>
+          ${c.regions ? `<div class="meta">${esc(c.regions)}</div>` : ""}
+          ${c.until ? `<div class="meta${expired ? " cc-expired" : ""}">活動到期日 ${esc(c.until)}${expired ? "　已過期" : ""}</div>` : ""}
+          ${quota ? `
+            <div class="cc-row">
+              <label class="f-lbl">這筆刷了多少<input class="input cc-add-input" type="number" inputmode="numeric"
+                     min="0" step="1" data-card="${esc(c.name)}" placeholder="輸入金額，自動加總"></label>
+              <button class="btn btn-plain cc-add-btn" type="button" data-card="${esc(c.name)}">加入</button>
+            </div>
+            <div class="cc-bar"><i style="width:${pct}%"></i></div>
+            <div class="cc-used-row">
+              <div class="meta cc-used">已計入 ${esc(M.money.home)}$${fmt(spent)}／額度 ${esc(M.money.home)}$${fmt(quota)}</div>
+              <button class="cc-fix" type="button" data-cc-fix="${esc(c.name)}"
+                      aria-label="直接修改「${esc(c.name)}」已計入的總額">${ic("pencil-simple")}</button>
+            </div>
+            <div class="cc-left${left ? "" : " cc-full"}">剩餘 ${esc(M.money.home)}$${fmt(left)}</div>
+          ` : `<div class="meta">這張沒有回饋上限，不用算額度</div>`}
+          ${c.register ? `<label class="chk cc-reg"><input type="checkbox" data-reg="${esc(c.name)}"${s.done ? " checked" : ""}><span>已完成銀行活動登錄</span></label>` : ""}
+          ${c.note ? `<details class="intro"><summary>查看回饋條件與備註</summary>
+            <div class="intro-body">${c.note.split(/\n+/).filter(Boolean).map(p=>`<p>${iconText(p)}</p>`).join("")}</div>
+          </details>` : ""}
+        </div>`;
+      }).join("")}
+      ${hiddenCount ? `<button class="cc-restore" data-restore="1" type="button">還原已移除的 ${hiddenCount} 張</button>` : ""}
+    </div>`;
+  },
+
+  /* 購物清單（優惠券也是它的一個群組，結構一樣）。
+     種子項目來自 Excel，在網站上增刪的存本機，兩邊在 shopGroups() 合併。
+     勾選與輸入全部走 data-sid／data-snote／data-samt，由就地更新的處理器接手。 */
+  shopping: b => {
+    const s = shopBag();
+    /* 券是「用掉」不是「買到」，所以不給數量與金額。旗標在群組層級，
+       自己在網站上加進這一組的項目也一樣不給，同一組才不會長得不一樣。 */
+    const coupon = new Set((b.groups || []).filter(g => g.coupon).map(g => g.name));
+    return `<div class="card"><h2 class="subject">${iconText(b.title || "購物清單")}</h2>
+      ${notesHTML(b.notes)}
+      ${[...shopGroups(b)].map(([name, items]) => {
+        const done = items.filter(it => (s.edits[it.id] || {}).done).length;
+        const isCoupon = coupon.has(name);
+        return `<details class="shop-g" data-group="${esc(name)}" open>
+          <summary><span class="shop-gn">${esc(name)}</span>
+            <span class="shop-n">${isCoupon ? `共 ${items.length} 張` : `${done}/${items.length}`}</span>
+            <button class="shop-gx" data-delgroup="${esc(name)}" type="button">刪除群組</button></summary>
+          <div class="shop-grid">${items.map(it => {
+            const ed = s.edits[it.id] || {};
+            /* 沒有圖片的卡片加 no-img，內容才會讓開左上角那顆 ✕ */
+            /* 自己加的圖存在 IndexedDB（uimg），網址等 paintUserImages() 讀出來才補上。
+               新增時附的記在項目上，之後才補的記在 edits（Excel 給的項目也能補） */
+            const uimg = it.uimg || ed.uimg;
+            return `<div class="shop-i${it.img || uimg ? "" : " no-img"}" data-id="${esc(it.id)}">
+              <button class="shop-x" data-sdel="${esc(it.id)}" type="button" aria-label="刪除${esc(it.name)}">${ic("x")}</button>
+              ${it.img ? `<img class="shop-img" src="${esc(it.img)}" data-zoom="${esc(it.img)}" alt="${esc(it.name)}" loading="lazy">`
+                : uimg ? `<img class="shop-img" data-uimg="${esc(it.id)}" alt="${esc(it.name)}">` : ""}
+              ${isCoupon
+                ? `<div class="shop-name">${esc(it.name)}</div>`
+                : `<label class="chk"><input type="checkbox" data-sid="${esc(it.id)}"${ed.done ? " checked" : ""}><span>${esc(it.name)}${it.who ? `<span class="shop-who">${esc(it.who)}</span>` : ""}</span></label>`}
+              ${/^https?:\/\//i.test(it.url) ? `<a class="btn btn-plain shop-link" href="${esc(it.url)}" target="_blank" rel="noopener">${isCoupon ? "開啟優惠券" : "開啟連結"}</a>` : ""}
+              ${isCoupon ? "" : `<label class="f-lbl">數量／備註<input class="input shop-note" data-snote="${esc(it.id)}" value="${esc(ed.note || "")}" autocomplete="off"></label>
+              <label class="f-lbl">金額<input class="input shop-amt" type="number" inputmode="numeric" min="0" data-samt="${esc(it.id)}" value="${esc(String(ed.amount ?? ""))}"></label>`}
+              ${it.img || uimg ? "" : `<label class="shop-addimg"><input type="file" accept="image/*" data-simg="${esc(it.id)}" hidden>${ic("camera")}加圖片</label>`}
+            </div>`;
+          }).join("")}</div>
+          <form class="shop-add" data-addto="${esc(name)}">
+            <label class="f-lbl">加一項到「${esc(name)}」<input class="input" name="n" autocomplete="off"></label>
+            <button class="btn" type="submit">新增</button>
+            <div class="shop-extra">
+              <label class="shop-file"><input type="file" name="f" accept="image/*" hidden>${ic("camera")}<span>附圖片</span></label>
+              <label class="f-lbl">連結（選填）<input class="input" name="u" inputmode="url" autocomplete="off"></label>
+            </div></form>
+        </details>`;
+      }).join("")}
+      ${s.removed.length ? `<button class="shop-restore" data-srestore="1" type="button">還原已移除的 ${s.removed.length} 項</button>` : ""}
+      <form class="shop-addg">
+        <label class="f-lbl">群組名稱<input class="input" name="g" placeholder="例如「超市」" autocomplete="off"></label>
+        <button class="btn" type="submit">新增群組</button></form>
+    </div>`;
+  },
+
+  weather: () => `<div class="card"><h2 class="subject">${ic("thermometer")}行程期間天氣</h2>
+    <div class="wx-strip" id="wx-strip">載入中…</div></div>`,
+
+  phrases: () => `<div class="card"><h2 class="subject">${ic("chat-circle-dots")}常用片語</h2>
+    ${(TRIP_DATA.phrases||[]).map(p => p.local
+      ? `<div class="ph"><div class="ph-l">${esc(p.local)}</div><div class="ph-z">${esc(p.zh)}</div></div>`
+      : `<div class="ph"><div class="ph-l dim">${esc(p.zh)}</div><div class="ph-z">（沒有翻譯結果）</div></div>`
+    ).join("")}</div>`,
+
+  emergency: b => `<div class="card"><h2 class="subject">${ic("first-aid")}緊急資訊</h2>
+    ${b && b.country ? `<div class="src">${esc(b.country)}${b.countryCode ? `（${esc(b.countryCode)}）` : ""}${b.auto ? ` 前 ${b.auto} 筆為當地官方緊急號碼` : ""}<br>
+      出發前請再確認一次，號碼可能更動。</div>` : ""}
+    ${(TRIP_DATA.emergency||[]).map(e => `<div class="phrase"><span>${esc(e.label)}</span>
+      <span>${e.tel ? `<a href="tel:${esc(e.value)}">${esc(e.value)}</a>` : esc(e.value)}</span></div>`).join("")}</div>`,
+
+  expenses: () => renderExpenses(),
+
+  board: () => renderBoard()
+};
+
+function renderBlock(b){
+  const fn = RENDERERS[b.type];
+  if (!fn) return `<div class="card"><div class="err">未知的 block 型別：<code>${esc(b.type)}</code><br>
+    請在 RENDERERS 補上對應的渲染函式。</div></div>`;
+  try { return fn(b); }
+  catch (e) { return `<div class="card"><div class="err">渲染 <code>${esc(b.type)}</code> 失敗：${esc(e.message)}</div></div>`; }
+}
+
+/* ── 分頁 ── */
+let current = TRIP_DATA.days[0].id;
+let mapFocus = null;   // { day, v, p }：右側地圖只看當天第 v 站（地點 p）
+const mapSkip = {};    // 每天取消勾選、不畫進路線的點（Set，見 skipOf）。換天保留，重新整理就全部恢復
+let dayLink = null;    // 「在 Google 地圖開啟」要用的路線：paintDayMap 算好，paintDayLink 畫
+function renderDay(id){
+  if (id !== current) mapFocus = null;   // 換一天就回到整條路線
+  current = id;
+  const day = TRIP_DATA.days.find(d => d.id === id);
+  document.getElementById("main").innerHTML =
+    wakeHTML(wakeFor(day)) + day.blocks.map(renderBlock).join("");
+  /* 分頁與內容的對應（APG tabs）：三組各是一個 tablist，每組只留一個 Tab 停留點——
+     有選取中的就是它，沒有就是那組的第一顆（roving tabindex）。只讓「全站選取中的那一顆」
+     能 Tab 到的話，另外兩組會整組跳過、用鍵盤進不去；全部都能 Tab 到的話，光跨過十一顆
+     分頁就要按十一次。
+     內容區用 aria-labelledby 指回選取中的分頁，讀螢幕時才知道現在看的是哪一天。 */
+  document.querySelectorAll(".nav-item").forEach(b =>
+    b.setAttribute("aria-selected", String(b.dataset.day === id)));
+  for (const list of document.querySelectorAll('.sidenav [role="tablist"]')){
+    const tabs = [...list.querySelectorAll(".nav-item")];
+    const stop = tabs.find(t => t.dataset.day === id) || tabs[0];
+    tabs.forEach(t => { t.tabIndex = t === stop ? 0 : -1; });
+  }
+  document.getElementById("main").setAttribute("aria-labelledby", `tab-${id}`);
+  revealTab();
+  /* 編輯入口只留在行前：其他分頁是旅途中當下要看的東西，
+     不該混進「回去改試算表、重新產生網站」這種出發前才做的事。
+     （Open-Meteo 的授權標示留在 footer，所有分頁都要有。）*/
+  document.getElementById("edit-bar").hidden = id !== "d0";
+  if (id === "board") markBoardSeen();   // 進去看過了，分頁上的未讀數歸零
+  paintBoardBadge();
+  paintForecast();
+  paintVaults();        // 記住密語的話，卡片上的私人資料在這裡自動解開（解密是非同步的）
+  paintUserImages();    // 購物清單裡自己加的圖片從 IndexedDB 讀出來（非同步）
+  paintDayMap(day);
+  window.scrollTo({ top:0, behavior:"smooth" });
+  markNow();           // 捲到頂之後才標記；第一次進站會再捲到目前項目
+}
+
+/* ── 現在進行到哪 ─────────────────────────────
+   旅途中打開網站，最想知道的是「現在該在哪、還剩多久」。
+   每 30 秒只改 class 與一行字，不重畫整頁——否則展開到一半的介紹會被收起來。 */
+let firstNowPaint = true;
+
+function markNow(){
+  const n = nowAtDestination();
+  const day = TRIP_DATA.days.find(d => d.id === current);
+  const cards = [...document.querySelectorAll("#main .card[data-start]")];
+
+  cards.forEach(c => {
+    c.classList.remove("is-now", "is-next", "is-past");
+    const l = c.querySelector(".now-line");
+    if (l){ l.hidden = true; l.textContent = ""; }
+  });
+
+  /* 導覽列標出今天是哪一個分頁 */
+  document.querySelectorAll(".nav-item").forEach(btn => {
+    const d = TRIP_DATA.days.find(x => x.id === btn.dataset.day);
+    btn.classList.toggle("is-today", !!(d && d.date === n.date));
+  });
+
+  if (!day || day.date !== n.date){ paintDayLink(); return; }   // 不是今天就不標任何東西（過了午夜，連結也要回到從第一站出發）
+
+  /* 結束時間：有填停留就用它，沒填就接到下一個項目的開始時間，
+     最後一項沒得接就給 2 小時。否則住宿這種沒填停留的會立刻變「已結束」。 */
+  const ends = cards.map((c, i) => {
+    const s = +c.dataset.start, stay = +(c.dataset.stay || 0), go = +(c.dataset.travel || 0);
+    let e = stay > 0 ? s + stay : (cards[i + 1] ? +cards[i + 1].dataset.start : s + go + 120);
+    return e > s ? e : s + 60;
+  });
+
+  let cur = null, next = null;
+  cards.forEach((c, i) => {
+    const s = +c.dataset.start;
+    if (n.minutes >= ends[i]) c.classList.add("is-past");
+    else if (n.minutes >= s)  { if (!cur) cur = { card: c, end: ends[i], arrive: s + +(c.dataset.travel || 0) }; }
+    else if (!next)           next = { card: c, start: s, arrive: s + +(c.dataset.travel || 0) };
+  });
+
+  const show = (card, cls, text) => {
+    card.classList.add(cls);
+    const l = card.querySelector(".now-line");
+    if (l){ l.textContent = text; l.hidden = false; }
+  };
+  /* 卡片的時間是「出發」（這一列從離開上一站開始），前段是在路上：還沒到就標「前往中」 */
+  if (cur && n.minutes < cur.arrive) show(cur.card, "is-now", `前往中 · 預計 ${toHHMM(cur.arrive)} 抵達`);
+  /* 幾點離開已經印在卡片上（.stay.leave），這一行只留它獨有的那半句：還剩多久 */
+  else if (cur)  show(cur.card, "is-now",  `現在 · 還有 ${fmtMin(cur.end - n.minutes)}`);
+  else if (next) show(next.card, "is-next", next.arrive > next.start
+    ? `接下來 · ${fmtMin(next.start - n.minutes)}後出發（預計 ${toHHMM(next.arrive)} 抵達）`
+    : `接下來 · ${fmtMin(next.start - n.minutes)}後開始（${toHHMM(next.start)}）`);
+  paintDayLink();      // 今天的路線跳過已經過去的站：剛才標好的 is-past 就是依據
+
+  /* 開啟網站時捲到目前位置。只做第一次，之後自己切分頁就不要再被拉走。 */
+  if (firstNowPaint){
+    firstNowPaint = false;
+    const target = (cur || next || {}).card;
+    if (target) target.scrollIntoView({
+      block: "center",
+      behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"
+    });
+  }
+}
+
+function buildNav(){
+  /* 分頁上帶日期與星期：排行程時常要確認「這天是幾號、禮拜幾」，
+     不然每切一天都要看一次標題。放第二行，寬度才不會爆掉。
+     沒有日期的分頁（行前、記帳、資訊）不顯示這一行。 */
+  const sub = d => {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(d.date || ""));
+    if (!m) return "";
+    const wk = WEEK[new Date(d.date + "T00:00:00Z").getUTCDay()];
+    return `<span class="nav-sub">${Number(m[2])}/${Number(m[3])} ${wk}</span>`;
+  };
+  const tab = d =>
+    `<button class="nav-item" role="tab" id="tab-${esc(d.id)}" data-day="${esc(d.id)}" ` +
+      `aria-controls="main" aria-selected="false" tabindex="-1">` +
+      `<span class="nav-main">${iconText(d.nav)}</span>${sub(d)}</button>`;
+  /* 分三組：有日期的是每日行程；沒日期的再分「旅途工具」（購物、記帳）與「準備資訊」（其餘）。
+     用 builder 固定給的 id 判斷，不靠分頁名稱——名稱每趟行程會不一樣 */
+  const TOOLS = new Set(["shop", "wallet", "board"]);
+  const days  = TRIP_DATA.days.filter(d => d.date);
+  const tools = TRIP_DATA.days.filter(d => !d.date && TOOLS.has(d.id));
+  const prep  = TRIP_DATA.days.filter(d => !d.date && !TOOLS.has(d.id));
+  const group = (id, label, list) => {
+    const el = document.getElementById(id);
+    el.hidden = !list.length;          // 沒有項目的群組整組不出現
+    el.innerHTML = list.length
+      ? `<span class="nav-glabel" aria-hidden="true">${label}</span>` + list.map(tab).join("") : "";
+  };
+  group("nav-prep",  "準備資訊", prep);
+  group("nav-tools", "旅途工具", tools);
+  group("nav",       "每日行程", days);
+  // .nav-aux 不整列藏起來：配色切換鍵也在這一列，兩組都沒有項目時它仍然要在
+  paintBoardBadge();   // 重建導覽會把徽章一起沖掉
+  navEdges();
+}
+
+/* 選取中的分頁捲進視野。開啟網站會直接跳到今天，那顆分頁常常在畫面外——
+   不捲的話，看起來就像停在第一個分頁上。
+   直接捲 nav 自己，不用 scrollIntoView：電腦版的分頁是直向的，
+   scrollIntoView 會把整頁一起捲走，跟 renderDay 的「捲回頂端」打架。 */
+function revealTab(){
+  const bar = document.getElementById("nav");
+  const btn = bar.querySelector('.nav-item[aria-selected="true"]');
+  if (!btn || bar.scrollWidth <= bar.clientWidth) return;   // 電腦版直向排列，沒有橫向捲動
+  bar.scrollTo({
+    left: btn.offsetLeft - (bar.clientWidth - btn.offsetWidth) / 2,
+    behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth"
+  });
+}
+
+/* 哪一邊還有捲不到的分頁，就在那一邊鋪漸層（CSS 的 .nav-l／.nav-r）。 */
+function navEdges(){
+  const bar = document.getElementById("nav");
+  const max = bar.scrollWidth - bar.clientWidth;
+  bar.classList.toggle("nav-l", max > 1 && bar.scrollLeft > 1);
+  bar.classList.toggle("nav-r", max > 1 && bar.scrollLeft < max - 1);
+}
+document.getElementById("nav").addEventListener("scroll", navEdges, { passive: true });
+addEventListener("resize", navEdges);
+
+/* ── 天氣（Open-Meteo，免 API key） ── */
+const WMO = {
+  0:["sun","晴"],1:["cloud-sun","大致晴"],2:["cloud-sun","多雲"],3:["cloud","陰"],
+  45:["cloud-fog","霧"],48:["cloud-fog","霧淞"],
+  51:["cloud-rain","毛毛雨"],53:["cloud-rain","毛毛雨"],55:["cloud-rain","毛毛雨"],
+  56:["cloud-rain","凍雨"],57:["cloud-rain","凍雨"],
+  61:["cloud-rain","小雨"],63:["cloud-rain","雨"],65:["cloud-rain","大雨"],
+  66:["cloud-rain","凍雨"],67:["cloud-rain","凍雨"],
+  71:["cloud-snow","小雪"],73:["cloud-snow","雪"],75:["snowflake","大雪"],77:["cloud-snow","冰珠"],
+  80:["cloud-rain","陣雨"],81:["cloud-rain","陣雨"],82:["cloud-lightning","強陣雨"],
+  85:["cloud-snow","陣雪"],86:["snowflake","強陣雪"],
+  95:["cloud-lightning","雷雨"],96:["cloud-lightning","雷雨冰雹"],99:["cloud-lightning","雷雨冰雹"]
+};
+const wmo = c => WMO[c] || ["thermometer","—"];
+const WXKEY = `${KEY}:wx`;
+let wx = (() => { try { return JSON.parse(LS.get(WXKEY)); } catch { return null; } })();
+
+async function fetchWeather(){
+  const p = M.place;
+  const url = `https://api.open-meteo.com/v1/forecast?latitude=${p.lat}&longitude=${p.lon}`
+    + `&current=temperature_2m,apparent_temperature,relative_humidity_2m,weather_code`
+    + `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max`
+    + `&timezone=${encodeURIComponent(p.timezone)}&forecast_days=16`;
+  try{
+    const r = await fetch(url);
+    if (!r.ok) throw new Error(`HTTP ${r.status}`);
+    const j = await r.json();
+    wx = { ...j, fetchedAt: Date.now() };
+    LS.set(WXKEY, JSON.stringify(wx));
+  }catch(e){
+    console.warn("天氣抓取失敗，使用快取：", e.message);
+  }
+  paintNow(); paintForecast();
+}
+
+/* 目的地當地時間；沒有時區資料就不顯示 */
+function localTime(){
+  const tz = M.place && M.place.timezone;
+  if (!tz || tz === "auto") return "";
+  try{
+    return "當地 " + new Intl.DateTimeFormat("zh-TW", {
+      timeZone: tz, hour: "2-digit", minute: "2-digit", hour12: false
+    }).format(new Date());
+  }catch{ return ""; }
+}
+
+/* 目的地當地的「現在」：{ date:"YYYY-MM-DD", minutes:距午夜幾分, weekday:0-6 }
+
+   一定要用目的地時區，不能用裝置時區。台日差一小時，台灣時間 23:00 之後
+   日本已經是隔天——「第 N 天」會整整差一天，而旁邊的時鐘卻顯示當地時間，
+   兩個數字互相矛盾。判斷「現在進行到哪一站」更不能錯。
+   沒有時區資料就退回裝置時間。 */
+function nowAtDestination(){
+  const d = new Date();
+  const pad = n => String(n).padStart(2, "0");
+  const fallback = () => ({
+    date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`,
+    minutes: d.getHours() * 60 + d.getMinutes(),
+    weekday: d.getDay()
+  });
+  const tz = M.place && M.place.timezone;
+  if (!tz || tz === "auto") return fallback();
+  try{
+    /* hourCycle:"h23" 不能省——hour12:false 在部分瀏覽器午夜會給出「24」 */
+    const p = new Intl.DateTimeFormat("en-CA", {
+      timeZone: tz, year:"numeric", month:"2-digit", day:"2-digit",
+      hour:"2-digit", minute:"2-digit", hourCycle:"h23"
+    }).formatToParts(d).reduce((o, x) => (o[x.type] = x.value, o), {});
+    const date = `${p.year}-${p.month}-${p.day}`;
+    return {
+      date,
+      minutes: Number(p.hour) * 60 + Number(p.minute),
+      weekday: new Date(date + "T00:00:00Z").getUTCDay()   // 由日期字串推，避開語系差異
+    };
+  }catch{ return fallback(); }
+}
+
+function paintNow(){
+  const el = document.getElementById("wx-now");
+  const stamp = document.getElementById("wx-stamp");
+  const now = new Date();
+  const WK = ["日","一","二","三","四","五","六"];
+  /* 日期一律以目的地當地時間為準。旁邊顯示的就是當地時鐘，若這裡用裝置
+     時區，台灣半夜時兩個數字會對不起來（日本已跨日，天數卻還沒加）。 */
+  const nd = nowAtDestination();
+  const utcDay = s => Date.parse(s + "T00:00:00Z");   // 一律當 UTC 解讀，相減才是整數天
+
+  /* 今天是第幾天，或距離出發還有幾天 */
+  const t0 = utcDay(M.startDate);
+  const t1 = utcDay(M.endDate || M.startDate);
+  const tn = utcDay(nd.date);
+  let tag = "";
+  if (!isNaN(t0) && !isNaN(tn)){
+    if (tn < t0)      tag = `出發倒數 ${Math.round((t0 - tn) / 86400000)} 天`;
+    else if (tn > t1) tag = "行程已結束";
+    else              tag = `第 ${Math.round((tn - t0) / 86400000) + 1} 天`;
+  }
+  const [, mm, dd] = nd.date.split("-");
+  const topHTML = `<div class="wx-top">
+      <div class="wx-date">${Number(mm)}/${Number(dd)}<span>週${WK[nd.weekday]}${tag ? " · " + tag : ""}</span></div>
+      <div class="wx-time">${esc(localTime())}</div>
+    </div>`;
+
+  if (!wx || !wx.current){
+    el.innerHTML = topHTML + `<div class="wx-main"><div class="wx-emoji">${ic("globe")}</div>
+      <div><div class="wx-desc">尚無天氣資料</div></div></div>`;
+    stamp.textContent = "連上網路後會自動更新";
+    return;
+  }
+  const c = wx.current, [emoji, desc] = wmo(c.weather_code);
+  const d = wx.daily || {};
+  /* 「今日」要查的是目的地的日期。Open-Meteo 回的 daily.time 也是當地日期，
+     用裝置日期比對，跨時區時會對到前一天的預報。 */
+  const key = nd.date;
+  const i = d.time ? d.time.indexOf(key) : -1;
+  const hi = i >= 0 ? Math.round(d.temperature_2m_max[i]) : null;
+  const lo = i >= 0 ? Math.round(d.temperature_2m_min[i]) : null;
+  const rain = i >= 0 ? d.precipitation_probability_max[i] : null;
+
+  el.innerHTML = topHTML + `
+    <div class="wx-main">
+      <div class="wx-emoji">${ic(emoji)}</div>
+      <div>
+        <div class="wx-temp">${Math.round(c.temperature_2m)}°</div>
+        <div class="wx-desc">${esc(desc)}</div>
+      </div>
+      ${hi !== null ? `<div class="wx-hl">
+        <div class="cap">今日</div><div class="hi">${hi}°</div><div class="lo">${lo}°</div></div>` : ""}
+    </div>
+    <div class="wx-grid">
+      <div>體感<b>${Math.round(c.apparent_temperature)}°</b></div>
+      <div>濕度<b>${c.relative_humidity_2m}%</b></div>
+      <div>降雨<b>${rain ?? "—"}%</b></div>
+    </div>`;
+
+  const age = Date.now() - wx.fetchedAt;
+  stamp.textContent = age < 6e5 ? "" :
+    `最後更新：${new Date(wx.fetchedAt).toLocaleString("zh-TW",{month:"numeric",day:"numeric",hour:"2-digit",minute:"2-digit"})}`;
+}
+
+/* ── 電腦版的當日路線地圖 ───────────────────────
+   當天的景點與住宿依序串成一條路線（Maps Embed API，最多 20 個途經點）。
+   每一點的位置見 mapQuery()。地圖上方列出當天每一點：點名字只看那一點，
+   取消勾選的點不畫進路線——比較「去不去某個景點」路線差多少。 */
+const DESKTOP = matchMedia("(min-width:1024px)");
+/* 是不是同一個地方：比查詢字串逗號前的名字。同一間飯店，入住卡與住宿卡的地址常寫得
+   不一樣（「祇園町 2-31」與「祇園（地鐵空港線 祇園站）」），整串比會被當成兩個地方 */
+const placeKey = q => q.split(", ")[0].trim();
+function dayMapPoints(day){
+  /* pts：地點按鈕，同一個地方只有一顆。visits：一天實際移動的順序，同一個地方可以出現
+     兩次（出門再回飯店）——路線照 visits 畫。二選一是一個 visit 帶幾個候選點（alts）。
+     cardVisit[k]：當天第 k 張有地點的卡片是第幾個 visit。 */
+  const pts = [], visits = [], cardVisit = [];
+  /* id：地圖按鈕釘住的 place ID（見 mapPlaceId），同一個地方只要有一張卡片釘過就用它 */
+  const ptOf = (q, title, extra) => {
+    const i = pts.findIndex(p => placeKey(p.q) === placeKey(q));
+    if (i >= 0){ if (extra.id && !pts[i].id) pts[i].id = extra.id; return i; }
+    pts.push({ q, title: title || q, ...extra });
+    return pts.length - 1;
+  };
+  const go = v => {   // 跟上一站是同一個地方（入住完接著是住宿卡）就不算移動
+    const last = visits[visits.length - 1];
+    if (!last || last.alts || v.alts || last.p !== v.p) visits.push(v);
+    return visits.length - 1;
+  };
+  /* 從前一晚的住宿出發，才看得到怎麼從住處到第一站。只看緊接的前一天（有日期的分頁）；
+     那天沒有住宿（第一天、搭夜班機）就不加 */
+  const before = TRIP_DATA.days.slice(0, TRIP_DATA.days.indexOf(day)).reverse().find(d => d.date);
+  const stay = before && [...(before.blocks || [])].reverse().find(b => b.type === "lodging" && mapQuery(b));
+  if (stay) go({ p: ptOf(mapQuery(stay), stay.title, { start: true, id: mapPlaceId(stay) }) });
+  let alt = 0;
+  for (const b of day.blocks || []){
+    /* mode：怎麼到這一站（卡片上的交通方式） */
+    if (b.type === "options"){
+      const cs = (b.choices || []).filter(c => mapQuery(c));   // 跟卡片上的 mapAttrs 一致
+      if (!cs.length) continue;
+      alt++;
+      cardVisit.push(go({ alts: cs.map(c => ptOf(mapQuery(c), c.title, { alt, id: mapPlaceId(c) })), mode: b.mode }));
+    }
+    if (b.type !== "stop" && b.type !== "lodging") continue;
+    const q = mapQuery(b);
+    if (!q) continue;                                   // 跟 mapAttrs 一樣，沒地點的卡片不算
+    const p = ptOf(q, b.title, { id: mapPlaceId(b) });
+    /* 同一間飯店的入住卡與住宿卡合併後，按鈕用住宿卡的名字（飯店名），不用「Check-in・放行李」 */
+    if (b.type === "lodging" && !pts[p].start) pts[p].title = b.title || pts[p].title;
+    cardVisit.push(go({ p, mode: b.mode }));
+  }
+  if (!cardVisit.length) pts.length = visits.length = 0;   // 當天自己沒有地點，只有前一晚的住宿就不畫
+  /* 沒開車的日子用大眾運輸。嵌入地圖的大眾運輸一次只能查兩點之間：加了途經點就畫不出線，
+     只把各點標出來（2026-10 實測，文件沒寫）——整天看地點分布，點某一站再看那一段怎麼搭 */
+  const mode = (day.blocks || []).some(b => b.mode === "driving") ? "driving" : "transit";
+  return { pts, visits, cardVisit, mode };
+}
+/* 每天取消勾選的點。那天還沒動過的話，二選一每組先只勾第一個 */
+function skipOf(dayId, pts){
+  return mapSkip[dayId] = mapSkip[dayId] ||
+    new Set(pts.flatMap((p, i) => p.alt && pts.findIndex(o => o.alt === p.alt) !== i ? [i] : []));
+}
+/* 這一站實際去哪：二選一取勾著的那個，沒勾就是不去 */
+const chosen = (vis, skip) => vis.alts ? vis.alts.find(p => !skip.has(p)) : skip.has(vis.p) ? undefined : vis.p;
+const NUM = i => i < 20 ? String.fromCharCode(0x2460 + i) : `${i + 1}.`;   // ①②③…
+function paintDayMap(day){
+  const app = document.querySelector(".app");
+  const box = document.getElementById("daymap");
+  const { pts, visits, cardVisit, mode } = day && day.date ? dayMapPoints(day) : { pts: [], visits: [], cardVisit: [] };
+  const e = encodeURIComponent;
+  app.classList.toggle("map-on", !!(M.mapsEmbedKey && DESKTOP.matches));
+  const on = !!(M.mapsEmbedKey && pts.length && DESKTOP.matches);
+  app.classList.toggle("has-map", on);
+  const skip = day ? skipOf(day.id, pts) : new Set();
+  /* 路線依序經過的點：取消勾選的跳過，連續同一點只算一次。
+     v 是它屬於第幾個 visit——旅行當天的連結靠它跳過已經過去的站（paintDayLink） */
+  const seq = [];
+  visits.forEach((vis, v) => {
+    const p = chosen(vis, skip);
+    if (p !== undefined && p !== (seq[seq.length - 1] || {}).p) seq.push({ p, v });
+  });
+  const route = seq.slice(0, 22).map(x => x.p);   // 起點＋20 個途經點＋終點
+  const focus = on && mapFocus && mapFocus.day === day.id && visits[mapFocus.v] && pts[mapFocus.p] ? mapFocus : null;
+  /* 沒開車的日子點了某一站：看「從上一站怎麼去」（取消勾選的站跳過），交通方式用那張卡片的。
+     開車的日子點了只標位置。當天第一站沒有上一站，也只標位置 */
+  let leg = null;
+  if (focus && mode !== "driving"){
+    let u = focus.v - 1, from;
+    while (u >= 0 && (from = chosen(visits[u], skip)) === undefined) u--;
+    if (u >= 0 && from !== focus.p)
+      leg = { pts: [from, focus.p], mode: visits[focus.v].mode || "transit" };
+  }
+  dayLink = seq.length ? { day: day.id, pts, visits, cardVisit, seq, leg, mode } : null;
+  paintDayLink();
+
+  const main = document.getElementById("main");
+  main.querySelectorAll(".card[data-mapq]").forEach((c, k) => {
+    const vis = visits[cardVisit[k]];
+    c.classList.toggle("map-focus", !!focus && !!vis && (vis.p === focus.p || (vis.alts || []).includes(focus.p)));
+    /* 有地圖時卡片也能用鍵盤選（Tab 到卡片按 Enter）。手機不加，Tab 順序才不會多出一堆卡片 */
+    if (on) c.tabIndex = 0; else c.removeAttribute("tabindex");
+  });
+  if (!on) return;
+
+  /* 地圖上方的地點按鈕。前一晚的住宿不編號；二選一的候選點共用一個號碼。
+     整排重畫，所以先記住鍵盤焦點在哪一顆，畫完放回去 */
+  const num = {};
+  let n = 0;
+  for (const vis of visits){
+    const ps = (vis.alts || [vis.p]).filter(p => !(p in num) && !pts[p].start);
+    if (ps.length){ ps.forEach(p => num[p] = n); n++; }
+  }
+  const groups = [...new Set(pts.filter(p => p.alt).map(p => p.alt))];
+  const all = pts.every((p, i) => p.alt || !skip.has(i)) &&
+              groups.every(g => pts.some((p, i) => p.alt === g && !skip.has(i)));
+  const pick = box.querySelector(".daymap-pick");
+  const was = pick.contains(document.activeElement) ? { ...document.activeElement.dataset } : null;
+  pick.innerHTML =
+    `<label class="dm-chip"><input type="checkbox" data-all${all ? " checked" : ""}>全選</label>` +
+    pts.map((p, i) => {
+      const name = p.start ? ic("bed") + esc(p.title) : esc(`${NUM(num[i])} ${p.title}`);
+      const tip = p.start ? `前一晚住宿：${p.title}` : p.alt ? `二選一：${p.title}` : p.title;
+      return `<span class="dm-chip${focus && focus.p === i ? " is-on" : ""}${skip.has(i) ? " is-off" : ""}">` +
+        `<label><input type="checkbox" data-skip="${i}"${skip.has(i) ? "" : " checked"} aria-labelledby="dm-p${i}"></label>` +
+        `<button type="button" id="dm-p${i}" data-p="${i}" aria-pressed="${!!focus && focus.p === i}" title="${esc(tip)}">${name}</button></span>`;
+    }).join("");
+  /* 只勾了一部分：全選框顯示「–」，按下去會全部勾起來 */
+  pick.querySelector("[data-all]").indeterminate = !all && skip.size < pts.length;
+  if (was) pick.querySelector(was.all !== undefined ? "[data-all]"
+    : was.skip !== undefined ? `[data-skip="${was.skip}"]` : `[data-p="${was.p}"]`)?.focus();
+
+  /* 全部取消勾選：沒有東西可畫，收起地圖、改成一行提示。
+     地圖按鈕釘了 place ID 的地點用 ID 查（見 mapPlaceId），其他用名稱 */
+  const at = p => pts[p].id ? `place_id:${pts[p].id}` : pts[p].q;
+  const show = (leg ? leg.pts : focus ? [focus.p] : route).map(at);
+  const frame = box.querySelector("iframe");
+  frame.hidden = !show.length;
+  box.querySelector(".daymap-empty").hidden = !!show.length;
+  if (!show.length) return;
+
+  const key = e(M.mapsEmbedKey);
+  const src = show.length === 1
+    ? `https://www.google.com/maps/embed/v1/place?key=${key}&q=${e(show[0])}&language=ja&region=jp`
+    : `https://www.google.com/maps/embed/v1/directions?key=${key}&mode=${leg ? leg.mode : mode}&language=ja&region=jp` +
+      `&origin=${e(show[0])}&destination=${e(show[show.length - 1])}` +
+      (show.length > 2 ? `&waypoints=${show.slice(1, -1).map(e).join("|")}` : "");
+  /* 同一天重畫（例如購物清單增刪）網址沒變就不要重設，否則地圖會整個重新載入 */
+  if (frame.getAttribute("src") !== src) frame.setAttribute("src", src);
+}
+/* 同一條路線開到 Google 地圖：可以拖曳、看路況。不用金鑰，所以沒填嵌入金鑰的
+   網站也有；取消勾選的點這裡也不帶。手機也有：手機上通常是用 Google 地圖 App 開，
+   途經點上限跟電腦一樣是 9 個；沒裝 App、用手機瀏覽器開的話只認前 3 個（Google 的限制）。
+   Google 地圖的大眾運輸也不能加途經點（會說無法規劃），所以沒開車的日子整天用步行開、
+   只剩一站時才用大眾運輸；點了某一站就改開那一段，用大眾運輸，可以直接拿來導航。
+   旅行當天（那一天的日期＝目的地的今天）：不帶起點，Google 地圖就從裝置的現在位置出發，
+   原本的第一站（前一晚的住宿）不帶；而且跳過已經過去的站——跟「現在進行到哪」同一套判斷
+   （卡片的 is-past），所以 markNow 每 30 秒會重畫一次。出發前規劃時現在位置在台灣，
+   Google 規劃不出來，所以其他日子照舊從第一站出發（使用者決定）。
+   放在 #main 最上面（起床那一條的上方）：renderDay 每次都會整個換掉 #main，不會留下舊的 */
+function paintDayLink(){
+  const main = document.getElementById("main");
+  let a = main.querySelector(".daymap-open");
+  const L = dayLink && dayLink.day === current ? dayLink : null;
+  if (!L){ a?.remove(); return; }
+  const day = TRIP_DATA.days.find(d => d.id === L.day);
+  const e = encodeURIComponent, q = p => L.pts[p].q;
+  let lp, lm, here = false;
+  if (L.leg){ lp = L.leg.pts.map(q); lm = L.leg.mode; }
+  else {
+    let s = L.seq;
+    if (day.date === nowAtDestination().date){
+      here = true;
+      /* 第一張還沒過去的卡片是第幾個 visit；全部都過了就只剩最後一站（回住處） */
+      const k = [...main.querySelectorAll(".card[data-mapq]")].map(c => c.classList.contains("is-past")).lastIndexOf(true) + 1;
+      const from = k < L.cardVisit.length ? L.cardVisit[k] : L.visits.length - 1;
+      s = s.filter(x => x.v >= from);
+      if (!s.length) s = L.seq.slice(-1);
+    }
+    lp = s.map(x => q(x.p));
+  }
+  const via = (here ? lp.slice(0, -1) : lp.slice(1, -1)).slice(0, 9);
+  if (!L.leg) lm = L.mode === "driving" ? "driving" : via.length ? "walking" : "transit";
+  const href = lp.length === 1 && !here
+    ? `https://www.google.com/maps/search/?api=1&query=${e(lp[0])}`
+    : `https://www.google.com/maps/dir/?api=1&travelmode=${lm}` +
+      (here ? "" : `&origin=${e(lp[0])}`) + `&destination=${e(lp[lp.length - 1])}` +
+      (via.length ? `&waypoints=${via.map(e).join("|")}` : "");
+  const label = L.leg ? "這一段" : "今天的路線";
+  if (!a){
+    main.insertAdjacentHTML("afterbegin", `<a class="daymap-open" target="_blank" rel="noopener"></a>`);
+    a = main.firstElementChild;
+  }
+  /* 每 30 秒會跑一次：沒變就不動，鍵盤焦點在上面也不會被打斷 */
+  if (a.getAttribute("href") !== href) a.setAttribute("href", href);
+  if (a.dataset.label !== label){
+    a.dataset.label = label;
+    a.innerHTML = `在 Google 地圖開啟${label}${ic("arrow-square-out")}`;
+  }
+}
+/* 視窗從手機寬度拉到電腦寬度時補載，反過來就收起 */
+DESKTOP.addEventListener("change", () => paintDayMap(TRIP_DATA.days.find(d => d.id === current)));
+
+/* 只看某一站（{ v, p }：第 v 站、地點 p）；null 回到路線。點同一個地方第二次也回到路線 */
+function setMapFocus(f){
+  mapFocus = !f || (mapFocus && mapFocus.day === current && mapFocus.p === f.p) ? null : { day: current, ...f };
+  paintDayMap(TRIP_DATA.days.find(d => d.id === current));
+}
+/* 點卡片 = 點上面對應的地點按鈕（二選一的卡片取勾著的那個）。卡片裡的按鈕、連結、
+   看介紹、私人資料的表單照常運作，不會順便切換地圖；反白選字（例如要複製地址）時也不切換。 */
+function cardPoint(card){
+  const day = TRIP_DATA.days.find(d => d.id === current);
+  const { pts, visits, cardVisit } = dayMapPoints(day);
+  const v = cardVisit[[...document.querySelectorAll("#main .card[data-mapq]")].indexOf(card)];
+  const vis = visits[v];
+  return { v, p: vis.alts ? chosen(vis, skipOf(day.id, pts)) ?? vis.alts[0] : vis.p };
+}
+document.getElementById("main").addEventListener("click", ev => {
+  if (!document.querySelector(".app.has-map")) return;
+  const card = ev.target.closest(".card[data-mapq]");
+  if (!card || ev.target.closest("a,button,input,label,select,textarea,form,details")) return;
+  if (String(getSelection()).trim()) return;
+  setMapFocus(cardPoint(card));
+});
+document.getElementById("main").addEventListener("keydown", ev => {
+  if (ev.key !== "Enter" && ev.key !== " ") return;
+  if (!ev.target.matches(".app.has-map .card[data-mapq]")) return;
+  ev.preventDefault();
+  setMapFocus(cardPoint(ev.target));
+});
+const dmPick = document.querySelector("#daymap .daymap-pick");
+dmPick.addEventListener("click", ev => {
+  const b = ev.target.closest("button[data-p]");
+  if (!b) return;
+  const p = Number(b.dataset.p);
+  const { visits } = dayMapPoints(TRIP_DATA.days.find(d => d.id === current));
+  setMapFocus({ p, v: visits.findIndex(vis => vis.p === p || (vis.alts || []).includes(p)) });
+});
+dmPick.addEventListener("change", ev => {
+  const day = TRIP_DATA.days.find(d => d.id === current);
+  const { pts } = dayMapPoints(day);
+  const s = skipOf(day.id, pts);
+  if (ev.target.matches("[data-all]")){
+    if (ev.target.checked){
+      /* 全選：全部勾起來，二選一每組只留一個（原本勾著的，沒有就第一個） */
+      const keep = [...new Set(pts.filter(p => p.alt).map(p => p.alt))].map(g => {
+        const ids = pts.flatMap((p, i) => p.alt === g ? [i] : []);
+        return ids.find(i => !s.has(i)) ?? ids[0];
+      });
+      mapSkip[day.id] = new Set(pts.flatMap((p, i) => p.alt && !keep.includes(i) ? [i] : []));
+    } else mapSkip[day.id] = new Set(pts.map((_, i) => i));   // 已經全選，再按一次全部取消
+  } else {
+    const i = Number(ev.target.dataset.skip);
+    if (!ev.target.checked) s.add(i);
+    else {
+      s.delete(i);
+      /* 二選一：勾了一個，同組的其他自動取消 */
+      if (pts[i].alt) pts.forEach((p, j) => { if (j !== i && p.alt === pts[i].alt) s.add(j); });
+    }
+  }
+  mapFocus = null;   // 改勾選就是要看路線怎麼變：正在只看某一點的話，切回路線
+  paintDayMap(day);
+});
+
+function paintForecast(){
+  const strip = document.getElementById("wx-strip");
+  if (!strip) return;
+  if (!wx || !wx.daily){
+    strip.innerHTML = `<div class="note-box">尚無預報資料，連上網路後會自動更新。</div>`;
+    return;
+  }
+  const d = wx.daily;
+  const from = M.startDate, to = M.endDate || M.startDate;
+  const idx = d.time.map((t, i) => i).filter(i => d.time[i] >= from && d.time[i] <= to);
+
+  if (!idx.length){
+    const gap = Math.round((Date.parse(from + "T00:00:00Z") - Date.now()) / 86400000);
+    strip.innerHTML = `<div class="note-box">${
+      gap > 0
+        ? `距離出發還有 ${gap} 天。氣象預報只提供未來 16 天，接近出發日就會自動出現。`
+        : "行程期間已過，沒有可顯示的預報。"
+    }</div>`;
+    return;
+  }
+  strip.innerHTML = idx.map(i => {
+    const [e] = wmo(d.weather_code[i]);
+    const dt = new Date(d.time[i] + "T00:00:00Z");
+    const wd = ["日","一","二","三","四","五","六"][dt.getUTCDay()];
+    return `<div class="wx-day">
+      <div>${dt.getUTCMonth()+1}/${dt.getUTCDate()} 週${wd}</div>
+      <div class="e">${ic(e)}</div>
+      <div class="hi">${Math.round(d.temperature_2m_max[i])}°</div>
+      <div class="lo">${Math.round(d.temperature_2m_min[i])}°</div>
+      <div class="lo">${d.precipitation_probability_max[i] ?? "—"}%</div></div>`;
+  }).join("");
+}
+
+/* ── 記帳與分帳 ── */
+const fmt = n => Math.round(n).toLocaleString("en-US");
+
+/* ── 記帳的密碼鎖 ─────────────────────────────
+   使用者要求記帳要密碼才看得到。固定密碼、在前端比對——repo 是公開的，
+   原始碼裡就讀得到這組數字，Firestore 的規則也只看「匿名登入＋tripId」，
+   所以這是一道「手機借人看行程時不會順便看到帳」的簾子，不是擋得住人的鎖。
+   （要真的擋住得像卡片上的私人資料那樣加密，但四位數字離線幾秒就猜完。）
+   解開之後記在這台裝置（使用者的決定），標題列右上角有「上鎖」可以鎖回去。 */
+const WALLET_PASS = "0000";
+const WALLET_LS = `${KEY}:walletok`;
+let walletOpen = LS.get(WALLET_LS) === "1";
+
+const walletLockHTML = () => `<div class="card">
+    <h2 class="subject">${ic("lock-simple")}記帳</h2>
+    <div class="note-box">這一頁要密碼才看得到。</div>
+    <form class="vault-form" id="w-form" autocomplete="off">
+      <label class="f-lbl">密碼<input class="input" id="w-pass" type="password" inputmode="numeric"
+             autocomplete="current-password" enterkeyhint="go"></label>
+      <button class="btn" type="submit">解鎖</button>
+      <p class="f-err" id="w-err" hidden></p>
+    </form></div>`;
+
+function unlockWallet(){
+  const inp = document.getElementById("w-pass"), msg = document.getElementById("w-err");
+  if (inp.value.trim() === WALLET_PASS){
+    walletOpen = true;
+    LS.set(WALLET_LS, "1");
+    renderDay(current);
+    return;
+  }
+  /* 錯誤寫在欄位底下，不跳 alert（CLAUDE.md 第十四節） */
+  msg.textContent = inp.value.trim() ? "密碼不對" : "請輸入密碼";
+  msg.hidden = false;
+  inp.setAttribute("aria-invalid", "true");
+  inp.setAttribute("aria-describedby", msg.id);
+  inp.select();
+}
+
+function lockWallet(){
+  walletOpen = false;
+  LS.del(WALLET_LS);
+  renderDay(current);
+}
+
+function renderExpenses(){
+  if (!walletOpen) return walletLockHTML();
+  const cats = M.categories, members = M.members;
+  const days = TRIP_DATA.days.filter(d => d.date);
+  const rows = [...state.expenses].sort((a,b)=>b.createdAt-a.createdAt);
+  const total = state.expenses.reduce((s,e)=>s+e.home,0);
+  return `<div class="card">
+    <div class="opt-head"><div class="opt-head-main"><h2 class="subject" id="e-me-l">我是誰</h2></div>
+      <div class="opt-links"><button class="btn btn-plain" id="e-lock" type="button"
+              aria-label="鎖上記帳">${ic("lock-simple")}上鎖</button></div></div>
+    <div class="field"><div class="chips" id="e-me" role="group" aria-labelledby="e-me-l">
+      ${members.map(m=>`<label class="chip"><input type="radio" name="me" value="${esc(m)}"${state.me===m?" checked":""}>${esc(m)}</label>`).join("")}
+    </div></div>
+    <div class="note-box">只存在這台裝置，用來標記每筆花費是誰記的。</div>
+  </div>
+  <div class="card">
+    <h2 class="subject">新增花費</h2>
+    <div class="field"><label for="e-day">日期</label>
+      <select class="input" id="e-day">${days.map(d=>`<option value="${esc(d.id)}">${esc(d.nav)}</option>`).join("")}</select></div>
+    <div class="field"><div class="f-grp" id="e-payer-l">誰付錢</div><div class="chips" id="e-payer" role="group" aria-labelledby="e-payer-l">
+      ${members.map((m,i)=>`<label class="chip"><input type="radio" name="payer" value="${esc(m)}"${i===0?" checked":""}>${esc(m)}</label>`).join("")}
+    </div></div>
+    <div class="field"><div class="f-grp" id="e-split-l">分攤對象</div><div class="chips" id="e-split" role="group" aria-labelledby="e-split-l">
+      ${members.map(m=>`<label class="chip"><input type="checkbox" name="split" value="${esc(m)}" checked>${esc(m)}</label>`).join("")}
+    </div><p class="f-err" id="e-split-err" hidden></p></div>
+    <div class="field"><label for="e-item">項目</label>
+      <input class="input" id="e-item" type="text" placeholder="例：晚餐">
+      <p class="f-err" id="e-item-err" hidden></p></div>
+    <div class="field"><div class="row2">
+      <div><label for="e-local">${esc(M.money.local)}</label><input class="input" id="e-local" type="number" inputmode="numeric" placeholder="0"></div>
+      <div><label for="e-home">${esc(M.money.home)}</label><input class="input" id="e-home" type="number" inputmode="numeric" placeholder="自動換算"></div>
+    </div><p class="f-err" id="e-local-err" hidden></p></div>
+    <div class="field"><label for="e-cat">分類</label>
+      <select class="input" id="e-cat">${cats.map(c=>`<option>${esc(c)}</option>`).join("")}</select></div>
+    <button class="btn btn-full" id="e-add">新增花費</button>
+    ${M.money.rate
+      ? `<div class="meta meta-foot">匯率 1 ${esc(M.money.local)} = ${M.money.rate} ${esc(M.money.home)}${M.money.rateDate ? `（${esc(M.money.rateDate)} 查得）` : ""}，僅供估算。</div>`
+      : `<div class="meta meta-foot">沒有匯率資料，兩種幣別請各自填寫。</div>`}
+  </div>
+
+  <div class="card"><h2 class="subject">花費明細</h2>
+    <p class="exp-total"><span>合計</span><b>${esc(M.money.home)} ${fmt(total)}</b></p>
+    <div class="exp-list">${rows.length ? rows.map(e=>`
+      <div class="exp-item">
+        <div><strong>${esc(e.item)}</strong><span class="exp-cat">${esc(e.cat)}</span><br>
+          <span class="meta">${esc(e.payer)} 付 · 分 ${esc(e.split.join("、"))}</span></div>
+        <div class="amt">${esc(M.money.home)} ${fmt(e.home)}
+          ${e.local ? `<br><span class="lang-local">${esc(M.money.local)} ${fmt(e.local)}</span>` : ""}
+          <button class="exp-del" data-del="${esc(e.id)}" aria-label="刪除「${esc(e.item)}」">${ic("x")}</button></div>
+      </div>`).join("") : `<div class="meta">還沒有紀錄。</div>`}</div></div>
+
+  <div class="card"><h2 class="subject">結清建議</h2>${settleHTML()}
+    <button class="btn btn-plain" id="e-csv">${ic("download-simple")}匯出明細 CSV</button>
+    <button class="btn btn-plain" id="e-csv2">${ic("chart-bar")}匯出結清摘要</button>
+    <div class="meta meta-foot">CSV 已加 UTF-8 BOM，Excel 與 Google Sheets 都能直接開，中文不會亂碼。</div>
+  </div>`;
+}
+
+/* 一筆花費的每人分攤，以「分」（0.01 元）為單位的整數。畫面與 CSV 顯示到小數點後兩位。
+   使用者要「平分就是平分」：41,553 四人分就是每人 10,388.25，不要有人因為零頭多攤 1 元。
+
+   還是用整數（分）來算，不直接寫 e.home / e.split.length：浮點數各處各自四捨五入，
+   加總會湊不回來——1000 三人分會顯示 333.33、333.33，應收那邊卻是 666.67。
+   連「分」都除不盡的（1000 三人分），多出的 1 分整本帳輪流給：照記帳順序累計每人
+   「多攤 − 應攤」，給目前多攤得最少的人，每人加總最多差 0.01。
+
+   settle() 與兩個 CSV 匯出都走這個函式，畫面和匯出才不會各算各的。 */
+function shareCents(e){
+  const drift = {};                         // 到目前為止每人累計「多攤 − 應攤」（分）
+  let out = {};
+  for (const x of state.expenses.includes(e) ? state.expenses : [e]){
+    out = {};
+    const n = x.split.length;               // 舊資料可能沒有分攤對象
+    if (n){
+      const total = Math.round(x.home * 100), base = Math.floor(total / n), rem = total - base * n;
+      const d = m => drift[m] || 0;
+      const extra = new Set([...x.split].sort((a, b) =>
+        Math.abs(d(a) - d(b)) > 1e-9 ? d(a) - d(b) : x.split.indexOf(a) - x.split.indexOf(b)).slice(0, rem));
+      for (const m of x.split){
+        out[m] = base + (extra.has(m) ? 1 : 0);
+        drift[m] = d(m) + out[m] - total / n;
+      }
+    }
+    if (x === e) break;
+  }
+  return out;
+}
+/* 分 → 金額文字：有零頭顯示兩位小數（10,388.25），剛好整數就不帶（10,388） */
+const fmtCents = c => (c / 100).toLocaleString("en-US",
+  { minimumFractionDigits: c % 100 ? 2 : 0, maximumFractionDigits: 2 });
+const csvCents = c => (c / 100).toFixed(2);   // CSV 一律兩位小數，Excel 加總才不會混到文字
+
+function settle(){                         // 金額單位都是分
+  const net = Object.fromEntries(M.members.map(m=>[m,0]));
+  for (const e of state.expenses){
+    if (net[e.payer] !== undefined) net[e.payer] += Math.round(e.home * 100);
+    const sh = shareCents(e);
+    for (const m in sh) if (net[m] !== undefined) net[m] -= sh[m];
+  }
+  const cred = Object.entries(net).filter(([,v])=>v > 0).map(([m,v])=>({m,v})).sort((a,b)=>b.v-a.v);
+  const debt = Object.entries(net).filter(([,v])=>v < 0).map(([m,v])=>({m,v:-v})).sort((a,b)=>b.v-a.v);
+  const tx = [];
+  let i=0, j=0;
+  while (i < debt.length && j < cred.length){
+    const amt = Math.min(debt[i].v, cred[j].v);
+    tx.push({ from:debt[i].m, to:cred[j].m, amt });
+    debt[i].v -= amt; cred[j].v -= amt;
+    if (debt[i].v === 0) i++;
+    if (cred[j].v === 0) j++;
+  }
+  return { net, tx };
+}
+
+function settleHTML(){
+  if (!state.expenses.length) return `<div class="meta">還沒有紀錄。</div>`;
+  const { net, tx } = settle();
+  return M.members.map(m => `<div class="settle"><span>${esc(m)}</span>
+      <span>${net[m] >= 0 ? "應收" : "應付"} <b>${esc(M.money.home)} ${fmtCents(Math.abs(net[m]))}</b></span></div>`).join("")
+    + (tx.length ? `<div class="note-box">${tx.map(t =>
+        `${esc(t.from)} → ${esc(t.to)}　<strong>${esc(M.money.home)} ${fmtCents(t.amt)}</strong>`).join("<br>")}</div>`
+      : `<div class="note-box">已經結清。</div>`);
+}
+
+/* ── 匯出 CSV ── */
+const csvCell = v => {
+  const s = String(v ?? "");
+  return /[",\n\r]/.test(s) ? `"${s.replace(/"/g,'""')}"` : s;
+};
+const dateTag = () => new Date().toISOString().slice(0,10).replace(/-/g,"");
+
+function downloadCSV(name, rows){
+  // \uFEFF (BOM) 讓 Excel 正確辨識 UTF-8，否則中文會變亂碼
+  const text = "\uFEFF" + rows.map(r => r.map(csvCell).join(",")).join("\r\n");
+  const url = URL.createObjectURL(new Blob([text], { type:"text/csv;charset=utf-8" }));
+  const a = document.createElement("a");
+  a.href = url; a.download = name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+function exportDetail(){
+  if (!state.expenses.length){ toast("還沒有花費紀錄，沒有東西可以匯出"); return; }
+  const day  = id => TRIP_DATA.days.find(d => d.id === id) || {};
+  const rows = [[
+    "日期","行程","項目","分類","付款人","分攤對象","分攤人數",
+    M.money.local, M.money.home, `每人分攤(${M.money.home})`,"記錄時間","記錄者"
+  ]];
+  for (const e of [...state.expenses].sort((a,b)=>a.createdAt-b.createdAt)){
+    const d = day(e.day);
+    rows.push([
+      d.date || "", d.nav || e.day, e.item, e.cat, e.payer,
+      e.split.join("、"), e.split.length,
+      /* 分攤不一定每人相同（連「分」都除不盡時會差 0.01），所以逐人列出，
+         順序與「分攤對象」欄一致，加起來剛好等於金額。 */
+      e.local || "", e.home, (sh => e.split.map(m => csvCents(sh[m])).join("、"))(shareCents(e)),
+      new Date(e.createdAt).toLocaleString("sv-SE"), e.createdBy || ""
+    ]);
+  }
+  downloadCSV(`${M.tripId}_花費明細_${dateTag()}.csv`, rows);
+}
+
+function exportSettle(){
+  if (!state.expenses.length){ toast("還沒有花費紀錄，沒有東西可以匯出"); return; }
+  const { net, tx } = settle();
+  const paid = Object.fromEntries(M.members.map(m=>[m,0]));
+  const owe  = Object.fromEntries(M.members.map(m=>[m,0]));
+  const byCat = {};
+  for (const e of state.expenses){            // 代墊與應分攤用分加總，最後才換成元
+    if (paid[e.payer] !== undefined) paid[e.payer] += Math.round(e.home * 100);
+    const sh = shareCents(e);
+    for (const m in sh) if (owe[m] !== undefined) owe[m] += sh[m];
+    byCat[e.cat] = (byCat[e.cat] || 0) + Math.round(e.home);
+  }
+  const rows = [["成員","代墊總額","應分攤","淨額","狀態"]];
+  for (const m of M.members)
+    rows.push([m, csvCents(paid[m]), csvCents(owe[m]),
+               csvCents(Math.abs(net[m])), net[m] >= 0 ? "應收" : "應付"]);
+  rows.push([], ["結清建議","付款人","收款人",`金額(${M.money.home})`]);
+  tx.forEach((t,i) => rows.push([i+1, t.from, t.to, csvCents(t.amt)]));
+  rows.push([], ["分類統計","金額"]);
+  for (const [c,v] of Object.entries(byCat).sort((a,b)=>b[1]-a[1])) rows.push([c, Math.round(v)]);
+  rows.push([], ["總計", Math.round(state.expenses.reduce((s,e)=>s+e.home,0))]);
+  downloadCSV(`${M.tripId}_結清摘要_${dateTag()}.csv`, rows);
+}
+
+/* ── 卡片上的私人資料 ──────────────────────────
+   密文在 TRIP_DATA.vault（tools/encrypt-vault.mjs 產生：PBKDF2-SHA256 推導金鑰、AES-GCM 加密），
+   卡片只帶一個 secret 鍵。鎖著時那一格是一顆按鈕，解開後每張帶鍵的卡片換成自己那一段。
+   解密用瀏覽器內建的 Web Crypto，不靠網路，離線也解得開。解開的內容只放在記憶體；
+   勾「記住」的話密語存在這台裝置，下次打開自動解。 */
+let vaultData = null;
+const VAULT_LS = `${KEY}:vault`;
+
+/* 大小寫、空白、連字號都不計較——手機鍵盤會自動把第一個字母改大寫。
+   跟 tools/encrypt-vault.mjs 的規則必須一模一樣，否則加密與解密對不上。 */
+const normPass = p => String(p ?? "").normalize("NFKC").toLowerCase()
+  .replace(/[\s\-\u2010-\u2015]/g, "");
+const unb64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
+
+async function openVault(pass){
+  const v = TRIP_DATA.vault;
+  const subtle = globalThis.crypto && crypto.subtle;
+  if (!subtle) throw Object.assign(new Error("這個網址不是 HTTPS，瀏覽器不允許解密"), { fatal:true });
+  const base = await subtle.importKey("raw", new TextEncoder().encode(normPass(pass)),
+                                      "PBKDF2", false, ["deriveKey"]);
+  const key = await subtle.deriveKey(
+    { name:"PBKDF2", hash:"SHA-256", salt:unb64(v.salt), iterations:v.iterations },
+    base, { name:"AES-GCM", length:256 }, false, ["decrypt"]);
+  const plain = await subtle.decrypt({ name:"AES-GCM", iv:unb64(v.iv) }, key, unb64(v.data));
+  return JSON.parse(new TextDecoder().decode(plain));
+}
+
+const secretItemHTML = it => {
+  if (it.note) return `<div class="secret-note">${esc(it.note)}</div>`;
+  if (/^https?:\/\//i.test(String(it.url || "")))
+    return `<a class="btn btn-theme" href="${esc(it.url)}" target="_blank" rel="noopener">${esc(it.label || "開啟")}</a>`;
+  return `<div class="secret-row"><span class="secret-label">${esc(it.label)}</span>
+    <span class="secret-val">${esc(it.value)}</span></div>`;
+};
+
+function secretHTML(b){
+  if (!b.secret || !TRIP_DATA.vault) return "";
+  const key = esc(b.secret), hint = esc(b.secretHint || "私人資料");
+  const sec = vaultData && vaultData.sections && vaultData.sections[b.secret];
+  return sec
+    ? `<div class="secret" data-secret="${key}" data-hint="${hint}">
+        <div class="secret-items">${(sec.items || []).map(secretItemHTML).join("")}</div>
+        <button class="secret-lock" data-vault-lock type="button">上鎖</button></div>`
+    : `<div class="secret is-locked" data-secret="${key}" data-hint="${hint}">
+        <button class="secret-ask" data-vault-ask type="button">${ic("lock-simple")}顯示${hint}</button></div>`;
+}
+
+/* 只換掉卡片上的私人資料那一格，不重畫整頁——整頁重畫會捲回頂端，展開的介紹也會收起來 */
+function repaintSecrets(){
+  for (const el of document.querySelectorAll("#main .secret[data-secret]"))
+    el.outerHTML = secretHTML({ secret: el.dataset.secret, secretHint: el.dataset.hint });
+}
+
+/* 按下「🔒 顯示…」：就在這張卡片裡展開輸入框 */
+function askVault(btn){
+  const box = btn.closest(".secret");
+  box.classList.remove("is-locked");
+  box.innerHTML = `<form class="vault-form" autocomplete="off">
+      <label class="f-lbl">通關密語<input class="input vault-pass" type="password" name="pass" autocomplete="current-password"
+             autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="go"></label>
+      <button class="btn btn-theme" type="submit">解鎖</button>
+      <label class="vault-remember"><input type="checkbox" name="remember" checked>
+        <span>在這台裝置記住，下次自動解開</span></label>
+      <div class="vault-msg" aria-live="polite"></div>
+    </form>`;
+  box.querySelector(".vault-pass").focus();
+}
+
+/* 渲染完才跑：有記住密語、還沒解開的，在這裡自動解 */
+async function paintVaults(){
+  const pass = LS.get(VAULT_LS);
+  if (vaultData || !pass || !TRIP_DATA.vault || !document.querySelector("#main .secret")) return;
+  try {
+    vaultData = await openVault(pass);
+    repaintSecrets();
+  } catch (e) {
+    if (!e.fatal) LS.del(VAULT_LS);     // 密語換過了：忘掉舊的，下次按按鈕重新輸入
+  }
+}
+
+async function unlockVault(form){
+  const pass = form.elements.pass.value;
+  const msg  = form.querySelector(".vault-msg");
+  const btn  = form.querySelector("button[type=submit]");
+  const say  = (t, err) => { msg.textContent = t; msg.classList.toggle("is-err", !!err); };
+  if (!normPass(pass)) return say("請輸入通關密語", true);
+  btn.disabled = true;
+  say("解鎖中…");
+  try {
+    vaultData = await openVault(pass);
+    if (form.elements.remember.checked) LS.set(VAULT_LS, pass);
+    else LS.del(VAULT_LS);
+    repaintSecrets();
+  } catch (e) {
+    btn.disabled = false;
+    say(e.fatal ? e.message : "通關密語不對", true);
+    form.elements.pass.select();
+  }
+}
+
+function lockVault(){
+  vaultData = null;
+  LS.del(VAULT_LS);
+  repaintSecrets();
+}
+
+/* ── 事件（統一委派，不用 inline onclick） ── */
+document.getElementById("main").addEventListener("submit", e => {
+  const form = e.target.closest(".vault-form");
+  if (!form) return;
+  e.preventDefault();          // 不送出、不換頁；手機鍵盤按「前往」也走這裡
+  if (form.id === "w-form") return unlockWallet();   // 記帳的密碼鎖借用同一份版面
+  unlockVault(form);
+});
+document.querySelector(".sidenav").addEventListener("click", e => {
+  const b = e.target.closest(".nav-item");
+  if (b) renderDay(b.dataset.day);
+});
+
+/* 方向鍵換分頁（APG tabs）。手機上分頁是橫的、電腦版是直的，所以四個方向都收；
+   Home／End 跳到那一組的第一個與最後一個。方向鍵只在同一組裡走，跨組用 Tab。
+   切過去之後把焦點留在那一顆上。 */
+document.querySelector(".sidenav").addEventListener("keydown", e => {
+  const STEP = { ArrowRight: 1, ArrowDown: 1, ArrowLeft: -1, ArrowUp: -1 };
+  if (!(e.key in STEP) && e.key !== "Home" && e.key !== "End") return;
+  const cur = e.target.closest(".nav-item");
+  if (!cur) return;
+  const tabs = [...cur.closest('[role="tablist"]').querySelectorAll(".nav-item")];
+  const i = tabs.indexOf(cur);
+  e.preventDefault();
+  const n = e.key === "Home" ? 0
+          : e.key === "End"  ? tabs.length - 1
+          : (i + STEP[e.key] + tabs.length) % tabs.length;
+  renderDay(tabs[n].dataset.day);
+  tabs[n].focus();
+});
+
+document.getElementById("main").addEventListener("change", e => {
+  const cb = e.target.closest("input[data-k]");
+  if (cb){
+    state.checks[cb.dataset.k] = cb.checked;
+    /* 打包清單只存在這台裝置，不上傳——每個人的打包進度本來就不一樣。
+       共用的是記帳，不是清單。 */
+    persist();
+    const card = cb.closest("[data-chk]");
+    const p = card.querySelector(".chk-progress");
+    const all = card.querySelectorAll("input[data-k]");
+    p.textContent = `${[...all].filter(x=>x.checked).length}/${all.length}`;
+    return;
+  }
+  if (e.target.dataset.sid){
+    const s = shopBag(), id = e.target.dataset.sid;
+    s.edits[id] = { ...(s.edits[id] || {}), done: e.target.checked };
+    persist();
+    /* 群組標題的 n/總數 就地更新，不重畫——重畫會把其他輸入框的游標弄掉 */
+    const g = e.target.closest(".shop-g");
+    const all = g.querySelectorAll("[data-sid]");
+    g.querySelector(".shop-n").textContent =
+      `${[...all].filter(x => x.checked).length}/${all.length}`;
+    return;
+  }
+  if (e.target.dataset.reg){
+    const n = e.target.dataset.reg;
+    state.cards[n] = { ...(state.cards[n] || {}), done: e.target.checked };
+    persist();
+    return;
+  }
+  if (e.target.name === "me"){
+    /* 記帳頁自己的「我是誰」。留言板不看它——留言的署名來自這台裝置的登記（device.by），
+       登記的時候會順手把這裡也設成同一個人。 */
+    state.me = e.target.value;
+    LS.set(`${KEY}:me`, state.me);
+    return;
+  }
+  if (e.target.id === "e-local"){
+    const v = Number(e.target.value);
+    const home = document.getElementById("e-home");
+    if (v && M.money.rate && !home.value) home.value = Math.round(v * M.money.rate);
+  }
+});
+
+/* 購物清單的備註與金額：同樣就地存，不重新渲染，否則輸入框會失焦。 */
+document.getElementById("main").addEventListener("input", e => {
+  /* 留言草稿：存在變數裡，重畫時才接得回來（renderBoard 會把它填回 textarea） */
+  if (e.target.id === "bd-text"){ bdDraft = e.target.value; return; }
+  const note = e.target.closest("[data-snote]");
+  const amt  = e.target.closest("[data-samt]");
+  if (!note && !amt) return;
+  const s  = shopBag();
+  const id = (note || amt).dataset.snote || (note || amt).dataset.samt;
+  s.edits[id] = { ...(s.edits[id] || {}) };
+  if (note) s.edits[id].note = note.value;
+  else      s.edits[id].amount = amt.value === "" ? "" : Number(amt.value);
+  persist();
+});
+
+/* 已經加好的項目補一張圖 */
+document.getElementById("main").addEventListener("change", e => {
+  const f = e.target.closest("[data-simg]");
+  if (f && f.files.length) attachUserImage(f.dataset.simg, f.files[0]);
+});
+
+/* 選了圖片，按鈕改成「已選圖片」，才知道有沒有選到 */
+document.getElementById("main").addEventListener("change", e => {
+  const f = e.target.closest('.shop-add [name="f"]');
+  if (!f) return;
+  const lab = f.closest(".shop-file");
+  lab.classList.toggle("has", f.files.length > 0);
+  lab.querySelector("span").textContent = f.files.length ? "已選圖片" : "附圖片";
+});
+
+/* 點圖放大給店員看。用原生 <dialog>：免自己做焦點管理，Esc 也能關。 */
+document.getElementById("main").addEventListener("click", e => {
+  const img = e.target.closest("[data-zoom]");
+  if (!img) return;
+  let dlg = document.getElementById("zoom");
+  if (!dlg){
+    dlg = document.createElement("dialog");
+    dlg.id = "zoom";
+    dlg.innerHTML = `<img alt=""><div class="zoom-acts"></div><button type="button" class="zoom-x">關閉</button>`;
+    dlg.addEventListener("click", ev => {
+      const del = ev.target.closest("[data-zdel]");
+      if (del){ dlg.close(); detachUserImage(del.dataset.zdel); return; }
+      if (ev.target === dlg || ev.target.closest(".zoom-x")) dlg.close();
+    });
+    dlg.addEventListener("change", ev => {
+      const f = ev.target.closest("[data-zimg]");
+      if (f && f.files.length){ dlg.close(); attachUserImage(f.dataset.zimg, f.files[0]); }
+    });
+    document.body.appendChild(dlg);
+  }
+  /* 放大的那張圖就是這個對話框的內容，替代文字要跟著縮圖走，不能留空；
+     對話框本身也要有名字，不然讀螢幕只會說「對話方塊」。 */
+  const zimg = dlg.querySelector("img");
+  zimg.src = img.dataset.zoom;
+  zimg.alt = img.alt || "";
+  dlg.setAttribute("aria-label", img.alt ? `${img.alt}（放大）` : "放大檢視");
+  /* 自己加的圖可以在這裡換一張或拿掉；Excel 給的圖不行 */
+  const uid = img.dataset.uimg;
+  dlg.querySelector(".zoom-acts").innerHTML = uid
+    ? `<label class="btn btn-route"><input type="file" accept="image/*" data-zimg="${esc(uid)}" hidden>${ic("camera")}換一張</label>` +
+      `<button type="button" class="btn btn-route" data-zdel="${esc(uid)}">移除圖片</button>` : "";
+  dlg.showModal();
+});
+
+/* 購物清單的增刪。會改變項目數量，所以要重畫，但只重畫當前分頁。 */
+document.getElementById("main").addEventListener("click", e => {
+  const s = shopBag();
+  const forget = (id, drops) => {
+    /* 種子項目記進 removed（重新產生網站後才不會跑回來），
+       自己加的直接從 added 拿掉。圖先記下來，等復原時限過了才真的刪。 */
+    const i = s.added.findIndex(a => a.id === id);
+    if ((i >= 0 && s.added[i].uimg) || (s.edits[id] || {}).uimg) drops.push(id);
+    if (i >= 0) s.added.splice(i, 1);
+    else if (!s.removed.includes(id)) s.removed.push(id);
+    delete s.edits[id];
+  };
+  /* 刪除給 6 秒「復原」：先把整包購物狀態存一份，按復原就整包還原。✕ 在卡片左上角、
+     緊鄰勾選框，誤觸的機會不小；自己加的項目原本一刪就永久消失。
+     自己加的圖存在 IndexedDB、刪了回不來，所以等時限過了（expire）才刪。 */
+  const undoable = (what, mutate) => {
+    const snap = JSON.stringify({ added:s.added, removed:s.removed, edits:s.edits, groups:s.groups });
+    const drops = [];
+    mutate(drops);
+    persist(); renderDay(current);
+    toast(`已刪除${what}`, 6000, {
+      label: "復原",
+      run(){ Object.assign(s, JSON.parse(snap)); persist(); renderDay(current); },
+      expire(){ drops.forEach(dropUserImage); }
+    });
+  };
+  const del = e.target.closest("[data-sdel]");
+  if (del){
+    const name = (del.getAttribute("aria-label") || "").replace(/^刪除/, "");
+    undoable(`「${name}」`, drops => forget(del.dataset.sdel, drops));
+    return;
+  }
+
+  /* 誤觸 ✕ 不該讓一張券永久消失。自己新增的刪掉就是刪掉，
+     但種子項目只是記進 removed，清掉就全部回來。 */
+  if (e.target.closest("[data-srestore]")){
+    s.removed.length = 0;
+    persist(); renderDay(current); return;
+  }
+
+  const dg = e.target.closest("[data-delgroup]");
+  if (dg){
+    const box = dg.closest(".shop-g");
+    undoable(`「${dg.dataset.delgroup}」整組`, drops => {
+      for (const el of box.querySelectorAll("[data-id]")) forget(el.dataset.id, drops);
+      s.groups = s.groups.filter(g => g !== dg.dataset.delgroup);
+    });
+    return;
+  }
+});
+
+/* 新增項目與群組。用 <form> 的 submit，Enter 鍵才會自然生效。
+   項目可以附一張圖片、一個連結（選填）。 */
+document.getElementById("main").addEventListener("submit", async e => {
+  const s = shopBag();
+  const addItem = e.target.closest(".shop-add");
+  if (addItem){
+    e.preventDefault();
+    const name = addItem.querySelector('[name="n"]').value.trim();
+    if (!name){ toast("請填寫名稱"); addItem.querySelector('[name="n"]').focus(); return; }
+    const url = cleanLink(addItem.querySelector('[name="u"]').value);
+    if (url === null){ toast("連結要是網址，例如 https://www.donki.com"); addItem.querySelector('[name="u"]').focus(); return; }
+    const it = { id: `+${Date.now().toString(36)}`, group: addItem.dataset.addto, name };
+    if (url) it.url = url;
+    const file = addItem.querySelector('[name="f"]').files[0];
+    if (file){
+      try{ await imgDB.put(it.id, await shrinkImage(file)); it.uimg = true; }
+      catch{ toast("這個瀏覽器存不了圖片，先只加名稱與連結"); }
+    }
+    s.added.push(it);
+    persist(); renderDay(current); return;
+  }
+  const addGroup = e.target.closest(".shop-addg");
+  if (addGroup){
+    e.preventDefault();
+    const inp = addGroup.querySelector('[name="g"]');
+    const name = inp.value.trim();
+    if (!name || s.groups.includes(name)) return;
+    s.groups.push(name);
+    inp.value = "";
+    persist(); renderDay(current); return;
+  }
+});
+
+/* ── 信用卡排序：拖曳與鍵盤 ─────────────────
+   手機上 HTML5 的 dragstart/drop 不會觸發，所以用 pointer 事件（滑鼠、觸控、觸控筆同一套）。
+   拖的時候只搬 DOM、不重畫——重畫會把正在拖的那個元素換掉，手指就跟它斷了；
+   放開才寫回順序並重畫一次。 */
+let ccDrag = null;
+const ccList = cc => [...cc.parentElement.querySelectorAll(":scope > .cc")];
+
+document.getElementById("main").addEventListener("pointerdown", e => {
+  const grip = e.target.closest("[data-grip]");
+  if (!grip || e.button) return;
+  const cc = grip.closest(".cc");
+  if (!cc) return;
+  e.preventDefault();                       // 不要順便選到文字
+  /* 不用 setPointerCapture：拖的時候會把這張卡片搬到別的位置（insertBefore），
+     瀏覽器會判定捕捉的元素被移動而丟出 lostpointercapture，第一次換位就把拖曳結束掉。
+     改成全部掛在 window 上收，不需要捕捉也收得到。 */
+  cc.classList.add("is-dragging");
+  ccDrag = { cc, grip, id: e.pointerId, y: e.clientY, raf: 0 };
+  ccDrag.raf = requestAnimationFrame(ccEdgeScroll);
+});
+
+/* 拖到畫面上下緣時自己捲動——九張卡片比一個畫面高，不捲就只能一次拖一點點 */
+function ccEdgeScroll(){
+  if (!ccDrag) return;
+  const pad = 72, y = ccDrag.y, h = window.innerHeight;
+  if (y < pad) window.scrollBy(0, -Math.ceil((pad - y) / 5));
+  else if (y > h - pad) window.scrollBy(0, Math.ceil((y - (h - pad)) / 5));
+  ccDrag.raf = requestAnimationFrame(ccEdgeScroll);
+}
+
+window.addEventListener("pointermove", e => {
+  if (!ccDrag || e.pointerId !== ccDrag.id) return;
+  ccDrag.y = e.clientY;
+  const { cc } = ccDrag;
+  /* 「插在第一張中線還在指標下面的卡片前面」——直接由指標位置算出該在哪一格，
+     不是「越過中線就跟隔壁換」。換過之後每張卡片的位置都會變，用「越過就換」的寫法
+     同一次移動會連續觸發好幾次，一下就滑過頭（卡片高度不一樣時特別明顯）。
+     這種算法同樣的指標位置永遠得到同樣的結果，不會來回跳。只動 DOM，順序等放開才存。 */
+  const target = ccList(cc).find(el => {
+    if (el === cc) return false;
+    const r = el.getBoundingClientRect();
+    return e.clientY < r.top + r.height / 2;
+  });
+  if (target !== cc.nextElementSibling || !target)
+    cc.parentElement.insertBefore(cc, target || null);
+});
+
+/* 結束一定要掛在 window：拖的時候正在搬動的就是把手所在的那張卡片，
+   事件掛在 #main 上有機會收不到（手機模擬實測就是放開了卻沒存檔）。 */
+function ccDragEnd(){
+  if (!ccDrag) return;
+  const { cc, raf } = ccDrag;
+  cancelAnimationFrame(raf);
+  ccDrag = null;
+  cc.classList.remove("is-dragging");
+  const name = cc.dataset.card;
+  if (!setCardOrder(ccList(cc).map(el => el.dataset.card))) return;
+  persist(); renderDay(current); focusGrip(name);
+}
+for (const t of ["pointerup", "pointercancel"]) window.addEventListener(t, ccDragEnd);
+
+/* 不用拖的替代方式（WCAG 2.5.7）：把手聚焦後用上下鍵。讀螢幕的人也是走這條 */
+document.getElementById("main").addEventListener("keydown", e => {
+  if (e.key === "Enter" && e.target.closest(".cc-add-input")){
+    e.preventDefault(); return addCardSpent(e.target.dataset.card);
+  }
+  if (e.key === "Enter" && e.target.closest(".cc-fix-input")){
+    e.preventDefault(); return confirmCardFix(e.target.dataset.card);
+  }
+  const grip = e.target.closest("[data-grip]");
+  if (!grip) return;
+  const dir = e.key === "ArrowUp" ? -1 : e.key === "ArrowDown" ? 1 : 0;
+  if (!dir) return;
+  e.preventDefault();
+  if (!moveCard(grip.dataset.card, dir)) return;
+  persist(); renderDay(current); focusGrip(grip.dataset.card);
+});
+
+document.getElementById("main").addEventListener("click", e => {
+  const ask = e.target.closest("[data-vault-ask]");
+  if (ask) return askVault(ask);
+  if (e.target.closest("[data-vault-lock]")) return lockVault();
+  /* 移除只隱藏在這台裝置，隨時可以還原——誤觸不該讓一張卡永久消失 */
+  const hide = e.target.closest("[data-hide]");
+  if (hide){
+    const n = hide.dataset.hide;
+    state.cards[n] = { ...(state.cards[n] || {}), hidden: true };
+    persist(); renderDay(current); return;
+  }
+  if (e.target.closest("[data-restore]")){
+    for (const k of Object.keys(state.cards)) delete state.cards[k].hidden;
+    persist(); renderDay(current); return;
+  }
+  if (e.target.id === "bd-add")  return addMessage();
+  if (e.target.id === "bd-reg")  return registerDevice(false);
+  if (e.target.id === "bd-take") return registerDevice(true);   // 這是我的新手機
+  if (e.target.id === "bd-redo"){ bdEdit = true; renderDay(current); return; }
+  if (e.target.closest("#e-lock")) return lockWallet();
+  const ccAdd = e.target.closest(".cc-add-btn");
+  if (ccAdd) return addCardSpent(ccAdd.dataset.card);
+  const ccFixToggle = e.target.closest("[data-cc-fix]");
+  if (ccFixToggle) return toggleCardFix(ccFixToggle.dataset.ccFix);
+  const ccFixOk = e.target.closest(".cc-fix-ok");
+  if (ccFixOk) return confirmCardFix(ccFixOk.dataset.card);
+  if (e.target.closest(".cc-fix-cancel")){
+    e.target.closest(".cc")?.querySelector(".cc-fix-row")?.remove();
+    return;
+  }
+  if (e.target.id === "e-add")  return addExpense();
+  if (e.target.id === "e-csv")  return exportDetail();
+  if (e.target.id === "e-csv2") return exportSettle();
+  /* 購物是 data-sdel、記帳是 data-del、留言是 data-bdel：三個分開寫，不然 #main 上的
+     處理器會互相誤認——原本購物與記帳都叫 data-del，刪一筆會順便動到另一邊 */
+  const bdel = e.target.closest("[data-bdel]");
+  if (bdel){
+    const i = state.board.findIndex(x => x.id === bdel.dataset.bdel);
+    if (i < 0) return;
+    const [gone] = state.board.splice(i, 1);
+    persist(); push({ type:"board" }); paintBoard();
+    /* 留言是同步的：誤觸 ✕ 會讓這則從所有人的裝置上消失，給 6 秒復原 */
+    toast("已刪除你的留言", 6000, {
+      label: "復原",
+      run(){
+        state.board.splice(Math.min(i, state.board.length), 0, gone);
+        persist(); push({ type:"board" }); paintBoard();
+      }
+    });
+    return;
+  }
+  const del = e.target.closest("[data-del]");
+  if (del){
+    const i = state.expenses.findIndex(x => x.id === del.dataset.del);
+    if (i < 0) return;
+    const [gone] = state.expenses.splice(i, 1);
+    persist(); push({ type:"expenses" }); renderDay(current);
+    /* 記帳是同步的：誤觸 ✕ 會讓這筆從所有人的裝置上消失，給 6 秒復原 */
+    toast(`已刪除「${gone.item}」`, 6000, {
+      label: "復原",
+      run(){
+        state.expenses.splice(Math.min(i, state.expenses.length), 0, gone);
+        persist(); push({ type:"expenses" }); renderDay(current);
+      }
+    });
+  }
+});
+
+function addExpense(){
+  const item = document.getElementById("e-item").value.trim();
+  const local = Number(document.getElementById("e-local").value) || 0;
+  let home = Number(document.getElementById("e-home").value) || 0;
+  if (!home && local && M.money.rate) home = Math.round(local * M.money.rate);
+  const split = [...document.querySelectorAll('#e-split input:checked')].map(x=>x.value);
+  /* 錯誤直接寫在欄位底下，用 aria-describedby 綁住、焦點移到第一個沒填的欄位
+     （ui-ux-pro-max error-placement）。原本用 alert()：會擋住整個畫面，
+     關掉之後還要自己找是哪一欄。 */
+  const errs = [];
+  if (!item)         errs.push(["e-item",  "請填寫項目"]);
+  if (!home)         errs.push(["e-local", "請填寫金額（填其中一種幣別就好）"]);
+  if (!split.length) errs.push(["e-split", "請至少選一位分攤對象"]);
+  for (const id of ["e-item", "e-local", "e-split"]){
+    const field = document.getElementById(id), msg = document.getElementById(`${id}-err`);
+    const hit = errs.find(x => x[0] === id);
+    msg.hidden = !hit; msg.textContent = hit ? hit[1] : "";
+    if (hit){ field.setAttribute("aria-invalid", "true"); field.setAttribute("aria-describedby", msg.id); }
+    else    { field.removeAttribute("aria-invalid"); field.removeAttribute("aria-describedby"); }
+  }
+  if (errs.length){
+    const first = document.getElementById(errs[0][0]);
+    (first.matches("input, select") ? first : first.querySelector("input"))?.focus();
+    return;
+  }
+  state.expenses.push({
+    id: crypto.randomUUID(),
+    day: document.getElementById("e-day").value,
+    payer: document.querySelector('#e-payer input:checked').value,
+    item, local, home,
+    cat: document.getElementById("e-cat").value,
+    split, createdAt: Date.now(), createdBy: state.me || ""
+  });
+  persist(); push({ type:"expenses" }); renderDay(current);
+  toast(`已記下「${item}」 ${M.money.home} ${fmt(home)}`);
+}
+
+/* ── 留言板 ─────────────────────────────────────
+   「每個人都可以留言、每個人都看得到全部的留言」，所以跟記帳同一類：走
+   push() → flush() 寫進 Firestore 的同一份文件、再由 onSnapshot 收回來。
+   （checks／shopping／cards 才是刻意只存本機的——那些本來就各人各一份。）
+
+   署名來自「這台裝置的登記」：每台裝置登記一次（我是誰＋裝置名稱），
+   一個名字只認一台裝置，別台選同一個名字會被擋下來。
+
+   ⚠ 這是前端檢查，不是權限。repo 是公開的，知道網址的人可以直接寫雲端，
+   偽造一則留言並不難。所以除了擋，還要讓「不是登記過的裝置送出的留言」
+   在清單上標出來——擋得住手滑與隨便玩，看得出來的才是真的有人動手腳。 */
+
+/* 留言時間照目的地的時區顯示：旅途中打開網站，想知道的是「當地幾點說的」。
+   用裝置自己的時區在台日之間會差一小時，看起來就像沒人回話。 */
+const bdWhen = t => {
+  const d = new Date(t);
+  if (!t || isNaN(d)) return "";
+  return new Intl.DateTimeFormat("zh-TW", {
+    timeZone: M.place.timezone, month: "numeric", day: "numeric",
+    hour: "2-digit", minute: "2-digit", hour12: false
+  }).format(d);
+};
+
+/* 這台裝置的登記，只存本機：{ id, name, by }。
+   id 是這台裝置的固定編號，比對用；name 是人看的；by 是這台裝置登記的人。 */
+const DEVKEY = `${KEY}:device`;
+let device = (() => { try { return JSON.parse(LS.get(DEVKEY)) || null; } catch { return null; } })();
+const saveDevice = d => { device = d; LS.set(DEVKEY, JSON.stringify(d)); };
+
+/* 自動偵測的機種當預設值。使用者第一次還是要自己確認一次——自己打過一次名字，
+   這台裝置才跟那個人綁在一起（使用者的決定）。偵測只是省打字，不是身分。 */
+const guessDevice = () => {
+  const u = navigator.userAgent;
+  if (/iPhone/.test(u)) return "iPhone";
+  /* iPad 的 Safari 預設回報成 Macintosh，要靠觸控點數才分得出來 */
+  if (/iPad/.test(u) || (/Macintosh/.test(u) && navigator.maxTouchPoints > 1)) return "iPad";
+  if (/Android/.test(u)) return /Mobile/.test(u) ? "Android 手機" : "Android 平板";
+  if (/Macintosh/.test(u)) return "Mac";
+  if (/Windows/.test(u)) return "Windows 電腦";
+  return "這台裝置";
+};
+
+const ownerOf = m => state.owners[m] || null;
+/* 這台裝置現在是不是「登記中」的那一台。換手機、清掉瀏覽器資料之後會是 false */
+const registered = () => !!(device && ownerOf(device.by) && ownerOf(device.by).devId === device.id);
+/* 這則留言是不是從曾經登記過這個名字的裝置送出的。
+   比的是 seen（歷來登記過的裝置），不是現在那一台——不然換一次手機，
+   自己以前的留言會整批變成「可疑」。沒有 devId 的是加這個功能以前的舊留言。 */
+const fromKnownDevice = m =>
+  !m.devId || !ownerOf(m.by) || (ownerOf(m.by).seen || []).includes(m.devId);
+
+/* 打到一半的留言。onSnapshot 收到別人的留言會整頁重畫（renderDay），
+   草稿存在外面才不會連自己正在打的字一起被洗掉。 */
+let bdDraft = "";
+let bdEdit = false;   // 已登記但按了「改登記」：照樣顯示登記表單
+
+function boardListHTML(){
+  /* 新的排在上面：手機上不用先捲過十幾則舊留言才看到最新的（跟花費明細同一個方向） */
+  const rows = [...state.board].sort((a, b) => b.at - a.at);
+  if (!rows.length) return `<div class="meta">還沒有留言。</div>`;
+  return rows.map(m => {
+    const odd = !fromKnownDevice(m);
+    /* ✕ 給「這個名字現在登記在這台」而且「這則是登記過的裝置送出的」。
+       不直接比 devId：換過手機的人要刪得掉自己用舊手機送的留言。
+       冒名的那幾則（devId 沒登記過）不給刪——那正是要留著讓大家看到的。 */
+    const mine = registered() && m.by === device.by && fromKnownDevice(m);
+    return `<div class="bd-item${odd ? " is-odd" : ""}">
+      <div class="bd-body">
+        <div class="bd-who">${esc(m.by)}<span class="bd-at">${esc(bdWhen(m.at))}</span></div>
+        <p class="bd-text">${esc(m.text)}</p>
+        ${odd ? `<p class="bd-odd">${ic("warning")}不是「${esc(m.by)}」登記的裝置（${esc(m.dev || "不明")}）送出的</p>` : ""}
+      </div>
+      ${mine
+        ? `<button class="bd-del" data-bdel="${esc(m.id)}" aria-label="刪除你的留言「${esc(String(m.text).slice(0, 12))}」">${ic("x")}</button>`
+        : ""}
+    </div>`;
+  }).join("");
+}
+
+function deviceCardHTML(){
+  if (device && !bdEdit){
+    const mine = ownerOf(device.by);
+    const lost = !registered();
+    return `<div class="card">
+      <h2 class="subject">這台裝置</h2>
+      <p class="bd-reg"><strong>${esc(device.by)}</strong><span class="bd-dev">${esc(device.name)}</span></p>
+      <button class="btn btn-plain" id="bd-redo">改登記</button>
+      <div class="note-box">一個名字只認一台裝置，別台選同一個名字會被擋下來。換手機、或清掉瀏覽器資料之後，按「改登記」把名字改到這台。</div>
+      ${lost ? `<div class="note-box warn">${ic("warning")}「${esc(device.by)}」${mine
+        ? `已經改登記在「${esc(mine.dev)}」上` : "還沒有登記在這台裝置上"}，這台現在不能用這個名字留言。</div>` : ""}
+    </div>`;
+  }
+  const picked = (device && device.by) || state.me || "";
+  return `<div class="card">
+    <h2 class="subject">登記這台裝置</h2>
+    <div class="field"><div class="f-grp" id="bd-me-l">我是誰</div>
+      <div class="chips" id="bd-me" role="group" aria-labelledby="bd-me-l">
+        ${M.members.map(m => `<label class="chip"><input type="radio" name="bdme" value="${esc(m)}"${picked === m ? " checked" : ""}>${esc(m)}</label>`).join("")}
+      </div><p class="f-err" id="bd-me-err" hidden></p></div>
+    <div class="field"><label for="bd-dev">裝置名稱</label>
+      <input class="input" id="bd-dev" type="text" autocomplete="off"
+             value="${esc((device && device.name) || guessDevice())}" placeholder="例：白的 iPhone">
+      <p class="f-err" id="bd-dev-err" hidden></p></div>
+    <button class="btn btn-full" id="bd-reg">登記這台裝置</button>
+    <div id="bd-take-wrap" hidden>
+      <button class="btn btn-plain btn-full" id="bd-take">這是我的新裝置，改用這台</button>
+    </div>
+    <div class="note-box">自動填的是偵測到的機種，可以改成自己的叫法。登記之後，這台裝置就只用這個名字留言。</div>
+  </div>`;
+}
+
+function renderBoard(){
+  return deviceCardHTML() + (registered() ? `
+  <div class="card">
+    <h2 class="subject">${ic("chat-circle-dots")}留言給大家</h2>
+    <div class="field"><label for="bd-text">留言內容</label>
+      <textarea class="input" id="bd-text" rows="3" placeholder="例：我先到飯店了，行李可以先放櫃檯">${esc(bdDraft)}</textarea>
+      <p class="f-err" id="bd-text-err" hidden></p></div>
+    <button class="btn btn-full" id="bd-add">送出留言</button>
+    <div class="meta meta-foot">送出後所有人的裝置都會看到。離線時先留在這台裝置，連上網路會自動補送——兩個人同時離線留言的話，後補送的那邊可能會蓋掉對方的。</div>
+  </div>` : "") + `
+
+  <div class="card"><h2 class="subject">所有留言</h2>
+    <div class="bd-list">${boardListHTML()}</div>
+    <div class="meta meta-foot">✕ 只出現在這台裝置送出的留言上。刪掉會從所有人的裝置上消失，有 6 秒可以復原。</div>
+  </div>`;
+}
+
+/* 只重畫留言清單，不重畫整頁：renderDay 會把打到一半的留言與捲動位置一起弄掉 */
+function paintBoard(){
+  const list = document.querySelector("#main .bd-list");
+  if (list) list.innerHTML = boardListHTML();
+}
+
+/* ── 有新留言的提示 ──
+   手機上這一列不黏在頂端，捲下去就看不到徽章了，所以另外補一個 toast。
+   「看過了」只存本機（每台裝置各自算未讀），不同步。 */
+const SEENKEY = `${KEY}:bdseen`;
+let bdSeen = Number(LS.get(SEENKEY)) || 0;
+let bdFirstSnap = true;
+
+/* 自己送的不算未讀——不然每打一則自己的分頁上就多一個紅點 */
+const bdUnread = () => state.board.filter(m =>
+  (m.at || 0) > bdSeen && !(device && m.devId === device.id)).length;
+
+function markBoardSeen(){
+  const newest = state.board.reduce((n, m) => Math.max(n, m.at || 0), 0);
+  if (newest > bdSeen){ bdSeen = newest; LS.set(SEENKEY, String(bdSeen)); }
+}
+
+function paintBoardBadge(){
+  const tab = document.getElementById("tab-board");
+  if (!tab) return;
+  let b = tab.querySelector(".bd-badge");
+  if (!b){
+    b = document.createElement("span");
+    /* 徽章對輔助技術隱藏，改用整顆分頁的 aria-label 唸出來——
+       光一個「3」接在分頁名稱後面，讀螢幕聽起來像分頁叫「留言板 3」 */
+    b.className = "bd-badge"; b.setAttribute("aria-hidden", "true");
+    tab.append(b);
+  }
+  const n = bdUnread();
+  b.textContent = n > 99 ? "99+" : String(n);
+  b.hidden = !n;
+  const name = (tab.querySelector(".nav-main") || {}).textContent || "留言板";
+  if (n) tab.setAttribute("aria-label", `${name.trim()}，${n} 則新留言`);
+  else   tab.removeAttribute("aria-label");
+}
+
+/* 遠端的留言有變動時呼叫。第一次（開網站時收到的那一批）不提示，
+   不然每次開網站都會跳一個「有 N 則新留言」。 */
+function boardChanged(){
+  const n = bdUnread();
+  if (bdFirstSnap) bdFirstSnap = false;
+  else if (n && current !== "board")
+    toast(`有 ${n} 則新留言`, 6000, { label: "看看", run(){ renderDay("board"); } });
+  if (current === "board") markBoardSeen();
+  paintBoardBadge();
+}
+
+/* 欄位底下報錯的共用寫法（跟記帳同一套；全站已經沒有 alert()）。
+   errs 是 [欄位 id, 訊息]，回傳有沒有錯。 */
+function fieldErrors(ids, errs){
+  for (const id of ids){
+    const field = document.getElementById(id), msg = document.getElementById(`${id}-err`);
+    const hit = errs.find(x => x[0] === id);
+    msg.hidden = !hit; msg.textContent = hit ? hit[1] : "";
+    if (hit){ field.setAttribute("aria-invalid", "true"); field.setAttribute("aria-describedby", msg.id); }
+    else    { field.removeAttribute("aria-invalid"); field.removeAttribute("aria-describedby"); }
+  }
+  if (!errs.length) return false;
+  const first = document.getElementById(errs[0][0]);
+  (first.matches("input, textarea, select") ? first : first.querySelector("input"))?.focus();
+  return true;
+}
+
+/* takeover = 按了「這是我的新裝置，改用這台」。
+   沒有這條路的話，換手機或清掉瀏覽器資料的人會被自己的名字鎖在外面，
+   旅途中沒有人能幫他解開。所以擋歸擋，接手要留一條明路——而且接手會改寫
+   owners，原本那台的卡片上立刻會出現「已經改登記在…」，當事人馬上看得到。 */
+function registerDevice(takeover){
+  const by = (document.querySelector('#bd-me input:checked') || {}).value || "";
+  const name = document.getElementById("bd-dev").value.trim();
+  const mineId = (device && device.id) || null;
+  const owner = by ? ownerOf(by) : null;
+  const taken = !!(owner && owner.devId !== mineId);
+
+  const errs = [];
+  if (!by)   errs.push(["bd-me",  "請選擇你是誰"]);
+  if (!name) errs.push(["bd-dev", "請幫這台裝置取個名字"]);
+  if (!errs.length && taken && !takeover)
+    errs.push(["bd-me", `「${by}」已經登記在「${owner.dev}」上。如果那是你的舊裝置，按下面的「改用這台」。`]);
+  document.getElementById("bd-take-wrap").hidden = !(taken && !takeover && by && name);
+  if (fieldErrors(["bd-me", "bd-dev"], errs)) return;
+
+  const id = mineId || crypto.randomUUID();
+  saveDevice({ id, name, by });
+  state.me = by; LS.set(`${KEY}:me`, by);   // 記帳頁的「我是誰」跟著登記走，兩頁不要各說各話
+  const seen = [...new Set([...((owner && owner.seen) || []), id])];
+  state.owners = { ...state.owners, [by]: { devId: id, dev: name, at: Date.now(), seen } };
+  /* 同一台裝置改登記成別的名字時，要把舊名字讓出來——
+     不然一台裝置會同時佔住兩個名字，真正的本人就登記不進來了 */
+  for (const k of Object.keys(state.owners))
+    if (k !== by && state.owners[k].devId === id) delete state.owners[k];
+
+  bdEdit = false;
+  persist(); push({ type:"owners" }); renderDay(current);
+  toast(`已登記：${by} · ${name}`);
+}
+
+function addMessage(){
+  /* 送出前再確認一次：登記之後，可能有人從別台按了「改用這台」把名字接走 */
+  if (!registered()){
+    bdEdit = false; renderDay(current);
+    toast("這台裝置還沒登記，或名字已經改登記到別台");
+    return;
+  }
+  const el = document.getElementById("bd-text");
+  const text = el.value.trim();
+  if (fieldErrors(["bd-text"], text ? [] : [["bd-text", "請填寫留言內容"]])) return;
+
+  state.board.push({ id: crypto.randomUUID(), by: device.by, text, at: Date.now(),
+                     dev: device.name, devId: device.id });
+  bdDraft = ""; el.value = "";
+  markBoardSeen();                       // 自己送的不算未讀
+  persist(); push({ type: "board" }); paintBoard();
+  toast("已送出留言");
+}
+
+/* ── 離線優先同步 ── */
+let db = null, uid = null;
+function push(change){
+  state.queue.push({ ...change, at: Date.now() });
+  persist();
+  flush();
+}
+async function flush(){
+  if (!db || !navigator.onLine){
+    const n = state.queue.length;
+    setSync(db ? "offline" : "local", db ? (n ? `離線中（${n} 筆待傳）` : "離線中") : "單機模式");
+    return;
+  }
+  if (!state.queue.length){ setSync("ok","已同步"); return; }
+  try{
+    const { doc, setDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    /* 記帳、留言、裝置登記都寫在同一份文件的不同欄位，整份覆寫。
+       已知的代價：兩個人各自離線留言、先後上線，後傳的那個會把前一個的留言蓋掉。
+       使用者看過這個風險並且選擇這樣（留言表單底下有一行字寫給使用者看）。
+       要改成「一則一份文件」的子集合之前，先問使用者——不要自己動手。 */
+    await setDoc(doc(db, "trips", M.tripId, "shared", "state"), {
+      expenses: state.expenses, board: state.board, owners: state.owners, updatedAt: Date.now()
+    });
+    state.queue = []; persist(); setSync("ok","已同步");
+  }catch(e){
+    console.error("同步失敗：", e);
+    setSync("error", "同步失敗");
+  }
+}
+
+async function initFirebase(){
+  if (!FIREBASE_CONFIG){ setSync("local","單機模式"); return; }
+  if (!navigator.onLine){
+    setSync("offline","離線中");
+    window.addEventListener("online", initFirebase, { once:true });
+    return;
+  }
+  try{
+    const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js");
+    const { getAuth, signInAnonymously } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js");
+    const { getFirestore, doc, onSnapshot } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    const app = initializeApp(FIREBASE_CONFIG);
+    const cred = await signInAnonymously(getAuth(app));
+    uid = cred.user.uid;
+    db = getFirestore(app);
+    /* 成員名稱不在這裡問。prompt() 若不被支援會丟錯，整個初始化就掉進
+       catch 顯示「雲端連線失敗」——即使登入與 Firestore 其實都成功了；
+       使用者按取消也沒有第二次機會。改用記帳頁的「我是誰」選擇器。 */
+    onSnapshot(doc(db, "trips", M.tripId, "shared", "state"), snap => {
+      const d = snap.data();
+      if (!d || state.queue.length) return;   // 本地有未傳資料時不覆蓋
+      /* 刻意不碰 state.checks / shopping / cards：這些清單都是各自的，
+         遠端殘留的舊值要忽略。 */
+      state.expenses = d.expenses || [];
+      state.board = d.board || [];
+      state.owners = d.owners || {};
+      persist(); renderDay(current);
+      boardChanged();   // 分頁上的未讀數與「有新留言」的提示
+    });
+    flush();
+  }catch(e){
+    console.error("Firebase 初始化失敗：", e);
+    setSync("error","雲端連線失敗");
+  }
+}
+
+window.addEventListener("online", flush);
+window.addEventListener("offline", () => setSync(db ? "offline" : "local", db ? "離線中" : "單機模式"));
+
+/* ── PWA：註冊 Service Worker ── */
+/* toast(訊息, 毫秒, 動作)。動作是 { label, run, expire }，目前只有「復原」在用：
+   有動作時至少停 6 秒、可以點（.has-act 才開 pointer-events）。
+   刪除要等這段時間過了才丟掉真正回不來的東西（IndexedDB 裡的圖），所以有 expire。 */
+function toast(msg, ms = 3200, action){
+  let t = document.getElementById("toast");
+  if (!t){
+    t = document.createElement("div");
+    t.id = "toast"; t.className = "toast"; t.setAttribute("role","status");
+    document.body.appendChild(t);
+  }
+  /* 上一個還沒結束就被新的蓋掉：它的 expire 要先跑，不然那張圖永遠不會被清掉 */
+  if (t._expire){ const f = t._expire; t._expire = null; f(); }
+  t.textContent = msg;
+  t.classList.toggle("has-act", !!action);
+  if (action){
+    const b = document.createElement("button");
+    b.type = "button"; b.className = "toast-act"; b.textContent = action.label;
+    b.addEventListener("click", () => {
+      clearTimeout(t._timer); t._expire = null;
+      t.classList.remove("show", "has-act");
+      action.run();
+    });
+    t.append(b);
+    t._expire = action.expire || null;
+  }
+  requestAnimationFrame(() => t.classList.add("show"));
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => {
+    t.classList.remove("show", "has-act");
+    if (t._expire){ const f = t._expire; t._expire = null; f(); }
+  }, action ? Math.max(ms, 6000) : ms);
+}
+
+if ("serviceWorker" in navigator && location.protocol.startsWith("http")){
+  const hadController = !!navigator.serviceWorker.controller;
+  navigator.serviceWorker.register("sw.js")
+    .catch(err => console.warn("Service Worker 註冊失敗：", err));
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (hadController) toast("行程已更新，重新開啟即可看到最新版");
+  });
+}
+
+/* 主題為 auto 或留空時，依出發月份與半球推導。
+   產生器在輸出時就會算好，所以這裡通常用不到——但手動編輯 TRIP_DATA
+   的人照規範可以填 "auto"，少了這段就會變成 data-theme="auto"，對不上
+   任何 CSS 規則，整頁沒有主題。邏輯與 builder/assets/parse.js 的
+   autoTheme() 相同：用字串取月份，不經過 Date，避開時區位移。 */
+function resolveTheme(meta){
+  const t = (meta.theme || "").trim();
+  if (t && t !== "auto") return t;
+  if (!meta.startDate) return "none";
+  const m = Number(String(meta.startDate).slice(5, 7)) || 1;
+  const lat = meta.place && meta.place.lat;
+  const shift = (lat != null && lat < 0) ? ((m + 5) % 12) + 1 : m;   // 南半球季節對調
+  if (shift === 12 || shift <= 2) return "snow";
+  if (shift <= 5) return "sakura";
+  if (shift <= 8) return "ocean";
+  return "maple";
+}
+
+/* ── 啟動 ── */
+document.documentElement.dataset.theme = resolveTheme(M);
+document.title = M.title;
+document.getElementById("app-title").textContent = M.title;
+document.getElementById("app-sub").textContent = M.subtitle || "";
+/* 編輯入口：有填試算表網址才出現 */
+(function editBar(){
+  const bar = document.getElementById("edit-bar");
+  const out = [];
+  if (M.sheetUrl)
+    out.push(`<a href="${esc(M.sheetUrl)}" target="_blank" rel="noopener">${ic("pencil-simple")}編輯行程</a>`);
+  if (M.builderUrl){
+    const u = M.builderUrl + (M.sheetUrl ? (M.builderUrl.includes("?") ? "&" : "?") +
+              "sheet=" + encodeURIComponent(M.sheetUrl) : "");
+    out.push(`<a class="go" href="${esc(u)}" target="_blank" rel="noopener">${ic("arrows-clockwise")}重新產生網站</a>`);
+  }
+  bar.innerHTML = out.join("");
+})();
+
+/* 勾選 key 的一次性轉換。不轉的話，升級後已經打好的勾會憑空消失。
+   必須在第一次渲染前跑完。旗標以 __ 開頭，不會跟真正的 key 衝突。
+     v2：「清單:群組:陣列索引」→「清單:群組:項目文字」——中間插一項後面不會錯位
+     v3：「清單:群組:項目文字」→「清單:項目文字」——重新分類不會讓勾消失 */
+(function migrateCheckKeys(){
+  const done = { __keys_v2: true, __keys_v3: true };
+  if (!state.checks.__keys_v2){
+    /* 最舊的資料：照 TRIP_DATA 的位置找回項目，直接轉成 v3 */
+    const out = { ...done };
+    for (const day of TRIP_DATA.days || [])
+      for (const b of day.blocks || []){
+        if (b.type !== "checklist") continue;
+        for (const g of b.groups || [])
+          (g.items || []).forEach((it, i) => {
+            if (state.checks[`${b.key}:${g.name}:${i}`]) out[chkKey(b, it)] = true;
+          });
+      }
+    state.checks = out;
+    persist();
+    return;
+  }
+  if (state.checks.__keys_v3) return;
+  /* v2 的 key 是「清單:群組:項目」。清單與群組名稱都不含半形冒號，所以切掉
+     第一、二個冒號之間那段就好；項目文字本身有冒號也留在後面不動。
+     不能照 TRIP_DATA 反查——重新分類之後，舊的群組名稱已經不在裡面了。 */
+  const out = { ...done };
+  for (const [k, v] of Object.entries(state.checks)){
+    if (!v || k.startsWith("__")) continue;
+    const a = k.indexOf(":"), c = k.indexOf(":", a + 1);
+    out[c < 0 ? k : k.slice(0, a + 1) + k.slice(c + 1)] = true;
+  }
+  state.checks = out;
+  persist();
+})();
+
+/* ── 配色：跟隨系統／淺色／深色 ──────────────────
+   偏好存在這台裝置、不帶 tripId（同網域下所有行程共用）。<head> 那一段已經在繪製前
+   把 data-scheme 設好了，這裡只是再算一次並把按鈕畫出來。 */
+const SCHEME_KEY = "travel:scheme";
+const SCHEMES = [
+  ["auto",  "circle-half", "跟隨系統"],
+  ["light", "sun",         "淺色"],
+  ["dark",  "moon",        "深色"],
+];
+const schemeMQ  = matchMedia("(prefers-color-scheme: dark)");
+const schemeBtn = document.getElementById("scheme");
+const schemePref = () => {
+  const v = LS.get(SCHEME_KEY);
+  return SCHEMES.some(s => s[0] === v) ? v : "auto";
+};
+function paintScheme(){
+  const pref = schemePref();
+  const [, icon, label] = SCHEMES.find(s => s[0] === pref);
+  document.documentElement.dataset.scheme =
+    pref === "auto" ? (schemeMQ.matches ? "dark" : "light") : pref;
+  schemeBtn.innerHTML = ic(icon);
+  schemeBtn.setAttribute("aria-label", `配色：${label}（點一下換下一個）`);
+  schemeBtn.title = `配色：${label}`;
+}
+schemeBtn.addEventListener("click", () => {
+  const i = SCHEMES.findIndex(s => s[0] === schemePref());
+  const [key, , label] = SCHEMES[(i + 1) % SCHEMES.length];
+  LS.set(SCHEME_KEY, key);
+  paintScheme();
+  toast(`配色：${label}`);
+});
+/* 選「跟隨系統」時，系統自己換了也要跟著換 */
+schemeMQ.addEventListener("change", () => { if (schemePref() === "auto") paintScheme(); });
+paintScheme();
+
+buildNav();
+/* 開啟時直接跳到今天。旅途中每次都要自己點到正確的分頁很煩；
+   不在行程期間（還沒出發、或已結束）就照舊顯示第一個分頁。 */
+renderDay((TRIP_DATA.days.find(d => d.date === nowAtDestination().date) || TRIP_DATA.days[0]).id);
+
+/* 每 30 秒更新一次；從背景切回來時也立刻更新，
+   否則放了幾小時再打開會停在舊的標記上。 */
+/* 圖片要先抓進快取：優惠券是在店裡結帳時要打開、介紹照片是在山裡要看，那時都不一定有訊號。
+   放在自己的快取名稱（trip-img），這樣換圖片就不必改 sw.js、也不用升 VERSION。
+   sw.js 的 cacheFirst 用的是 caches.match()，會搜尋所有快取，所以找得到。 */
+(async function cacheTripImages(){
+  if (!("caches" in window)) return;
+  const urls = [];
+  for (const day of TRIP_DATA.days || [])
+    for (const b of day.blocks || []){
+      if (b.photo && b.photo.src) urls.push(b.photo.src);
+      if (b.type === "shopping")
+        for (const g of b.groups || [])
+          for (const it of g.items || [])
+            if (it && it.img) urls.push(it.img);
+    }
+  if (!urls.length) return;
+  try{
+    const c = await caches.open("trip-img");
+    /* 一張一張加，有一張失敗不要讓其他的也沒快取到（addAll 是全有或全無） */
+    await Promise.all(urls.map(u => c.match(u).then(hit => hit || c.add(u)).catch(() => {})));
+  }catch{ /* 快取滿了或被拒絕就算了，線上仍然看得到 */ }
+})();
+
+setInterval(markNow, 30000);
+document.addEventListener("visibilitychange", () => { if (!document.hidden) markNow(); });
+paintNow();
+fetchWeather();
+initFirebase();

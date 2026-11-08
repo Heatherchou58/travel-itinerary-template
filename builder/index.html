@@ -813,9 +813,20 @@ const round = v => v >= 1 ? Number(v.toFixed(4)) : Number(v.toPrecision(4));
 /* ── 組裝網站 ─────────────────────────── */
 $("fb").addEventListener("input", () => { clearTimeout(window._t); window._t = setTimeout(build, 400); });
 
+/* 網站的程式與樣式只有一份，放在 ../app/（正式網站直接引用那裡）。
+   builder 產出的網站要能單獨放到任何地方，所以 makeIndex 會把它們內嵌回 index.html */
+let APP_JS = null, APP_CSS = null;
+const getText = async u => {
+  const r = await fetch(u);
+  if (!r.ok) throw new Error(`讀不到 ${u}（${r.status}）`);   // 不然會把 404 頁面當程式內嵌進去
+  return r.text();
+};
+
 async function loadAssets(){
   if (!TPL) TPL = await (await fetch("assets/site-template.html")).text();
   if (!SW)  SW  = await (await fetch("assets/sw.js")).text();
+  if (!APP_JS)  APP_JS  = await getText("../app/app.js");
+  if (!APP_CSS) APP_CSS = await getText("../app/app.css");
 }
 
 /* Firebase Console 給的是 JavaScript 物件（key 沒有引號），不是 JSON。
@@ -895,6 +906,14 @@ function makeIndex(data){
   h = h.replace(/<meta name="theme-color" content="[^"]*">/, `<meta name="theme-color" content="${t.ink}">`);
   h = h.replace(/<meta name="apple-mobile-web-app-title" content="[^"]*">/,
                 `<meta name="apple-mobile-web-app-title" content="${esc(short)}">`);
+
+  /* 內嵌共用的程式與樣式（見 loadAssets）。取代值一定要用函式：程式裡到處是 `$`，
+     字串取代值會把 `$&`、`$1` 這些當成特殊符號吃掉，產出來的程式就壞了。
+     程式與樣式裡的結束標籤要拆開（寫成 <\/script），不然 HTML 會在那裡提早結束。 */
+  const css = APP_CSS.replace(/<\/style/gi, "<\\/style");
+  const js  = APP_JS.replace(/<\/script/gi, "<\\/script");
+  h = h.replace('<link rel="stylesheet" href="../app/app.css">', () => "<style>\n" + css + "</style>");
+  h = h.replace('<script type="module" src="../app/app.js"><\/script>', () => '<script type="module">\n' + js + "<\/script>");   // 寫成 <\/script：照字面寫的話，這個 <script> 自己會在這裡被 HTML 提早結束
   return h;
 }
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;" }[c]));

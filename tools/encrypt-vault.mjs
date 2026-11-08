@@ -44,7 +44,7 @@ const ITERATIONS = 600000;
 
 /* 通關密語正規化：大小寫、空白、連字號都不計較。
    手機鍵盤會自動把第一個字母改成大寫，連字號也有全形半形之分，
-   打錯這些不該被當成密語錯誤。網站端 site-template.html 用的是同一條規則。 */
+   打錯這些不該被當成密語錯誤。網站端 app/app.js 用的是同一條規則。 */
 const normPass = p => String(p ?? "").normalize("NFKC").toLowerCase()
   .replace(/[\s\-‐-―]/g, "");
 

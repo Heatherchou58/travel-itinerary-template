@@ -1,6 +1,6 @@
 # 旅遊行程網站
 
-一趟旅行 = 一個 HTML 檔。手機上開網址即可使用，可加入主畫面、離線瀏覽，同行者之間即時同步。
+一趟旅行 = 一個資料夾，程式所有行程共用一份（`app/`）。手機上開網址即可使用，可加入主畫面、離線瀏覽，同行者之間即時同步。
 
 ## 線上網址
 
@@ -14,6 +14,10 @@
 ## 資料夾
 
 ```
+app/                  網站的程式與樣式，所有行程共用（只有這一份）
+├─ app.js            程式＋圖示表
+└─ app.css           樣式
+
 builder/              Excel／Google 試算表 → 網站的產生器（純前端，檔案不上傳）
 ├─ index.html         產生器介面
 ├─ travel-template.xlsx   給使用者下載的 Excel 模板
@@ -22,11 +26,11 @@ builder/              Excel／Google 試算表 → 網站的產生器（純前�
    ├─ sheets.js       Google 試算表 → 二維陣列
    ├─ localdata.js    各國插座、緊急電話、季節打包清單、通用片語
    ├─ deploy.js       用 GitHub API 推檔（一次 commit）
-   ├─ site-template.html  網站模板，注入 TRIP_DATA 用
+   ├─ site-template.html  網站骨架，注入 TRIP_DATA 用（產生時把 app/ 內嵌回去，產出仍是單一 HTML）
    └─ sw.js           原樣打包進輸出
 
 fukuoka-2026/         已產出的行程網站
-├─ index.html         行程本體（唯一需要編輯的檔案）
+├─ index.html         行程資料＋HTML 骨架，引用 ../app/
 ├─ sw.js              離線快取
 ├─ manifest.json      App 名稱與圖示
 └─ icons/             各尺寸圖示
@@ -72,12 +76,12 @@ node tools/export-xlsx.mjs fukuoka-2026
 
 ## 架構
 
-`index.html` 內部固定切成三層：
+固定切成三層：
 
 ```
-<style>        設計層  ── 幾乎不改
-TRIP_DATA      資料層  ── 換旅程時「只改這裡」
-渲染 + 同步 JS  邏輯層  ── 幾乎不改
+app/app.css                  設計層  ── 所有行程共用
+<行程>/index.html 的 TRIP_DATA  資料層  ── 換旅程時「只改這裡」
+app/app.js                   邏輯層  ── 所有行程共用
 ```
 
 判斷是否符合規範的標準：把 `TRIP_DATA` 換成另一趟旅行的資料後，網站要能完整運作，不需要動 HTML 或 CSS 任何一行。

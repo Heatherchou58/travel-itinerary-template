@@ -1,8 +1,7 @@
 # 福岡 2026 行程網站 —— UI／UX 現況
 
-讀自 `fukuoka-2026/index.html`。`<style>` 區段與 `builder/assets/site-template.html`
-**逐行相同**（`diff` 無差異），所以這份文件同時描述模板；下面寫的每一條改動都要改兩處
-（CLAUDE.md 第一節）。
+讀自 `app/app.css` 與 `app/app.js`（2026-11-08 起程式與樣式只有這一份，所有行程與模板共用；
+見 CLAUDE.md 第一節）。下面的行號是搬家前單一 HTML 的位置，僅供對照。
 
 > **2026-10-26 改版：秋日九州 × 日系雜誌。** 下面「零、這次改了什麼」是總覽；
 > 第一到第八節的細節大多寫於改版前，與總覽衝突時**以總覽為準**。
@@ -109,8 +108,8 @@
 
 ## 一、整站骨架
 
-單一 HTML，三層：設計層 `<style>`（19–948）、資料層 `TRIP_DATA`（1054–3313）、程式層（3314–5064）。
-沒有外部 CSS／JS／字型，圖示是內嵌的 Phosphor regular SVG `<symbol>`。
+三層：設計層 `app/app.css`、資料層 `<行程>/index.html` 的 `TRIP_DATA`、程式層 `app/app.js`。
+沒有外部字型；圖示是 Phosphor regular SVG `<symbol>`，放在 `app/app.js` 開頭、執行時注入 `<body>`。
 
 ```
 a.skip               跳到主內容（鍵盤第一個 Tab，平常移出畫面，z-index 400）

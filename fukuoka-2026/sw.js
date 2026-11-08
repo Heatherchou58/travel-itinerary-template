@@ -1,15 +1,17 @@
 /* ══════════════════════════════════════════════════
    Service Worker —— 離線快取
    ──────────────────────────────────────────────────
-   行程內容（index.html）採「網路優先」，所以改完行程
-   重新部署，使用者一有網路就會拿到新版，不用改這裡。
+   行程內容（index.html）與共用的程式（../app/app.js、app.css）
+   採「網路優先」，所以改完行程或程式重新部署，使用者一有網路
+   就會拿到新版，不用改這裡。程式不能走快取優先：新的 index.html
+   配上快取裡舊的 app.js，網站可能直接打不開。
 
    manifest.json 與 icons/ 走「快取優先」，改動它們時必須把
    下面的 VERSION 加 1，否則已經開過網站的人會一直拿到舊版，
    重新部署也救不回來。（sw.js 本身不在 PRECACHE 裡，瀏覽器
    會自己偵測並安裝新版，不需要為了它升版。）
    ══════════════════════════════════════════════════ */
-const VERSION  = "v6";
+const VERSION  = "v7";
 const CACHE    = `trip-${VERSION}`;
 const IMG_CACHE = "trip-img";   // 優惠券圖片，不隨版本清掉
 const TIMEOUT  = 3000;   // 網路等待上限（毫秒），超過就用快取
@@ -18,6 +20,8 @@ const PRECACHE = [
   "./",
   "./index.html",
   "./manifest.json",
+  "../app/app.js",
+  "../app/app.css",
   "./icons/icon-192.png",
   "./icons/icon-512.png",
   "./icons/icon-maskable-512.png",
@@ -54,12 +58,14 @@ self.addEventListener("fetch", e => {
   //   Firebase    → 同步邏輯自行處理離線
   if (new URL(req.url).origin !== self.location.origin) return;
 
-  const isDoc = req.mode === "navigate" || req.destination === "document";
-  e.respondWith(isDoc ? networkFirst(req) : cacheFirst(req));
+  const isDoc  = req.mode === "navigate" || req.destination === "document";
+  const isCode = /\/app\/app\.(js|css)$/.test(new URL(req.url).pathname);
+  e.respondWith(isDoc ? networkFirst(req) : isCode ? networkFirst(req, false) : cacheFirst(req));
 });
 
-/* 網頁本體：網路優先，逾時或離線就用快取 */
-async function networkFirst(req){
+/* 網頁本體與共用程式：網路優先，逾時或離線就用快取。
+   程式（asPage=false）快取裡沒有時不能拿 index.html 頂替——把 HTML 當 JS 執行只會報錯 */
+async function networkFirst(req, asPage = true){
   const cache = await caches.open(CACHE);
   try{
     const net = await Promise.race([
@@ -74,8 +80,10 @@ async function networkFirst(req){
     if (net && net.ok) cache.put(req, net.clone());
     return net;
   }catch{
-    return (await cache.match(req))
-        || (await cache.match("./index.html"))
+    const hit = await cache.match(req);
+    if (hit) return hit;
+    if (!asPage) return new Response("", { status: 504 });
+    return (await cache.match("./index.html"))
         || new Response("目前離線，且沒有可用的快取版本。", {
              status: 503,
              headers: { "Content-Type": "text/plain;charset=utf-8" }

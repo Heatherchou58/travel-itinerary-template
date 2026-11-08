@@ -387,6 +387,19 @@ def disable_firebase(path: Path) -> None:
         sys.exit("準備測試副本失敗：副本裡仍有 API 金鑰殘留")
 
 
+def guard_shared_code(app_dir: Path) -> None:
+    """共用程式（app/）裡不能有 Firebase 設定或金鑰。
+
+    disable_firebase 只清 index.html——設定一直放在資料那一段。哪天有人把設定搬進
+    app.js，測試副本就會連上真正的 Firestore、把測試資料寫進大家的記帳，而且不會有人發現。"""
+    for f in app_dir.glob("*.js"):
+        code = f.read_text(encoding="utf-8")
+        if re.search(r"(const|let|var)\s+FIREBASE_CONFIG\s*=\s*\{", code):
+            sys.exit(f"準備測試副本失敗：{f.name} 裡有 FIREBASE_CONFIG，disable_firebase 清不到它")
+        if re.search(r"AIza[A-Za-z0-9_-]{20,}", code):
+            sys.exit(f"準備測試副本失敗：{f.name} 裡有 API 金鑰")
+
+
 def swap_trip_data(path: Path, trip: dict) -> None:
     """用大括號配對找出 TRIP_DATA 的範圍再整段換掉（正則數不準巢狀括號）。"""
     html = path.read_text(encoding="utf-8")
@@ -545,6 +558,10 @@ def run(trip: str) -> bool:
     try:
         shutil.copytree(src, tmp / "site")
         disable_firebase(tmp / "site" / "index.html")
+        # 程式與樣式只有一份在 repo 根目錄的 app/，網站用 ../app/app.js 引用。
+        # 各個測試副本（site、swap、settle…）都是 tmp 底下的兄弟資料夾，共用這一份
+        shutil.copytree(REPO / "app", tmp / "app")
+        guard_shared_code(tmp / "app")
         shutil.copytree(tmp / "site", tmp / "swap")
         swap_trip_data(tmp / "swap" / "index.html", SWAP_TRIP)
 
@@ -2943,6 +2960,64 @@ def run(trip: str) -> bool:
             page.wait_for_timeout(300)
             r.check("密碼鎖：其他分頁不受影響", page.locator("#main .chk").count() > 0)
             r.check("密碼鎖：整段沒有 JS 例外", not lock_err, "; ".join(lock_err[:2]))
+            ctx.close()
+
+            # 15 ── 程式只有一份，在 app/ ─────────────────────────
+            # 程式與樣式從 index.html 搬到 repo 根目錄的 app/app.js、app/app.css（使用者要的：
+            # 程式碼短一點、改一個地方就好）。index.html 只剩資料。要守的有三件：
+            #   一、兩個 HTML 都是引用，不再內嵌——不然又變回兩份，改一邊另一邊會退回舊版
+            #   二、Service Worker 預先快取它們——離線要能開
+            #   三、而且走「網路優先」——快取優先的話，開過網站的手機會一直用舊程式，
+            #       新的 index.html 配上舊的 app.js 甚至可能直接打不開
+            idx_src = (site_dir / "index.html").read_text(encoding="utf-8")
+            tpl_src = (REPO / "builder" / "assets" / "site-template.html").read_text(encoding="utf-8")
+            sw_src = (site_dir / "sw.js").read_text(encoding="utf-8")
+            for name, html in (("index.html", idx_src), ("site-template.html", tpl_src)):
+                r.check(f"共用程式：{name} 引用 ../app/ 的程式與樣式，自己不再內嵌",
+                        '<script type="module" src="../app/app.js"></script>' in html
+                        and '<link rel="stylesheet" href="../app/app.css">' in html
+                        and "邏輯層 —— 以下皆不需修改" not in html and "<style>" not in html)
+            r.check("共用程式：Service Worker 預先快取 app.js 與 app.css",
+                    '"../app/app.js"' in sw_src and '"../app/app.css"' in sw_src)
+
+            ctx = browser.new_context()
+            page = ctx.new_page()
+            app_err = []
+            page.on("pageerror", lambda e: app_err.append(str(e)))
+            page.goto(base)
+            page.wait_for_load_state("networkidle")
+            page.wait_for_function("navigator.serviceWorker.controller !== null", timeout=15000)
+            page.reload()
+            page.wait_for_load_state("networkidle")
+            # 驗的是 SW 的決定：程式走網路優先。快取優先的話會一直拿到預先快取的舊檔
+            #（故意改壞成快取優先實測過，這條會失敗）。
+            # 不能用「改了檔案、同一個分頁重新整理、看新程式有沒有跑」來驗：伺服器回
+            # Cache-Control: max-age（GitHub Pages 是 600 秒），Chrome 重新整理時會直接從
+            # 記憶體快取拿 app.js、根本不問 SW——用 CDP 確認過。所以同一個分頁在部署後
+            # 10 分鐘內重新整理，可能還是上一版的程式（見 CLAUDE.md 第三節）。
+            # cache:'no-store' 讓頁面這一端不碰 HTTP 快取，結果完全由 SW 決定
+            app_js = tmp / "app" / "app.js"
+            original = app_js.read_bytes()
+            try:
+                app_js.write_bytes(original + b"\nwindow.__appProbe = 'updated';\n")
+                got = page.evaluate("fetch('../app/app.js', { cache: 'no-store' }).then(r => r.text())")
+                r.check("共用程式：Service Worker 對 app.js 走網路優先（改了會拿到新版，不會卡在快取）",
+                        "__appProbe" in got)
+            finally:
+                app_js.write_bytes(original)
+            ctx.set_offline(True)
+            page.reload()
+            page.wait_for_load_state("domcontentloaded")
+            page.wait_for_timeout(1500)
+            r.check("共用程式：離線重新整理，程式與樣式從快取載入、畫面照常",
+                    page.locator(".nav-item").count() > 2
+                    and page.locator("#main").inner_text().strip() != ""
+                    # 樣式有載入：--fs-md 只定義在 app.css 裡
+                    and page.evaluate("getComputedStyle(document.documentElement).getPropertyValue('--fs-md').trim()") != "",
+                    f"{page.locator('.nav-item').count()} 個分頁")
+            r.check("共用程式：圖示表有注入（圖示畫得出來）",
+                    page.evaluate("!!document.getElementById('i-x') && document.body.firstElementChild.tagName === 'svg'"))
+            r.check("共用程式：整段沒有 JS 例外", not app_err, "; ".join(app_err[:2]))
             ctx.close()
 
             browser.close()

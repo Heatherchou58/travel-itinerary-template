@@ -1,23 +1,31 @@
 # 旅遊行程網站
 
-一趟旅行 = 一個 HTML 檔。正式站在 GitHub Pages，`builder/` 是把 Excel 轉成網站的純前端產生器。
+一趟旅行 = 一個資料夾。正式站在 GitHub Pages，`builder/` 是把 Excel 轉成網站的純前端產生器。程式與樣式所有行程共用一份，在 `app/`。
 
 整體架構與設計規範見使用者的 `travel-site-builder` skill。這份檔案只記**實際踩過、光讀程式碼看不出來**的坑。
 
 ---
 
-## 一、改一個地方要改兩處
+## 一、程式在 `app/`，`index.html` 只有資料
 
-網站的程式碼同時存在兩個檔案：
+2026-11-08 起（使用者要的：程式碼短一點、改一個地方就好）：
 
-| 檔案 | 身分 |
+| 檔案 | 裝什麼 |
 |---|---|
-| `builder/assets/site-template.html` | 模板，之後產生的新網站用這份 |
-| `fukuoka-2026/index.html` | 已經產出的網站 |
+| `app/app.js` | **全部程式**＋圖示表（開頭注入到 `<body>`）。所有行程共用，**只有這一份** |
+| `app/app.css` | **全部樣式**。同上 |
+| `fukuoka-2026/index.html` | `<head>` 的 meta、配色同步腳本、HTML 骨架、資料（`TRIP_DATA`＋`FIREBASE_CONFIG`）。用 `../app/app.js`、`../app/app.css` 引用 |
+| `builder/assets/site-template.html` | 跟上面同一個骨架，資料是範例 |
 
-**只改其中一份，另一份就會退回舊行為。** 改模板但不改已產出的網站，使用者現在看不到；改已產出的網站但不改模板，下次用 builder 重新產生就全部消失。
+改程式、樣式、圖示 → **只改 `app/`**。另一個對話改行程資料（`index.html`），兩邊不再擠同一個檔案。
 
-CSS、renderer、同步邏輯都適用。只有 `TRIP_DATA` 是該趟專屬的，不用同步。
+| 坑 | 說明 |
+|---|---|
+| 骨架仍然兩份 | `<head>` 與 `<body>` 的結構在 `index.html` 和模板各一份，改了要兩邊一起改。很少動 |
+| 資料是**經典** `<script>`，不是 module | 頂層 `const` 才會是全域的，`app.js`（module）才讀得到 `TRIP_DATA`、`FIREBASE_CONFIG`。改成 `type="module"` 的話 `app.js` 會 `ReferenceError`，整個網站空白 |
+| builder 產出的網站仍是單一 HTML | `makeIndex` 把 `app.js`、`app.css` **內嵌回去**，產出的 zip／預覽／部署可以放到任何地方。取代值一定要用函式（程式裡滿是 `$`，字串取代值會把 `$&` 吃掉），`</script` 要拆成 `<\/script`。**builder 自己的程式裡也不能照字面寫 `</script`**——連註解都不行，瀏覽器會在那裡把 builder 的 `<script>` 結束掉（踩過：寫在註解裡的「`</script 的話`」） |
+| 用 builder 重新產生福岡的話 | 產出來是內嵌版（程式凍結在那個檔案裡），之後改 `app/` 就不會影響它。要改回引用版：把 `<style>…</style>` 換回 `<link rel="stylesheet" href="../app/app.css">`、模組換回 `<script type="module" src="../app/app.js"></script>`、資料那段改回經典 `<script>` |
+| 搬家前兩份程式其實已經不一樣 | 6 行（打包清單處理器的順序與註解），行為相同。搬的時候以正式網站那份為準。所以「兩份要一樣」光靠人記是守不住的，這也是搬家的理由之一 |
 
 ## 二、驗證部署結果的正確方法
 
@@ -38,12 +46,20 @@ CSS、renderer、同步邏輯都適用。只有 `TRIP_DATA` 是該趟專屬的�
 | 資源 | 策略 | 改了要升 `VERSION` 嗎 |
 |---|---|---|
 | `index.html` | 網路優先 | 不用 |
+| `../app/app.js`、`../app/app.css` | **網路優先**，也在 PRECACHE | 不用 |
 | `manifest.json`、`icons/` | **快取優先** | **要** |
 | `sw.js` 本身 | 不在 PRECACHE，瀏覽器自行偵測 | 不用 |
 
 改了 `manifest.json` 卻沒升版，已經開過網站的人**永遠拿不到新版**，重新部署也救不回來。
 
 另外：GitHub Pages 對 HTML 回 `Cache-Control: max-age=600`，所以 `networkFirst` 用的是 `fetch(req, { cache: "no-cache" })` 來繞過瀏覽器自己的 HTTP 快取。**不要改回 `fetch(req)`**，那會讓部署後 10 分鐘內拿到的還是舊檔。
+
+| 坑 | 說明 |
+|---|---|
+| `app/` 絕對不能走快取優先 | 已經開過網站的手機會一直用舊程式；新的 `index.html` 配上快取裡舊的 `app.js`，網站可能直接打不開。測試第 15 段在守（故意改成快取優先實測過，會失敗） |
+| 程式離線時不能拿 `index.html` 頂替 | `networkFirst(req, false)`：快取裡沒有就回 504。把 HTML 當 JS 執行只會報錯 |
+| **同一個分頁重新整理，部署後 10 分鐘內可能還是舊程式** | Chrome 重新整理時，`max-age` 還沒過的 `app.js` 直接從記憶體快取拿，**根本不問 SW**（CDP 的 `requestServedFromCache` 確認過）。`index.html` 是頁面本身，重新整理一定問 SW，所以只會出現「新的 `index.html`＋上一版的程式」。重新打開 App 或過 10 分鐘就是新的。**所以同一次部署不要讓新的 `index.html` 依賴新的 `app.js`**：要改資料格式或拿掉骨架裡的元素時，先部署能同時吃新舊兩種的程式，下一次才改資料 |
+| 本機測 SW 更新會被修改時間騙 | Python 的伺服器用修改時間回 304。`shutil.copy2` 會保留來源較舊的時間，瀏覽器的更新檢查拿到 304、新 SW 永遠裝不上。測試要用 `shutil.copy`。GitHub Pages 用內容的 ETag，沒有這個問題 |
 
 ## 四、分帳用「分」計算，顯示到小數點兩位
 
@@ -94,7 +110,9 @@ CSS、renderer、同步邏輯都適用。只有 `TRIP_DATA` 是該趟專屬的�
 python tests/offline_test.py
 ```
 
-寫測試時**不要用 `page.content()` 比對字串**。這個網站是單一 HTML、JS 內嵌，原始碼裡本來就含有 `TRIP_DATA` 和所有樣板字串——查 `"CI51"` 就算 renderer 根本沒畫出來也會通過。一律讀 `#main` 的 `innerText`。
+寫測試時**不要用 `page.content()` 比對字串**。原始碼（`index.html` 的資料、`app/app.js` 的樣板字串）本來就含有 `TRIP_DATA` 和所有樣板字串——查 `"CI51"` 就算 renderer 根本沒畫出來也會通過。一律讀 `#main` 的 `innerText`。
+
+測試把行程資料夾複製到暫存區時，`app/` 也要一起複製（`../app/app.js` 才找得到）。`disable_firebase` 只清 `index.html` 的 `FIREBASE_CONFIG`，所以另外有 `guard_shared_code` 檢查 `app/` 裡沒有 Firebase 設定或金鑰——**設定哪天被搬進 `app.js`，測試副本就會連上真正的 Firestore、把測試資料寫進大家的記帳**，而且沒人會發現。
 
 判斷 `<details>` 內容是否可見也不要用 `getBoundingClientRect()`，收合狀態下它仍會回報高度。用 `checkVisibility()` 或 Playwright 的 `is_visible()`。
 
@@ -138,7 +156,7 @@ node tools/encrypt-vault.mjs fukuoka-2026
 |---|---|
 | 重新產生行程區塊後，卡片上的私人資料會消失 | builder 重新產生網站、或任何重寫行程區塊的步驟，都會把 `secret` 鍵洗掉。產生完要再跑一次上面的指令。明文刻意不放進 Excel——Excel 會傳上雲端分享 |
 | 卡片改了標題，私人資料就對不上 | 工具用標題比對卡片，對不到會直接報錯；改標題時要一起改明文檔的 `card` |
-| 通關密語的正規化規則寫在兩個地方 | `normPass` 在 `tools/encrypt-vault.mjs` 與網站程式各一份（大小寫、空白、連字號不計較），只改一邊就解不開 |
+| 通關密語的正規化規則寫在兩個地方 | `normPass` 在 `tools/encrypt-vault.mjs` 與 `app/app.js` 各一份（大小寫、空白、連字號不計較），只改一邊就解不開 |
 | 前端只「檢查」密碼擋不住任何人 | repo 是公開的，原始碼誰都讀得到。一定要用密語「加密」，而且密語要夠長——密文永久留在 git 紀錄裡，可以被離線慢慢猜 |
 
 工具每次都會把密文解回來比對，並掃描 index.html 有沒有明文外洩；Excel 與其他檔案要自己注意。
@@ -224,7 +242,7 @@ node tools/intro-photos.mjs fukuoka-2026 --src <原圖資料夾>  # 先重新壓
 | 減少動態效果時不能有動畫在跑 | `*` 不會套到 `::before／::after`，偽元素的動畫要另外寫進 reduced-motion 規則，而且選擇器要跟原規則一樣具體 |
 | 動畫要表達因果 | 起終點的脈動光暈是純裝飾，已拿掉；交通卡上表示方向的流動光點保留 |
 | **背景飄落的裝飾是這條規則的例外** | 使用者指定要留。`c024925` 曾照 motion-meaning 把 `body::before／::after` 的 `animation` 拿掉，2026-10-25 又順手刪了留下來的 `@keyframes`，使用者發現楓葉不會動、要求裝回去。**不要再把它當成純裝飾刪掉。** 偏好減少動態的人由 `prefers-reduced-motion` 連圖層一起關掉，所以測試那條仍然會過。**maple 主題改成 `.leaves` 每片一個元素**（手機 7 片、電腦 12 片、週期 19–35 秒、11–24px、透明度 .12–.30，只動 `transform`），舊的貼圖在 maple 關掉、同時只跑一套；其他四個主題仍用 `body::before／::after` 的貼圖。原本的貼圖每 120px 一格三片，手機上同時一百多片、同一層完全同步，而且動 `background-position` 會讓全螢幕圖層每格重繪 |
-| 不用 emoji 當圖示 | 頁首有一份 Phosphor 圖示表（MIT，regular），程式裡用 `ic("名稱")`。資料裡（Excel、builder 產生的按鈕文字、說明、分頁名稱）開頭的 emoji 由 `iconText()` 換成對應圖示，對不到的直接拿掉，所以資料不用改。要加新圖示照圖示表上方註解的步驟。網站標題是使用者自己寫的文字，不換 |
+| 不用 emoji 當圖示 | `app/app.js` 開頭有一份 Phosphor 圖示表（MIT，regular，執行時注入 `<body>`），程式裡用 `ic("名稱")`。資料裡（Excel、builder 產生的按鈕文字、說明、分頁名稱）開頭的 emoji 由 `iconText()` 換成對應圖示，對不到的直接拿掉，所以資料不用改。要加新圖示照圖示表上方註解的步驟。網站標題是使用者自己寫的文字，不換 |
 | 圖示按語意上色 | `ic()` 查 `IC_CAT` 決定類別（吃 food／行 move／住 stay／買 shop／看 see／提醒 warn），CSS 的 `.ic-food` 等給顏色。**實心按鈕、選取中的分頁與標籤裡的圖示要 `color:inherit`**，不然會在深色底上自己上色、看不見 |
 | 線條有兩個 token | `--c-line`（`#E7E1D8`，淡）畫分隔線與結構線：路線、進度條軌道、卡片狀態的左邊框、各種 `border-top／bottom`。`--c-border`（`#8A8278`）只給**控制項**的邊框（輸入框、chip、分頁膠囊、外框按鈕、檔案選擇…），WCAG 1.4.11 要求能識別介面元件的圖形 ≥ 3:1，而 `--c-line` 對白底只有 1.3。**不要把兩個合併**：實測把整組調深之後，交通卡那條 4px 的線會變成一根灰柱，跟站點的圓點搶視線。同一個中灰對淺色底與深色底都夠，所以 `--c-border` 不用分深淺兩套 |
 | 深色模式要看「面跟面分不分得開」 | 對比探針只量**文字**，量不到「說明框的底色跟卡片底色幾乎一樣」。第一版深色的 `--c-accent-soft` 比 `--c-surface` 還暗一點點，區別度只有 1.02（1.00 ＝ 同色），說明框整個消失，是使用者看畫面才發現的。現在深色的 `--c-accent-soft` 一律**比 `--c-surface` 亮**（區別度 1.27–1.36），測試第 12 段有一條在守 |

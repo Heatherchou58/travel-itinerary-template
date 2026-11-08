@@ -1,0 +1,1299 @@
+/* 旅遊行程網站的樣式——所有行程共用這一份（見 app.js 開頭的說明） */
+/* ═══════════════════════════════════════════════
+   設計層 —— 換旅程時不需要修改
+   ═══════════════════════════════════════════════ */
+:root{
+  /* 色彩：單一語意化系統 */
+  --c-bg:#F5F2ED;
+  --c-surface:#FFFFFF;
+  --c-text:#3B3733;
+  /* 次要文字也要 4.5:1（ui-ux-pro-max color-accessible-pairs）：#8A8178 在白底只有 3.8，
+     #6B635B 在五個主題的底色、淡色底上最低 5.1 */
+  --c-text-dim:#6B635B;
+  --c-line:#E7E1D8;
+  /* 控制項（輸入框、chip、分頁、外框按鈕…）的邊框。WCAG 1.4.11 要求能識別介面元件的
+     圖形 >= 3:1，--c-line 對白底只有 1.3。刻意不拿來畫分隔線與路線——實測整組調深之後
+     交通卡那條 4px 的線會變成一根灰柱，跟站點的圓點搶視線。
+     同一個中灰對淺色底（最差 3.27）與深色底（最差 3.17）都夠，所以深色模式不用另外覆寫。 */
+  --c-border:#8A8278;
+  --c-accent:#74B9FF;
+  --c-accent-soft:#E8F4FF;
+  --c-on-accent:#0F4670;
+  /* 線條、圓點、進度條這種沒有文字疊在上面的地方用深的：--c-accent 要淡到能襯深色字，
+     拿來畫 4px 的線在白底上就看不出來了。每個主題的 --c-on-accent 都是它的深色版。 */
+  --c-accent-strong:var(--c-on-accent);
+  --deco-size:120px 120px,180px 180px,240px 240px;
+  --c-warn:#E0A458;
+  --c-warn-text:#9A6210;   /* 拿來當文字時用這個，--c-warn 在白底只有 2.2 */
+  --c-warn-soft:#FDF4E7;
+  --c-danger:#C9302C;
+  --c-ok:#2A7F52;
+  --c-on-solid:#FFFFFF;    /* 深色實心按鈕上的字 */
+  --c-pop:    #B85C00;   /* theme 樣式用的對比色，各主題覆寫 */
+  /* 第二層配色：讓不同內容一眼分得出來（交通、住宿、提醒、景點類型）。版面只認這些名字，
+     顏色由主題決定；主題沒指定的就退回它自己的主色與淡色，所以別的主題不會冒出它沒有的顏色。
+       --c-alt / -text / -soft   第二強調色：交通、地圖、訂位、實用資訊（線與框 ≥3:1／文字 ≥4.5:1／淡底）
+       --c-link-line / -text     地圖、訂位按鈕的外框與字（預設是中性外框）
+       --c-note-bg               一般說明框；重要提醒（⚠️）用 --c-warn-soft
+       --c-lodge-bg / -line      住宿卡
+       --c-time-bg / -fg         時間膠囊
+       --k-see / -food / -shop   景點、美食、購物標題前那個小色塊的底 */
+  --c-alt:var(--c-accent-strong); --c-alt-text:var(--c-on-accent); --c-alt-soft:var(--c-accent-soft);
+  --c-link-line:var(--c-border); --c-link-text:var(--c-text);
+  --c-note-bg:var(--c-accent-soft);
+  --c-lodge-bg:var(--c-accent-soft); --c-lodge-line:var(--c-accent);
+  --c-time-bg:var(--c-accent-soft); --c-time-fg:var(--c-text);
+  --k-see:var(--c-accent-soft); --k-food:var(--c-accent-soft); --k-shop:var(--c-accent-soft);
+  /* 圖示按語意上色（見 .ic-food 那段）。放在這裡而不是那段旁邊：主題要能覆寫，
+     寫在後面的 :root 會因為順序比較晚，把主題區塊的值蓋回去 */
+  --ic-food:#B23A1F; --ic-move:#1D5FA8; --ic-stay:#7A4FA3;
+  --ic-shop:#1F7A73; --ic-see:#2F7D32;  --ic-warn:#9A6210;
+  --ic-time:#6B635B;
+  /* 尺寸 */
+  --w-app:480px;
+  --r-card:10px;
+  --r-pill:20px;
+  --sp-1:4px; --sp-2:8px; --sp-3:12px; --sp-4:16px; --sp-5:24px; --sp-6:32px;
+  /* 字級只有這七階，不要再寫死 rem——原本散落的 .9／1.1／1.3／1.35／1.4
+     各自只差 0.05rem，擺在一起看就是「有大有小」而沒有理由。 */
+  --fs-xs:.75rem; --fs-sm:.85rem; --fs-md:1rem; --fs-lg:1.15rem;
+  --fs-xl:1.35rem; --fs-2xl:1.5rem; --fs-3xl:2.4rem;
+  /* 日系雜誌的卡片靠一條細框線分出來，不靠浮起來的影子；只留一點點落影當厚度 */
+  --shadow:0 0 0 1px var(--c-line), 0 1px 2px rgba(58,45,36,.05);
+  /* 浮在內容之上的東西（提示、連線狀態）比卡片重一階（ui-ux-pro-max elevation-consistent）。
+     放大檢視不用：它的 ::backdrop 已經把底下壓暗，再加影子也看不出來。 */
+  --shadow-pop:0 4px 14px rgba(0,0,0,.12);
+}
+[data-theme="snow"]  { --c-accent:#74B9FF; --c-pop:#B85C00; --c-on-accent:#0F4670; --c-accent-soft:#E8F4FF; --c-bg:#F5F2ED;
+                       --deco:radial-gradient(circle,#FFFFFF 2px,transparent 3px); --deco-size:120px 120px,180px 180px; --deco-size2:240px 240px;
+                       --deco-op:.55; --anim-a:driftA; --anim-b:driftB; }
+[data-theme="sakura"]{ --c-accent:#F4A6C0; --c-pop:#04855A; --c-on-accent:#6E2338; --c-accent-soft:#FDEEF3; --c-bg:#FBF6F4;
+                       --deco:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><g transform='translate(30,24) rotate(-18) scale(0.875) translate(-8,-7)' opacity='1'><ellipse cx='8' cy='7' rx='6.5' ry='3.4' fill='%23F0A9C1'/></g><g transform='translate(86,58) rotate(42) scale(0.75) translate(-8,-7)' opacity='0.82'><ellipse cx='8' cy='7' rx='6.5' ry='3.4' fill='%23F0A9C1'/></g><g transform='translate(52,96) rotate(158) scale(0.95) translate(-8,-7)' opacity='0.66'><ellipse cx='8' cy='7' rx='6.5' ry='3.4' fill='%23F0A9C1'/></g></svg>"); --deco-size:120px 120px,120px 120px; --deco-size2:120px 120px;
+                       --deco-op:.55; --anim-a:driftA; --anim-b:driftB; }
+/* 楓葉：楓葉紅 × 湖水藍 × 奶油白。楓葉紅留給選取中的日期、主要按鈕、「現在」與重要提醒；
+   湖水藍是第二強調（交通、地圖、實用資訊），森林綠給景點——都是輔助，面積刻意比紅色小。
+   淡色底只用在住宿卡、提醒框、標題前的小色塊，不是每張卡片換一個顏色。
+   每一組前景／背景都算過：文字 ≥ 4.5:1，線、框、圖示 ≥ 3:1（湖水藍 #3F8990 對白底只有 4.0，
+   所以當文字時用深一階的 #2C6268） */
+[data-theme="maple"] { --c-accent:#F4DCD3; --c-pop:#526B46; --c-on-accent:#A3392B; --c-accent-soft:#FBEFE9; --c-bg:#FAF6EF;
+                       --c-text:#3A2D24; --c-text-dim:#6F6157;   /* 深棕與灰褐，秋日九州 */
+                       --c-alt:#3F8990; --c-alt-text:#2C6268; --c-alt-soft:#D9E9E7;   /* 湖水藍 */
+                       --c-link-line:#3F8990; --c-link-text:#2C6268;
+                       --c-note-bg:#F8F0E3;                                          /* 奶油 */
+                       --c-lodge-bg:#F8EEDC; --c-lodge-line:#E3CC9F;                 /* 淡米黃 */
+                       --c-time-bg:#3A2D24; --c-time-fg:#FAF6EF;                     /* 墨色，像雜誌的時刻 */
+                       --c-warn:#A3392B; --c-warn-text:#A3392B; --c-warn-soft:#F5DAD6; /* 重要提醒：楓葉紅＋淡粉 */
+                       --k-see:#E4EBDC; --k-food:#F5DAD6; --k-shop:#F3E3C7;
+                       --ic-move:#3F8990; --ic-see:#526B46; --ic-shop:#8A5A12; --ic-stay:#8E3B2B; --ic-warn:#A3392B;
+                       /* 楓葉改成 .leaves 每片一個元素（見 .leaves 那段），舊的貼圖關掉，同時只跑一套 */
+                       --deco:none; --deco-op:0; --anim-a:none; --anim-b:none; }
+[data-theme="ocean"] { --c-accent:#6FCBD5; --c-pop:#C2410C; --c-on-accent:#0C4A50; --c-accent-soft:#E3F5F7; --c-bg:#F2F7F7;
+                       --deco:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='120' height='120'><g transform='translate(28,26) rotate(0) scale(1) translate(-8,-7)' opacity='0.95'><circle cx='8' cy='7' r='6.6' fill='none' stroke='%236FCBD5' stroke-width='1.5'/></g><g transform='translate(88,60) rotate(0) scale(0.58) translate(-8,-7)' opacity='0.8'><circle cx='8' cy='7' r='6.6' fill='none' stroke='%236FCBD5' stroke-width='1.5'/></g><g transform='translate(54,98) rotate(0) scale(0.78) translate(-8,-7)' opacity='0.62'><circle cx='8' cy='7' r='6.6' fill='none' stroke='%236FCBD5' stroke-width='1.5'/></g></svg>"); --deco-size:120px 120px,120px 120px; --deco-size2:120px 120px;
+                       --deco-op:.5; --anim-a:riseA; --anim-b:riseB; }
+[data-theme="city"]  { --c-accent:#A9A4E0; --c-pop:#8A6410; --c-on-accent:#322B70; --c-accent-soft:#EEEDFA; --c-bg:#F5F4F8;
+                       --deco:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='480' height='190' viewBox='0 0 480 190'><rect x='0' y='72' width='58' height='118' fill='%23322B70'/><rect x='10' y='88' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='10' y='128' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='25' y='88' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='25' y='108' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='25' y='148' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='40' y='108' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='62' y='32' width='34' height='158' fill='%23322B70'/><rect x='77.0' y='6' width='4' height='26' fill='%23322B70'/><circle cx='79.0' cy='2' r='3' fill='%23322B70'/><rect x='69' y='48' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='69' y='68' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='69' y='128' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='69' y='148' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='81' y='48' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='81' y='68' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='81' y='88' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='81' y='128' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='81' y='148' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='100' y='98' width='46' height='92' fill='%23322B70'/><rect x='108' y='154' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='119' y='114' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='119' y='154' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='130' y='114' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='130' y='134' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='130' y='154' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='150' y='54' width='40' height='136' fill='%23322B70'/><rect x='159' y='40' width='22' height='14' fill='%23322B70'/><rect x='159' y='130' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='159' y='150' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='173' y='70' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='173' y='90' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='173' y='110' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='173' y='130' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='173' y='150' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='194' y='84' width='66' height='106' fill='%23322B70'/><rect x='203' y='100' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='203' y='140' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='203' y='160' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='216' y='100' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='216' y='120' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='216' y='140' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='216' y='160' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='230' y='120' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='230' y='140' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='243' y='100' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='243' y='140' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='243' y='160' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='264' y='20' width='30' height='170' fill='%23322B70'/><rect x='277.0' y='-6' width='4' height='26' fill='%23322B70'/><circle cx='279.0' cy='-10' r='3' fill='%23322B70'/><rect x='270' y='36' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='270' y='56' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='270' y='76' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='270' y='96' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='270' y='116' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='270' y='136' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='270' y='156' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='280' y='36' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='280' y='56' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='280' y='76' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='280' y='96' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='280' y='136' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='280' y='156' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='298' y='66' width='52' height='124' fill='%23322B70'/><rect x='309' y='52' width='29' height='14' fill='%23322B70'/><rect x='307' y='82' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='307' y='102' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='307' y='122' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='307' y='142' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='307' y='162' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='320' y='102' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='333' y='82' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='333' y='142' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='333' y='162' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='354' y='104' width='44' height='86' fill='%23322B70'/><rect x='361' y='140' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='361' y='160' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='372' y='120' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='372' y='140' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='372' y='160' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='383' y='120' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='383' y='140' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='383' y='160' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='402' y='42' width='38' height='148' fill='%23322B70'/><rect x='411' y='58' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='411' y='78' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='423' y='58' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='423' y='78' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='423' y='98' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='423' y='138' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='423' y='158' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='444' y='90' width='36' height='100' fill='%23322B70'/><rect x='452' y='76' width='20' height='14' fill='%23322B70'/><rect x='452' y='106' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='452' y='126' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='452' y='146' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='464' y='106' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='464' y='126' width='8' height='10' rx='1' fill='%23F5F4F8'/><rect x='464' y='146' width='8' height='10' rx='1' fill='%23F5F4F8'/></svg>");
+                       --deco-b:none; --deco-c:none;
+                       --deco-size:480px auto; --deco-repeat:repeat-x; --deco-pos:center bottom;
+                       --deco-op:.13; --anim-a:none; --anim-b:none; }
+[data-theme="none"]  { --deco:none; --deco-op:0; --anim-a:none; --anim-b:none; }
+
+*,*::before,*::after{ box-sizing:border-box; }
+html,body{ margin:0; padding:0; }
+html{ touch-action:manipulation; }
+/* 置頂的分頁列約 66px 高：取得焦點或捲到某個元素時預留這段，元素才不會被它蓋住（focus-not-obscured） */
+html{ scroll-padding-top:80px; }
+body{
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","Noto Sans TC",Roboto,sans-serif;
+  background:var(--c-bg); color:var(--c-text);
+  font-size:var(--fs-md); line-height:1.6;
+  display:flex; justify-content:center;
+  overflow-x:hidden; -webkit-text-size-adjust:100%;
+}
+
+/* 主題裝飾：兩個獨立圖層，速度與路徑都不同，避免整片同步平移 */
+body::before, body::after{
+  content:""; position:fixed; inset:0; pointer-events:none; z-index:0;
+}
+body::before{
+  background-image:var(--deco-a,var(--deco)),var(--deco-b,var(--deco));
+  background-size:var(--deco-size);
+  background-repeat:var(--deco-repeat,repeat);
+  background-position:var(--deco-pos,0 0);
+  opacity:var(--deco-op);
+  /* 飄落的裝飾是使用者指定要的。ui-ux-pro-max 的 motion-meaning 說純裝飾的動畫不做，
+     這一條是使用者自己決定要留的，不要再「修正」掉——偏好減少動態的人由下面的
+     prefers-reduced-motion 關掉（連圖層一起隱藏）。 */
+  animation:var(--anim-a) 24s linear infinite;
+}
+body::after{
+  background-image:var(--deco-c,var(--deco));
+  background-size:var(--deco-size2,var(--deco-size));
+  background-repeat:var(--deco-repeat,repeat);
+  background-position:var(--deco-pos,0 0);
+  opacity:calc(var(--deco-op) * .7);
+  animation:var(--anim-b) 17s linear infinite;
+}
+/* 垂直位移 720px（120／180／240 的公倍數），才能無縫接回；
+   水平回到原點，中間的節點刻意不等距，落下速度才不會像機器 */
+@keyframes driftA{
+  0%   { background-position:-26px -240px, 58px -240px; }
+  35%  { background-position: 18px   14px, 10px   34px; }
+  70%  { background-position:-22px  268px, 62px  288px; }
+  100% { background-position:-26px  480px, 58px  480px; }
+}
+@keyframes driftB{
+  0%   { background-position: 40px -300px; }
+  40%  { background-position:-16px  -12px; }
+  75%  { background-position: 34px  240px; }
+  100% { background-position: 40px  420px; }
+}
+/* 氣泡由下往上，同樣位移 720px */
+@keyframes riseA{
+  0%   { background-position:-22px  480px, 62px  480px; }
+  35%  { background-position: 16px  226px,  8px  206px; }
+  70%  { background-position:-18px  -28px, 58px  -48px; }
+  100% { background-position:-22px -240px, 62px -240px; }
+}
+@keyframes riseB{
+  0%   { background-position: 36px  420px; }
+  40%  { background-position:-12px  132px; }
+  75%  { background-position: 30px -120px; }
+  100% { background-position: 36px -300px; }
+}
+@media (prefers-reduced-motion:reduce){
+  body::before, body::after{ animation:none; opacity:0; }
+  .leaves{ display:none !important; }
+  .route-step:not(:last-child)::after, .route-link .bar::after{ animation:none; opacity:0; }
+  *, *::before, *::after{ animation-duration:.01ms !important; transition-duration:.01ms !important; }
+}
+
+.app{ width:100%; max-width:var(--w-app); position:relative; z-index:1; padding-bottom:var(--sp-6); }
+
+/* ── 楓葉飄落（maple 主題）──────────────────────
+   每片葉子一個元素、各自一組參數：位置、大小、週期、起跑點、旋轉、左右擺幅、透明度。
+   原本是兩層全螢幕的重複貼圖（每 120px 一格、每格三片）用 background-position 平移：
+   手機上同時有一百多片、同一層的葉子完全同步移動，而且整個全螢幕圖層每一格都要重繪。
+   現在手機 7 片、電腦 12 片，週期 19–35 秒，大小 11–24px，透明度 .12–.30，
+   只動 transform（交給 GPU 合成，不重繪）。
+   位在 .app 底下（z-index 0 對 1）、不接任何點擊；卡片是不透明的底，葉子只會從
+   卡片之間與兩側飄過，不會蓋到文字與按鈕。其他四個主題仍用 body::before／::after 的貼圖。 */
+.leaves{ display:none; }
+[data-theme="maple"] .leaves{
+  display:block; position:fixed; inset:0; z-index:0; overflow:hidden; pointer-events:none;
+}
+.leaves i{
+  --leaf:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='1.5 1 13 12'><path d='M8 1.5 L9.6 5 L13 4.2 L10.9 7 L14 8.6 L10.6 9.2 L11.4 12.6 L8 10.6 L4.6 12.6 L5.4 9.2 L2 8.6 L5.1 7 L3 4.2 L6.4 5 Z'/></svg>");
+  position:absolute; top:-32px; left:var(--x);
+  width:var(--s); height:var(--s); opacity:var(--o);
+  background:var(--lc, #A3392B);
+  -webkit-mask:var(--leaf) center / contain no-repeat; mask:var(--leaf) center / contain no-repeat;
+  animation:leaf-fall var(--d) linear var(--w) infinite;
+  will-change:transform;
+}
+/* 一片一組參數；負的 animation-delay 讓一開網站就散在半空中，不會等十幾秒才出現。
+   前 7 片要能單獨撐起手機的畫面，所以左右分散；後 5 片只給寬螢幕 */
+.leaves i:nth-child(1) { --x:8%;  --s:15px; --d:26s; --w:-4s;  --r:15deg;  --sw:30px;  --o:.24; }
+.leaves i:nth-child(2) { --x:74%; --s:19px; --d:31s; --w:-17s; --r:-40deg; --sw:-40px; --o:.20; }
+.leaves i:nth-child(3) { --x:40%; --s:12px; --d:22s; --w:-11s; --r:80deg;  --sw:25px;  --o:.28; }
+.leaves i:nth-child(4) { --x:90%; --s:21px; --d:34s; --w:-25s; --r:5deg;   --sw:-30px; --o:.16; }
+.leaves i:nth-child(5) { --x:24%; --s:16px; --d:28s; --w:-20s; --r:-60deg; --sw:35px;  --o:.22; }
+.leaves i:nth-child(6) { --x:58%; --s:11px; --d:19s; --w:-7s;  --r:120deg; --sw:-25px; --o:.30; }
+.leaves i:nth-child(7) { --x:2%;  --s:23px; --d:33s; --w:-14s; --r:-20deg; --sw:40px;  --o:.14; }
+.leaves i:nth-child(8) { --x:83%; --s:13px; --d:24s; --w:-2s;  --r:60deg;  --sw:-35px; --o:.26; }
+.leaves i:nth-child(9) { --x:47%; --s:24px; --d:35s; --w:-29s; --r:-90deg; --sw:30px;  --o:.12; }
+.leaves i:nth-child(10){ --x:65%; --s:15px; --d:21s; --w:-9s;  --r:30deg;  --sw:-20px; --o:.24; }
+.leaves i:nth-child(11){ --x:15%; --s:19px; --d:30s; --w:-23s; --r:100deg; --sw:25px;  --o:.18; }
+.leaves i:nth-child(12){ --x:96%; --s:12px; --d:20s; --w:-12s; --r:-45deg; --sw:-30px; --o:.26; }
+/* 三種秋色輪流：楓葉紅（預設）、暖橘、磚紅 */
+.leaves i:nth-child(3n+2){ --lc:#C8742E; }
+.leaves i:nth-child(3n)  { --lc:#8E3B2B; }
+/* 手機只留 7 片 */
+.leaves i:nth-child(n+8){ display:none; }
+@media (min-width:768px){ .leaves i:nth-child(n+8){ display:block; } }
+@keyframes leaf-fall{
+  0%   { transform:translate3d(0, 0, 0) rotate(var(--r)); }
+  50%  { transform:translate3d(var(--sw), 55vh, 0) rotate(calc(var(--r) + 150deg)); }
+  100% { transform:translate3d(0, calc(100vh + 64px), 0) rotate(calc(var(--r) + 310deg)); }
+}
+
+/* 跳到行程內容：鍵盤的第一個 Tab 就是它，按下去可以略過頁首與十一顆分頁。
+   平常用 left:-9999px 移出畫面，不用 display:none／visibility:hidden——那兩個會讓它
+   根本不能被聚焦。position:fixed 的負 left 不會把頁面撐出橫向捲動。 */
+.skip{
+  position:fixed; top:var(--sp-2); left:-9999px; z-index:400;
+  display:inline-flex; align-items:center; min-height:44px; padding:0 var(--sp-4);
+  border-radius:10px; background:var(--c-text); color:var(--c-on-solid);
+  font-size:var(--fs-sm); font-weight:700; text-decoration:none;
+}
+.skip:focus{ left:var(--sp-2); }
+
+/* ── Header ───────────────────────────── */
+header{ position:relative; text-align:center; padding:var(--sp-5) var(--sp-4) var(--sp-3); }
+/* 配色切換：跟隨系統／淺色／深色，點一下換下一個。只有圖示，所以名稱靠 aria-label。
+   放在導覽列「記帳」的右邊（使用者要的）：原本在頁首右上角自己佔一列，標題上面多一塊空白 */
+.scheme{
+  flex:0 0 auto; margin-left:auto;
+  display:inline-flex; align-items:center; justify-content:center;
+  width:44px; height:44px; padding:0;
+  border:1px solid var(--c-border); border-radius:50%;
+  background:var(--c-surface); color:var(--c-text-dim); cursor:pointer;
+}
+.scheme .ic{ width:1.25em; height:1.25em; margin:0; vertical-align:0; }
+/* 標題要一行：375px 時一行要 343px，整行可用的寬度剛好也是 343px，所以字距 .5 → .2px
+   留一點餘裕（肉眼看不出差別），切換鍵也不能放在標題這一行（使用者不要標題被擠斷）。
+   320px 本來就放不下一行，會自然折行。 */
+header h1{ font-size:var(--fs-2xl); margin:0 0 var(--sp-1); letter-spacing:.2px; }
+header .subtitle{ font-size:var(--fs-sm); color:var(--c-text-dim); margin:0 0 var(--sp-4); }
+
+/* ── 目前天氣條 ───────────────────────── */
+.wx-now{
+  background:var(--c-surface); border-radius:var(--r-card); box-shadow:var(--shadow);
+  padding:var(--sp-4); text-align:left;
+}
+.wx-top{
+  display:flex; justify-content:space-between; align-items:baseline;
+  gap:var(--sp-2); margin-bottom:var(--sp-3);
+}
+.wx-date{ font-size:var(--fs-md); font-weight:800; color:var(--c-text); letter-spacing:.2px; }
+.wx-date span{ font-size:var(--fs-xs); font-weight:400; color:var(--c-text-dim); margin-left:var(--sp-2); }
+.wx-time{ font-size:var(--fs-sm); color:var(--c-text-dim); white-space:nowrap; }
+.wx-main{ display:flex; align-items:center; gap:var(--sp-4); }
+/* emoji 不走字級 token：它是圖不是字，要跟旁邊的數字做視覺對齊而不是字級對齊 */
+.wx-emoji{ font-size:2.6rem; line-height:1; flex:0 0 auto; }
+.wx-temp{ font-size:var(--fs-3xl); font-weight:800; line-height:1; letter-spacing:-2px; }
+.wx-desc{ font-size:var(--fs-sm); color:var(--c-text-dim); margin-top:3px; }
+.wx-hl{ margin-left:auto; text-align:right; white-space:nowrap; }
+.wx-hl .cap{ font-size:var(--fs-xs); color:var(--c-text-dim); }
+.wx-hl .hi{ font-size:var(--fs-xl); font-weight:800; line-height:1.15; }
+.wx-hl .lo{ font-size:var(--fs-lg); color:var(--c-text-dim); line-height:1.15; }
+/* 數據列：標籤與數值同一行，高度只有原本的一半 */
+.wx-grid{
+  display:flex; margin-top:var(--sp-3); background:var(--c-alt-soft);
+  border-radius:8px; padding:var(--sp-1) 0;
+}
+.wx-grid div{
+  flex:1; text-align:center; font-size:var(--fs-xs); color:var(--c-text-dim);
+  line-height:1.9; white-space:nowrap;
+}
+.wx-grid div + div{ border-left:1px solid rgba(0,0,0,.06); }
+.wx-grid b{ font-size:var(--fs-sm); color:var(--c-text); margin-left:3px; font-weight:700; }
+.wx-stamp{ font-size:var(--fs-xs); color:var(--c-text-dim); text-align:center; margin-top:var(--sp-1); }
+
+/* ── 導覽膠囊 ─────────────────────────── */
+.nav-bar{
+  display:flex; gap:var(--sp-2); overflow-x:auto; padding:var(--sp-2) var(--sp-4);
+  position:sticky; top:0; z-index:100;
+  background:color-mix(in srgb,var(--c-bg) 92%,transparent);
+  backdrop-filter:blur(10px); -webkit-backdrop-filter:blur(10px);
+  scrollbar-width:none; -webkit-overflow-scrolling:touch;
+}
+.nav-bar::-webkit-scrollbar{ display:none; }
+/* 兩端的漸層：提示還有捲不到的分頁，捲到底的那一邊就收起來。
+   電腦版的分頁是直向、捲不動的，JS 不會加這兩個 class，所以不用另外排除。 */
+.nav-bar.nav-l, .nav-bar.nav-r{ -webkit-mask-image:var(--nav-fade); mask-image:var(--nav-fade); }
+.nav-bar.nav-l{ --nav-fade:linear-gradient(to right, transparent, #000 var(--sp-6)); }
+.nav-bar.nav-r{ --nav-fade:linear-gradient(to right, #000 calc(100% - var(--sp-6)), transparent); }
+.nav-bar.nav-l.nav-r{ --nav-fade:linear-gradient(to right, transparent, #000 var(--sp-6),
+                                                #000 calc(100% - var(--sp-6)), transparent); }
+.nav-item{
+  flex:0 0 auto; display:inline-flex; flex-direction:column;
+  align-items:center; justify-content:center; line-height:1.25;
+  padding:var(--sp-2) var(--sp-4); min-height:44px;
+  border:1px solid var(--c-border); border-radius:var(--r-pill);
+  background:var(--c-surface); color:var(--c-text-dim);
+  font-size:var(--fs-sm); font-family:inherit; font-weight:700;
+  cursor:pointer; white-space:nowrap; transition:background .15s,color .15s;
+}
+/* ── 導覽三組（準備資訊／旅途工具／每日行程）──────────
+   每日行程是主要導覽：外框膠囊、兩行（名稱＋日期）、黏在畫面頂端。
+   準備與工具是輔助入口：沒有外框的「圖示＋文字」，單行，不黏——跟日期列一眼就分得出來，
+   文字本身 ≥ 4.5:1，像連結一樣靠文字辨識，不需要外框。
+   手機上一排三塊：準備（左）、工具（中）、配色切換（右）。space-between 讓工具落在中間，
+   不再貼著右邊。 */
+.sidenav{ display:contents; }   /* 手機：拆開，日期列才能單獨黏在 .app 頂端（包在 div 裡的話只能黏在 div 範圍內） */
+/* flex-wrap：旅途工具變成三顆（購物、記帳、留言板）之後，375px 的一排放不下了——
+   量過是「準備 138 ＋ 工具 224 ＋ 切換 44」，可用的只有 327px，超出 63px。
+   收窄內距或間距都救不了：間距一縮到 8px 以下就違反「觸控目標彼此 ≥ 8px」，
+   拿掉圖示雖然塞得進去，但輔助入口的「圖示＋文字」是這一列的辨識方式。
+   所以讓它折行：窄螢幕上第一列是準備資訊，第二列是旅途工具＋切換鍵。
+   這一列不黏在頂端，捲一下就過去了，多出來的高度只影響第一屏。
+   DOM 順序仍然等於畫面順序（WCAG 2.4.3），電腦版是直排、不受影響。 */
+.nav-aux{
+  display:flex; flex-wrap:wrap; justify-content:space-between; align-items:center;
+  gap:var(--sp-2); padding:0 var(--sp-4) var(--sp-2);
+}
+.nav-group{ display:flex; gap:var(--sp-2); }
+/* 沒有項目的群組整組藏起來。自己設了 display 的元素 hidden 屬性藏不掉（第六節），要明寫 */
+.nav-aux[hidden], .nav-group[hidden], .nav-bar[hidden]{ display:none; }
+.nav-glabel{ display:none; }    /* 群組標題只給電腦版；手機靠位置與樣式區分，省高度 */
+.nav-group .nav-item{
+  flex-direction:row; gap:var(--sp-1); padding:0 var(--sp-2);
+  border-color:transparent; background:transparent;
+}
+/* 選取中：三組同一個語言，楓葉紅實心。原本是淡色底配紅字，跟沒選的白底只差一點色相；
+   規格要求選取狀態不能只靠細微的顏色差異，實心的明度差一眼就看得出來 */
+.nav-item[aria-selected="true"]{ background:var(--c-accent-strong); border-color:var(--c-accent-strong); color:var(--c-on-solid); }
+.nav-item[aria-selected="true"] .nav-sub{ opacity:1; }   /* 實心底上 .75 的透明度會掉對比 */
+/* 日期分頁：地名用正文色、日期用次要色，兩行分得出主次（原本整顆都是灰字）。
+   今天：第二強調色的雙線外框，跟選取中的實心紅一眼分開 */
+.nav-bar .nav-item:not([aria-selected="true"]){ color:var(--c-text); }
+.nav-bar .nav-item:not([aria-selected="true"]) .nav-sub{ color:var(--c-text-dim); opacity:1; }
+.nav-bar .nav-item.is-today:not([aria-selected="true"]){ border-color:var(--c-alt); box-shadow:inset 0 0 0 1px var(--c-alt); }
+.nav-item:focus-visible,.btn:focus-visible,input:focus-visible,select:focus-visible,button:focus-visible,
+a:focus-visible,summary:focus-visible{
+  outline:2px solid var(--c-accent); outline-offset:2px;
+}
+
+/* ── 內容 ─────────────────────────────── */
+main{ padding:var(--sp-3) var(--sp-4) 0; }
+.card.lodge{ background:var(--c-lodge-bg); border:1px solid var(--c-lodge-line); }
+.ttag{
+  display:inline-block; background:var(--c-accent); color:var(--c-on-accent);
+  font-size:var(--fs-xs); font-weight:700; padding:2px var(--sp-2);
+  border-radius:6px; margin-bottom:var(--sp-2); margin-right:var(--sp-2);
+}
+.info{ margin-top:var(--sp-3); padding-top:var(--sp-3); border-top:1px dashed var(--c-line); font-size:var(--fs-sm); }
+.info div{ padding:var(--sp-1) 0; }
+.card{
+  background:var(--c-surface); border-radius:var(--r-card); box-shadow:var(--shadow);
+  /* 上下多一點空氣（雜誌的呼吸感），左右維持 16px，窄螢幕的內容寬度不縮 */
+  padding:var(--sp-5) var(--sp-4); margin-bottom:var(--sp-4);
+}
+/* ── 購物清單與優惠券 ─────────────────────
+   兩欄網格，每格一張圖加三個欄位。手機上兩欄剛好，圖片縮圖點了放大。 */
+.shop-g{ margin-top:var(--sp-3); border-top:1px solid var(--c-line); }
+.shop-g summary{
+  display:flex; align-items:center; gap:var(--sp-2);
+  min-height:44px; cursor:pointer; list-style:none;
+  font-size:var(--fs-sm); font-weight:700; color:var(--c-on-accent);
+}
+.shop-g summary::-webkit-details-marker{ display:none; }
+.shop-g summary::before{ content:"▸"; display:inline-block; transition:transform .15s; }
+.shop-g[open] summary::before{ transform:rotate(90deg); }
+/* 群組名是這一區的標題，字級與字重比照 .wx-date，否則 15px 的橘褐色讀起來偏細 */
+.shop-gn{ flex:1; font-size:var(--fs-md); font-weight:800; }
+.shop-n{ font-weight:400; color:var(--c-text-dim); }
+.shop-gx{
+  min-height:44px; padding:0 var(--sp-2); border:none; background:none;
+  color:var(--c-text-dim); font-family:inherit; font-size:var(--fs-xs); cursor:pointer;
+}
+.shop-grid{ display:grid; grid-template-columns:1fr 1fr; gap:var(--sp-2); margin-top:var(--sp-2); }
+.shop-i{
+  position:relative; display:flex; flex-direction:column; gap:var(--sp-2);
+  border:1px solid var(--c-line); border-radius:10px; padding:var(--sp-2);
+}
+/* 沒有圖片的卡片，內容要讓開左上角那顆 ✕，否則會跟勾選框疊在一起 */
+.shop-i.no-img{ padding-top:34px; }
+/* 勾掉（買好）的項目退到背景：換底色，不用 opacity——那會連文字對比一起壓掉（第十四節）。
+   品名本來就會劃掉，這裡只是讓整格也看得出「已經處理了」 */
+.shop-i:has(.chk input:checked){ background:var(--c-bg); }
+.shop-x{
+  position:absolute; top:2px; left:2px; z-index:1;
+  width:28px; height:28px; border-radius:50%;
+  border:1px solid var(--c-border); background:var(--c-surface);
+  color:var(--c-text-dim); font-family:inherit; line-height:1; cursor:pointer;
+}
+/* 可點範圍補到 44px：圓圈本身再放大會擋住券上的條碼與折扣數字，
+   所以只往外擴張熱區，視覺維持 28px。 */
+.shop-x::after{
+  content:""; position:absolute; top:50%; left:50%;
+  width:44px; height:44px; transform:translate(-50%, -50%);
+}
+.shop-img{
+  width:100%; height:120px; object-fit:cover;
+  border-radius:8px; background:var(--c-accent-soft); cursor:zoom-in;
+}
+/* 券沒有勾選框，名稱直接當文字。高度對齊 .chk，同一列的卡片才不會參差 */
+/* 店名要一眼認出是哪一家，所以加粗；群組標題再高一階（--fs-md/800）維持層級 */
+.shop-name{
+  display:flex; align-items:center; min-height:44px;
+  font-size:var(--fs-sm); font-weight:700; line-height:1.4;
+}
+.shop-who{ display:block; font-size:var(--fs-xs); font-weight:400; color:var(--c-text-dim); }
+/* 輸入框都要有看得見的標籤（ui-ux-pro-max input-labels），不能只靠框裡的提示文字。
+   label 直接包住輸入框，點標籤也會把游標帶進去，不用另外編 id。
+   輸入框維持 .input 的 16px、44px 高：小於 16px 時 iPhone 一點就放大畫面（touch-friendly-input） */
+.f-lbl{ display:flex; flex-direction:column; gap:2px; min-width:0; font-size:var(--fs-xs); font-weight:700; color:var(--c-text-dim); }
+.shop-link{ margin:0; width:100%; text-align:center; }
+.shop-add, .shop-addg{ display:flex; align-items:flex-end; gap:var(--sp-2); margin-top:var(--sp-2); }
+.shop-add .f-lbl, .shop-addg .f-lbl, .shop-extra .f-lbl{ flex:1; }
+.shop-add .btn, .shop-addg .btn{ margin-top:0; flex:0 0 auto; }
+.shop-addg{ margin-top:var(--sp-3); }
+/* 新增時可以附一張圖（例如優惠券截圖）或一個連結，選填，放在名稱那一列下面 */
+.shop-add{ flex-wrap:wrap; }
+.shop-extra{ display:flex; align-items:flex-end; gap:var(--sp-2); flex:1 0 100%; }
+.shop-file{
+  display:inline-flex; align-items:center; flex:0 0 auto; min-height:44px; padding:0 var(--sp-3);
+  border:1px dashed var(--c-border); border-radius:10px; cursor:pointer;
+  font-size:var(--fs-xs); font-weight:700; color:var(--c-text-dim); white-space:nowrap;
+}
+.shop-file.has{ border-style:solid; border-color:var(--c-accent); background:var(--c-accent-soft); color:var(--c-on-accent); }
+/* 已經加好的項目之後再補圖 */
+.shop-addimg{
+  display:flex; align-items:center; justify-content:center; min-height:44px;
+  border:1px dashed var(--c-border); border-radius:8px; cursor:pointer;
+  font-size:var(--fs-xs); font-weight:700; color:var(--c-text-dim);
+}
+/* 放大檢視裡：自己加的圖可以換一張或拿掉 */
+.zoom-acts{ display:flex; gap:var(--sp-2); padding:var(--sp-2); }
+.zoom-acts:empty{ display:none; }
+.zoom-acts .btn{ flex:1; margin:0; text-align:center; }
+
+/* 放大檢視：給店員看的時候要夠大 */
+#zoom{
+  border:none; border-radius:14px; padding:0; max-width:96vw; max-height:92vh;
+  background:var(--c-surface);
+}
+#zoom::backdrop{ background:rgba(0,0,0,.72); }
+#zoom img{ display:block; max-width:96vw; max-height:80vh; object-fit:contain; }
+.zoom-x{
+  display:block; width:100%; min-height:44px; border:none;
+  background:var(--c-accent); color:var(--c-on-accent);
+  font-family:inherit; font-weight:700; cursor:pointer;
+}
+
+/* ── 信用卡回饋額度 ───────────────────────
+   每張卡一塊，重點是「還能刷多少」而不是卡片清單本身。 */
+.cc{
+  border:1px solid var(--c-line); border-radius:10px;
+  padding:var(--sp-3); margin-top:var(--sp-3);
+}
+/* 抬頭：卡名＋右邊一排動作鍵（往上、往下、移除）。手機放不下三顆鍵加卡名，
+   所以整排鍵自己換到下一行——用 flex-wrap，不用斷點：卡名要排得下 220px 才留在同一行，
+   平板與電腦版寬得下就併回一行 */
+.cc-head{ display:flex; flex-wrap:wrap; align-items:flex-start; gap:var(--sp-2); }
+.cc-name{ flex:1 1 220px; font-weight:700; font-size:var(--fs-md); }
+.cc-acts{ display:flex; align-items:flex-start; gap:var(--sp-2); margin-left:auto; flex:0 0 auto; }
+/* 排序把手：按住直接拖。touch-action:none 是必要的——不關掉的話，手機上這一下會被
+   當成捲動頁面，拖不動卡片。鍵盤與輔助技術走上下鍵（WCAG 2.5.7 要求拖曳一定要有
+   不用拖的替代方式），名稱與目前第幾張都寫在 aria-label 裡。 */
+.cc-grip{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:44px; height:44px; padding:0; flex:0 0 auto;
+  border:1px solid var(--c-border); border-radius:10px;
+  background:var(--c-surface); color:var(--c-text-dim);
+  cursor:grab; touch-action:none;
+}
+.cc-grip:active{ cursor:grabbing; }
+/* 「修改總額」是少數才用到的訂正入口，做成 44×44 的圖示鍵貼在「已計入」右邊——
+   帶文字的話 375px 那一行排不下，會自己掉到下一行，九張卡片就多出一大截 */
+.cc-fix{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:44px; height:44px; padding:0; flex:0 0 auto;
+  border:1px solid var(--c-border); border-radius:10px;
+  background:var(--c-surface); color:var(--c-text-dim); cursor:pointer;
+}
+/* 拖著的那張浮起來一階（跟提示、連線狀態同一階），並蓋住下面的卡片 */
+.cc.is-dragging{
+  position:relative; z-index:2; cursor:grabbing;
+  box-shadow:var(--shadow-pop); background:var(--c-surface);
+  user-select:none; -webkit-user-select:none;
+}
+/* 回饋%是這張卡「現在該不該拿出來刷」的關鍵數字，使用者要求放大、加粗——
+   比卡名本身還顯眼才對 */
+.cc-rate{
+  margin-left:var(--sp-2); padding:2px var(--sp-3); border-radius:var(--r-pill);
+  background:var(--c-alt-soft); color:var(--c-alt-text); font-size:var(--fs-xl); font-weight:700;
+  display:inline-block; vertical-align:middle;
+}
+.cc-x, .cc-restore, .shop-restore{
+  flex:0 0 auto; min-height:44px; padding:0 var(--sp-3);
+  border:1px solid var(--c-border); border-radius:var(--r-pill);
+  background:var(--c-surface); color:var(--c-text-dim);
+  font-family:inherit; font-size:var(--fs-xs); cursor:pointer;
+}
+.cc-restore, .shop-restore{ width:100%; margin-top:var(--sp-3); }
+.cc-expired{ color:var(--c-danger); font-weight:700; }
+/* 「加入這筆」「修改總額」共用同一種排版：標籤在上、輸入框與按鈕同一行貼齊底部——
+   跟 .vault-form 同一套版面語言 */
+.cc-row{ display:flex; flex-wrap:wrap; align-items:flex-end; gap:var(--sp-2); margin-top:var(--sp-3); }
+.cc-row .f-lbl{ flex:1 1 10em; min-width:0; }
+.cc-row .btn{ margin:0; flex:0 0 auto; }
+/* 不折行：金額到千位以上，「已計入…／額度…」加上 44px 的鉛筆鍵就超過 375px 那一行。
+   折行的話鍵會掉到下一行（每張卡片多 30 幾 px、九張就一大截），所以改成文字自己在框裡換行，
+   鍵永遠貼在右邊 */
+.cc-used-row{ display:flex; align-items:center; gap:var(--sp-2); margin-top:var(--sp-2); }
+.cc-used-row .cc-used{ margin-top:0; flex:1; min-width:0; }
+.cc-bar{
+  height:6px; border-radius:3px; background:var(--c-line);
+  margin-top:var(--sp-3); overflow:hidden;
+}
+.cc-bar i{ display:block; height:100%; background:var(--c-accent-strong); transition:width .2s; }
+.cc-used{ margin-top:var(--sp-2); }
+.cc-left{ margin-top:2px; font-weight:700; color:var(--c-on-accent); }
+.cc-left.cc-full{ color:var(--c-danger); }   /* 額度用完，再刷就沒加碼了 */
+.cc-reg{ margin-top:var(--sp-2); }
+/* ── 卡片上的私人資料 ─────────────────────────
+   門鎖密碼與訂單編號：網站上只有密文，輸入通關密語才在這台裝置解開，
+   解開後直接顯示在對應的卡片上。鎖著時只有一顆按鈕。 */
+.secret{
+  margin-top:var(--sp-3); padding:var(--sp-2) var(--sp-3);
+  border:1px dashed var(--c-line); border-radius:10px;
+}
+.secret.is-locked{ padding:0; border:none; }
+.secret-ask{
+  width:100%; min-height:44px; padding:0 var(--sp-3); text-align:left;
+  border:1px dashed var(--c-border); border-radius:10px;
+  background:var(--c-surface); color:var(--c-text-dim);
+  font-family:inherit; font-size:var(--fs-sm); cursor:pointer;
+}
+/* 標籤在上、值在下：值多半是長串編號，靠右擺在窄螢幕會被拆成好幾段 */
+.secret-row{ padding:var(--sp-1) 0; }
+.secret-label{ display:block; font-size:var(--fs-xs); color:var(--c-text-dim); }
+.secret-val{ display:block; font-size:var(--fs-md); font-weight:700; word-break:break-all; user-select:all;
+             font-family:ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+.secret-note{ margin:var(--sp-2) 0; font-size:var(--fs-sm); color:var(--c-text-dim); }
+/* 解開後：資料在左、「上鎖」在右上角，不另外佔一行。按鈕往右上角的框線推，
+   點擊範圍維持 44px，跟左邊的資料（可能有按鈕）隔 8px */
+.secret:not(.is-locked){ display:flex; align-items:flex-start; gap:var(--sp-2); }
+.secret-items{ flex:1; min-width:0; }
+.secret-lock{
+  flex:0 0 auto; min-width:44px; min-height:44px; padding:0 var(--sp-2);
+  margin:calc(-1 * var(--sp-2)) calc(-1 * var(--sp-2)) 0 0;
+  border:none; background:none; color:var(--c-text-dim);
+  font-family:inherit; font-size:var(--fs-xs); text-decoration:underline; cursor:pointer;
+}
+.vault-form{ display:flex; flex-wrap:wrap; align-items:flex-end; gap:0 var(--sp-2); }
+.vault-form .f-lbl{ flex:1 1 10em; }
+.vault-form .btn{ margin:0; }
+.vault-remember{ display:flex; align-items:center; gap:var(--sp-2); flex:1 0 100%;
+                 min-height:44px; font-size:var(--fs-sm); color:var(--c-text-dim); }
+.vault-remember input{ width:18px; height:18px; accent-color:var(--c-accent); flex:0 0 auto; }
+.vault-msg{ flex:1 0 100%; min-height:1.4em; font-size:var(--fs-sm); color:var(--c-text-dim); }
+.vault-msg.is-err{ color:var(--c-danger); font-weight:700; }
+.vault-form .f-err{ flex:1 0 100%; }
+/* 有備註的清單項目：勾選框對齊第一行，備註不要被刪除線劃到 */
+.chk.has-note{ align-items:flex-start; padding:var(--sp-2) 0; }
+.chk-note{ display:block; margin-top:2px; font-size:var(--fs-xs);
+           font-weight:400; color:var(--c-text-dim); }
+.chk input:checked + span .chk-note{ text-decoration:none; }
+
+/* ── 現在進行到哪 ─────────────────────────
+   目前項目用主題色標出來，已結束的降低存在感，讓視線自動落到「現在」。
+   邊框用 transparent 佔位，套用時才不會整張卡片位移。 */
+.card{ border-left:4px solid transparent; }
+/* 用 shorthand 連寬度一起指定。住宿卡片的 .card.lodge 有自己的 1px 邊框，
+   只改 border-left-color 的話，住宿變成「現在」時高亮只有 1px。 */
+.card.is-now{ border-left:4px solid var(--c-accent-strong); background:var(--c-accent-soft); }
+.card.is-next{ border-left:4px solid var(--c-line); }
+/* 已結束：原本是整張卡片 opacity:.62，那會連文字一起壓掉——正文的對比從 11.8:1 掉到
+   3.8:1、次要文字掉到 2.7:1（測試的對比探針只讀 backgroundColor、不算 opacity，量不到）。
+   已結束的卡片旅途中還是會回去翻，所以只收掉「浮起來」這件事：底色跟頁面同色、
+   陰影換成一條細框線，文字維持原本的對比。 */
+.card.is-past{ background:var(--c-bg); box-shadow:0 0 0 1px var(--c-line); }
+/* 住宿卡本來就有自己的 1px 邊框，再加一圈會變兩倍粗：只把邊框調淡 */
+.card.lodge.is-past{ border-color:var(--c-line); box-shadow:none; }
+/* 這行不能省：瀏覽器的 [hidden]{display:none} 來自 UA 樣式表，
+   會被下面的 display:inline-flex 蓋掉，收起來的膠囊仍會露出一小條色塊。 */
+.now-line[hidden]{ display:none; }
+.now-line{
+  /* 自己佔一行（width 收到內容寬，不是整條橫槓）。原本是 inline-flex，會跟下面那排
+     「抵達・停留・離開」擠在同一行，375px 剛好把「離開 HH:MM」擠到第二行去。
+     這一條是當下的狀態，跟那排時間本來就不是同一組資訊，分開反而好讀。 */
+  display:flex; width:fit-content; align-items:center; margin-bottom:var(--sp-2);
+  padding:3px var(--sp-3); border-radius:var(--r-pill);
+  background:var(--c-accent); color:var(--c-on-accent);
+  font-size:var(--fs-xs); font-weight:700;
+}
+.card.is-next .now-line{ background:var(--c-line); color:var(--c-text); }
+/* 「今天」接在日期那一行後面。掛在 .nav-item 上的話，
+   按鈕變成直向排列後它會自己佔掉第三行。 */
+.nav-sub{ font-size:var(--fs-xs); font-weight:400; opacity:.75; }
+.nav-item.is-today .nav-sub::after{ content:"・今天"; }
+
+.time{
+  display:inline-block; background:var(--c-time-bg); color:var(--c-time-fg);
+  font-size:var(--fs-xs); font-weight:700; padding:2px var(--sp-2);
+  border-radius:6px; margin-bottom:var(--sp-2); letter-spacing:.3px;
+}
+.stay{
+  display:inline-block; font-size:var(--fs-xs); color:var(--c-text-dim);
+  margin-left:var(--sp-2); margin-bottom:var(--sp-2);
+}
+/* 交通時間：淡底小標籤，跟「停留」分開——原本兩個都是灰字，路上花多久要讀完才知道 */
+.stay.move{
+  padding:2px var(--sp-2); border-radius:6px;
+  background:var(--c-alt-soft); color:var(--c-alt-text); font-weight:700;
+}
+.stay.move .ic{ color:inherit; }
+/* 預計幾點離開：跟「停留」同一排、同一階——抵達、停留、離開讀起來是同一組。
+   不另外給底色或圖示，這一排只留時間膠囊（抵達）一個重點；時刻本身用正文色加粗，
+   掃過去就看得到幾點要走，前面的「離開」兩個字維持次要色。 */
+.stay.leave b{ font-weight:700; color:var(--c-text); }
+/* 兩張卡片中間的交通：左邊一條虛線接上下兩張卡片，標籤沿用上面的淡底。
+   上面吃掉一半卡片間距，跟上下兩張卡片各留 8px 左右，看得出是夾在中間的 */
+.leg{
+  display:flex; align-items:center; min-height:32px;
+  margin:calc(-1 * var(--sp-2)) 0 var(--sp-2) var(--sp-5);
+  padding-left:var(--sp-3); border-left:2px dashed var(--c-line);
+}
+.leg .stay{ margin:0; }
+/* 卡片標題是 h2（頁首 h1 → 卡片 h2 → 清單群組 h3），所以要自己歸零瀏覽器
+   預設的字級與上下邊距，外觀跟原本的 div 一模一樣 */
+.subject{ margin:0 0 var(--sp-1); font-size:var(--fs-lg); font-weight:700; }
+/* 景點／美食／購物：標題前的圖示墊一塊淡色，掃過去就分得出類型，不用整張卡片換顏色 */
+.subject > .ic-see:first-child, .subject > .ic-food:first-child, .subject > .ic-shop:first-child{
+  width:1.6em; height:1.6em; padding:.22em; border-radius:6px; vertical-align:-.38em; margin-right:.4em;
+}
+.subject > .ic-see:first-child{ background:var(--k-see); }
+.subject > .ic-food:first-child{ background:var(--k-food); }
+.subject > .ic-shop:first-child{ background:var(--k-shop); }
+.lang-local{ font-size:var(--fs-sm); color:var(--c-text-dim); font-weight:400; margin-left:var(--sp-1); }
+.meta{ font-size:var(--fs-sm); color:var(--c-text-dim); margin-bottom:var(--sp-1); }
+/* 卡片最後的補充說明（匯率、CSV 編碼），跟上面的欄位或按鈕隔開一段 */
+.meta-foot{ margin-top:var(--sp-2); }
+/* 圖示：Phosphor regular 的 SVG，跟著文字的顏色與字級走，全站一個尺寸（1.15em） */
+.ic{ display:inline-block; width:1.15em; height:1.15em; flex:0 0 auto; vertical-align:-.2em; margin-right:.3em; fill:currentColor; }
+.fl-mid .ic, .shop-x .ic, .exp-del .ic, .bd-del .ic, .wx-day .ic, .cc-grip .ic, .cc-fix .ic{ margin-right:0; }
+.daymap-open .ic{ margin:0 0 0 .3em; }
+.wx-emoji .ic{ width:2.6rem; height:2.6rem; margin:0; vertical-align:0; color:var(--c-on-accent); }
+/* 圖示按語意上色（ui-ux-pro-max icon-style-consistent：同一套圖示、同一類同一色）。
+   六類：吃 food／行 move／住 stay／買 shop／看 see／提醒 warn；時間與一般操作不上色，
+   跟著文字走。每個顏色在白底、淡色底上都 ≥ 4.5:1（非文字圖形只要 3:1，這裡留足餘裕）。
+   顏色定義在最上面的 :root（主題要能覆寫）。 */
+.ic-food{ color:var(--ic-food); } .ic-move{ color:var(--ic-move); } .ic-stay{ color:var(--ic-stay); }
+.ic-shop{ color:var(--ic-shop); } .ic-see{ color:var(--ic-see); }  .ic-warn{ color:var(--ic-warn); }
+.ic-time{ color:var(--ic-time); }
+/* 實心按鈕、選取中的分頁與標籤：底色是深的或主題色，圖示要跟著容器的文字色，不能自己上色 */
+.btn .ic, .nav-item .ic, .ttag .ic, .zoom-x .ic, .now-line .ic,
+.choice .tag .ic, .chip .ic, .dm-chip .ic, #edit-bar .ic{ color:inherit; }
+/* 電話點了就撥，在店門口不用再抄號碼。外觀跟營業時間、費用那幾列一樣，只多一條虛線
+   底線表示可以點。觸控目標照樣 44px：上下 padding 把點擊範圍撐大，再用等量的負 margin
+   抵掉，版面不會因此多出一塊空白（ui-ux-pro-max：extend hit area beyond visual bounds） */
+.meta a.tel{
+  display:inline-block; padding:12px 0; margin:-12px 0;
+  color:inherit; text-decoration:underline dotted; text-underline-offset:3px;
+}
+.note-box{
+  background:var(--c-note-bg); border-radius:10px;
+  /* 說明框的字跟手機通知差不多大。不用 --fs-md（大螢幕會長到 18px），
+     也不能再小：小於 16px 時 iPhone 一點輸入框就放大畫面（ui-ux-pro-max） */
+  padding:var(--sp-3); margin-top:var(--sp-3); font-size:16px; line-height:1.7;
+}
+/* 重要提醒（⚠️ 開頭的句子由 notesHTML 拆出來）：淡底＋左側色條，不只是換字色 */
+.note-box.warn{ background:var(--c-warn-soft); border-left:3px solid var(--c-warn); }
+/* 當天幾點起床：緊接在第一段行程上面，是實用資訊不是提醒，所以用第二強調色不是楓葉紅 */
+.wake-line{
+  display:flex; align-items:center; margin:0 0 var(--sp-3);
+  font-size:var(--fs-sm); font-weight:700; color:var(--c-alt-text);
+}
+.wake-line b{ font-size:var(--fs-md); margin:0 .15em; }
+.note-box + .note-box{ margin-top:var(--sp-2); }
+
+/* ── 景點介紹（預設收合）─────────────────
+   旅途中主要看的是時間與交通，介紹是背景知識，收起來才不會把
+   一天的版面拉得太長。展開/收合由原生 <details> 處理，沒有 JS。 */
+.intro{ margin-top:var(--sp-3); border-top:1px solid var(--c-line); }
+.intro summary{
+  display:flex; align-items:center; gap:var(--sp-2);
+  min-height:44px; cursor:pointer; list-style:none;
+  font-size:var(--fs-sm); font-weight:700; color:var(--c-on-accent);
+}
+.intro summary::-webkit-details-marker{ display:none; }   /* Safari 的預設三角 */
+.intro summary::before{ content:"▸"; display:inline-block; transition:transform .15s; }
+.intro[open] summary::before{ transform:rotate(90deg); }
+/* 跟說明框一樣固定 16px。原本是 1rem，基準字級在手機上隨螢幕放大到 18px、電腦版 17px，
+   介紹就比說明框大一號（Pro Max 上差 2px），使用者看得出來 */
+.intro-body{ padding-bottom:var(--sp-2); font-size:16px; line-height:1.75; }
+.intro-body p{ margin:0 0 var(--sp-3); }
+.intro-body p:last-child{ margin-bottom:0; }
+/* 有照片的介紹：收合時「看介紹」那一條鋪一層淡淡的照片，不點開也看得出是什麼地方；
+   展開後那一條的淡底收掉，照片放在文字下面（見下面 .intro-photo） */
+.intro.has-photo{ border-top:none; }
+.intro.has-photo summary{
+  position:relative; isolation:isolate; overflow:hidden;
+  min-height:56px; padding:0 var(--sp-3); border-radius:10px;
+}
+.intro.has-photo summary::after{
+  content:""; position:absolute; inset:0; z-index:-1;
+  background:var(--photo) center/cover; opacity:.25;   /* 照片最暗處 #BFBFBF，主題色字仍 ≥ 5.3:1 */
+}
+.intro.has-photo[open] summary::after{ opacity:0; }
+/* 展開後：文字在上、照片在下，照片照原本的比例完整顯示——不固定比例、不 cover，
+   否則 4:3 的照片會被切掉上下。照片都是橫的（tools/intro-photos.mjs 限寬 800）。 */
+.intro-photo{
+  display:block; width:100%; height:auto; margin-top:var(--sp-3);
+  border-radius:10px; background:var(--c-line);
+}
+/* 點擊範圍用 padding 撐到 44px、負 margin 抵掉（touch-target-size：extend hit area） */
+.photo-credit{
+  display:block; padding:13px 0; margin:calc(var(--sp-1) - 13px) 0 0;
+  font-size:var(--fs-xs); color:var(--c-text-dim); text-decoration:none;
+}
+
+/* ── 按鈕 ─────────────────────────────── */
+.btn{
+  display:inline-block; margin-top:var(--sp-2); margin-right:var(--sp-2);
+  padding:10px var(--sp-4); min-height:44px; line-height:24px;
+  border:none; border-radius:10px; text-decoration:none;
+  font-size:var(--fs-sm); font-weight:700; font-family:inherit;
+  color:var(--c-on-solid); background:var(--c-accent-strong); cursor:pointer;
+}
+/* 按鈕三階——一個畫面只留一個強調，其餘退成中性（ui-ux-pro-max primary-action）：
+     主要  .btn        楓葉紅實心（--c-accent-strong）：新增、送出
+     次要  .btn-plain  中性外框。外部服務（地圖、訂房、Naver）也歸這一階——原本各用
+                       品牌色，地圖那顆 Google 藍在每張卡片上都有（這趟 50 顆），是整頁最
+                       跳離主題的顏色；圖示加文字已經看得出是哪個服務
+     強調  .btn-route  楓葉紅外框（看路線）；.btn-theme 橄欖綠實心（私人資料的連結）
+   外框的 padding 少 1px 把邊框讓出來，高度維持 44px。 */
+.btn-plain, .btn-naver, .btn-booking, .btn-map{
+  padding:9px var(--sp-4); border:1px solid var(--c-border);
+  background:var(--c-surface); color:var(--c-text);
+}
+/* 地圖與訂位：第二強調色的外框（主題沒指定時就是上面的中性外框）。
+   「從上一站／從住處」維持楓葉紅外框，它是卡片上的主要動作 */
+.btn-booking, .btn-map{ border-color:var(--c-link-line); color:var(--c-link-text); }
+.btn-theme{ background:var(--c-pop); color:var(--c-on-solid); }
+/* full：整列寬的送出鍵。.btn 預設的右邊距在滿版時會把按鈕推出容器 */
+.btn-full{ display:block; width:100%; margin-right:0; text-align:center; }
+/* 路線：楓葉紅外框。原本框線吃 --c-accent（淡色底用的那個），對白底只有 1.3:1，
+   邊界幾乎看不見；改用深的那個，並跟其他外框一樣 1px、padding 讓 1px 維持 44px */
+.btn-route{
+  padding:9px var(--sp-4); background:transparent; color:var(--c-on-accent);
+  border:1px solid var(--c-accent-strong); font-weight:700;
+}
+.btn:active{ opacity:.85; }
+
+/* ── 航班卡 ───────────────────────────── */
+/* 整圈框線（左邊那條較粗）是航空公司的識別色（見程式裡的 AIRLINE）。認不出來的航空公司退回主題色，
+   框線一樣在，所以看起來不會像少了一塊。左邊用識別色、其餘三邊卻是主題色的話，兩色會打架。
+   這是第十四節「不用品牌色」的例外，使用者指定的：地圖、訂房那些鍵每張卡片都有，
+   各用各的品牌色會整頁花掉；航班卡一趟只有兩三張，而且是在認「這是哪一家的班機」。
+   識別色本身多半太淡，當文字會看不清楚，所以文字另外用同色系深一階的（都算過 ≥ 4.5:1）。 */
+.flight{ border:1px solid var(--c-alt); border-left-width:4px; border-left-color:var(--c-alt); }
+.flight.fl-brand{ border-color:var(--air); }
+.flight.fl-brand .fl-air, .flight.fl-brand .fl-air b{ color:var(--air-on); }
+.fl-head{
+  display:flex; justify-content:space-between; align-items:baseline;
+  font-size:var(--fs-xs); color:var(--c-text-dim); margin-bottom:var(--sp-3);
+}
+.fl-air{ font-weight:700; color:var(--c-text); letter-spacing:.3px; }
+.fl-air b{ color:var(--c-alt-text); margin-left:var(--sp-2); font-weight:800; }
+.fl-body{ display:grid; grid-template-columns:auto minmax(48px,1fr) auto; align-items:center; gap:var(--sp-3); }
+.fl-side .t{ font-size:var(--fs-xl); font-weight:800; line-height:1.05; letter-spacing:-.5px; }
+.fl-side .p{ font-size:var(--fs-sm); font-weight:700; letter-spacing:1.5px; color:var(--c-alt-text); }
+.fl-side .g{ font-size:var(--fs-xs); color:var(--c-text-dim); white-space:nowrap; }
+.fl-side.end{ text-align:right; }
+.fl-mid{ position:relative; display:flex; align-items:center; justify-content:center; }
+.fl-mid::before{
+  content:""; position:absolute; left:0; right:0; top:50%;
+  border-top:1px dashed var(--c-line);
+}
+.fl-mid span{
+  position:relative; background:var(--c-surface); padding:0 var(--sp-2);
+  font-size:var(--fs-sm); color:var(--c-alt-text);
+}
+
+/* ── 交通路線 ─────────────────────────── */
+.route{ margin-top:var(--sp-3); padding-left:2px; }
+.route-step{ display:flex; gap:var(--sp-3); align-items:flex-start; position:relative; }
+/* 站與站之間的線由站點自己畫：從圓點底下一路畫到下一站的圓點（bottom -5px＝下一站圓點的上緣），
+   這一站有出口說明或提醒框時線跟著拉長，不會斷，也不用另外插一段連接線（那會多出一塊空白）。
+   left 7px＝圓點欄 18px 的正中間減掉線寬的一半；top 23px＝圓點上緣 5px＋圓點 18px。 */
+.route-step:not(:last-child)::before{
+  content:""; position:absolute; left:7px; top:23px; bottom:-5px; width:4px;
+  background:var(--c-line);
+}
+/* 光點沿著這條線由上往下流 */
+.route-step:not(:last-child)::after{
+  content:""; position:absolute; left:7px; width:4px; height:12px; border-radius:2px;
+  background:var(--c-alt); animation:flow-step 1.8s linear infinite;
+}
+@keyframes flow-step{
+  from{ top:23px; opacity:0; }
+  15% { opacity:.85; }
+  85% { opacity:.85; }
+  to  { top:calc(100% - 7px); opacity:0; }
+}
+.route-dot{
+  position:relative; flex:0 0 14px; width:14px; height:14px; margin-top:5px;
+  border-radius:50%; background:var(--c-line); border:2px solid var(--c-surface);
+  box-sizing:content-box; z-index:2;
+}
+/* 起終點：實心主題色（原本的脈動光暈是純裝飾，拿掉；路線上的流動光點表示方向，保留） */
+.route-dot.on{ background:var(--c-alt); }
+.route-body{ flex:1; padding-bottom:var(--sp-3); }
+.route-step:last-child .route-body{ padding-bottom:0; }
+.route-body strong{ font-size:var(--fs-md); }
+/* 經過站：只是讓人數站數用的，淡一點，視線才會落在起終點與轉乘站 */
+.route-dot:not(.on) + .route-body strong{ font-size:var(--fs-sm); font-weight:400; color:var(--c-text-dim); }
+/* 連接線：光點由上往下流 */
+.route-link{ display:flex; gap:var(--sp-3); }
+.route-link .bar{ flex:0 0 18px; display:flex; justify-content:center; }
+.route-link .bar::before{
+  content:""; width:4px; min-height:34px; border-radius:2px;
+  background:var(--c-line); position:relative; overflow:hidden;
+}
+.route-link .bar{ position:relative; }
+.route-link .bar::after{
+  content:""; position:absolute; left:calc(50% - 2px); width:4px; height:16px;
+  border-radius:2px; background:var(--c-alt);
+  animation:flow 1.8s linear infinite;
+}
+@keyframes flow{
+  from{ top:-16px; opacity:0; }
+  15% { opacity:.85; }
+  85% { opacity:.85; }
+  to  { top:100%;   opacity:0; }
+}
+.route-link .via{ flex:1; font-size:var(--fs-xs); color:var(--c-text-dim); padding:var(--sp-2) 0; }
+.exit-note{ font-size:var(--fs-sm); color:var(--c-text-dim); }
+
+/* ── 選項（多選一） ───────────────────── */
+.choice{ border:1px solid var(--c-line); border-radius:10px; padding:var(--sp-3); margin-top:var(--sp-2); }
+/* 只有一顆按鈕：放右邊、垂直置中，省掉按鈕獨佔的那一行。兩顆以上維持放在下面——
+   375px 手機上文字欄只剩約 180px，再擠第二顆按鈕標題會折成好幾行 */
+.choice.one-link{ display:flex; align-items:center; gap:var(--sp-3); }
+.choice.one-link .choice-main{ flex:1; min-width:0; }
+.choice.one-link .btn{ margin:0; flex:0 0 auto; }
+/* 選項卡自己的按鈕：標題列右上角。space-between 讓它在標題右邊；寬度不夠時整顆掉到標題下面、
+   靠左，不去擠標題（標題不能被擠斷） */
+.opt-head{ display:flex; flex-wrap:wrap; align-items:flex-start; justify-content:space-between; gap:var(--sp-2) var(--sp-3); }
+.opt-head-main{ flex:1 1 11em; min-width:0; }
+.opt-links{ flex:0 0 auto; }
+.opt-links .btn{ margin:0 var(--sp-2) 0 0; }
+.opt-links .btn:last-child{ margin-right:0; }
+.subject-note{ font-size:var(--fs-sm); font-weight:400; color:var(--c-text-dim); }
+/* A／B 直接接在店名前面、同一行（使用者要的）：原本自己佔一行，每個選項都多一列高度。
+   vertical-align 讓小字的標籤對齊店名的視覺中線，不是文字基線 */
+.choice .tag{
+  display:inline-block; background:var(--c-accent); color:var(--c-on-accent); font-size:var(--fs-xs);
+  font-weight:700; padding:1px var(--sp-2); border-radius:5px;
+  margin-right:var(--sp-2); vertical-align:.06em;
+}
+
+/* ── 勾選清單 ─────────────────────────── */
+.chk-group{ margin-top:var(--sp-3); }
+.chk-group:first-of-type{ margin-top:var(--sp-2); }
+/* 分組標題是實用資訊的小標籤：淡底色塊，不只靠字色 */
+.chk-group h3{
+  display:inline-block; margin:0 0 var(--sp-2); padding:2px var(--sp-2); border-radius:6px;
+  background:var(--c-alt-soft); color:var(--c-alt-text); font-size:var(--fs-sm); letter-spacing:.06em;
+}
+.chk{
+  display:flex; align-items:center; gap:var(--sp-3);
+  min-height:44px; padding:0; cursor:pointer; font-size:var(--fs-sm); line-height:1.4;
+}
+.chk input{ width:18px; height:18px; accent-color:var(--c-accent); flex:0 0 auto; }
+.chk input:checked + span{ color:var(--c-text-dim); text-decoration:line-through; }
+.chk-progress{ font-size:var(--fs-xs); color:var(--c-text-dim); }
+/* 帶連結的清單項目：連結是 label 外的獨立元素，點它不會順便打勾 */
+.chk-row{ display:flex; align-items:center; gap:var(--sp-2); }
+.chk-row .chk{ flex:1; min-width:0; }
+.chk-link{
+  flex:0 0 auto; display:inline-flex; align-items:center; justify-content:center;
+  min-height:44px; min-width:44px; padding:0 var(--sp-2);
+  color:var(--c-on-accent); font-size:var(--fs-sm); font-weight:700;
+  text-decoration:none; white-space:nowrap;
+}
+.chk-link:hover{ text-decoration:underline; }
+
+/* ── 天氣預報列 ───────────────────────── */
+.wx-strip{ display:flex; gap:var(--sp-2); overflow-x:auto; padding-bottom:var(--sp-2); scrollbar-width:none; }
+.wx-strip::-webkit-scrollbar{ display:none; }
+.wx-day{
+  flex:0 0 76px; text-align:center; background:var(--c-alt-soft);
+  border-radius:10px; padding:var(--sp-2) var(--sp-1); font-size:var(--fs-xs);
+}
+.wx-day .e{ font-size:var(--fs-xl); line-height:1.3; }
+.wx-day .hi{ font-weight:800; }
+.wx-day .lo{ color:var(--c-text-dim); }
+
+/* ── 記帳 ─────────────────────────────── */
+.field{ margin-bottom:var(--sp-3); }
+/* .f-grp：一組 chip（我是誰、誰付錢、分攤對象）的標題。它不能是 <label>——沒有
+   單一的輸入框可以指；改用 role="group" + aria-labelledby 綁，讀螢幕的人才知道
+   這幾顆是一組的。外觀跟 .field > label 一樣。 */
+.field > label, .f-grp{ display:block; font-size:var(--fs-sm); font-weight:700; margin-bottom:var(--sp-2); }
+.input{
+  width:100%; padding:10px var(--sp-3); min-height:44px;
+  border:1px solid var(--c-border); border-radius:10px;
+  background:var(--c-surface); color:var(--c-text);
+  font-size:var(--fs-md); font-family:inherit;
+}
+.chips{ display:flex; flex-wrap:wrap; gap:var(--sp-2); }
+.chip{
+  display:inline-flex; align-items:center; justify-content:center;
+  min-height:44px; min-width:44px; padding:var(--sp-1) var(--sp-3);
+  border:1px solid var(--c-border); border-radius:var(--r-pill);
+  background:var(--c-surface); font-size:var(--fs-sm); cursor:pointer; user-select:none;
+}
+.chip input{ position:absolute; opacity:0; width:0; height:0; }
+.chip:has(input:checked){ background:var(--c-accent); border-color:var(--c-accent); color:var(--c-on-accent); font-weight:700; }
+.row2{ display:flex; gap:var(--sp-2); }
+.row2 > *{ flex:1; }
+.exp-list{ margin-top:var(--sp-2); }
+.exp-item{
+  display:flex; justify-content:space-between; align-items:flex-start; gap:var(--sp-2);
+  padding:var(--sp-2) 0; border-bottom:1px solid var(--c-line); font-size:var(--fs-sm);
+}
+.exp-item:last-child{ border-bottom:none; }
+/* 金額是這一頁最要一眼看到的：比品項大一階 */
+.exp-item .amt{ font-size:var(--fs-md); font-weight:700; white-space:nowrap; text-align:right; }
+/* 合計單獨一行、數字放大，靠右對齊到跟每一筆的金額同一欄 */
+.exp-total{
+  display:flex; align-items:baseline; justify-content:space-between; gap:var(--sp-2);
+  margin:var(--sp-1) 0 0; padding-bottom:var(--sp-2); border-bottom:1px solid var(--c-line);
+}
+.exp-total span{ font-size:var(--fs-sm); color:var(--c-text-dim); }
+.exp-total b{ font-size:var(--fs-xl); font-variant-numeric:tabular-nums; }
+/* 分類（食衣住行玩）：中性外框的文字標籤。不靠顏色分類——五類各一色會變成一片色塊，
+   而且只靠顏色的話色弱看不出來 */
+.exp-cat{
+  display:inline-block; margin-left:var(--sp-2); padding:0 var(--sp-2); vertical-align:1px;
+  border:1px solid var(--c-border); border-radius:var(--r-pill);
+  font-size:var(--fs-xs); font-weight:700; line-height:1.6; color:var(--c-text-dim);
+}
+/* 欄位底下的錯誤訊息；沒填的欄位框線轉紅 */
+.f-err{ margin:var(--sp-1) 0 0; font-size:var(--fs-sm); font-weight:700; color:var(--c-danger); }
+.input[aria-invalid="true"], .chips[aria-invalid="true"] .chip{ border-color:var(--c-danger); }
+.time, .stay, .exp-item .amt{ font-variant-numeric:tabular-nums; }
+.exp-del{
+  border:none; background:none; color:var(--c-danger); cursor:pointer;
+  font-size:var(--fs-sm); padding:0 var(--sp-1);
+  min-height:44px; min-width:44px;   /* ✕ 本身只有約 20px 寬，不補寬度就點不到 */
+}
+.settle{ display:flex; justify-content:space-between; padding:var(--sp-2) 0; font-size:var(--fs-sm); }
+.settle b{ color:var(--c-on-accent); }
+
+/* ── 留言板 ───────────────────────────── */
+/* 多行輸入：.input 只給單行高度，留言要一眼看得到三四行。字級沿用 .input 的 16px
+   （小於 16px iPhone 會放大整個畫面），高度由 rows 決定，使用者還能自己拉長 */
+textarea.input{ min-height:88px; line-height:1.5; resize:vertical; }
+.bd-list{ margin-top:var(--sp-2); }
+.bd-item{
+  display:flex; justify-content:space-between; align-items:flex-start; gap:var(--sp-2);
+  padding:var(--sp-2) 0; border-bottom:1px solid var(--c-line);
+}
+.bd-item:last-child{ border-bottom:none; }
+.bd-body{ flex:1; min-width:0; }
+/* 留言者是這一列最先要認出來的，比內容粗一階；時間是次要資訊，小一階又淡一階 */
+.bd-who{ font-size:var(--fs-sm); font-weight:700; }
+.bd-at{
+  margin-left:var(--sp-2); font-size:var(--fs-xs); font-weight:400;
+  color:var(--c-text-dim); font-variant-numeric:tabular-nums;
+}
+/* 留言是使用者自己打的字：換行要留著（pre-wrap），貼進來的長網址要能斷行，
+   不然 375px 會被撐出橫向捲動 */
+.bd-text{
+  margin:2px 0 0; font-size:var(--fs-sm); line-height:1.6;
+  white-space:pre-wrap; overflow-wrap:anywhere;
+}
+/* 跟記帳的 ✕ 同一顆：本身只有約 20px 寬，不補到 44px 就點不到 */
+.bd-del{
+  flex:0 0 auto; border:none; background:none; color:var(--c-danger); cursor:pointer;
+  font-size:var(--fs-sm); padding:0 var(--sp-1);
+  min-height:44px; min-width:44px;
+}
+/* 已登記的身分：名字大一階，裝置名稱淡一階跟在後面 */
+.bd-reg{ margin:0 0 var(--sp-3); font-size:var(--fs-md); }
+.bd-reg strong{ font-size:var(--fs-lg); }
+.bd-dev{ margin-left:var(--sp-2); font-size:var(--fs-sm); color:var(--c-text-dim); }
+/* 不是登記的裝置送出的留言。擋是前端擋的，繞過去就會留下這種留言，所以一定要看得出來。
+   顏色不是唯一線索（WCAG 1.4.1）：旁邊有圖示也有文字 */
+.bd-item.is-odd{ border-left:3px solid var(--c-warn); padding-left:var(--sp-2); }
+.bd-odd{ margin:var(--sp-1) 0 0; font-size:var(--fs-xs); font-weight:700; color:var(--c-warn-text); }
+/* 名字被別台佔住時才出現的「改用這台」。自己沒設 display，[hidden] 就藏得掉，
+   但照第六節的習慣明寫一條，之後有人給它 display 也不會破功 */
+#bd-take-wrap{ margin-top:var(--sp-2); }
+#bd-take-wrap[hidden]{ display:none; }
+/* 分頁上的新留言數。選取中的分頁底色就是楓葉紅，徽章要反過來才看得見
+   （跟 .btn 在深色模式要翻過來是同一類問題） */
+.bd-badge{
+  display:inline-flex; align-items:center; justify-content:center;
+  min-width:18px; height:18px; margin-left:var(--sp-1); padding:0 5px;
+  border-radius:var(--r-pill); background:var(--c-accent-strong); color:var(--c-on-solid);
+  font-size:var(--fs-xs); font-weight:700; line-height:1; font-variant-numeric:tabular-nums;
+}
+/* 自己設了 display，[hidden] 藏不掉（第六節） */
+.bd-badge[hidden]{ display:none; }
+.nav-item[aria-selected="true"] .bd-badge{ background:var(--c-on-solid); color:var(--c-accent-strong); }
+
+/* ── 同步狀態 ─────────────────────────── */
+/* 連線狀態固定在左下角。原本在右上角，但它是 position:fixed、z-index 比
+   置頂的導覽列高，會直接蓋住分頁按鈕——導覽列加上日期那一行之後更明顯。
+   左下角不擋任何可點擊的東西，也還是一眼看得到。 */
+.sync{
+  position:fixed; left:var(--sp-2); z-index:200;
+  bottom:calc(var(--sp-2) + env(safe-area-inset-bottom));
+  font-size:var(--fs-xs); font-weight:700; padding:var(--sp-1) var(--sp-3);
+  border-radius:var(--r-pill); background:var(--c-surface); box-shadow:var(--shadow-pop);
+}
+.sync[data-s="ok"]{ color:var(--c-ok); }
+.sync[data-s="offline"]{ color:var(--c-warn-text); }
+.sync[data-s="local"]{ color:var(--c-text-dim); }
+.sync[data-s="error"]{ color:var(--c-danger); }
+
+/* ── 其他 ─────────────────────────────── */
+.src{
+  font-size:var(--fs-xs); color:var(--c-text-dim); line-height:1.6;
+  background:var(--c-note-bg); border-radius:8px;
+  padding:var(--sp-2) var(--sp-3); margin-bottom:var(--sp-3);
+}
+.ph{ padding:var(--sp-2) 0; border-bottom:1px solid var(--c-line); }
+.ph:last-child{ border-bottom:none; }
+.ph-l{ font-size:var(--fs-md); line-height:1.5; }
+.ph-l.dim{ color:var(--c-text-dim); }
+.ph-z{ font-size:var(--fs-sm); color:var(--c-text-dim); margin-top:1px; }
+.phrase{
+  display:flex; justify-content:space-between; align-items:baseline;
+  gap:var(--sp-3); padding:var(--sp-2) 0; border-bottom:1px solid var(--c-line);
+}
+.phrase > span:first-child{ min-width:0; }              /* 讓標題可以折行 */
+.phrase > span:last-child{
+  flex:0 0 auto; white-space:nowrap; text-align:right;  /* 電話號碼絕不折行 */
+  font-variant-numeric:tabular-nums;
+}
+.phrase:last-child{ border-bottom:none; }
+.phrase a[href^="tel:"]{ display:inline-flex; align-items:center; justify-content:flex-end; min-height:44px; min-width:44px; }
+.phrase:has(a[href^="tel:"]){ align-items:center; padding:var(--sp-1) 0; }
+.phrase .zh{ color:var(--c-text-dim); font-size:var(--fs-sm); }
+.err{ background:var(--c-warn-soft); border-left:3px solid var(--c-danger); padding:var(--sp-3); border-radius:8px; font-size:var(--fs-sm); }
+/* ── PWA：瀏海與底部安全區 ─────────────── */
+body{
+  padding-top:env(safe-area-inset-top);
+  padding-bottom:env(safe-area-inset-bottom);
+}
+/* 連線狀態已改到左下角，安全區在它自己的規則裡用 safe-area-inset-bottom
+   處理。這裡若留著 top，fixed 元素同時有 top 與 bottom 會被撐滿整個視窗高。 */
+.nav-bar{ top:env(safe-area-inset-top); }
+.toast{
+  /* 抬高一點，才不會壓到左下角的連線狀態 */
+  position:fixed; left:50%; bottom:calc(var(--sp-6) + env(safe-area-inset-bottom));
+  transform:translateX(-50%); z-index:300; max-width:calc(var(--w-app) - var(--sp-6));
+  background:var(--c-text); color:var(--c-bg); font-size:var(--fs-sm); font-weight:700;
+  padding:var(--sp-3) var(--sp-4); border-radius:var(--r-pill); box-shadow:var(--shadow-pop);
+  opacity:0; pointer-events:none; transition:opacity .25s;
+  display:flex; align-items:center; gap:var(--sp-3);
+}
+.toast.show{ opacity:.96; }
+.toast.has-act{ pointer-events:auto; }
+/* 「復原」：外觀跟訊息同一行，點擊範圍用負 margin 撐到 44px，提示本身不會因此變高 */
+.toast-act{
+  flex:0 0 auto; min-height:44px; padding:0 var(--sp-2);
+  margin:calc(-1 * var(--sp-3)) calc(-1 * var(--sp-2)) calc(-1 * var(--sp-3)) 0;
+  border:none; background:transparent; color:inherit;
+  font:inherit; text-decoration:underline; text-underline-offset:3px; cursor:pointer;
+}
+/* ── 自適應：手機放大、平板加寬、桌機雙欄 ───────── */
+/* 基準字級跟著螢幕微調：iPhone SE 16px → 17 Pro 16.9px → 17 Pro Max 18px */
+html{ font-size:clamp(16px, 4.2vw, 18px); }
+
+/* 平板：單欄但加寬 */
+@media (min-width:600px){
+  :root{ --w-app:600px; }
+  body{ padding:var(--sp-4) var(--sp-4) 0; }
+  main{ padding-left:0; padding-right:0; }
+  header{ padding-left:0; padding-right:0; }
+  .nav-bar, .nav-aux{ padding-left:0; padding-right:0; }
+}
+
+/* 桌機：左欄放天氣與導覽（吸頂），右欄放行程 */
+@media (min-width:1024px){
+  html{ font-size:17px; }
+  body{ align-items:flex-start; padding:var(--sp-5) var(--sp-5) 0; }
+  .app{
+    max-width:1020px;
+    display:grid;
+    grid-template-columns:360px minmax(0,1fr);
+    grid-template-rows:auto 1fr auto;
+    column-gap:var(--sp-6);
+  }
+  /* 左欄 300 → 360px：標題一行要 329px，300 本來就放不下。
+     整頁上限跟著加 60px，右邊的行程欄不會因此變窄 */
+  header{ grid-column:1; grid-row:1; text-align:left; padding:0 0 var(--sp-4); }
+  header h1{ font-size:var(--fs-xl); }
+  /* 左欄裡再分兩欄：左邊「準備資訊＋旅途工具」，右邊「每日行程」，整塊黏住。
+     原本三組上下疊成一長條（約 650px），在 900px 高的螢幕上黏住之後，下面幾天要捲才看得到 */
+  .sidenav{
+    grid-column:1; grid-row:2; align-self:start;
+    position:sticky; top:var(--sp-4);
+    display:grid; grid-template-columns:minmax(0,2fr) minmax(0,3fr); column-gap:var(--sp-4); align-items:start;
+  }
+  .nav-aux{ flex-direction:column; align-items:stretch; gap:var(--sp-5); padding:0; }
+  .scheme{ align-self:flex-start; margin-left:var(--sp-1); }   /* 直排時接在「記帳」下面，不拉滿整欄 */
+  .nav-group, .nav-bar{ flex-direction:column; gap:var(--sp-2); }
+  .nav-bar{
+    position:static; overflow:visible;
+    padding:0; background:none; backdrop-filter:none; -webkit-backdrop-filter:none;
+  }
+  /* 群組標題：雜誌式的小標，字距拉開 */
+  .nav-glabel{
+    display:block; margin:0 0 var(--sp-1);
+    font-size:var(--fs-xs); font-weight:700; letter-spacing:.12em; color:var(--c-text-dim);
+  }
+  .nav-item{ width:100%; text-align:left; }
+  .nav-group .nav-item{ justify-content:flex-start; padding:0 var(--sp-3); }
+  main{ grid-column:2; grid-row:1 / span 2; padding:0; }
+  footer{ grid-column:1 / -1; grid-row:3; }
+  /* 行程卡片較寬，內距跟著加大 */
+  main .card{ padding:var(--sp-5); }
+  main .card + .card{ margin-top:var(--sp-4); }
+}
+
+/* ── 電腦版的當日路線地圖 ───────────────────────
+   手機不顯示，iframe 也不設網址（不載入）。
+   1024–1279：放在行程上方，跟左欄的標題同一列，高度跟著那一列。
+   1280 以上：變成第三欄，捲行程時固定不動，一邊看卡片一邊對地圖。
+   map-on（網站有金鑰、而且是電腦寬度）決定三欄的寬度，has-map（這一頁有地圖）
+   只決定地圖要不要出現——分開是因為：如果沒地圖的分頁（行前、記帳…）退回兩欄，
+   整個版面會從 1560px 縮回 1020px 重新置中，切分頁時左邊的按鈕會橫向跳將近 200px。 */
+/* 開啟路線的按鈕放在當天行程最上面：手機、電腦都有，有沒有嵌入地圖都在同一個位置 */
+.daymap-open{
+  display:inline-flex; align-items:center; min-height:44px; margin-bottom:var(--sp-2);
+  color:var(--c-on-accent); font-size:var(--fs-sm); font-weight:700; text-decoration:none;
+}
+.daymap-open:hover{ text-decoration:underline; }
+#daymap{ display:none; }
+@media (min-width:1024px){
+  .app.has-map #daymap{
+    grid-column:2; grid-row:1;
+    display:flex; flex-direction:column;
+    padding-bottom:var(--sp-4);
+  }
+  .app.has-map main{ grid-row:2; }
+  #daymap iframe{
+    flex:1; width:100%; min-height:240px; border:0;
+    border-radius:var(--r-card); background:var(--c-alt-soft);
+  }
+  /* 地圖上方：「全選」＋每一點一顆（前一晚的住宿排第一）。點名字只看那一點，勾選框決定畫不畫進路線。
+     做得比一般按鈕小：一天十個地點時，44px 高的按鈕會把地圖擠到剩 250px。
+     名字只露出前幾個字，完整名稱在 title（滑鼠移上去）與按鈕文字裡（讀螢幕軟體讀得到） */
+  .daymap-pick{ display:flex; flex-wrap:wrap; gap:var(--sp-1); margin-bottom:var(--sp-2); }
+  .dm-chip{
+    display:inline-flex; align-items:center; min-height:34px; max-width:100%; padding:0 var(--sp-3);
+    border:1px solid var(--c-border); border-radius:var(--r-pill); background:var(--c-surface);
+    color:var(--c-text); font-family:inherit; font-size:var(--fs-xs); font-weight:700; cursor:pointer;
+  }
+  span.dm-chip{ padding:0; cursor:auto; }
+  label.dm-chip{ gap:var(--sp-1); }   /* 全選：整顆都是勾選框的標籤 */
+  .dm-chip label{ display:flex; align-items:center; align-self:stretch; padding:0 2px 0 var(--sp-2); cursor:pointer; }
+  .dm-chip input{ width:15px; height:15px; margin:0; accent-color:var(--c-on-accent); cursor:pointer; }
+  .dm-chip button{
+    align-self:stretch; min-width:0; max-width:6.5em; padding:0 var(--sp-2) 0 2px;
+    border:0; background:none; color:inherit; font:inherit; cursor:pointer;
+    overflow:hidden; text-overflow:ellipsis; white-space:nowrap;
+  }
+  .dm-chip.is-on{
+    background:var(--c-accent); border-color:var(--c-accent); color:var(--c-on-accent);
+  }
+  .dm-chip.is-off button{ color:var(--c-text-dim); text-decoration:line-through; }
+  .daymap-empty{
+    margin:0; padding:var(--sp-4); border-radius:var(--r-card);
+    background:var(--c-alt-soft); color:var(--c-text-dim); font-size:var(--fs-sm);
+  }
+  /* 有地圖時，景點與住宿卡片點了會切換地圖。用外圈陰影標示，不動左邊框——那是「現在進行到哪」在用的 */
+  .app.has-map .card[data-mapq]{ cursor:pointer; }
+  .app.has-map .card[data-mapq]:hover{ box-shadow:0 0 0 1px var(--c-accent), var(--shadow); }
+  .app.has-map .card.map-focus{ box-shadow:0 0 0 2px var(--c-accent), var(--shadow); }
+  .app.has-map .card[data-mapq]:focus-visible{ outline:2px solid var(--c-accent); outline-offset:2px; }
+}
+@media (min-width:1280px){
+  /* 行程欄上限 720px 跟下面的超寬規則一致，多的寬度給地圖 */
+  .app.map-on{ max-width:1560px; grid-template-columns:360px minmax(0,720px) minmax(360px,1fr); }
+  .app.has-map #daymap{
+    grid-column:3; grid-row:1 / span 2; align-self:start;
+    position:sticky; top:var(--sp-4); height:calc(100vh - 2 * var(--sp-4));
+    padding-bottom:0;
+  }
+  .app.has-map main{ grid-row:1 / span 2; }
+}
+
+/* 超寬螢幕：只把內容欄加寬，不要拆成兩欄。
+   行程是有時間順序的，拆欄之後閱讀動線會從第一欄底部跳到第二欄頂端，很難跟。 */
+@media (min-width:1440px){
+  .app{ max-width:1160px; grid-template-columns:360px minmax(0,720px); }
+}
+
+#edit-bar{ display:flex; gap:var(--sp-2); justify-content:center; flex-wrap:wrap; margin-bottom:var(--sp-5); }
+/* UA 的 [hidden]{display:none} 會輸給上面的 display:flex，所以要明寫 */
+#edit-bar[hidden]{ display:none; }
+#edit-bar a{
+  display:inline-block; padding:10px var(--sp-4); min-height:44px; line-height:22px;
+  border:1px solid var(--c-border); border-radius:var(--r-pill); background:var(--c-surface);
+  color:var(--c-text); font-size:var(--fs-sm); font-weight:700; text-decoration:none;
+}
+#edit-bar a.go{ background:var(--c-accent); border-color:var(--c-accent); color:var(--c-on-accent); }
+footer{ text-align:center; font-size:var(--fs-xs); color:var(--c-text-dim); padding:var(--sp-5) var(--sp-4); }
+footer a{ color:inherit; }
+footer > a{ display:inline-block; padding:14px 0; margin:-14px 0; }
+
+/* ── 深色模式 ─────────────────────────────────
+   由 <html data-scheme> 決定，不直接寫 @media——因為使用者可以自己切（跟隨系統／
+   淺色／深色，頁首右上角那顆鍵）。<head> 有一小段在繪製前就把屬性設好；選「跟隨
+   系統」時由 JS 監聽 prefers-color-scheme 的變化再改它。
+
+   五個主題各一套底色與強調色，其餘的語意色不分主題。每一組會疊在一起的前景／背景
+   都算過對比：文字 ≥ 4.5:1，圖示這種非文字圖形 ≥ 3:1。
+
+   深色模式的層次是靠「亮」表達的：--c-accent-soft 與 --c-warn-soft 一定要比
+   --c-surface 亮，否則說明框會整個消失（第一版做反了，區別度只有 1.02）。
+   對比探針只量文字、量不到這種「面跟面分不開」，所以測試另外有一條在守。
+
+   有幾個地方光換 token 不夠，附在最後單獨處理——最典型的是 .btn 與 .skip：
+   它們的底色是 --c-text，深色模式下 --c-text 變成淺的，白字就看不見了。 */
+:root[data-scheme="light"]{ color-scheme:light; }
+:root[data-scheme="dark"]{
+  color-scheme:dark;
+  --c-surface:#1A2029; --c-text:#EDE7E1; --c-text-dim:#AAA098; --c-line:#3B332D;
+  --c-warn-text:#F0B870; --c-warn-soft:#3E301A;
+  --c-danger:#F28E88; --c-ok:#74D7A0;
+  /* 深底上要更重的影子才看得出層次 */
+  --shadow:0 0 0 1px var(--c-line), 0 2px 6px rgba(0,0,0,.35);
+  --shadow-pop:0 4px 14px rgba(0,0,0,.6);
+  --ic-food:#F0896B; --ic-move:#7FB6EE; --ic-stay:#C6A2E8;
+  --ic-shop:#5FC9C0; --ic-see:#86CE89;  --ic-warn:#F0B870;
+  --ic-time:#AAA098;
+}
+/* --c-border 不覆寫：同一個中灰對淺色底（最差 3.27）與深色底（最差 3.17）都夠。
+   --c-pop 大多不覆寫：各主題原本的深飽和色配白字仍有 4.6–5.4:1，改淺反而會讓
+   .btn-theme 的白字糊掉。例外是 maple：橄欖綠比原本的藍綠暗，在深色卡片上只剩 2.63:1、
+   看不出是一塊按鈕，所以提亮到 #647736（白字 4.96、對卡片 3.39）。 */
+:root[data-scheme="dark"][data-theme="snow"]  { --c-bg:#10141A; --c-surface:#1A2029; --c-accent:#1E3A52; --c-accent-soft:#2C3749; --c-on-accent:#A8D4F5; --deco-op:.30; }
+:root[data-scheme="dark"][data-theme="sakura"]{ --c-bg:#191215; --c-surface:#241A20; --c-accent:#4E2436; --c-accent-soft:#3C2A36; --c-on-accent:#F7B9CE; --deco-op:.30; }
+:root[data-scheme="dark"][data-theme="maple"] { --c-bg:#17120F; --c-surface:#221C18; --c-accent:#4A2A20; --c-accent-soft:#3A2D26; --c-on-accent:#F3B9A6; --c-pop:#647736; --deco-op:.28;
+  /* 淺色那組的深色版。淡底一律比卡片亮（區別度 ≥ 1.2），文字 ≥ 4.5:1；
+     時間膠囊翻成淺底深字，跟淺色模式的墨色膠囊一樣是全卡最重的那一小塊 */
+  --c-alt:#6FB7BD; --c-alt-text:#8FCDD2; --c-alt-soft:#213A3C;
+  --c-link-line:#6FB7BD; --c-link-text:#8FCDD2;
+  --c-note-bg:#362C24; --c-lodge-bg:#2C251A; --c-lodge-line:#5A4A30;
+  --c-time-bg:#D6C8B5; --c-time-fg:#221C18;
+  --c-warn:#E07A66; --c-warn-text:#F3B9A6; --c-warn-soft:#432824;
+  --k-see:#273022; --k-food:#432824; --k-shop:#3A3020;
+  --ic-move:#6FB7BD; --ic-see:#9DBB88; --ic-shop:#E0B263; --ic-stay:#E8A58C; --ic-warn:#F3B9A6; }
+:root[data-scheme="dark"][data-theme="ocean"] { --c-bg:#0E1617; --c-surface:#182224; --c-accent:#1C3F44; --c-accent-soft:#27373A; --c-on-accent:#9EDCE3; --deco-op:.30; }
+:root[data-scheme="dark"][data-theme="city"]  { --c-bg:#14141C; --c-surface:#1E1E29; --c-accent:#2E2A55; --c-accent-soft:#302F42; --c-on-accent:#C3BEF0; --deco-op:.18; }
+
+/* 實心的主要按鈕（底 --c-accent-strong）與「跳到主內容」（底 --c-text）：深色模式下
+   這兩個底都變成淺的，字要翻成底色。下面幾行不能省：這一條在 .btn-* 那些變體後面、
+   而且多一層選擇器，不重新宣告的話會把它們的 color 一起蓋掉——外框樣式的
+   .btn-plain／.btn-route 會變成深字配深底（實測 1.10:1，等於看不見）。 */
+[data-scheme="dark"] .btn, [data-scheme="dark"] .skip{ color:var(--c-bg); }
+[data-scheme="dark"] .btn-theme{ color:var(--c-on-solid); }
+[data-scheme="dark"] .btn-plain, [data-scheme="dark"] .btn-naver,
+[data-scheme="dark"] .btn-booking, [data-scheme="dark"] .btn-map{ color:var(--c-link-text); }
+[data-scheme="dark"] .btn-route{ color:var(--c-on-accent); }
+/* 選取中的分頁是 --c-accent-strong 實心，深色模式下那是淺色，字翻成底色 */
+[data-scheme="dark"] .nav-item[aria-selected="true"]{ color:var(--c-bg); }
+/* 新留言的徽章同一個坑：底是 --c-accent-strong，深色模式下那是淺色，
+   白字疊上去只有 1.71:1。選取中的分頁底本身就是那個淺色，所以徽章要反過來變深底 */
+[data-scheme="dark"] .bd-badge{ color:var(--c-bg); }
+[data-scheme="dark"] .nav-item[aria-selected="true"] .bd-badge{
+  background:var(--c-bg); color:var(--c-accent-strong);
+}
+/* 勾選框：--c-accent 在深色模式是「底色」用的深色，拿來當勾勾會看不見 */
+[data-scheme="dark"] .chk input, [data-scheme="dark"] .vault-remember input{ accent-color:var(--c-on-accent); }
+/* 天氣格的分隔線原本是黑色半透明，在深底上等於沒有 */
+[data-scheme="dark"] .wx-grid div + div{ border-left-color:rgba(255,255,255,.1); }
+/* 「看介紹」那條鋪的照片：深色模式的字是淺的，照片要壓更暗才不會吃掉對比
+   （照片最亮處以純白計，疊完仍有 6:1 以上） */
+[data-scheme="dark"] .intro.has-photo summary::after{ opacity:.15; }
+/* 航空公司的識別色：淺色模式用壓深過的版本（淡色在白底上看不出來），
+   深色模式可以用原本的識別色，在深底上反而夠亮 */
+[data-scheme="dark"] .flight.fl-brand{ border-color:var(--air-dark); }
+[data-scheme="dark"] .flight.fl-brand .fl-air,
+[data-scheme="dark"] .flight.fl-brand .fl-air b{ color:var(--air-on-dark); }
+/* 楓葉：淺色模式的深紅在深底上幾乎看不見，換成亮一階的秋色——仍然是 .12–.30 的透明度，不會搶眼 */
+[data-scheme="dark"] .leaves i{ --lc:#C9654C; }
+[data-scheme="dark"] .leaves i:nth-child(3n+2){ --lc:#D9914E; }
+[data-scheme="dark"] .leaves i:nth-child(3n){ --lc:#A85540; }
