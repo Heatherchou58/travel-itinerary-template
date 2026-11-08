@@ -23,6 +23,7 @@
 |---|---|
 | 骨架仍然兩份 | `<head>` 與 `<body>` 的結構在 `index.html` 和模板各一份，改了要兩邊一起改。很少動 |
 | 資料是**經典** `<script>`，不是 module | 頂層 `const` 才會是全域的，`app.js`（module）才讀得到 `TRIP_DATA`、`FIREBASE_CONFIG`。改成 `type="module"` 的話 `app.js` 會 `ReferenceError`，整個網站空白 |
+| `app.css` 裡的相對網址從 `app/` 算起 | **透過 `var()` 帶進去的也一樣**。介紹照片的淡底是 app.js 在 HTML 上寫 `--photo:url(img/…)`、app.css 用 `var(--photo)`，Chrome 照 app.css 的位置解析成 `/app/img/intro/…` 而 404——搬家後所有照片的淡底都不見，是使用者在本機模擬才發現的（舊測試只比對「網址裡有沒有 `img/intro/…`」，照樣會過）。所以要放進 CSS 變數的網址，先用 `absUrl()` 換成完整網址。`<img src>`、`fetch()`、`a href` 從頁面算，不受影響。測試第 15 段每個分頁走一遍，同網域有任何檔案載入失敗就不過 |
 | builder 產出的網站仍是單一 HTML | `makeIndex` 把 `app.js`、`app.css` **內嵌回去**，產出的 zip／預覽／部署可以放到任何地方。取代值一定要用函式（程式裡滿是 `$`，字串取代值會把 `$&` 吃掉），`</script` 要拆成 `<\/script`。**builder 自己的程式裡也不能照字面寫 `</script`**——連註解都不行，瀏覽器會在那裡把 builder 的 `<script>` 結束掉（踩過：寫在註解裡的「`</script 的話`」） |
 | 用 builder 重新產生福岡的話 | 產出來是內嵌版（程式凍結在那個檔案裡），之後改 `app/` 就不會影響它。要改回引用版：把 `<style>…</style>` 換回 `<link rel="stylesheet" href="../app/app.css">`、模組換回 `<script type="module" src="../app/app.js"></script>`、資料那段改回經典 `<script>` |
 | 搬家前兩份程式其實已經不一樣 | 6 行（打包清單處理器的順序與註解），行為相同。搬的時候以正式網站那份為準。所以「兩份要一樣」光靠人記是守不住的，這也是搬家的理由之一 |

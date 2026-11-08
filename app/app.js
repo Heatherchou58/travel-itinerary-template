@@ -349,6 +349,8 @@ const mapAttrs = b => {
    接受字串（以空行或換行分段）或字串陣列，Excel 給的是前者。 */
 /* photo 是 tools/intro-photos.mjs 掛上去的 Wikimedia Commons 自由授權照片。
    CC BY／BY-SA 要求標示作者與授權，所以照片底下一定附出處，不能拿掉。 */
+/* 相對路徑 → 以頁面（行程資料夾）為準的完整網址。解析不了的（不該發生）原樣回傳 */
+const absUrl = p => { try { return new URL(p, document.baseURI).href; } catch { return p; } };
 const introHTML = (v, photo, alt) => {
   const parts = (Array.isArray(v) ? v : String(v ?? "").split(/\n+/))
     .map(x => String(x ?? "").trim()).filter(Boolean);
@@ -360,7 +362,10 @@ const introHTML = (v, photo, alt) => {
   const pic = src ? `<img class="intro-photo" src="${esc(src)}" alt="${esc(alt || "")}" loading="lazy" decoding="async">` : "";
   const by = !src ? "" : href ? `<a class="photo-credit" href="${esc(href)}" target="_blank" rel="noopener">${credit}</a>`
                               : `<span class="photo-credit">${credit}</span>`;
-  return `<details class="intro${src ? " has-photo" : ""}"${src ? ` style="--photo:url('${esc(src)}')"` : ""}><summary>看介紹</summary>
+  /* 收合時的淡底要先換成完整網址：var(--photo) 是在 app.css 裡用的，瀏覽器會把相對路徑
+     從 app/ 算起，變成 /app/img/intro/… 而 404。上面 <img> 的 src 從頁面算，不受影響 */
+  const bg = src ? absUrl(src).replace(/'/g, "%27") : "";
+  return `<details class="intro${src ? " has-photo" : ""}"${src ? ` style="--photo:url('${esc(bg)}')"` : ""}><summary>看介紹</summary>
     <div class="intro-body">${parts.map(p => `<p>${iconText(p)}</p>`).join("")}${pic}</div>${by}
   </details>`;
 };

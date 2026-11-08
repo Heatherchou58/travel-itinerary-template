@@ -2361,8 +2361,10 @@ def run(trip: str) -> bool:
             else:
                 ctx = browser.new_context()
                 page = ctx.new_page()
-                photo_errors = []
+                photo_errors, photo_404 = [], []
                 page.on("pageerror", lambda e: photo_errors.append(str(e)))
+                page.on("response", lambda res: res.status >= 400 and "/img/" in res.url
+                        and photo_404.append(f"{res.status} {res.url}"))
                 page.goto(f"http://127.0.0.1:{port}/photo/")
                 page.wait_for_load_state("networkidle")
                 page.wait_for_function("navigator.serviceWorker.controller !== null", timeout=15000)
@@ -2376,7 +2378,13 @@ def run(trip: str) -> bool:
                 r.check("介紹照片：有照片的卡片才有淡底",
                         bar.count() == 1 and without.locator(".has-photo").count() == 0)
                 bg = bar.evaluate("s => [getComputedStyle(s, '::after').backgroundImage, getComputedStyle(s, '::after').opacity]")
-                r.check("介紹照片：收合時那一條鋪著照片", photo_src in bg[0] and float(bg[1]) > 0, f"{bg}")
+                # 要比「解析出來的完整網址」，不能只看有沒有包含 img/intro/…：程式搬到 app/ 之後，
+                # 寫在 app.css 裡的 var(--photo) 被瀏覽器從 app/ 算起，變成 /app/img/intro/… 而 404，
+                # 只比對包含的話照樣會過（踩過）
+                want = page.evaluate("s => new URL(s, location.href).href", photo_src)
+                r.check("介紹照片：收合時那一條鋪著照片（網址從行程資料夾算起）",
+                        bg[0] == f'url("{want}")' and float(bg[1]) > 0, f"{bg}")
+                r.check("介紹照片：照片真的載得到，沒有 404", not photo_404, "; ".join(photo_404[:2]))
                 pic = with_photo.locator("img.intro-photo")
                 r.check("介紹照片：收合時看不到大照片", not pic.is_visible())
 
@@ -2407,10 +2415,15 @@ def run(trip: str) -> bool:
                     "async s => !!(await (await caches.open('trip-img')).match(s))", photo_src)
                 r.check("介紹照片：開網站時就先存進 trip-img 快取", cached)
 
+                photo_404.clear()
+                photo_failed = []
+                page.on("requestfailed", lambda q: "/img/" in q.url and photo_failed.append(q.url))
                 ctx.set_offline(True)
                 page.reload()
                 page.wait_for_load_state("domcontentloaded")
                 page.wait_for_timeout(800)
+                r.check("介紹照片：離線時收合那一條的照片也從快取載得到",
+                        not photo_404 and not photo_failed, "; ".join((photo_404 + photo_failed)[:2]))
                 page.locator("#main .intro.has-photo summary").click()
                 page.wait_for_timeout(800)
                 r.check("介紹照片：離線也看得到",
@@ -2989,6 +3002,18 @@ def run(trip: str) -> bool:
             page.wait_for_function("navigator.serviceWorker.controller !== null", timeout=15000)
             page.reload()
             page.wait_for_load_state("networkidle")
+            # 搬家之後相對路徑有兩個基準：app.js 組出來、放進 HTML 的網址從 index.html 算起，
+            # 但 app.css 裡的 url()——包括透過 var() 帶進去的——從 app/ 算起。每個分頁走一遍，
+            # 同網域的檔案一個都不能失敗（踩過：介紹照片的淡底變成 /app/img/intro/… 而 404）
+            broken = []
+            page.on("response", lambda res: res.url.startswith(f"http://127.0.0.1:{port}/")
+                    and res.status >= 400 and broken.append(f"{res.status} {res.url}"))
+            for i in range(page.locator(".nav-item").count()):
+                page.locator(".nav-item").nth(i).click()
+                page.wait_for_timeout(250)
+            page.wait_for_load_state("networkidle")
+            r.check("共用程式：每個分頁走一遍，同網域的檔案沒有一個載入失敗",
+                    not broken, "; ".join(broken[:3]))
             # 驗的是 SW 的決定：程式走網路優先。快取優先的話會一直拿到預先快取的舊檔
             #（故意改壞成快取優先實測過，這條會失敗）。
             # 不能用「改了檔案、同一個分頁重新整理、看新程式有沒有跑」來驗：伺服器回
