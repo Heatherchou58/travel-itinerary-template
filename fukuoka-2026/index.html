@@ -2709,7 +2709,6 @@ const TRIP_DATA = {
           "place": "宮崎縣高千穗町",
           "notes": [
           "御塩井 → 真名井瀑布展望台 → 御橋 → 玉垂の滝，單程約 600m，散步約 1 小時",
-          "停車：第 1 御塩井駐車場（午餐停高千穗神社那邊的話就不用再找）",
           "沒訂到船，今天純散步；現場票常賣完，不用特地繞去排",
           "想拍水面翡翠綠，中午前後直射光線最好"
         ],
@@ -2881,10 +2880,8 @@ const TRIP_DATA = {
           "titleLocal": "柳川 川下り",
           "place": "福岡縣柳川市",
           "notes": [
-          "車停乘船場旁的免費停車場（官網列兩個，三柱神社那個最近）",
           "10:25 到，搭 10:40 那班（每小時 :10 與 :40 開船，開船前 10 分鐘要買好票，先上官網預約最穩）；船程約 60 分到御花",
           "趕不上 10:30 報到就改 11:10 那班，午餐順延 30 分、太宰府少逛 30 分",
-          "こたつ舟（暖桌船）12 月才開始，11 月船上會冷",
           "⚠️ 船是單程，終點在 3 公里外——車留在乘船場，吃完午餐要回來拿"
         ],
           "links": [
@@ -3053,7 +3050,7 @@ const TRIP_DATA = {
           "titleLocal": "オリックスレンタカー 博多駅博多口店",
           "place": "福岡市博多區博多站前2-3-24",
           "notes": [
-          "還車前先加滿油，把車上東西清乾淨",
+          "⚠️ 還車前先加滿油，把車上東西清乾淨",
           "⚠️ 租期到 19:00——太宰府延誤寧可少逛"
         ],
           "links": [
@@ -3076,7 +3073,7 @@ const TRIP_DATA = {
         {
           "type": "options",
           "time": "18:30",
-          "title": "晚餐二選一",
+          "title": "晚餐三選一",
           "place": "福岡市博多區・中央區",
           "placeLocal": "",
           "choices": [
@@ -3112,6 +3109,24 @@ const TRIP_DATA = {
                 {
                   "label": "📅 訂位",
                   "url": "https://www.hotpepper.jp/strJ003916963/",
+                  "style": "booking"
+                }
+              ]
+            },
+            {
+              "label": "C",
+              "title": "博多炉ばた 魚松 博多駅前店（爐端燒）",
+              "titleLocal": "博多炉ばた 魚松 博多駅前店",
+              "note": "爐端燒配透抽活魚生魚片・博多駅前3-18-8 ブルク博多駅前 2F，離博多站約 600 公尺・16:00–24:00・晚餐約 ¥5,000–5,999・有包廂、多語言菜單，店內可吸菸・092-402-9098・建議先訂位，要趕 19:45 離席，點餐時先講",
+              "links": [
+                {
+                  "label": "🗺️ 地圖",
+                  "url": "https://www.google.com/maps/search/?api=1&query=%E5%8D%9A%E5%A4%9A%E7%82%89%E3%81%B0%E3%81%9F%20%E9%AD%9A%E6%9D%BE%20%E5%8D%9A%E5%A4%9A%E9%A7%85%E5%89%8D%E5%BA%97",
+                  "style": "map"
+                },
+                {
+                  "label": "📅 訂位",
+                  "url": "https://www.hotpepper.jp/strJ004537141/",
                   "style": "booking"
                 }
               ]
@@ -5077,7 +5092,7 @@ let walletOpen = LS.get(WALLET_LS) === "1";
 
 const walletLockHTML = () => `<div class="card">
     <h2 class="subject">${ic("lock-simple")}記帳</h2>
-    <div class="note-box">這一頁要密碼才看得到，問同行的人就知道。</div>
+    <div class="note-box">這一頁要密碼才看得到。</div>
     <form class="vault-form" id="w-form" autocomplete="off">
       <label class="f-lbl">密碼<input class="input" id="w-pass" type="password" inputmode="numeric"
              autocomplete="current-password" enterkeyhint="go"></label>

@@ -2772,7 +2772,7 @@ let walletOpen = LS.get(WALLET_LS) === "1";
 
 const walletLockHTML = () => `<div class="card">
     <h2 class="subject">${ic("lock-simple")}記帳</h2>
-    <div class="note-box">這一頁要密碼才看得到，問同行的人就知道。</div>
+    <div class="note-box">這一頁要密碼才看得到。</div>
     <form class="vault-form" id="w-form" autocomplete="off">
       <label class="f-lbl">密碼<input class="input" id="w-pass" type="password" inputmode="numeric"
              autocomplete="current-password" enterkeyhint="go"></label>
