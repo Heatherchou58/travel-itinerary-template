@@ -505,6 +505,14 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
   cursor:grab; touch-action:none;
 }
 .cc-grip:active{ cursor:grabbing; }
+/* 「修改總額」是少數才用到的訂正入口，做成 44×44 的圖示鍵貼在「已計入」右邊——
+   帶文字的話 375px 那一行排不下，會自己掉到下一行，九張卡片就多出一大截 */
+.cc-fix{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:44px; height:44px; padding:0; flex:0 0 auto;
+  border:1px solid var(--c-border); border-radius:10px;
+  background:var(--c-surface); color:var(--c-text-dim); cursor:pointer;
+}
 /* 拖著的那張浮起來一階（跟提示、連線狀態同一階），並蓋住下面的卡片 */
 .cc.is-dragging{
   position:relative; z-index:2; cursor:grabbing;
@@ -663,7 +671,7 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 .meta-foot{ margin-top:var(--sp-2); }
 /* 圖示：Phosphor regular 的 SVG，跟著文字的顏色與字級走，全站一個尺寸（1.15em） */
 .ic{ display:inline-block; width:1.15em; height:1.15em; flex:0 0 auto; vertical-align:-.2em; margin-right:.3em; fill:currentColor; }
-.fl-mid .ic, .shop-x .ic, .exp-del .ic, .bd-del .ic, .wx-day .ic, .cc-grip .ic{ margin-right:0; }
+.fl-mid .ic, .shop-x .ic, .exp-del .ic, .bd-del .ic, .wx-day .ic, .cc-grip .ic, .cc-fix .ic{ margin-right:0; }
 .daymap-open .ic{ margin:0 0 0 .3em; }
 .wx-emoji .ic{ width:2.6rem; height:2.6rem; margin:0; vertical-align:0; color:var(--c-on-accent); }
 /* 圖示按語意上色（ui-ux-pro-max icon-style-consistent：同一套圖示、同一類同一色）。
@@ -4558,8 +4566,8 @@ const RENDERERS = {
             <div class="cc-bar"><i style="width:${pct}%"></i></div>
             <div class="cc-used-row">
               <div class="meta cc-used">已計入 ${esc(M.money.home)}$${fmt(spent)}／額度 ${esc(M.money.home)}$${fmt(quota)}</div>
-              <button class="cc-x" type="button" data-cc-fix="${esc(c.name)}"
-                      aria-label="直接修改「${esc(c.name)}」已計入的總額">${ic("pencil-simple")}修改總額</button>
+              <button class="cc-fix" type="button" data-cc-fix="${esc(c.name)}"
+                      aria-label="直接修改「${esc(c.name)}」已計入的總額">${ic("pencil-simple")}</button>
             </div>
             <div class="cc-left${left ? "" : " cc-full"}">剩餘 ${esc(M.money.home)}$${fmt(left)}</div>
           ` : `<div class="meta">這張沒有回饋上限，不用算額度</div>`}
