@@ -573,6 +573,7 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 .vault-remember input{ width:18px; height:18px; accent-color:var(--c-accent); flex:0 0 auto; }
 .vault-msg{ flex:1 0 100%; min-height:1.4em; font-size:var(--fs-sm); color:var(--c-text-dim); }
 .vault-msg.is-err{ color:var(--c-danger); font-weight:700; }
+.vault-form .f-err{ flex:1 0 100%; }
 /* 有備註的清單項目：勾選框對齊第一行，備註不要被刪除線劃到 */
 .chk.has-note{ align-items:flex-start; padding:var(--sp-2) 0; }
 .chk-note{ display:block; margin-top:2px; font-size:var(--fs-xs);
@@ -3866,7 +3867,9 @@ function setSync(s, text){ syncEl.dataset.s = s; syncEl.textContent = text; }
 const linksHTML = (links=[]) => links.map(l =>
   `<a class="btn btn-${esc(l.style||"plain")}" href="${esc(l.url)}" target="_blank" rel="noopener">${iconText(l.label)}</a>`
 ).join("");
-const localSpan = t => t ? `<span class="lang-local">${esc(t)}</span>` : "";
+/* 卡片上不顯示當地語（日文）名稱——使用者的決定，中文名稱就夠了。
+   titleLocal／placeLocal／nameLocal 仍然留在 TRIP_DATA 裡：地圖按鈕與電腦版的
+   當日路線都靠「當地語名稱, 地址」去查（mapQuery），把資料拿掉會查不到店。 */
 /* 圖示：頁首的 Phosphor 圖示表（i-名稱）。旁邊都有文字，所以對輔助技術隱藏；
    只有圖示的按鈕（✕）由按鈕自己的 aria-label 提供名稱 */
 /* 圖示的語意分類，決定它的顏色（CSS 的 .ic-food 等）。對不到的不上色，跟著文字走。 */
@@ -4264,8 +4267,8 @@ const RENDERERS = {
 
   stop: b => `${legHTML(b)}<div class="card"${slotAttrs(b)}${mapAttrs(b)}>
     ${nowSlot(b)}${timeTag(b)}${stayTag(b)}${leaveTag(b)}
-    <h2 class="subject">${ic(KIND[b.kind] || KIND.sight)}${esc(b.title)}${localSpan(b.titleLocal)}</h2>
-    ${b.place ? `<div class="meta">${ic("map-pin")}${esc(b.place)}${localSpan(b.placeLocal)}</div>` : ""}${factsHTML(b)}
+    <h2 class="subject">${ic(KIND[b.kind] || KIND.sight)}${esc(b.title)}</h2>
+    ${b.place ? `<div class="meta">${ic("map-pin")}${esc(b.place)}</div>` : ""}${factsHTML(b)}
     ${notesHTML(b.notes)}${secretHTML(b)}${introHTML(b.intro, b.photo, b.title)}${linksHTML(b.links)}</div>`,
 
   /* 總耗時跟其他卡片的「停留」一樣放在時間旁邊，由 stay 算出來 */
@@ -4278,7 +4281,7 @@ const RENDERERS = {
       const dot = s.via ? "" : `<div class="route-step">
            <div class="route-dot${s.active ? " on" : ""}"></div>
            <div class="route-body">
-             <strong>${esc(s.name)}</strong>${s.nameLocal !== s.name ? localSpan(s.nameLocal) : ""}
+             <strong>${esc(s.name)}</strong>
              ${s.exit ? `<div class="exit-note">${iconText(s.exit)}</div>` : ""}
              ${s.note ? `<div class="note-box warn">${ic("warning")}${esc(s.note)}</div>` : ""}
            </div></div>`;
@@ -4290,7 +4293,7 @@ const RENDERERS = {
 
   lodging: b => `${legHTML(b)}<div class="card lodge"${slotAttrs(b)}${mapAttrs(b)}>
     ${nowSlot(b)}<div><span class="ttag">${ic("bed")}住宿</span>${timeTag(b)}${stayTag(b)}${leaveTag(b)}</div>
-    <h2 class="subject">${esc(b.title)}${localSpan(b.titleLocal)}</h2>
+    <h2 class="subject">${esc(b.title)}</h2>
     ${b.address ? `<div class="meta">${ic("map-pin")}${esc(b.address)}</div>` : ""}${factsHTML(b)}
     ${(b.notes && b.notes.length)
       ? `<div class="info">${b.notes.map(n => `<div>${iconText(n)}</div>`).join("")}</div>` : ""}
@@ -4299,7 +4302,7 @@ const RENDERERS = {
   /* 選項卡自己的按鈕（b.links，例如整頓飯共用的停車場）放在標題列右上角；沒有就維持原本的樣子 */
   options: b => {
     const head = `<h2 class="subject">${subjectHTML(b.title)}</h2>
-    ${b.place ? `<div class="meta">${ic("map-pin")}${esc(b.place)}${localSpan(b.placeLocal)}</div>` : ""}`;
+    ${b.place ? `<div class="meta">${ic("map-pin")}${esc(b.place)}</div>` : ""}`;
     return `<div class="card"${mapAttrs((b.choices || []).find(c => mapQuery(c)) || {})}>
     ${timeTag(b)}${stayTag(b)}${leaveTag(b)}
     ${(b.links || []).length
@@ -4307,7 +4310,7 @@ const RENDERERS = {
       : head}
     ${(b.choices||[]).map(c => `<div class="choice${(c.links || []).length === 1 ? " one-link" : ""}">
       <div class="choice-main">
-      <div><span class="tag">${esc(c.label)}</span><strong>${esc(c.title)}</strong>${localSpan(c.titleLocal)}</div>
+      <div><span class="tag">${esc(c.label)}</span><strong>${esc(c.title)}</strong></div>
       ${c.note ? `<div class="meta">${iconText(c.note)}</div>` : ""}</div>
       ${linksHTML(c.links)}</div>`).join("")}</div>`;
   },
@@ -5062,13 +5065,58 @@ function paintForecast(){
 /* ── 記帳與分帳 ── */
 const fmt = n => Math.round(n).toLocaleString("en-US");
 
+/* ── 記帳的密碼鎖 ─────────────────────────────
+   使用者要求記帳要密碼才看得到。固定密碼、在前端比對——repo 是公開的，
+   原始碼裡就讀得到這組數字，Firestore 的規則也只看「匿名登入＋tripId」，
+   所以這是一道「手機借人看行程時不會順便看到帳」的簾子，不是擋得住人的鎖。
+   （要真的擋住得像卡片上的私人資料那樣加密，但四位數字離線幾秒就猜完。）
+   解開之後記在這台裝置（使用者的決定），標題列右上角有「上鎖」可以鎖回去。 */
+const WALLET_PASS = "0000";
+const WALLET_LS = `${KEY}:walletok`;
+let walletOpen = LS.get(WALLET_LS) === "1";
+
+const walletLockHTML = () => `<div class="card">
+    <h2 class="subject">${ic("lock-simple")}記帳</h2>
+    <div class="note-box">這一頁要密碼才看得到，問同行的人就知道。</div>
+    <form class="vault-form" id="w-form" autocomplete="off">
+      <label class="f-lbl">密碼<input class="input" id="w-pass" type="password" inputmode="numeric"
+             autocomplete="current-password" enterkeyhint="go"></label>
+      <button class="btn" type="submit">解鎖</button>
+      <p class="f-err" id="w-err" hidden></p>
+    </form></div>`;
+
+function unlockWallet(){
+  const inp = document.getElementById("w-pass"), msg = document.getElementById("w-err");
+  if (inp.value.trim() === WALLET_PASS){
+    walletOpen = true;
+    LS.set(WALLET_LS, "1");
+    renderDay(current);
+    return;
+  }
+  /* 錯誤寫在欄位底下，不跳 alert（CLAUDE.md 第十四節） */
+  msg.textContent = inp.value.trim() ? "密碼不對" : "請輸入密碼";
+  msg.hidden = false;
+  inp.setAttribute("aria-invalid", "true");
+  inp.setAttribute("aria-describedby", msg.id);
+  inp.select();
+}
+
+function lockWallet(){
+  walletOpen = false;
+  LS.del(WALLET_LS);
+  renderDay(current);
+}
+
 function renderExpenses(){
+  if (!walletOpen) return walletLockHTML();
   const cats = M.categories, members = M.members;
   const days = TRIP_DATA.days.filter(d => d.date);
   const rows = [...state.expenses].sort((a,b)=>b.createdAt-a.createdAt);
   const total = state.expenses.reduce((s,e)=>s+e.home,0);
   return `<div class="card">
-    <h2 class="subject" id="e-me-l">我是誰</h2>
+    <div class="opt-head"><div class="opt-head-main"><h2 class="subject" id="e-me-l">我是誰</h2></div>
+      <div class="opt-links"><button class="btn btn-plain" id="e-lock" type="button"
+              aria-label="鎖上記帳">${ic("lock-simple")}上鎖</button></div></div>
     <div class="field"><div class="chips" id="e-me" role="group" aria-labelledby="e-me-l">
       ${members.map(m=>`<label class="chip"><input type="radio" name="me" value="${esc(m)}"${state.me===m?" checked":""}>${esc(m)}</label>`).join("")}
     </div></div>
@@ -5355,6 +5403,7 @@ document.getElementById("main").addEventListener("submit", e => {
   const form = e.target.closest(".vault-form");
   if (!form) return;
   e.preventDefault();          // 不送出、不換頁；手機鍵盤按「前往」也走這裡
+  if (form.id === "w-form") return unlockWallet();   // 記帳的密碼鎖借用同一份版面
   unlockVault(form);
 });
 document.querySelector(".sidenav").addEventListener("click", e => {
@@ -5685,6 +5734,7 @@ document.getElementById("main").addEventListener("click", e => {
   if (e.target.id === "bd-reg")  return registerDevice(false);
   if (e.target.id === "bd-take") return registerDevice(true);   // 這是我的新手機
   if (e.target.id === "bd-redo"){ bdEdit = true; renderDay(current); return; }
+  if (e.target.closest("#e-lock")) return lockWallet();
   if (e.target.id === "e-add")  return addExpense();
   if (e.target.id === "e-csv")  return exportDetail();
   if (e.target.id === "e-csv2") return exportSettle();

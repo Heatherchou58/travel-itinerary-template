@@ -63,7 +63,10 @@ SWAP_TRIP = {
              "depart": "21:30", "arrive": "10:05", "fromTerminal": "T1"},
             {"type": "stop", "kind": "sight", "time": "11:30",
              "title": "雪梨歌劇院", "titleLocal": "Sydney Opera House",
-             "place": "Bennelong Point", "stay": 90, "notes": ["測試備註"],
+             # 當地語的名稱與地點都不顯示在卡片上（使用者的決定），但資料要留著：
+             # 地圖查詢用的是「當地語名稱, 地點」
+             "place": "Bennelong Point", "placeLocal": "Bennelong Pt.",
+             "stay": 90, "notes": ["測試備註"],
              # 停留(分) 是含交通的總時間：90 − 20 → 卡片上停留 1 小時 10 分
              "travel": 20, "mode": "walking",
              "hours": "09:00–17:00、週二休", "fee": "A$43（可刷卡）", "tel": "+61 2 9250 7111",
@@ -76,7 +79,7 @@ SWAP_TRIP = {
                        {"name": "Town Hall", "active": False},
                        {"name": "Central", "nameLocal": "Central Station", "active": True}]},
             {"type": "options", "time": "18:00", "title": "晚餐二選一（也可以兩家都吃）",
-             "place": "Darling Harbour",
+             "place": "Darling Harbour", "placeLocal": "Darling Hbr.",
              # 選項卡自己的按鈕（整頓飯共用的，例如停車場）：放在標題列右上角
              "links": [{"label": "停車場", "url": "https://example.com/parking", "style": "booking"}],
              # 只有一顆按鈕的選項按鈕放右邊，兩顆以上的放下面
@@ -87,7 +90,7 @@ SWAP_TRIP = {
             # 故意用交通卡——它不帶地點，才不會多跑進電腦版地圖的地點列裡
             {"type": "transit", "time": "23:30", "title": "深夜巴士", "line": "N1 線", "stay": 90,
              "steps": [{"name": "Night Depot", "active": True}, {"name": "Airport", "active": True}]},
-            {"type": "lodging", "title": "測試飯店", "address": "1 Test St",
+            {"type": "lodging", "title": "測試飯店", "titleLocal": "Test Hotel", "address": "1 Test St",
              "notes": ["含早餐"], "stay": 15, "travel": 15, "mode": "driving",
              "hours": "Check-in 15:00／退房 10:00",
              # 地圖按鈕用 place ID 釘住：右側的嵌入地圖要用 ID 查，不能只給名稱
@@ -455,6 +458,55 @@ def seed_board(page) -> None:
         sys.exit(f"注入留言失敗（讀回 {got} 則）：UI 探針會量到一個空清單，每條都假通過")
 
 
+def local_names(path: Path) -> set:
+    """真實行程裡「跟中文名稱不一樣」的當地語名稱。卡片上不該出現任何一個。
+
+    這些值一定要留在 TRIP_DATA 裡（地圖查詢用），所以不能靠「資料裡沒有」來驗，
+    只能讀畫面（CLAUDE.md 第六節）。順便回傳數量，資料哪天不填了測試才不會變成空的。"""
+    html = path.read_text(encoding="utf-8")
+    start = html.find("const TRIP_DATA = ") + len("const TRIP_DATA = ")
+    depth, end = 0, None
+    for i in range(start, len(html)):
+        if html[i] == "{":
+            depth += 1
+        elif html[i] == "}":
+            depth -= 1
+            if depth == 0:
+                end = i + 1
+                break
+    if end is None:
+        sys.exit("讀不到 TRIP_DATA 的範圍")
+    out = set()
+
+    def walk(node):
+        if isinstance(node, dict):
+            for k, base in (("titleLocal", "title"), ("nameLocal", "name"), ("placeLocal", "place")):
+                v = node.get(k)
+                # 中文名稱本身就含著當地語的（「鰻料理 田舎庵 小倉本店（鰻魚飯）」）不算：
+                # 那是標題自己要顯示的字，不是被拿掉的那個當地語標籤
+                if v and v not in (node.get(base) or ""):
+                    out.add(v)
+            for v in node.values():
+                walk(v)
+        elif isinstance(node, list):
+            for v in node:
+                walk(v)
+
+    walk(json.loads(html[start:end]).get("days", []))
+    return out
+
+
+def unlock_wallet(page) -> None:
+    """記帳有密碼鎖（0000）。鎖本身在第 13 段驗；其他段落要的是鎖後面的東西，
+    所以在這裡照使用者的動作解開——解開會記在這台裝置，同一個 context 之後都是開的。
+    已經解開（或根本不在記帳頁）時是空動作，所以可以放在「每個分頁都走一遍」的迴圈裡。"""
+    if not page.locator("#w-pass").count():
+        return
+    page.locator("#w-pass").fill("0000")
+    page.locator("#w-form button[type=submit]").click()
+    page.wait_for_timeout(200)
+
+
 def serve(root: Path) -> int:
     """在背景起一個靜態伺服器，回傳實際使用的埠號（0 = 讓系統挑）。"""
     class Quiet(http.server.SimpleHTTPRequestHandler):
@@ -485,6 +537,7 @@ class Report:
 
 def run(trip: str) -> bool:
     src = REPO / trip
+    site_dir = src        # src 在底下被幾個區段當成區域變數重新綁過，要用路徑的話用這個
     if not (src / "index.html").exists():
         sys.exit(f"找不到 {src / 'index.html'}")
 
@@ -570,6 +623,7 @@ def run(trip: str) -> bool:
             page.on("pageerror", lambda e: errors.append(str(e)))
             page.get_by_role("tab", name=re.compile("記帳")).click()
             page.wait_for_timeout(500)
+            unlock_wallet(page)   # 離線也要解得開：密碼是寫死的，不用連線
             page.locator("#e-item").fill("離線測試項目")
             page.locator("#e-local").fill("1000")
             page.locator("#e-add").click()
@@ -940,9 +994,19 @@ def run(trip: str) -> bool:
 
             ride = page.locator("#main .card", has_text="Circular Quay")
             ride_text = ride.inner_text()
-            r.check("交通卡：當地語跟站名一樣時只顯示一次", ride_text.count("Circular Quay") == 1,
+            # 卡片上不顯示當地語名稱（使用者的決定：中文名稱就夠了）。資料裡仍然留著，
+            # 地圖按鈕與電腦版當日路線靠「當地語名稱, 地點」去查，拿掉會查不到店。
+            # 五個會顯示當地語的地方各出一個：景點標題與地點、交通卡站名、
+            # 住宿標題、二選一的地點（二選一的店名在第 13 段用真實行程驗）
+            hidden_local = [x for x in ["Central Station", "Sydney Opera House", "Bennelong Pt.",
+                                        "Darling Hbr.", "Test Hotel"] if x in shown]
+            r.check("卡片：不顯示當地語名稱", not hidden_local, "還看得到：" + "、".join(hidden_local))
+            r.check("交通卡：站名只出現一次", ride_text.count("Circular Quay") == 1,
                     f"出現 {ride_text.count('Circular Quay')} 次")
-            r.check("交通卡：當地語不同時照常顯示", "Central Station" in ride_text)
+            r.check("卡片：當地語仍留在資料裡（地圖查詢要用）",
+                    page.locator('#main .card[data-mapq]').first.get_attribute("data-mapq")
+                    == "Sydney Opera House, Bennelong Point",
+                    page.locator('#main .card[data-mapq]').first.get_attribute("data-mapq") or "")
             weights = [int(w) for w in ride.locator(".route-body strong").evaluate_all(
                 "els => els.map(e => getComputedStyle(e).fontWeight)")]
             r.check("交通卡：經過站比起終點淡", len(weights) == 3 and weights[1] < weights[0] == weights[2],
@@ -1488,6 +1552,7 @@ def run(trip: str) -> bool:
                 page.goto(f"http://127.0.0.1:{port}/settle/")
                 page.wait_for_load_state("networkidle")
                 page.wait_for_timeout(600)
+                unlock_wallet(page)
                 data = page.evaluate(READ_SETTLE)
                 if data is None:
                     r.check(f"分帳：{label}", False, "找不到結清建議卡片")
@@ -1507,6 +1572,7 @@ def run(trip: str) -> bool:
             page.goto(f"http://127.0.0.1:{port}/settle/")
             page.wait_for_load_state("networkidle")
             page.wait_for_timeout(600)
+            unlock_wallet(page)
             with page.expect_download() as dl:
                 page.locator("#e-csv2").click()
             csv = Path(dl.value.path()).read_bytes().decode("utf-8-sig")
@@ -2076,6 +2142,7 @@ def run(trip: str) -> bool:
             page.wait_for_load_state("networkidle")
             page.wait_for_timeout(600)
 
+            unlock_wallet(page)
             r.check("匯率 null：沒有 JS 例外", not rate_errors, "; ".join(rate_errors[:2]))
             r.check("匯率 null：記帳表單仍然可用",
                     page.locator("#e-item").count() == 1 and page.locator("#e-add").count() == 1)
@@ -2104,6 +2171,7 @@ def run(trip: str) -> bool:
             page.goto(f"http://127.0.0.1:{port}/unknown/")
             page.wait_for_load_state("networkidle")
             page.wait_for_timeout(600)
+            unlock_wallet(page)
             body = page.locator("#main").inner_text()
 
             r.check("未知 block：畫面上有明確錯誤訊息", "未知的 block 型別" in body)
@@ -2343,11 +2411,8 @@ def run(trip: str) -> bool:
                 return out;
             }"""
             fails = {k: [] for k in ["contrast", "target", "spacing", "alt", "heading", "emoji", "label", "focus", "overflow"]}
-            tabs = page.locator(".nav-item")
-            for i in range(tabs.count()):
-                tab = tabs.nth(i).inner_text().split("\n")[0]
-                tabs.nth(i).click()
-                page.wait_for_timeout(300)
+
+            def ux_pass(tab):
                 page.evaluate("document.querySelectorAll('#main details').forEach(d => d.open = true)")
                 if page.locator("#main .secret-ask").count():   # 私人資料的密語框按了才出現
                     page.locator("#main .secret-ask").first.click()
@@ -2360,6 +2425,17 @@ def run(trip: str) -> bool:
                 for k in ["contrast", "target", "spacing", "alt", "heading", "emoji", "label"]:
                     fails[k] += [f"{tab}：{x}" for x in got[k]]
                 if got["overflow"] > 0: fails["overflow"].append(f"{tab}：{got['overflow']}px")
+
+            tabs = page.locator(".nav-item")
+            for i in range(tabs.count()):
+                tab = tabs.nth(i).inner_text().split("\n")[0]
+                tabs.nth(i).click()
+                page.wait_for_timeout(300)
+                locked = page.locator("#w-pass").count() > 0
+                ux_pass(tab + "（密碼鎖）" if locked else tab)
+                if locked:          # 記帳：鎖著的密碼框與解開後的表單都要過同一組規則
+                    unlock_wallet(page)
+                    ux_pass(tab)
             for k, label in [("contrast", "文字對比 ≥ 4.5:1（大字 3:1）"), ("target", "觸控目標 ≥ 44×44px"),
                              ("spacing", "觸控目標之間 ≥ 8px"), ("alt", "圖片都有替代文字"),
                              ("heading", "標題層級不跳級"), ("emoji", "介面不用 emoji 當圖示（網站標題除外）"),
@@ -2378,6 +2454,7 @@ def run(trip: str) -> bool:
             for i in range(tabs.count()):
                 tabs.nth(i).click()
                 page.wait_for_timeout(300)
+                unlock_wallet(page)
                 moving |= set(page.evaluate("document.getAnimations().filter(a => a.playState === 'running' && a.effect.getTiming().duration > 1).map(a => a.animationName || 'transition')"))
             r.check("UI 規則：減少動態效果時沒有動畫在跑", not moving, "、".join(sorted(moving)))
             ctx.close()
@@ -2451,6 +2528,10 @@ def run(trip: str) -> bool:
                     page.locator("#main .secret-ask").first.click()
                     page.wait_for_timeout(100)
                     page.evaluate("window.scrollTo(0, 0)")
+                if page.locator("#w-pass").count():   # 記帳：鎖著與解開後都量
+                    dark_fail += [f"{tab}（密碼鎖）：{x}" for x in page.evaluate(UX_PROBE)["contrast"]]
+                    dark_flat += [f"{tab}（密碼鎖）：{x}" for x in page.evaluate(FLAT_PROBE)]
+                    unlock_wallet(page)
                 dark_fail += [f"{tab}：{x}" for x in page.evaluate(UX_PROBE)["contrast"]]
                 dark_flat += [f"{tab}：{x}" for x in page.evaluate(FLAT_PROBE)]
             r.check("UI 規則：深色模式的文字對比 ≥ 4.5:1（大字 3:1）", not dark_fail,
@@ -2499,6 +2580,9 @@ def run(trip: str) -> bool:
                 tab = tabs.nth(i).inner_text().split("\n")[0]
                 tabs.nth(i).click()
                 page.wait_for_timeout(300)
+                if page.locator("#w-pass").count():   # 記帳：鎖著與解開後都量
+                    unlabeled += [f"{tab}（密碼鎖）：{x}" for x in page.evaluate(UX_PROBE)["label"]]
+                    unlock_wallet(page)
                 unlabeled += [f"{tab}：{x}" for x in page.evaluate(UX_PROBE)["label"]]
             r.check("UI 規則：電腦版輸入框也都有看得見的標籤", not unlabeled, "；".join(sorted(set(unlabeled))[:4]) or "各分頁都過")
             ctx.close()
@@ -2515,6 +2599,7 @@ def run(trip: str) -> bool:
                 tab = tabs.nth(i).inner_text().split("\n")[0]
                 tabs.nth(i).click()
                 page.wait_for_timeout(200)
+                unlock_wallet(page)
                 res = page.evaluate("""() => {
                   const out = { mixed: 0, boxes: 0, bad: 0, dup: [], order: [] };
                   out.mixed = document.querySelectorAll('#main .note-box:not(.warn) > .ic-warn').length;
@@ -2661,6 +2746,111 @@ def run(trip: str) -> bool:
                             leaks += [f"{scheme}/{theme}/{day}：{x}" for x in page.evaluate(MAPLE_ONLY)]
             r.check("配色：楓葉主題的第二層顏色不會出現在其他主題", not leaks,
                     "；".join(sorted(set(leaks))[:4]) or "四個主題 × 淺色深色都沒有")
+            ctx.close()
+
+            # 13 ── 卡片上不顯示當地語（日文）名稱 ──────────────
+            # 使用者的決定：全部行程都只留中文名稱。資料裡的 titleLocal／placeLocal／
+            # nameLocal 仍然要留著——地圖按鈕與電腦版當日路線靠「當地語名稱, 地點」去查。
+            # 所以這裡掃的是真實行程的每一個分頁、讀畫面，不是看資料。
+            ctx = browser.new_context()
+            page = ctx.new_page()
+            page.goto(base)
+            page.wait_for_load_state("networkidle")
+            page.wait_for_timeout(600)
+            jp_names = local_names(site_dir / "index.html")
+            jp_shown, jp_spans = [], 0
+            tabs = page.locator(".nav-item")
+            for i in range(tabs.count()):
+                tab = tabs.nth(i).inner_text().split("\n")[0]
+                tabs.nth(i).click()
+                page.wait_for_timeout(200)
+                jp_spans += page.locator("#main .lang-local").count()
+                # 只看「名字會出現的地方」：卡片標題、交通卡站名、二選一的店名。
+                # 整個 #main 一起看的話，說明與營業時間本來就會提到當地語
+                # （「推薦ダコメッカドッグ」、「マイング 9:00–21:00」），那是資料要顯示的字。
+                # 被拿掉的「地點」那一行跟著地點欄位走，由置換資料那一段精確地驗
+                txt = "\n".join(page.locator(
+                    "#main .subject, #main .route-body strong, #main .choice-main > div:first-child"
+                ).all_inner_texts())
+                jp_shown += [f"{tab}：{n}" for n in jp_names if n in txt]
+            # 第二條防的是空測試：資料哪天不填當地語了，上面那條會永遠通過
+            r.check("當地語：真實行程裡確實有當地語名稱可以顯示（不是空測試）",
+                    len(jp_names) >= 10, f"{len(jp_names)} 個")
+            r.check("當地語：卡片上一個都看不到", not jp_shown and jp_spans == 0,
+                    "；".join(sorted(set(jp_shown))[:4]) or f"{jp_spans} 個 .lang-local")
+            ctx.close()
+
+            # 14 ── 記帳的密碼鎖 ───────────────────────────────
+            # 使用者要求記帳要密碼才看得到（0000）。這是一道簾子、不是鎖：repo 是公開的，
+            # 密碼在原始碼裡讀得到，Firestore 的規則也只看「匿名登入＋tripId」。所以這裡
+            # 驗的是「沒輸入密碼就看不到帳」與「解開之後記在這台裝置」，不是安全性。
+            ctx = browser.new_context()
+            page = ctx.new_page()
+            lock_err, lock_said = [], []
+            page.on("pageerror", lambda e: lock_err.append(str(e)))
+            page.on("dialog", lambda d: (lock_said.append(d.message), d.dismiss()))
+            page.goto(base)
+            page.wait_for_load_state("networkidle")
+            page.wait_for_timeout(600)
+            wallet_tab = page.get_by_role("tab", name=re.compile("記帳"))
+            r.check("密碼鎖：記帳分頁照樣在導覽列上（鎖的是內容，不是入口）",
+                    wallet_tab.count() == 1 and wallet_tab.is_visible())
+            wallet_tab.click()
+            page.wait_for_timeout(300)
+            r.check("密碼鎖：沒輸入密碼時看不到記帳表單",
+                    page.locator("#w-pass").is_visible()
+                    and page.locator("#e-add").count() == 0
+                    and "新增花費" not in page.locator("#main").inner_text())
+
+            page.locator("#w-form button[type=submit]").click()   # 空白
+            page.wait_for_timeout(200)
+            r.check("密碼鎖：沒填密碼時錯誤寫在欄位底下",
+                    page.locator("#w-err").is_visible()
+                    and "請輸入密碼" in page.locator("#w-err").inner_text())
+            page.locator("#w-pass").fill("1234")
+            page.locator("#w-form button[type=submit]").click()
+            page.wait_for_timeout(200)
+            r.check("密碼鎖：密碼不對時不開，而且不跳 alert",
+                    page.locator("#e-add").count() == 0 and not lock_said
+                    and "密碼不對" in page.locator("#w-err").inner_text(),
+                    "／".join(lock_said))
+            r.check("密碼鎖：錯的欄位標成 aria-invalid、用 describedby 綁住錯誤",
+                    page.locator("#w-pass").get_attribute("aria-invalid") == "true"
+                    and page.locator("#w-pass").get_attribute("aria-describedby") == "w-err")
+
+            unlock_wallet(page)
+            r.check("密碼鎖：輸入 0000 之後記帳表單出現", page.locator("#e-add").count() == 1)
+            page.locator("#e-item").fill("密碼鎖測試")
+            page.locator("#e-local").fill("9000")
+            page.locator("#e-add").click()
+            page.wait_for_timeout(600)
+            r.check("密碼鎖：解開之後記帳照常可用",
+                    "密碼鎖測試" in page.locator("#main").inner_text())
+
+            page.reload()
+            page.wait_for_load_state("networkidle")
+            page.wait_for_timeout(600)
+            page.get_by_role("tab", name=re.compile("記帳")).click()
+            page.wait_for_timeout(300)
+            r.check("密碼鎖：重新整理後這台裝置還記得（使用者選的）",
+                    page.locator("#e-add").count() == 1 and page.locator("#w-pass").count() == 0)
+
+            page.locator("#e-lock").click()
+            page.wait_for_timeout(300)
+            r.check("密碼鎖：按「上鎖」鎖回去，帳也跟著從畫面上消失",
+                    page.locator("#w-pass").is_visible()
+                    and "密碼鎖測試" not in page.locator("#main").inner_text())
+            page.reload()
+            page.wait_for_load_state("networkidle")
+            page.wait_for_timeout(600)
+            page.get_by_role("tab", name=re.compile("記帳")).click()
+            page.wait_for_timeout(300)
+            r.check("密碼鎖：上鎖之後重新整理還是鎖著", page.locator("#w-pass").is_visible())
+
+            page.locator(".nav-item").first.click()   # 行前
+            page.wait_for_timeout(300)
+            r.check("密碼鎖：其他分頁不受影響", page.locator("#main .chk").count() > 0)
+            r.check("密碼鎖：整段沒有 JS 例外", not lock_err, "; ".join(lock_err[:2]))
             ctx.close()
 
             browser.close()
