@@ -767,13 +767,13 @@ main{ padding:var(--sp-3) var(--sp-4) 0; }
 .btn:active{ opacity:.85; }
 
 /* ── 航班卡 ───────────────────────────── */
-/* 左邊一條線是航空公司的識別色（見程式裡的 AIRLINE）。認不出來的航空公司退回主題色，
-   線一樣在，所以看起來不會像少了一塊。
+/* 整圈框線（左邊那條較粗）是航空公司的識別色（見程式裡的 AIRLINE）。認不出來的航空公司退回主題色，
+   框線一樣在，所以看起來不會像少了一塊。左邊用識別色、其餘三邊卻是主題色的話，兩色會打架。
    這是第十四節「不用品牌色」的例外，使用者指定的：地圖、訂房那些鍵每張卡片都有，
    各用各的品牌色會整頁花掉；航班卡一趟只有兩三張，而且是在認「這是哪一家的班機」。
    識別色本身多半太淡，當文字會看不清楚，所以文字另外用同色系深一階的（都算過 ≥ 4.5:1）。 */
 .flight{ border:1px solid var(--c-alt); border-left-width:4px; border-left-color:var(--c-alt); }
-.flight.fl-brand{ border-left-color:var(--air); }
+.flight.fl-brand{ border-color:var(--air); }
 .flight.fl-brand .fl-air, .flight.fl-brand .fl-air b{ color:var(--air-on); }
 .fl-head{
   display:flex; justify-content:space-between; align-items:baseline;
@@ -1302,7 +1302,7 @@ footer > a{ display:inline-block; padding:14px 0; margin:-14px 0; }
 [data-scheme="dark"] .intro.has-photo summary::after{ opacity:.15; }
 /* 航空公司的識別色：淺色模式用壓深過的版本（淡色在白底上看不出來），
    深色模式可以用原本的識別色，在深底上反而夠亮 */
-[data-scheme="dark"] .flight.fl-brand{ border-left-color:var(--air-dark); }
+[data-scheme="dark"] .flight.fl-brand{ border-color:var(--air-dark); }
 [data-scheme="dark"] .flight.fl-brand .fl-air,
 [data-scheme="dark"] .flight.fl-brand .fl-air b{ color:var(--air-on-dark); }
 /* 楓葉：淺色模式的深紅在深底上幾乎看不見，換成亮一階的秋色——仍然是 .12–.30 的透明度，不會搶眼 */
