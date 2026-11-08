@@ -3087,12 +3087,42 @@ const TRIP_DATA = {
             }
           ],
           "links": [],
-          "stay": 90,
+          "stay": 75,
           "mode": "transit"
         },
         {
+          "type": "stop",
+          "kind": "sight",
+          "time": "19:45",
+          "title": "一蘭和樂團（陽台表演）",
+          "titleLocal": "一蘭 本社総本店 一蘭和楽団",
+          "place": "福岡市博多區中洲5-3-2",
+          "notes": [
+          "從博多站搭空港線到中洲川端 3 站、約 6 分，出站走 1 分；吃赤坂那家的話是 2 站",
+          "⚠️ 20:00 準時開演、只演 15 分鐘，晚餐 19:45 前要離席",
+          "演出在本社總本店大樓的陽台，站店門口那一帶看就好，不用排隊進店；下雨或臨時狀況會停演"
+        ],
+          "links": [
+            {
+              "label": "🗺️ 地圖",
+              "url": "https://www.google.com/maps/search/?api=1&query=%E4%B8%80%E8%98%AD%20%E6%9C%AC%E7%A4%BE%E7%B7%8F%E6%9C%AC%E5%BA%97%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8D%80%E4%B8%AD%E6%B4%B25-3-2",
+              "style": "map"
+            },
+            {
+              "label": "🚆 從博多站",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E5%8D%9A%E5%A4%9A%E9%A7%85&destination=%E4%B8%80%E8%98%AD%20%E6%9C%AC%E7%A4%BE%E7%B7%8F%E6%9C%AC%E5%BA%97%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8D%80%E4%B8%AD%E6%B4%B25-3-2&travelmode=transit",
+              "style": "route"
+            }
+          ],
+          "stay": 30,
+          "mode": "transit",
+          "intro": "一蘭自己組的樂團，每晚 20:00 在本社總本店的陽台演奏十五分鐘，曲子與編舞全是原創，內容是為在地人與來福岡的旅客祈求平安。",
+          "travel": 12,
+          "hours": "每天 20:00–20:15"
+        },
+        {
           "type": "lodging",
-          "time": "20:00",
+          "time": "20:15",
           "title": "SHIELD21 博多（Airbnb）",
           "titleLocal": "駅前ハイツ",
           "address": "福岡市博多区博多駅前1丁目22-6",
@@ -3112,7 +3142,7 @@ const TRIP_DATA = {
             },
             {
               "label": "🚆 從上一站",
-              "url": "https://www.google.com/maps/dir/?api=1&origin=%E3%82%AA%E3%83%AA%E3%83%83%E3%82%AF%E3%82%B9%E3%83%AC%E3%83%B3%E3%82%BF%E3%82%AB%E3%83%BC%20%E5%8D%9A%E5%A4%9A%E9%A7%85%E5%8D%9A%E5%A4%9A%E5%8F%A3%E5%BA%97&destination=%E9%A7%85%E5%89%8D%E3%83%8F%E3%82%A4%E3%83%84%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8C%BA%E5%8D%9A%E5%A4%9A%E9%A7%85%E5%89%8D1%E4%B8%81%E7%9B%AE22-6&travelmode=transit",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E4%B8%80%E8%98%AD%20%E6%9C%AC%E7%A4%BE%E7%B7%8F%E6%9C%AC%E5%BA%97%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8D%80%E4%B8%AD%E6%B4%B25-3-2&destination=%E9%A7%85%E5%89%8D%E3%83%8F%E3%82%A4%E3%83%84%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8C%BA%E5%8D%9A%E5%A4%9A%E9%A7%85%E5%89%8D1%E4%B8%81%E7%9B%AE22-6&travelmode=transit",
               "style": "route"
             }
           ],
@@ -3120,6 +3150,7 @@ const TRIP_DATA = {
           "mode": "transit",
           "secret": "shield21",
           "secretHint": "房號、門鎖密碼與入住指南",
+          "travel": 13,
           "hours": "入住 16:00"
         }
       ]
@@ -3163,12 +3194,11 @@ const TRIP_DATA = {
           "type": "stop",
           "kind": "sight",
           "time": "09:30",
-          "title": "大濠公園",
+          "title": "大濠公園・福岡市美術館",
           "titleLocal": "大濠公園",
           "place": "福岡市中央區大濠公園",
           "notes": [
-          "池畔步道一圈 2km，走一圈約 30 分；旁邊接福岡城跡（舞鶴公園）",
-          "今天只逛公園，美術館要一個半小時以上，時間排不進去"
+          "池畔步道一圈 2km，旁邊接福岡城跡（舞鶴公園）"
         ],
           "links": [
             {
@@ -3182,10 +3212,11 @@ const TRIP_DATA = {
               "style": "route"
             }
           ],
-          "stay": 60,
+          "stay": 150,
           "mode": "walking",
-          "intro": "大濠公園的池子原本是福岡城的外濠，1929 年整建成仿杭州西湖的環池公園，中央以三座小島與石橋串連。",
+          "intro": "大濠公園的池子原本是福岡城的外濠，1929 年整建成仿杭州西湖的環池公園，中央以三座小島與石橋串連。\n福岡市美術館由前川國男設計、1979 年開館，2019 年大規模改修後重開，常設展同時擺得下古美術與草間彌生、安迪沃荷。",
           "travel": 5,
+          "hours": "美術館 09:30–17:30、週一休館（今天週四正常）",
           "photo": {
             "src": "img/intro/ohori-park.jpg",
             "credit": "Hirho",
@@ -3195,45 +3226,13 @@ const TRIP_DATA = {
         },
         {
           "type": "stop",
-          "kind": "sight",
-          "time": "10:30",
-          "title": "福岡塔",
-          "titleLocal": "福岡タワー",
-          "place": "福岡市早良區百道浜2-3-26",
-          "notes": [
-          "地鐵空港線大濠公園→西新 2 站約 3 分（¥210），西新站出來轉西鉄巴士到「福岡塔」約 9 分；不想等車就從西新站走 20 分",
-          "展望室分三層：123、120、116 公尺，票一張三層都能看",
-          "可刷卡、也收 QR 行動支付"
-        ],
-          "links": [
-            {
-              "label": "🗺️ 地圖",
-              "url": "https://www.google.com/maps/search/?api=1&query=%E7%A6%8F%E5%B2%A1%E3%82%BF%E3%83%AF%E3%83%BC",
-              "style": "map"
-            },
-            {
-              "label": "🚆 從上一站",
-              "url": "https://www.google.com/maps/dir/?api=1&origin=%E5%A4%A7%E6%BF%A0%E5%85%AC%E5%9C%92&destination=%E7%A6%8F%E5%B2%A1%E3%82%BF%E3%83%AF%E3%83%BC&travelmode=transit",
-              "style": "route"
-            }
-          ],
-          "stay": 80,
-          "mode": "transit",
-          "intro": "高 234 公尺，日本最高的海濱塔，外牆鋪了八千片半反射鏡面，把海和天空映在塔身上。展望室在 123 公尺高，一邊是博多灣，一邊是整片福岡市區。",
-          "travel": 30,
-          "hours": "09:30–22:00（最後入場 21:30）",
-          "fee": "展望室 大人 ¥1,000"
-        },
-        {
-          "type": "stop",
           "kind": "meal",
-          "time": "11:50",
+          "time": "12:00",
           "title": "一蘭 本社總本店",
           "titleLocal": "一蘭 本社総本店",
           "place": "福岡市博多區中洲5-3-2",
           "notes": [
-          "從福岡塔搭西鉄巴士 301 直達中洲約 35 分，不用轉車；或走到藤崎站搭空港線到中洲川端，出站走 1 分",
-          "晚上 20:00 還會回來這裡看和樂團，點餐不用趕"
+          "地鐵空港線大濠公園→中洲川端，不用轉車，3 站約 6 分，出站走 1 分"
         ],
           "links": [
             {
@@ -3243,20 +3242,20 @@ const TRIP_DATA = {
             },
             {
               "label": "🚆 從上一站",
-              "url": "https://www.google.com/maps/dir/?api=1&origin=%E7%A6%8F%E5%B2%A1%E3%82%BF%E3%83%AF%E3%83%BC&destination=%E4%B8%80%E8%98%AD%20%E6%9C%AC%E7%A4%BE%E7%B7%8F%E6%9C%AC%E5%BA%97%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8D%80%E4%B8%AD%E6%B4%B25-3-2&travelmode=transit",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E5%A4%A7%E6%BF%A0%E5%85%AC%E5%9C%92&destination=%E4%B8%80%E8%98%AD%20%E6%9C%AC%E7%A4%BE%E7%B7%8F%E6%9C%AC%E5%BA%97%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8D%80%E4%B8%AD%E6%B4%B25-3-2&travelmode=transit",
               "style": "route"
             }
           ],
-          "stay": 98,
+          "stay": 70,
           "mode": "transit",
           "intro": "一蘭是從福岡起家的豚骨拉麵連鎖，中洲那珂川邊這家是它的本社總本店。\n招牌是一人一格的「味集中カウンター」：用紙本勾選湯頭濃淡、辣醬多寡與麵的硬度，隔板放下來，就只剩自己跟那碗麵。",
-          "travel": 35,
+          "travel": 7,
           "hours": "24 小時營業、全年無休"
         },
         {
           "type": "stop",
           "kind": "shop",
-          "time": "13:28",
+          "time": "13:10",
           "title": "博多リバレイン 麵包超人商店街",
           "titleLocal": "福岡アンパンマンこどもミュージアム in モール",
           "place": "福岡市博多區下川端町3-1 博多リバレインモール 5F",
@@ -3285,7 +3284,7 @@ const TRIP_DATA = {
         {
           "type": "stop",
           "kind": "shop",
-          "time": "14:14",
+          "time": "13:56",
           "title": "天神地下街・mina天神・PARCO／Loft",
           "titleLocal": "天神地下街",
           "place": "福岡市中央區天神",
@@ -3305,7 +3304,7 @@ const TRIP_DATA = {
               "style": "route"
             }
           ],
-          "stay": 92,
+          "stay": 110,
           "mode": "walking",
           "intro": "南北長約六百公尺、十二個街區的地下商店街。整體以十九世紀歐洲風格統一設計，石板地、鑄鐵裝飾與天花板紋樣都在規範之內，連店家招牌的樣式都受限制，所以走起來不像一般地下街那麼雜亂。\n它同時是串連天神各百貨與地鐵站的通道，下雨天完全不用撐傘。",
           "travel": 12,
@@ -3390,7 +3389,7 @@ const TRIP_DATA = {
           "notes": [
           "西鐵藥院站步行 4 分；從 Canal City 搭地鐵過來約 20 分",
           "⚠️ 已訂 17:30，生意很好，準時到",
-          "⚠️ 19:25 要離開，才接得上 20:00 一蘭的和樂團",
+          "⚠️ 19:25 前離席，才有時間去福岡塔看夜景",
           "和牛七部位拼盤套餐要 2 人以上，同桌每個人要點同一款",
           "收尾推薦：石鍋拌飯、盛岡冷麵"
         ],
@@ -3417,35 +3416,36 @@ const TRIP_DATA = {
           "type": "stop",
           "kind": "sight",
           "time": "19:24",
-          "title": "一蘭和樂團（陽台表演）",
-          "titleLocal": "一蘭 本社総本店 一蘭和楽団",
-          "place": "福岡市博多區中洲5-3-2",
+          "title": "福岡塔（夜景）",
+          "titleLocal": "福岡タワー",
+          "place": "福岡市早良區百道浜2-3-26",
           "notes": [
-          "地鐵七隈線藥院→博多站內轉空港線→中洲川端，約 22 分（七隈線直達博多，不用走去天神南轉乘）",
-          "⚠️ 20:00 準時開演、只演 15 分鐘；演出在本社總本店大樓的陽台，站店門口那一帶看就好，不用排隊進店",
-          "下雨或臨時狀況會停演"
+          "搭巴士約 35 分，在「福岡塔」站下車；出發前用 Google 地圖看當下班次",
+          "⚠️ 回程最後一班巴士先查；趕不上就走 20–25 分到西新站搭空港線",
+          "展望室分三層（123／120／116 公尺），一張票三層都能看；可刷卡、也收 QR 行動支付"
         ],
           "links": [
             {
               "label": "🗺️ 地圖",
-              "url": "https://www.google.com/maps/search/?api=1&query=%E4%B8%80%E8%98%AD%20%E6%9C%AC%E7%A4%BE%E7%B7%8F%E6%9C%AC%E5%BA%97%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8D%80%E4%B8%AD%E6%B4%B25-3-2",
+              "url": "https://www.google.com/maps/search/?api=1&query=%E7%A6%8F%E5%B2%A1%E3%82%BF%E3%83%AF%E3%83%BC",
               "style": "map"
             },
             {
               "label": "🚆 從上一站",
-              "url": "https://www.google.com/maps/dir/?api=1&origin=%E8%82%89%E3%81%84%E3%81%A1%20%E8%96%AC%E9%99%A2%E5%BA%97%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E4%B8%AD%E5%A4%AE%E5%8D%80%E8%97%A5%E9%99%A23-16-34%20%E3%83%A4%E3%83%9E%E3%83%88%E3%83%93%E3%83%AB%201F&destination=%E4%B8%80%E8%98%AD%20%E6%9C%AC%E7%A4%BE%E7%B7%8F%E6%9C%AC%E5%BA%97%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8D%80%E4%B8%AD%E6%B4%B25-3-2&travelmode=transit",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E8%82%89%E3%81%84%E3%81%A1%20%E8%96%AC%E9%99%A2%E5%BA%97%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E4%B8%AD%E5%A4%AE%E5%8D%80%E8%97%A5%E9%99%A23-16-34%20%E3%83%A4%E3%83%9E%E3%83%88%E3%83%93%E3%83%AB%201F&destination=%E7%A6%8F%E5%B2%A1%E3%82%BF%E3%83%AF%E3%83%BC&travelmode=transit",
               "style": "route"
             }
           ],
-          "stay": 51,
+          "stay": 96,
           "mode": "transit",
-          "intro": "一蘭自己組的樂團，每晚 20:00 在本社總本店的陽台演奏十五分鐘，曲子與編舞全是原創，內容是為在地人與來福岡的旅客祈求平安。",
-          "travel": 22,
-          "hours": "每天 20:00–20:15"
+          "intro": "高 234 公尺，日本最高的海濱塔，外牆鋪了八千片半反射鏡面，把海和天空映在塔身上。展望室在 123 公尺高，一邊是博多灣，一邊是整片福岡市區。",
+          "travel": 35,
+          "hours": "09:30–22:00（最後入場 21:30）",
+          "fee": "展望室 大人 ¥1,000"
         },
         {
           "type": "lodging",
-          "time": "20:15",
+          "time": "21:00",
           "title": "SHIELD21 博多（Airbnb）",
           "titleLocal": "駅前ハイツ",
           "address": "福岡市博多区博多駅前1丁目22-6",
@@ -3460,13 +3460,13 @@ const TRIP_DATA = {
             },
             {
               "label": "🚆 從上一站",
-              "url": "https://www.google.com/maps/dir/?api=1&origin=%E4%B8%80%E8%98%AD%20%E6%9C%AC%E7%A4%BE%E7%B7%8F%E6%9C%AC%E5%BA%97%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8D%80%E4%B8%AD%E6%B4%B25-3-2&destination=%E9%A7%85%E5%89%8D%E3%83%8F%E3%82%A4%E3%83%84%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8C%BA%E5%8D%9A%E5%A4%9A%E9%A7%85%E5%89%8D1%E4%B8%81%E7%9B%AE22-6&travelmode=transit",
+              "url": "https://www.google.com/maps/dir/?api=1&origin=%E7%A6%8F%E5%B2%A1%E3%82%BF%E3%83%AF%E3%83%BC&destination=%E9%A7%85%E5%89%8D%E3%83%8F%E3%82%A4%E3%83%84%2C%20%E7%A6%8F%E5%B2%A1%E5%B8%82%E5%8D%9A%E5%A4%9A%E5%8C%BA%E5%8D%9A%E5%A4%9A%E9%A7%85%E5%89%8D1%E4%B8%81%E7%9B%AE22-6&travelmode=transit",
               "style": "route"
             }
           ],
           "stay": null,
           "mode": "transit",
-          "travel": 13
+          "travel": 30
         }
       ]
     },
