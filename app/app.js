@@ -84,6 +84,9 @@ document.body.insertAdjacentHTML("afterbegin", `<svg xmlns="http://www.w3.org/20
 <symbol id="i-wallet" viewBox="0 0 256 256"><path d="M216,64H56a8,8,0,0,1,0-16H192a8,8,0,0,0,0-16H56A24,24,0,0,0,32,56V184a24,24,0,0,0,24,24H216a16,16,0,0,0,16-16V80A16,16,0,0,0,216,64Zm0,128H56a8,8,0,0,1-8-8V78.63A23.84,23.84,0,0,0,56,80H216Zm-48-60a12,12,0,1,1,12,12A12,12,0,0,1,168,132Z"/></symbol>
 <symbol id="i-warning" viewBox="0 0 256 256"><path d="M236.8,188.09,149.35,36.22h0a24.76,24.76,0,0,0-42.7,0L19.2,188.09a23.51,23.51,0,0,0,0,23.72A24.35,24.35,0,0,0,40.55,224h174.9a24.35,24.35,0,0,0,21.33-12.19A23.51,23.51,0,0,0,236.8,188.09ZM222.93,203.8a8.5,8.5,0,0,1-7.48,4.2H40.55a8.5,8.5,0,0,1-7.48-4.2,7.59,7.59,0,0,1,0-7.72L120.52,44.21a8.75,8.75,0,0,1,15,0l87.45,151.87A7.59,7.59,0,0,1,222.93,203.8ZM120,144V104a8,8,0,0,1,16,0v40a8,8,0,0,1-16,0Zm20,36a12,12,0,1,1-12-12A12,12,0,0,1,140,180Z"/></symbol>
 <symbol id="i-x" viewBox="0 0 256 256"><path d="M205.66,194.34a8,8,0,0,1-11.32,11.32L128,139.31,61.66,205.66a8,8,0,0,1-11.32-11.32L116.69,128,50.34,61.66A8,8,0,0,1,61.66,50.34L128,116.69l66.34-66.35a8,8,0,0,1,11.32,11.32L139.31,128Z"/></symbol>
+<symbol id="i-hand-coins" viewBox="0 0 256 256"><path d="M230.33,141.06a24.43,24.43,0,0,0-21.24-4.23l-41.84,9.62A28,28,0,0,0,140,112H89.94a31.82,31.82,0,0,0-22.63,9.37L44.69,144H16A16,16,0,0,0,0,160v40a16,16,0,0,0,16,16H120a7.93,7.93,0,0,0,1.94-.24l64-16a6.94,6.94,0,0,0,1.19-.4L226,182.82l.44-.2a24.6,24.6,0,0,0,3.93-41.56ZM16,160H40v40H16Zm203.43,8.21-38,16.18L119,200H56V155.31l22.63-22.62A15.86,15.86,0,0,1,89.94,128H140a12,12,0,0,1,0,24H112a8,8,0,0,0,0,16h32a8.32,8.32,0,0,0,1.79-.2l67-15.41.31-.08a8.6,8.6,0,0,1,6.3,15.9ZM164,96a36,36,0,0,0,5.9-.48,36,36,0,1,0,28.22-47A36,36,0,1,0,164,96Zm60-12a20,20,0,1,1-20-20A20,20,0,0,1,224,84ZM164,40a20,20,0,0,1,19.25,14.61,36,36,0,0,0-15,24.93A20.42,20.42,0,0,1,164,80a20,20,0,0,1,0-40Z"/></symbol>
+<symbol id="i-piggy-bank" viewBox="0 0 256 256"><path d="M192,116a12,12,0,1,1-12-12A12,12,0,0,1,192,116ZM152,64H112a8,8,0,0,0,0,16h40a8,8,0,0,0,0-16Zm96,48v32a24,24,0,0,1-24,24h-2.36l-16.21,45.38A16,16,0,0,1,190.36,224H177.64a16,16,0,0,1-15.07-10.62L160.65,208h-57.3l-1.92,5.38A16,16,0,0,1,86.36,224H73.64a16,16,0,0,1-15.07-10.62L46,178.22a87.69,87.69,0,0,1-21.44-48.38A16,16,0,0,0,16,144a8,8,0,0,1-16,0,32,32,0,0,1,24.28-31A88.12,88.12,0,0,1,112,32H216a8,8,0,0,1,0,16H194.61a87.93,87.93,0,0,1,30.17,37c.43,1,.85,2,1.25,3A24,24,0,0,1,248,112Zm-16,0a8,8,0,0,0-8-8h-3.66a8,8,0,0,1-7.64-5.6A71.9,71.9,0,0,0,144,48H112A72,72,0,0,0,58.91,168.64a8,8,0,0,1,1.64,2.71L73.64,208H86.36l3.82-10.69A8,8,0,0,1,97.71,192h68.58a8,8,0,0,1,7.53,5.31L177.64,208h12.72l18.11-50.69A8,8,0,0,1,216,152h8a8,8,0,0,0,8-8Z"/></symbol>
+<symbol id="i-tag" viewBox="0 0 256 256"><path d="M243.31,136,144,36.69A15.86,15.86,0,0,0,132.69,32H40a8,8,0,0,0-8,8v92.69A15.86,15.86,0,0,0,36.69,144L136,243.31a16,16,0,0,0,22.63,0l84.68-84.68a16,16,0,0,0,0-22.63Zm-96,96L48,132.69V48h84.69L232,147.31ZM96,84A12,12,0,1,1,84,72,12,12,0,0,1,96,84Z"/></symbol>
 </svg>`);
 
 /* ═══════════════════════════════════════════════
@@ -112,6 +115,7 @@ const state = {
   cardOrder: saved.cardOrder || [], // 信用卡排序：同上，A 手機排過不該動到 B 手機
   expenses: saved.expenses || [],
   board: saved.board || [],         // 留言板：所有人都看得到，所以跟記帳一樣會同步
+  fund: saved.fund || [],           // 公積金：誰給了多少、花在哪裡。大家同步，但存在雲端的另一份文件（見 flush）
   owners: saved.owners || {},       // 名字 → 登記的裝置。要擋別台冒用，就得讓所有人都看得到
   queue: saved.queue || [],
   me: LS.get(`${KEY}:me`) || null
@@ -119,7 +123,7 @@ const state = {
 const persist = () => LS.set(KEY, JSON.stringify({
   checks: state.checks, shopping: state.shopping, cards: state.cards,
   cardOrder: state.cardOrder,
-  expenses: state.expenses, board: state.board, owners: state.owners, queue: state.queue
+  expenses: state.expenses, board: state.board, owners: state.owners, fund: state.fund, queue: state.queue
 }));
 
 /* ── 同步狀態顯示 ── */
@@ -142,7 +146,7 @@ const IC_CAT = {
   "person-simple-walk":"move", "map-trifold":"move", "map-pin":"move",
   bed:"stay", house:"stay",
   "shopping-bag":"shop", wallet:"shop", "credit-card":"shop", receipt:"shop",
-  "currency-jpy":"shop", ticket:"shop",
+  "currency-jpy":"shop", ticket:"shop", "piggy-bank":"shop", "hand-coins":"shop", tag:"shop",
   compass:"see", camera:"see", globe:"see",   /* compass 是景點卡的標題圖示 */
   warning:"warn", "first-aid":"warn",
   clock:"time", "hourglass-medium":"time", timer:"time", "calendar-check":"time",
@@ -158,7 +162,7 @@ const EMOJI_IC = {
   "💳":"credit-card", "🧾":"receipt", "🕘":"clock", "💴":"currency-jpy", "☎":"phone", "⏳":"hourglass-medium",
   "⏱":"timer", "🧭":"compass", "🍽":"fork-knife", "🔒":"lock-simple", "📷":"camera", "🌡":"thermometer",
   "💬":"chat-circle-dots", "🆘":"first-aid", "📥":"download-simple", "📊":"chart-bar", "✏":"pencil-simple",
-  "🔄":"arrows-clockwise", "🌐":"globe"
+  "🔄":"arrows-clockwise", "🌐":"globe", "🐷":"piggy-bank", "🏷":"tag"
 };
 const iconText = t => {
   const s = String(t ?? ""), m = s.match(/^(\p{Extended_Pictographic})\uFE0F?\s*/u);
@@ -199,6 +203,7 @@ const shopBag = () => {
   if (!s.removed) s.removed = [];
   if (!s.added)   s.added   = [];
   if (!s.groups)  s.groups  = [];
+  if (!s.closed)  s.closed  = [];   // 收起來的群組（例如十幾張的優惠券）：重畫之後維持收起來
   return s;
 };
 
@@ -255,20 +260,31 @@ function dropUserImage(id){
   imgDB.del(id).catch(() => {});
   if (userImgURL.has(id)){ URL.revokeObjectURL(userImgURL.get(id)); userImgURL.delete(id); }
 }
+/* 價格標籤的照片跟商品圖分開存：key 是「項目 id#tag」，旗標記在那個項目的 edits.tag */
+const TAG = "#tag";
 async function attachUserImage(id, file){
   const s = shopBag();
   try{ await imgDB.put(id, await shrinkImage(file)); }
   catch{ toast("這個瀏覽器存不了圖片"); return; }
   if (userImgURL.has(id)){ URL.revokeObjectURL(userImgURL.get(id)); userImgURL.delete(id); }
-  s.edits[id] = { ...(s.edits[id] || {}), uimg: true };
-  persist(); renderDay(current);
+  if (id.endsWith(TAG)){
+    const base = id.slice(0, -TAG.length);
+    s.edits[base] = { ...(s.edits[base] || {}), tag: true };
+  } else s.edits[id] = { ...(s.edits[id] || {}), uimg: true };
+  persist(); rerender();
 }
 function detachUserImage(id){
-  const s = shopBag(), a = s.added.find(x => x.id === id);
+  const s = shopBag();
   dropUserImage(id);
-  if (a) delete a.uimg;
-  if (s.edits[id]) delete s.edits[id].uimg;
-  persist(); renderDay(current);
+  if (id.endsWith(TAG)){
+    const base = id.slice(0, -TAG.length);
+    if (s.edits[base]) delete s.edits[base].tag;
+  } else {
+    const a = s.added.find(x => x.id === id);
+    if (a) delete a.uimg;
+    if (s.edits[id]) delete s.edits[id].uimg;
+  }
+  persist(); rerender();
 }
 /* 自己貼的連結只收 http／https：javascript: 這種網址點了會在網站裡執行程式。
    沒打 https:// 的（www.donki.com）幫忙補上。不合格回傳 null */
@@ -281,29 +297,258 @@ function cleanLink(v){
   }catch{ return null; }
 }
 
+/* ── 自動分類 ─────────────────────────────────
+   使用者要「一直新增、不用自己找分類」：最上面只有一個新增欄位，分類先依名稱猜好，
+   猜錯可以從下拉選單改。只決定「新加的這一項」放哪裡，已經在清單裡的東西不會被搬動。
+   猜的順序：
+     一、清單裡已經有同名的 → 用它現在的分類（改過一次分類，下次同名的就跟著走）
+     二、比關鍵字，比到「最長」的那個贏：「電鍋」比「鍋」準，「衣架」不會被當成衣服、
+        「杯麵」不會被當成杯子。英文只比整個字，免得 EVE 比到 every
+     三、都沒有 → 「其他」 */
+const SHOP_CATS = ["藥妝店", "零食食品", "伴手禮", "電器 3C", "衣服鞋包", "生活用品", "其他"];
+const SHOP_WORDS = {
+  "藥妝店": "藥妝 藥 面膜 化妝 化妝水 卸妝 洗面 洗顏 乳液 精華 防曬 隔離 粉底 口紅 唇膏 護唇 眼影 眼線 睫毛 腮紅 遮瑕 美妝 保養 乳霜 面霜 護手霜 眼霜 洗髮 潤髮 護髮 髮膜 沐浴 牙膏 漱口 眼藥 眼藥水 貼布 酸痛 痠痛 止痛 胃藥 感冒 頭痛 喉嚨 維他命 維生素 保健 酵素 益生菌 膠原 眼罩 蒸氣眼罩 休足 足貼 痘 隱形眼鏡 DHC 肌研 資生堂 花王 曼秀雷敦 樂敦 Biore 蜜妮 KATE Canmake 安耐曬 雪肌精 SK-II 合利他命 EVE 撒隆巴斯 露露倫 LuLuLun 高絲 Kose",
+  "零食食品": "零食 餅乾 巧克力 糖 糖果 軟糖 喉糖 洋芋片 薯片 泡麵 杯麵 拉麵 烏龍麵 咖哩 調味 調味料 醬 醬油 味噌 茶 茶包 綠茶 抹茶 焙茶 咖啡 果汁 飲料 酒 清酒 啤酒 燒酎 梅酒 威士忌 米 海苔 香鬆 罐頭 布丁 果凍 堅果 仙貝 米果 柿種 麵包 蛋糕 Pocky KitKat Calbee 卡樂比 明治 森永 固力果 Glico 樂天 Lotte",
+  "伴手禮": "伴手禮 名產 土產 禮盒 送禮 禮物 銘菓 和菓子 菓子 羊羹 通りもん 博多通りもん 小雞蛋糕 ひよ子 明太子 梅枝餅 長崎蛋糕 蜂蜜蛋糕 白色戀人 東京芭娜娜 六花亭 薯條三兄弟 鈴懸",
+  "電器 3C": "電器 3C 相機 鏡頭 拍立得 耳機 喇叭 充電 充電器 行動電源 電池 傳輸線 轉接 轉接頭 USB 記憶卡 SD 吹風機 吹風 捲髮 離子夾 刮鬍刀 電動 電動牙刷 電鍋 電子鍋 熱水壺 美容儀 手機 平板 筆電 電腦 鍵盤 滑鼠 Switch 遊戲 卡帶 Nintendo 任天堂 Sony Panasonic 國際牌 Dyson 象印 虎牌 Apple iPhone iPad",
+  "衣服鞋包": "衣 衣服 外套 大衣 羽絨 發熱衣 Heattech 上衣 T恤 襯衫 毛衣 帽T 褲 褲子 牛仔褲 裙 洋裝 內衣 襪 襪子 鞋 球鞋 靴 拖鞋 帽 帽子 圍巾 手套 包 包包 背包 後背包 錢包 皮夾 托特包 眼鏡 太陽眼鏡 飾品 項鍊 耳環 戒指 手錶 UNIQLO GU 優衣庫",
+  "生活用品": "生活 文具 筆 原子筆 筆記本 便利貼 貼紙 膠帶 毛巾 浴巾 杯 杯子 馬克杯 保溫瓶 水壺 碗 盤 筷 餐具 便當盒 收納 衣架 清潔 洗衣 洗衣精 柔軟精 芳香 擴香 香氛 蠟燭 雨傘 傘 玩具 公仔 扭蛋 模型 樂高 吉伊卡哇 寶可夢 三麗鷗 卡比 無印 大創 Daiso 3COINS 宜得利 Nitori"
+};
+/* 先拆好：[關鍵字（小寫）, 分類, 是不是英數]，比對時不用每次重拆 */
+const SHOP_KW = Object.entries(SHOP_WORDS).flatMap(([g, words]) =>
+  words.split(/\s+/).filter(Boolean).map(w => [w.toLowerCase(), g, /^[\x20-\x7e]+$/.test(w)]));
+const asciiHit = (n, w) => {
+  for (let i = n.indexOf(w); i >= 0; i = n.indexOf(w, i + 1)){
+    const a = n[i - 1] || "", z = n[i + w.length] || "";
+    if (!/[a-z0-9]/.test(a) && !/[a-z0-9]/.test(z)) return true;
+  }
+  return false;
+};
+function guessShopGroup(name, b){
+  const n = String(name || "").trim().toLowerCase();
+  if (!n) return "";
+  for (const [g, items] of shopGroups(b))
+    if (items.some(it => shopView(it).name.trim().toLowerCase() === n)) return g;
+  const coupon = (b.groups || []).find(g => g.coupon);
+  if (coupon && /券|優惠|折價|coupon/.test(n)) return coupon.name;
+  let best = null;
+  for (const [w, g, ascii] of SHOP_KW)
+    if ((ascii ? asciiHit(n, w) : n.includes(w)) && (!best || w.length > best[0].length)) best = [w, g];
+  return best ? best[1] : "其他";
+}
+
+/* 項目現在要顯示的樣子：Excel 給的（種子）＋自己加的，再蓋上之後在網站上改過的（edits）。
+   ed.note 是改版前的「數量／備註」欄：沒有另外填「內容」的話，就把它當內容顯示，
+   大家已經打進去的字不會不見。改版前的「金額」本來就叫 ed.amount，現在是「實付金額」。 */
+function shopView(it){
+  const ed = shopBag().edits[it.id] || {};
+  return { ...it, ed,
+    name: ed.name ?? it.name,
+    desc: ed.desc ?? it.desc ?? ed.note ?? "",
+    qty:  ed.qty  ?? it.qty  ?? "",
+    who:  ed.who  ?? it.who  ?? "" };
+}
+
 /* 把種子與本機資料合併成要渲染的群組。Map 保留插入順序：
-   先種子群組、再使用者自己加的。 */
+   先種子群組、再使用者自己加的群組，最後是自動分類才出現的群組（照 SHOP_CATS 的順序，
+   「其他」墊底）。項目被改過分類的（edits.group）放到新的群組，id 不變，勾選與金額都跟著走。 */
 function shopGroups(b){
   const s = shopBag();
-  const out = new Map();
+  const out = new Map(), all = [];
   for (const g of (b.groups || [])){
-    out.set(g.name, (g.items || []).map(it => {
+    out.set(g.name, []);
+    for (const it of g.items || []){
       const o = (it && typeof it === "object") ? it : {};
       const name = String(o.name ?? o.text ?? it ?? "");
-      return { id: `${g.name}:${name}`, group: g.name, name,
-               img: o.img || "", url: o.url || "", who: o.who || "", seed: true };
-    }));
+      all.push({ id: `${g.name}:${name}`, group: g.name, name,
+                 img: o.img || "", url: o.url || "", who: o.who || "", seed: true });
+    }
   }
   for (const name of s.groups) if (!out.has(name)) out.set(name, []);
-  for (const a of s.added){
-    if (!out.has(a.group)) out.set(a.group, []);
-    out.get(a.group).push({ ...a, seed: false });
-  }
-  for (const [k, arr] of out) out.set(k, arr.filter(x => !s.removed.includes(x.id)));
+  for (const a of s.added) all.push({ ...a, seed: false });
+  const groupOf = it => (s.edits[it.id] || {}).group || it.group;
+  const rank = g => { const i = SHOP_CATS.indexOf(g); return i < 0 ? SHOP_CATS.length - 1.5 : i; };
+  /* 刪掉的先濾掉再看有哪些群組：不然自動分類生出來的群組會在最後一項被刪掉之後
+     留下一個空殼（Excel 給的、使用者自己加的群組則是刻意一直留著） */
+  const live = all.filter(it => !s.removed.includes(it.id));
+  [...new Set(live.map(groupOf))].filter(g => !out.has(g))
+    .sort((x, y) => rank(x) - rank(y)).forEach(g => out.set(g, []));
+  for (const it of live) out.get(groupOf(it)).push(it);
   return out;
 }
 
-/* ── 「現在進行到哪」用的時間換算 ──────────────
+/* 現在這一頁的購物區塊（代購結算就地重算時要用） */
+const shopBlock = () => ((TRIP_DATA.days.find(d => d.id === current) || {}).blocks || [])
+  .find(b => b.type === "shopping");
+
+/* 「幫誰買」的選項：旅伴＋清單裡填過的名字（媽媽、同事…），打一次之後就能直接選 */
+function shopWhoList(b){
+  const seen = new Set(M.members || []);
+  for (const items of shopGroups(b).values())
+    for (const it of items){ const w = shopView(it).who.trim(); if (w) seen.add(w); }
+  return [...seen];
+}
+
+/* 新增欄位打到一半的內容。重畫（刪掉別的項目、勾選…）時接回來，才不會打到一半被洗掉 */
+let shopDraft = {};
+
+function shopNewHTML(b, groups, coupon){
+  const d = shopDraft;
+  const opts = [...new Set([...groups.keys(), ...SHOP_CATS])];
+  const pick = d.g && opts.includes(d.g) ? d.g : (guessShopGroup(d.n, b) || "其他");
+  return `<form class="shop-new" id="shop-new" novalidate>
+    <h3 class="sn-h">新增要買的東西</h3>
+    <label class="f-lbl">名稱<input class="input" name="n" id="sn-n" autocomplete="off" value="${esc(d.n || "")}"></label>
+    <p class="f-err" id="sn-n-err" hidden></p>
+    <div class="sn-goods"${coupon.has(pick) ? " hidden" : ""}>
+      <label class="f-lbl">內容（選填）<input class="input" name="d" placeholder="例如：50ml、抹茶口味" autocomplete="off" value="${esc(d.d || "")}"></label>
+      <div class="row2">
+        <label class="f-lbl">數量<input class="input" name="q" type="number" inputmode="numeric" min="1" placeholder="1" value="${esc(d.q || "")}"></label>
+        <label class="f-lbl">幫誰買（選填）<input class="input" name="w" list="sn-who" placeholder="例如：媽媽" autocomplete="off" value="${esc(d.w || "")}"></label>
+      </div>
+    </div>
+    <label class="f-lbl">分類<select class="input" name="g" id="sn-g" aria-describedby="sn-hint"${d.g ? ' data-touched="1"' : ""}>
+      ${opts.map(o => `<option${o === pick ? " selected" : ""}>${esc(o)}</option>`).join("")}</select></label>
+    <p class="sn-hint" id="sn-hint">打名稱時會自動選好分類，不對可以改</p>
+    <details class="sn-more"${d.u ? " open" : ""}><summary>附圖片或連結（選填）</summary>
+      <div class="shop-extra">
+        <label class="shop-file"><input type="file" name="f" accept="image/*" hidden>${ic("camera")}<span>附圖片</span></label>
+        <label class="f-lbl">連結<input class="input" name="u" id="sn-u" inputmode="url" autocomplete="off" value="${esc(d.u || "")}"></label>
+      </div>
+      <p class="f-err" id="sn-u-err" hidden></p>
+    </details>
+    <button class="btn btn-full" type="submit">新增</button>
+    <datalist id="sn-who">${shopWhoList(b).map(w => `<option value="${esc(w)}"></option>`).join("")}</datalist>
+  </form>`;
+}
+
+/* 券：維持原本的格子（圖片要大，結帳時給店員看），不給數量、金額、勾選 */
+function couponTileHTML(v){
+  const uimg = v.uimg || v.ed.uimg;
+  return `<div class="shop-i${v.img || uimg ? "" : " no-img"}" data-id="${esc(v.id)}">
+    <button class="shop-x" data-sdel="${esc(v.id)}" type="button" aria-label="刪除${esc(v.name)}">${ic("x")}</button>
+    ${v.img ? `<img class="shop-img" src="${esc(v.img)}" data-zoom="${esc(v.img)}" alt="${esc(v.name)}" loading="lazy">`
+      : uimg ? `<img class="shop-img" data-uimg="${esc(v.id)}" alt="${esc(v.name)}">` : ""}
+    <div class="shop-name">${esc(v.name)}</div>
+    ${/^https?:\/\//i.test(v.url) ? `<a class="btn btn-plain shop-link" href="${esc(v.url)}" target="_blank" rel="noopener">開啟優惠券</a>` : ""}
+    ${v.img || uimg ? "" : `<label class="shop-addimg"><input type="file" accept="image/*" data-simg="${esc(v.id)}" hidden>${ic("camera")}加圖片</label>`}
+  </div>`;
+}
+
+/* 要買的東西：一項一列。最常用的兩個動作（勾掉、填實付金額＋拍價格標籤）直接在列上；
+   名稱、內容、數量、幫誰買、分類收在鉛筆裡，要改再打開（toggleShopEdit）。 */
+function shopRowHTML(v){
+  const id = esc(v.id), name = esc(v.name), uimg = v.uimg || v.ed.uimg;
+  const meta = [v.desc, v.qty ? `數量 ${v.qty}` : "", v.who ? `幫${v.who}買` : ""].filter(Boolean);
+  return `<div class="shop-i shop-row" data-id="${id}">
+    <div class="sr-top">
+      <label class="chk"><input type="checkbox" data-sid="${id}"${v.ed.done ? " checked" : ""}><span class="sr-name">${name}</span></label>
+      <button class="sr-btn" type="button" data-sedit="${id}" aria-expanded="false" aria-label="編輯「${name}」">${ic("pencil-simple")}</button>
+      <button class="sr-btn shop-x" type="button" data-sdel="${id}" aria-label="刪除${name}">${ic("x")}</button>
+    </div>
+    ${meta.length ? `<p class="sr-meta">${meta.map(esc).join("・")}</p>` : ""}
+    ${v.img ? `<img class="shop-img sr-img" src="${esc(v.img)}" data-zoom="${esc(v.img)}" alt="${name}" loading="lazy">`
+      : uimg ? `<img class="shop-img sr-img" data-uimg="${id}" alt="${name}">` : ""}
+    ${/^https?:\/\//i.test(v.url) ? `<a class="btn btn-plain shop-link sr-link" href="${esc(v.url)}" target="_blank" rel="noopener">開啟連結</a>` : ""}
+    <div class="sr-buy">
+      <label class="f-lbl sr-amt">實付金額（${esc(M.money.local)}）<input class="input shop-amt" type="number" inputmode="numeric" min="0" data-samt="${id}" value="${esc(String(v.ed.amount ?? ""))}"></label>
+      ${v.ed.tag
+        ? `<span class="sr-tag has"><img data-uimg="${id}${TAG}" alt="${name} 的價格標籤"></span>`
+        : `<label class="sr-tag"><input type="file" accept="image/*" data-stag="${id}" hidden>${ic("tag")}價格標籤</label>`}
+    </div>
+  </div>`;
+}
+
+/* 鉛筆打開的編輯欄。不重畫整頁，只插在這一列底下（跟信用卡的「修改總額」同一套），
+   其他列正在打的金額才不會被洗掉。按「儲存」才重畫——分類可能變了，要搬到別的群組。 */
+let shopEditSeq = 0;
+function shopEditHTML(v, b){
+  const n = ++shopEditSeq, groups = shopGroups(b);
+  const coupon = new Set((b.groups || []).filter(g => g.coupon).map(g => g.name));
+  const opts = [...new Set([...groups.keys(), ...SHOP_CATS])].filter(o => !coupon.has(o));
+  const cur = (v.ed.group || v.group);
+  const uimg = v.uimg || v.ed.uimg;
+  return `<form class="sr-editbox" data-sform="${esc(v.id)}" novalidate>
+    <label class="f-lbl">名稱<input class="input" name="n" id="se${n}-n" value="${esc(v.name)}" autocomplete="off"></label>
+    <p class="f-err" id="se${n}-n-err" hidden></p>
+    <label class="f-lbl">內容<input class="input" name="d" value="${esc(v.desc)}" placeholder="例如：50ml、抹茶口味" autocomplete="off"></label>
+    <div class="row2">
+      <label class="f-lbl">數量<input class="input" name="q" type="number" inputmode="numeric" min="1" value="${esc(String(v.qty))}"></label>
+      <label class="f-lbl">幫誰買<input class="input" name="w" list="sn-who" value="${esc(v.who)}" autocomplete="off"></label>
+    </div>
+    <label class="f-lbl">分類<select class="input" name="g">${opts.map(o =>
+      `<option${o === cur ? " selected" : ""}>${esc(o)}</option>`).join("")}</select></label>
+    ${v.img || uimg ? "" : `<label class="shop-addimg"><input type="file" accept="image/*" data-simg="${esc(v.id)}" hidden>${ic("camera")}加商品圖片</label>`}
+    <div class="sr-acts"><button class="btn" type="submit">儲存</button>
+      <button class="btn btn-plain" type="button" data-scancel>取消</button></div>
+  </form>`;
+}
+function toggleShopEdit(btn){
+  const row = btn.closest(".shop-row"), open = row.querySelector(".sr-editbox");
+  if (open){ open.remove(); btn.setAttribute("aria-expanded", "false"); return; }
+  const b = shopBlock(), id = btn.dataset.sedit;
+  const it = [...shopGroups(b).values()].flat().find(x => x.id === id);
+  if (!it) return;
+  row.insertAdjacentHTML("beforeend", shopEditHTML(shopView(it), b));
+  btn.setAttribute("aria-expanded", "true");
+  row.querySelector('.sr-editbox [name="n"]').focus();
+}
+function saveShopEdit(form){
+  const s = shopBag(), id = form.dataset.sform;
+  const get = k => form.querySelector(`[name="${k}"]`).value.trim();
+  const nameEl = form.querySelector('[name="n"]'), err = form.querySelector(".f-err");
+  if (!get("n")){
+    err.textContent = "請填寫名稱"; err.hidden = false;
+    nameEl.setAttribute("aria-invalid", "true"); nameEl.setAttribute("aria-describedby", err.id);
+    nameEl.focus(); return;
+  }
+  const qty = Math.round(Number(get("q"))) || "";
+  const vals = { name: get("n"), desc: get("d"), qty: qty > 0 ? qty : "", who: get("w"), group: get("g") };
+  const a = s.added.find(x => x.id === id);
+  const ed = s.edits[id] = { ...(s.edits[id] || {}) };
+  if (a){
+    Object.assign(a, vals);
+    for (const k of Object.keys(vals)) delete ed[k];
+  } else Object.assign(ed, vals);      // Excel 給的項目：改過的值記在 edits，種子本身不動
+  delete ed.note;                      // 改版前的「數量／備註」已經帶進「內容」了
+  persist(); rerender();
+  document.querySelector(`[data-sedit="${CSS.escape(id)}"]`)?.focus({ preventScroll: true });
+  toast(`已儲存「${vals.name}」`);
+}
+
+/* 代購結算：「幫誰買」有填的，照人加總實付金額。只算這支手機上的（購物清單本來就不同步） */
+function shopSettleBody(b){
+  const coupon = new Set((b.groups || []).filter(g => g.coupon).map(g => g.name));
+  const people = new Map();
+  for (const [g, items] of shopGroups(b)){
+    if (coupon.has(g)) continue;
+    for (const it of items){
+      const v = shopView(it), who = v.who.trim();
+      if (!who) continue;
+      if (!people.has(who)) people.set(who, { total: 0, paid: [], todo: [] });
+      const p = people.get(who), amt = Number(v.ed.amount) || 0;
+      if (amt > 0){ p.total += amt; p.paid.push([v, amt]); } else p.todo.push(v);
+    }
+  }
+  if (!people.size) return `<p class="meta">新增時填了「幫誰買」的東西，填上實付金額就會算在這裡。</p>`;
+  const cur = esc(M.money.local);
+  const about = n => M.money.rate ? `<span class="ss-about">約 ${esc(M.money.home)} ${fmt(n * M.money.rate)}</span>` : "";
+  const all = [...people.values()].reduce((s, p) => s + p.total, 0);
+  return [...people].map(([who, p]) => `<div class="ss-p">
+      <div class="ss-head"><h3 class="ss-name">${esc(who)}</h3>
+        <p class="ss-amt"><b>${cur} ${fmt(p.total)}</b>${about(p.total)}</p></div>
+      ${p.paid.length ? `<ul class="ss-items">${p.paid.map(([v, amt]) =>
+        `<li><span>${esc(v.name)}${v.qty > 1 ? ` ×${esc(String(v.qty))}` : ""}</span><span>${cur} ${fmt(amt)}</span></li>`).join("")}</ul>` : ""}
+      ${p.todo.length ? `<p class="ss-todo">還沒填實付金額：${p.todo.map(v => esc(v.name)).join("、")}</p>` : ""}
+    </div>`).join("") +
+    (people.size > 1 ? `<p class="exp-total ss-total"><span>全部代購</span><b>${cur} ${fmt(all)}</b></p>` : "");
+}
+const paintShopSettle = () => {
+  const el = document.getElementById("shop-settle"), b = shopBlock();
+  if (el && b) el.innerHTML = shopSettleBody(b);
+};
+
+/* ── 「現在進行到哪」用的時間換算 ──────────────/* ── 「現在進行到哪」用的時間換算 ──────────────
    卡片上掛 data-start / data-stay，實際的結束時間由 markNow() 依前後
    相鄰項目推算：沒填停留時間的項目（例如當天最後的住宿）若直接用
    start 當結束，會在抵達的那一秒就被判定成「已結束」。 */
@@ -737,55 +982,41 @@ const RENDERERS = {
     </div>`;
   },
 
-  /* 購物清單（優惠券也是它的一個群組，結構一樣）。
-     種子項目來自 Excel，在網站上增刪的存本機，兩邊在 shopGroups() 合併。
-     勾選與輸入全部走 data-sid／data-snote／data-samt，由就地更新的處理器接手。 */
+  /* 購物清單（優惠券也是它的一個群組）。
+     最上面一個新增欄位（自動猜分類），底下是各群組：券維持格子，要買的東西一項一列。
+     種子項目來自 Excel，在網站上增刪改的存本機，兩邊在 shopGroups() 合併。
+     勾選與金額走 data-sid／data-samt，由就地更新的處理器接手，不重畫。 */
   shopping: b => {
     const s = shopBag();
     /* 券是「用掉」不是「買到」，所以不給數量與金額。旗標在群組層級，
        自己在網站上加進這一組的項目也一樣不給，同一組才不會長得不一樣。 */
     const coupon = new Set((b.groups || []).filter(g => g.coupon).map(g => g.name));
+    const groups = shopGroups(b);
     return `<div class="card"><h2 class="subject">${iconText(b.title || "購物清單")}</h2>
       ${notesHTML(b.notes)}
-      ${[...shopGroups(b)].map(([name, items]) => {
-        const done = items.filter(it => (s.edits[it.id] || {}).done).length;
+      ${shopNewHTML(b, groups, coupon)}
+      ${[...groups].map(([name, items]) => {
+        const views = items.map(shopView);
         const isCoupon = coupon.has(name);
-        return `<details class="shop-g" data-group="${esc(name)}" open>
+        const done = views.filter(v => v.ed.done).length;
+        return `<details class="shop-g" data-group="${esc(name)}"${s.closed.includes(name) ? "" : " open"}>
           <summary><span class="shop-gn">${esc(name)}</span>
-            <span class="shop-n">${isCoupon ? `共 ${items.length} 張` : `${done}/${items.length}`}</span>
+            <span class="shop-n">${isCoupon ? `共 ${views.length} 張` : `${done}/${views.length}`}</span>
             <button class="shop-gx" data-delgroup="${esc(name)}" type="button">刪除群組</button></summary>
-          <div class="shop-grid">${items.map(it => {
-            const ed = s.edits[it.id] || {};
-            /* 沒有圖片的卡片加 no-img，內容才會讓開左上角那顆 ✕ */
-            /* 自己加的圖存在 IndexedDB（uimg），網址等 paintUserImages() 讀出來才補上。
-               新增時附的記在項目上，之後才補的記在 edits（Excel 給的項目也能補） */
-            const uimg = it.uimg || ed.uimg;
-            return `<div class="shop-i${it.img || uimg ? "" : " no-img"}" data-id="${esc(it.id)}">
-              <button class="shop-x" data-sdel="${esc(it.id)}" type="button" aria-label="刪除${esc(it.name)}">${ic("x")}</button>
-              ${it.img ? `<img class="shop-img" src="${esc(it.img)}" data-zoom="${esc(it.img)}" alt="${esc(it.name)}" loading="lazy">`
-                : uimg ? `<img class="shop-img" data-uimg="${esc(it.id)}" alt="${esc(it.name)}">` : ""}
-              ${isCoupon
-                ? `<div class="shop-name">${esc(it.name)}</div>`
-                : `<label class="chk"><input type="checkbox" data-sid="${esc(it.id)}"${ed.done ? " checked" : ""}><span>${esc(it.name)}${it.who ? `<span class="shop-who">${esc(it.who)}</span>` : ""}</span></label>`}
-              ${/^https?:\/\//i.test(it.url) ? `<a class="btn btn-plain shop-link" href="${esc(it.url)}" target="_blank" rel="noopener">${isCoupon ? "開啟優惠券" : "開啟連結"}</a>` : ""}
-              ${isCoupon ? "" : `<label class="f-lbl">數量／備註<input class="input shop-note" data-snote="${esc(it.id)}" value="${esc(ed.note || "")}" autocomplete="off"></label>
-              <label class="f-lbl">金額<input class="input shop-amt" type="number" inputmode="numeric" min="0" data-samt="${esc(it.id)}" value="${esc(String(ed.amount ?? ""))}"></label>`}
-              ${it.img || uimg ? "" : `<label class="shop-addimg"><input type="file" accept="image/*" data-simg="${esc(it.id)}" hidden>${ic("camera")}加圖片</label>`}
-            </div>`;
-          }).join("")}</div>
-          <form class="shop-add" data-addto="${esc(name)}">
-            <label class="f-lbl">加一項到「${esc(name)}」<input class="input" name="n" autocomplete="off"></label>
-            <button class="btn" type="submit">新增</button>
-            <div class="shop-extra">
-              <label class="shop-file"><input type="file" name="f" accept="image/*" hidden>${ic("camera")}<span>附圖片</span></label>
-              <label class="f-lbl">連結（選填）<input class="input" name="u" inputmode="url" autocomplete="off"></label>
-            </div></form>
+          ${isCoupon ? `<div class="shop-grid">${views.map(couponTileHTML).join("")}</div>`
+            : views.length ? `<div class="shop-list">${views.map(shopRowHTML).join("")}</div>`
+            : `<p class="meta shop-empty">還沒有東西。</p>`}
         </details>`;
       }).join("")}
       ${s.removed.length ? `<button class="shop-restore" data-srestore="1" type="button">還原已移除的 ${s.removed.length} 項</button>` : ""}
       <form class="shop-addg">
         <label class="f-lbl">群組名稱<input class="input" name="g" placeholder="例如「超市」" autocomplete="off"></label>
         <button class="btn" type="submit">新增群組</button></form>
+    </div>
+    <div class="card"><h2 class="subject">${ic("receipt")}代購結算</h2>
+      <div id="shop-settle">${shopSettleBody(b)}</div>
+      <div class="meta meta-foot">只算這支手機上記的（購物清單不同步）。金額是 ${esc(M.money.local)}${M.money.rate
+        ? `，台幣照 1 ${esc(M.money.local)} = ${M.money.rate} ${esc(M.money.home)} 估算` : ""}。</div>
     </div>`;
   },
 
@@ -806,7 +1037,9 @@ const RENDERERS = {
 
   expenses: () => renderExpenses(),
 
-  board: () => renderBoard()
+  board: () => renderBoard(),
+
+  fund: () => renderFund()
 };
 
 function renderBlock(b){
@@ -819,10 +1052,14 @@ function renderBlock(b){
 
 /* ── 分頁 ── */
 let current = TRIP_DATA.days[0].id;
+const rerender = () => renderDay(current, true);
 let mapFocus = null;   // { day, v, p }：右側地圖只看當天第 v 站（地點 p）
 const mapSkip = {};    // 每天取消勾選、不畫進路線的點（Set，見 skipOf）。換天保留，重新整理就全部恢復
 let dayLink = null;    // 「在 Google 地圖開啟」要用的路線：paintDayMap 算好，paintDayLink 畫
-function renderDay(id){
+/* keep：同一頁重畫（新增、刪除、勾選後重畫、雲端有更新）時維持現在捲到的位置。
+   使用者在購物清單每新增一項就被拉回最上面，要再捲下去找——只有換分頁才捲到頂。 */
+function renderDay(id, keep = false){
+  const same = id === current;
   if (id !== current) mapFocus = null;   // 換一天就回到整條路線
   current = id;
   const day = TRIP_DATA.days.find(d => d.id === id);
@@ -852,7 +1089,7 @@ function renderDay(id){
   paintVaults();        // 記住密語的話，卡片上的私人資料在這裡自動解開（解密是非同步的）
   paintUserImages();    // 購物清單裡自己加的圖片從 IndexedDB 讀出來（非同步）
   paintDayMap(day);
-  window.scrollTo({ top:0, behavior:"smooth" });
+  if (!(keep && same)) window.scrollTo({ top:0, behavior:"smooth" });
   markNow();           // 捲到頂之後才標記；第一次進站會再捲到目前項目
 }
 
@@ -937,7 +1174,7 @@ function buildNav(){
       `<span class="nav-main">${iconText(d.nav)}</span>${sub(d)}</button>`;
   /* 分三組：有日期的是每日行程；沒日期的再分「旅途工具」（購物、記帳）與「準備資訊」（其餘）。
      用 builder 固定給的 id 判斷，不靠分頁名稱——名稱每趟行程會不一樣 */
-  const TOOLS = new Set(["shop", "wallet", "board"]);
+  const TOOLS = new Set(["shop", "wallet", "fund", "board"]);
   const days  = TRIP_DATA.days.filter(d => d.date);
   const tools = TRIP_DATA.days.filter(d => !d.date && TOOLS.has(d.id));
   const prep  = TRIP_DATA.days.filter(d => !d.date && !TOOLS.has(d.id));
@@ -1424,8 +1661,9 @@ const WALLET_PASS = "0000";
 const WALLET_LS = `${KEY}:walletok`;
 let walletOpen = LS.get(WALLET_LS) === "1";
 
-const walletLockHTML = () => `<div class="card">
-    <h2 class="subject">${ic("lock-simple")}記帳</h2>
+/* 記帳與公積金共用這一道鎖：解開一個，另一個也開（同一個 walletOpen） */
+const walletLockHTML = (title = "記帳") => `<div class="card">
+    <h2 class="subject">${ic("lock-simple")}${esc(title)}</h2>
     <div class="note-box">這一頁要密碼才看得到。</div>
     <form class="vault-form" id="w-form" autocomplete="off">
       <label class="f-lbl">密碼<input class="input" id="w-pass" type="password" inputmode="numeric"
@@ -1826,16 +2064,59 @@ document.getElementById("main").addEventListener("change", e => {
 document.getElementById("main").addEventListener("input", e => {
   /* 留言草稿：存在變數裡，重畫時才接得回來（renderBoard 會把它填回 textarea） */
   if (e.target.id === "bd-text"){ bdDraft = e.target.value; return; }
-  const note = e.target.closest("[data-snote]");
-  const amt  = e.target.closest("[data-samt]");
-  if (!note && !amt) return;
-  const s  = shopBag();
-  const id = (note || amt).dataset.snote || (note || amt).dataset.samt;
-  s.edits[id] = { ...(s.edits[id] || {}) };
-  if (note) s.edits[id].note = note.value;
-  else      s.edits[id].amount = amt.value === "" ? "" : Number(amt.value);
+  const draft = e.target.closest("#shop-new");
+  if (draft && e.target.name && e.target.name !== "f"){
+    shopDraft[e.target.name] = e.target.value;
+    if (e.target.name === "n") shopGuessNow(draft);
+    return;
+  }
+  const fk = { "f-give":"give", "f-gnote":"gnote", "f-item":"item", "f-spend":"spend" }[e.target.id];
+  if (fk){ fundDraft[fk] = e.target.value; return; }
+  const amt = e.target.closest("[data-samt]");
+  if (!amt) return;
+  const s  = shopBag(), id = amt.dataset.samt;
+  s.edits[id] = { ...(s.edits[id] || {}), amount: amt.value === "" ? "" : Number(amt.value) };
   persist();
+  paintShopSettle();
 });
+
+/* 打名稱的時候順手選好分類。使用者自己動過下拉選單就不再改它（data-touched） */
+function shopGuessNow(form){
+  const sel = form.querySelector("#sn-g");
+  if (!sel.dataset.touched){
+    const g = guessShopGroup(form.querySelector("#sn-n").value, shopBlock()) || "其他";
+    if ([...sel.options].some(o => o.value === g)) sel.value = g;
+  }
+  shopGoodsFields(form);
+}
+/* 選到優惠券的話，內容、數量、幫誰買用不到，先收起來 */
+function shopGoodsFields(form){
+  const b = shopBlock(), sel = form.querySelector("#sn-g");
+  const coupon = (b.groups || []).some(g => g.coupon && g.name === sel.value);
+  form.querySelector(".sn-goods").hidden = coupon;
+}
+document.getElementById("main").addEventListener("change", e => {
+  if (e.target.id === "sn-g"){
+    e.target.dataset.touched = "1";
+    shopDraft.g = e.target.value;
+    shopGoodsFields(e.target.closest("#shop-new"));
+    return;
+  }
+  const t = e.target.closest("[data-stag]");
+  if (t && t.files.length) attachUserImage(t.dataset.stag + TAG, t.files[0]);
+  if (e.target.name === "fwho") fundDraft.who = e.target.value;
+  if (e.target.id === "f-day") fundDraft.day = e.target.value;
+});
+
+/* 群組收起來／打開記在本機。toggle 不會冒泡，所以用捕獲 */
+document.getElementById("main").addEventListener("toggle", e => {
+  const g = e.target.closest?.(".shop-g");
+  if (!g || e.target !== g) return;
+  const s = shopBag(), name = g.dataset.group;
+  s.closed = s.closed.filter(x => x !== name);
+  if (!g.open) s.closed.push(name);
+  persist();
+}, true);
 
 /* 已經加好的項目補一張圖 */
 document.getElementById("main").addEventListener("change", e => {
@@ -1845,7 +2126,7 @@ document.getElementById("main").addEventListener("change", e => {
 
 /* 選了圖片，按鈕改成「已選圖片」，才知道有沒有選到 */
 document.getElementById("main").addEventListener("change", e => {
-  const f = e.target.closest('.shop-add [name="f"]');
+  const f = e.target.closest('.shop-new [name="f"]');
   if (!f) return;
   const lab = f.closest(".shop-file");
   lab.classList.toggle("has", f.files.length > 0);
@@ -1894,6 +2175,7 @@ document.getElementById("main").addEventListener("click", e => {
        自己加的直接從 added 拿掉。圖先記下來，等復原時限過了才真的刪。 */
     const i = s.added.findIndex(a => a.id === id);
     if ((i >= 0 && s.added[i].uimg) || (s.edits[id] || {}).uimg) drops.push(id);
+    if ((s.edits[id] || {}).tag) drops.push(id + TAG);
     if (i >= 0) s.added.splice(i, 1);
     else if (!s.removed.includes(id)) s.removed.push(id);
     delete s.edits[id];
@@ -1905,13 +2187,21 @@ document.getElementById("main").addEventListener("click", e => {
     const snap = JSON.stringify({ added:s.added, removed:s.removed, edits:s.edits, groups:s.groups });
     const drops = [];
     mutate(drops);
-    persist(); renderDay(current);
+    persist(); rerender();
     toast(`已刪除${what}`, 6000, {
       label: "復原",
-      run(){ Object.assign(s, JSON.parse(snap)); persist(); renderDay(current); },
+      run(){ Object.assign(s, JSON.parse(snap)); persist(); rerender(); },
       expire(){ drops.forEach(dropUserImage); }
     });
   };
+  const ed = e.target.closest("[data-sedit]");
+  if (ed) return toggleShopEdit(ed);
+  if (e.target.closest("[data-scancel]")){
+    const row = e.target.closest(".shop-row"), btn = row.querySelector("[data-sedit]");
+    row.querySelector(".sr-editbox").remove();
+    btn.setAttribute("aria-expanded", "false"); btn.focus();
+    return;
+  }
   const del = e.target.closest("[data-sdel]");
   if (del){
     const name = (del.getAttribute("aria-label") || "").replace(/^刪除/, "");
@@ -1923,7 +2213,7 @@ document.getElementById("main").addEventListener("click", e => {
      但種子項目只是記進 removed，清掉就全部回來。 */
   if (e.target.closest("[data-srestore]")){
     s.removed.length = 0;
-    persist(); renderDay(current); return;
+    persist(); rerender(); return;
   }
 
   const dg = e.target.closest("[data-delgroup]");
@@ -1941,14 +2231,26 @@ document.getElementById("main").addEventListener("click", e => {
    項目可以附一張圖片、一個連結（選填）。 */
 document.getElementById("main").addEventListener("submit", async e => {
   const s = shopBag();
-  const addItem = e.target.closest(".shop-add");
+  const editForm = e.target.closest(".sr-editbox");
+  if (editForm){ e.preventDefault(); return saveShopEdit(editForm); }
+  const addItem = e.target.closest("#shop-new");
   if (addItem){
     e.preventDefault();
-    const name = addItem.querySelector('[name="n"]').value.trim();
-    if (!name){ toast("請填寫名稱"); addItem.querySelector('[name="n"]').focus(); return; }
-    const url = cleanLink(addItem.querySelector('[name="u"]').value);
-    if (url === null){ toast("連結要是網址，例如 https://www.donki.com"); addItem.querySelector('[name="u"]').focus(); return; }
-    const it = { id: `+${Date.now().toString(36)}`, group: addItem.dataset.addto, name };
+    const get = k => addItem.querySelector(`[name="${k}"]`).value.trim();
+    const name = get("n"), url = cleanLink(get("u"));
+    const errs = [];
+    if (!name) errs.push(["sn-n", "請填寫名稱"]);
+    if (url === null) errs.push(["sn-u", "連結要是網址，例如 https://www.donki.com"]);
+    if (url === null) addItem.querySelector(".sn-more").open = true;
+    if (fieldErrors(["sn-n", "sn-u"], errs)) return;
+    const group = get("g") || "其他";
+    const it = { id: `+${Date.now().toString(36)}`, group, name };
+    if (!addItem.querySelector(".sn-goods").hidden){
+      const qty = Math.round(Number(get("q")));
+      if (get("d")) it.desc = get("d");
+      if (qty > 0) it.qty = qty;
+      if (get("w")) it.who = get("w");
+    }
     if (url) it.url = url;
     const file = addItem.querySelector('[name="f"]').files[0];
     if (file){
@@ -1956,7 +2258,14 @@ document.getElementById("main").addEventListener("submit", async e => {
       catch{ toast("這個瀏覽器存不了圖片，先只加名稱與連結"); }
     }
     s.added.push(it);
-    persist(); renderDay(current); return;
+    /* 群組收起來的話打開，剛加的才看得到 */
+    s.closed = s.closed.filter(x => x !== group);
+    shopDraft = {};
+    persist(); rerender();
+    /* 停在原地、游標回到名稱，可以接著打下一個 */
+    document.getElementById("sn-n")?.focus({ preventScroll: true });
+    toast(`已加到「${group}」：${name}`);
+    return;
   }
   const addGroup = e.target.closest(".shop-addg");
   if (addGroup){
@@ -1966,7 +2275,7 @@ document.getElementById("main").addEventListener("submit", async e => {
     if (!name || s.groups.includes(name)) return;
     s.groups.push(name);
     inp.value = "";
-    persist(); renderDay(current); return;
+    persist(); rerender(); return;
   }
 });
 
@@ -2027,7 +2336,7 @@ function ccDragEnd(){
   cc.classList.remove("is-dragging");
   const name = cc.dataset.card;
   if (!setCardOrder(ccList(cc).map(el => el.dataset.card))) return;
-  persist(); renderDay(current); focusGrip(name);
+  persist(); rerender(); focusGrip(name);
 }
 for (const t of ["pointerup", "pointercancel"]) window.addEventListener(t, ccDragEnd);
 
@@ -2045,7 +2354,7 @@ document.getElementById("main").addEventListener("keydown", e => {
   if (!dir) return;
   e.preventDefault();
   if (!moveCard(grip.dataset.card, dir)) return;
-  persist(); renderDay(current); focusGrip(grip.dataset.card);
+  persist(); rerender(); focusGrip(grip.dataset.card);
 });
 
 document.getElementById("main").addEventListener("click", e => {
@@ -2057,17 +2366,22 @@ document.getElementById("main").addEventListener("click", e => {
   if (hide){
     const n = hide.dataset.hide;
     state.cards[n] = { ...(state.cards[n] || {}), hidden: true };
-    persist(); renderDay(current); return;
+    persist(); rerender(); return;
   }
   if (e.target.closest("[data-restore]")){
     for (const k of Object.keys(state.cards)) delete state.cards[k].hidden;
-    persist(); renderDay(current); return;
+    persist(); rerender(); return;
   }
   if (e.target.id === "bd-add")  return addMessage();
   if (e.target.id === "bd-reg")  return registerDevice(false);
   if (e.target.id === "bd-take") return registerDevice(true);   // 這是我的新手機
   if (e.target.id === "bd-redo"){ bdEdit = true; renderDay(current); return; }
   if (e.target.closest("#e-lock")) return lockWallet();
+  if (e.target.closest("#f-lock")) return lockWallet();   // 公積金跟記帳共用同一道鎖
+  if (e.target.id === "f-add-in")  return addFund("in");
+  if (e.target.id === "f-add-out") return addFund("out");
+  const fdel = e.target.closest("[data-fdel]");
+  if (fdel) return delFund(fdel.dataset.fdel);
   const ccAdd = e.target.closest(".cc-add-btn");
   if (ccAdd) return addCardSpent(ccAdd.dataset.card);
   const ccFixToggle = e.target.closest("[data-cc-fix]");
@@ -2104,13 +2418,13 @@ document.getElementById("main").addEventListener("click", e => {
     const i = state.expenses.findIndex(x => x.id === del.dataset.del);
     if (i < 0) return;
     const [gone] = state.expenses.splice(i, 1);
-    persist(); push({ type:"expenses" }); renderDay(current);
+    persist(); push({ type:"expenses" }); rerender();
     /* 記帳是同步的：誤觸 ✕ 會讓這筆從所有人的裝置上消失，給 6 秒復原 */
     toast(`已刪除「${gone.item}」`, 6000, {
       label: "復原",
       run(){
         state.expenses.splice(Math.min(i, state.expenses.length), 0, gone);
-        persist(); push({ type:"expenses" }); renderDay(current);
+        persist(); push({ type:"expenses" }); rerender();
       }
     });
   }
@@ -2149,8 +2463,133 @@ function addExpense(){
     cat: document.getElementById("e-cat").value,
     split, createdAt: Date.now(), createdBy: state.me || ""
   });
-  persist(); push({ type:"expenses" }); renderDay(current);
+  persist(); push({ type:"expenses" }); rerender();
   toast(`已記下「${item}」 ${M.money.home} ${fmt(home)}`);
+}
+
+/* ── 公積金 ─────────────────────────────────────
+   大家先各拿一筆錢放在一起，共同的花費（加油、停車、過路費…）從這裡付。
+   要記的就兩件事：每個人給了多少、錢花到哪裡。都用當地貨幣記（使用者選的：都用日圓），
+   旁邊附約多少台幣。跟記帳一樣所有人同步、跟記帳共用同一道密碼。
+   一筆紀錄：{ id, kind:"in"|"out", who（in）, item（out）, amount, note?, day?（out）, at, by } */
+let fundDraft = {};   // 打到一半的欄位：雲端更新時整頁重畫，接回來才不會被洗掉
+const money = n => `${esc(M.money.local)} ${fmt(n)}`;
+
+function fundTotals(){
+  const by = {};
+  let got = 0, spent = 0;
+  for (const x of state.fund){
+    if (x.kind === "in"){ got += x.amount; by[x.who] = (by[x.who] || 0) + x.amount; }
+    else spent += x.amount;
+  }
+  return { got, spent, left: got - spent, by };
+}
+
+function renderFund(){
+  if (!walletOpen) return walletLockHTML("公積金");
+  const members = M.members || [], t = fundTotals(), d = fundDraft;
+  const days = TRIP_DATA.days.filter(x => x.date);
+  const today = (days.find(x => x.date === nowAtDestination().date) || days[0] || {}).id;
+  const dayNav = id => (days.find(x => x.id === id) || {}).nav || "";
+  const people = [...members, ...Object.keys(t.by).filter(w => !members.includes(w))];
+  const rows = [...state.fund].sort((a, b) => b.at - a.at);
+  const by = x => x.by ? ` · ${esc(x.by)} 記` : "";
+  return `<div class="card">
+    <div class="opt-head"><div class="opt-head-main"><h2 class="subject">${ic("piggy-bank")}公積金</h2></div>
+      <div class="opt-links"><button class="btn btn-plain" id="f-lock" type="button"
+              aria-label="鎖上公積金">${ic("lock-simple")}上鎖</button></div></div>
+    <p class="fund-left"><span>還剩</span><b${t.left < 0 ? ' class="is-neg"' : ""}>${money(t.left)}</b>${M.money.rate
+      ? `<span class="fund-about">約 ${esc(M.money.home)} ${fmt(t.left * M.money.rate)}</span>` : ""}</p>
+    <div class="fund-sum"><p><span>收到</span><b>${money(t.got)}</b></p><p><span>花掉</span><b>${money(t.spent)}</b></p></div>
+    <h3 class="fund-h">每個人給了</h3>
+    <div class="fund-people">${people.map(m =>
+      `<p class="fund-p"><span>${esc(m)}</span><b>${money(t.by[m] || 0)}</b></p>`).join("")}</div>
+  </div>
+  <div class="card">
+    <h2 class="subject">${ic("hand-coins")}有人給錢</h2>
+    <div class="field"><div class="f-grp" id="f-who-l">誰給的</div>
+      <div class="chips" id="f-who" role="group" aria-labelledby="f-who-l">${members.map(m =>
+        `<label class="chip"><input type="radio" name="fwho" value="${esc(m)}"${d.who === m ? " checked" : ""}>${esc(m)}</label>`).join("")}</div>
+      <p class="f-err" id="f-who-err" hidden></p></div>
+    <div class="field"><label for="f-give">金額（${esc(M.money.local)}）</label>
+      <input class="input" id="f-give" type="number" inputmode="numeric" min="1" placeholder="0" value="${esc(d.give || "")}">
+      <p class="f-err" id="f-give-err" hidden></p></div>
+    <div class="field"><label for="f-gnote">備註（選填）</label>
+      <input class="input" id="f-gnote" type="text" placeholder="例如：出發前先收" autocomplete="off" value="${esc(d.gnote || "")}"></div>
+    <button class="btn btn-full" id="f-add-in" type="button">記下來</button>
+  </div>
+  <div class="card">
+    <h2 class="subject">${ic("receipt")}花在哪裡</h2>
+    <div class="field"><label for="f-item">項目</label>
+      <input class="input" id="f-item" type="text" placeholder="例如：加油、停車費" autocomplete="off" value="${esc(d.item || "")}">
+      <p class="f-err" id="f-item-err" hidden></p></div>
+    <div class="field"><label for="f-spend">金額（${esc(M.money.local)}）</label>
+      <input class="input" id="f-spend" type="number" inputmode="numeric" min="1" placeholder="0" value="${esc(d.spend || "")}">
+      <p class="f-err" id="f-spend-err" hidden></p></div>
+    <div class="field"><label for="f-day">日期</label>
+      <select class="input" id="f-day">${days.map(x =>
+        `<option value="${esc(x.id)}"${(d.day || today) === x.id ? " selected" : ""}>${esc(x.nav)}</option>`).join("")}</select></div>
+    <button class="btn btn-full" id="f-add-out" type="button">記下來</button>
+  </div>
+  <div class="card"><h2 class="subject">明細</h2>
+    <div class="exp-list">${rows.length ? rows.map(x => x.kind === "in" ? `
+      <div class="exp-item">
+        <div><strong>${esc(x.who)} 給的</strong><span class="exp-cat">收入</span><br>
+          <span class="meta">${esc(bdWhen(x.at))}${x.note ? ` · ${esc(x.note)}` : ""}${by(x)}</span></div>
+        <div class="amt">${money(x.amount)}
+          <button class="exp-del" data-fdel="${esc(x.id)}" aria-label="刪除「${esc(x.who)} 給的 ${money(x.amount)}」">${ic("x")}</button></div>
+      </div>` : `
+      <div class="exp-item">
+        <div><strong>${esc(x.item)}</strong><span class="exp-cat">支出</span><br>
+          <span class="meta">${esc(dayNav(x.day))}${by(x)}</span></div>
+        <div class="amt">${money(x.amount)}
+          <button class="exp-del" data-fdel="${esc(x.id)}" aria-label="刪除「${esc(x.item)}」">${ic("x")}</button></div>
+      </div>`).join("") : `<div class="meta">還沒有紀錄。</div>`}</div>
+  </div>`;
+}
+
+function addFund(kind){
+  const by = state.me || (device && device.by) || "";
+  const num = id => Math.round(Number(document.getElementById(id).value) || 0);
+  let rec;
+  if (kind === "in"){
+    const who = (document.querySelector('#f-who input:checked') || {}).value || "";
+    const amount = num("f-give"), errs = [];
+    if (!who) errs.push(["f-who", "請選是誰給的"]);
+    if (!(amount > 0)) errs.push(["f-give", "請填金額"]);
+    if (fieldErrors(["f-who", "f-give"], errs)) return;
+    const note = document.getElementById("f-gnote").value.trim();
+    rec = { kind, who, amount, ...(note ? { note } : {}) };
+    fundDraft = { item: fundDraft.item, spend: fundDraft.spend, day: fundDraft.day };
+  } else {
+    const item = document.getElementById("f-item").value.trim();
+    const amount = num("f-spend"), errs = [];
+    if (!item) errs.push(["f-item", "請填寫項目"]);
+    if (!(amount > 0)) errs.push(["f-spend", "請填金額"]);
+    if (fieldErrors(["f-item", "f-spend"], errs)) return;
+    rec = { kind, item, amount, day: document.getElementById("f-day").value };
+    fundDraft = { who: fundDraft.who, give: fundDraft.give, gnote: fundDraft.gnote, day: rec.day };
+  }
+  state.fund.push({ id: crypto.randomUUID(), ...rec, at: Date.now(), by });
+  persist(); push({ type:"fund" }); rerender();
+  document.getElementById(kind === "in" ? "f-add-in" : "f-add-out")?.focus({ preventScroll: true });
+  toast(kind === "in" ? `已記下：${rec.who} 給了 ${M.money.local} ${fmt(rec.amount)}`
+                      : `已記下「${rec.item}」 ${M.money.local} ${fmt(rec.amount)}`);
+}
+
+function delFund(id){
+  const i = state.fund.findIndex(x => x.id === id);
+  if (i < 0) return;
+  const [gone] = state.fund.splice(i, 1);
+  persist(); push({ type:"fund" }); rerender();
+  /* 公積金是同步的：誤觸 ✕ 會讓這筆從所有人的裝置上消失，給 6 秒復原 */
+  toast(`已刪除「${gone.kind === "in" ? `${gone.who} 給的` : gone.item}」`, 6000, {
+    label: "復原",
+    run(){
+      state.fund.splice(Math.min(i, state.fund.length), 0, gone);
+      persist(); push({ type:"fund" }); rerender();
+    }
+  });
 }
 
 /* ── 留言板 ─────────────────────────────────────
@@ -2418,14 +2857,24 @@ async function flush(){
   if (!state.queue.length){ setSync("ok","已同步"); return; }
   try{
     const { doc, setDoc } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js");
+    /* 公積金寫在另一份文件（shared/fund），不跟記帳擠在 shared/state：還沒更新的舊版程式
+       （手機上開著沒重新整理的分頁）記一筆帳就會整份覆寫 shared/state，它不知道有公積金
+       這個欄位，寫一次就把公積金整筆洗掉。分開放，舊程式碰不到它。
+       兩份各自只在「佇列裡有它的東西」時才寫：只動了公積金，就不要拿本機的記帳去蓋雲端。 */
+    const n = state.queue.length, kinds = new Set(state.queue.map(q => q.type));
     /* 記帳、留言、裝置登記都寫在同一份文件的不同欄位，整份覆寫。
        已知的代價：兩個人各自離線留言、先後上線，後傳的那個會把前一個的留言蓋掉。
        使用者看過這個風險並且選擇這樣（留言表單底下有一行字寫給使用者看）。
        要改成「一則一份文件」的子集合之前，先問使用者——不要自己動手。 */
-    await setDoc(doc(db, "trips", M.tripId, "shared", "state"), {
-      expenses: state.expenses, board: state.board, owners: state.owners, updatedAt: Date.now()
-    });
-    state.queue = []; persist(); setSync("ok","已同步");
+    if ([...kinds].some(k => k !== "fund"))
+      await setDoc(doc(db, "trips", M.tripId, "shared", "state"), {
+        expenses: state.expenses, board: state.board, owners: state.owners, updatedAt: Date.now()
+      });
+    if (kinds.has("fund"))
+      await setDoc(doc(db, "trips", M.tripId, "shared", "fund"), { items: state.fund, updatedAt: Date.now() });
+    /* 只清掉這次寫上去的：等待的時候又加進來的，留給下一次 */
+    state.queue.splice(0, n); persist();
+    if (state.queue.length) flush(); else setSync("ok","已同步");
   }catch(e){
     console.error("同步失敗：", e);
     setSync("error", "同步失敗");
@@ -2452,14 +2901,25 @@ async function initFirebase(){
        使用者按取消也沒有第二次機會。改用記帳頁的「我是誰」選擇器。 */
     onSnapshot(doc(db, "trips", M.tripId, "shared", "state"), snap => {
       const d = snap.data();
-      if (!d || state.queue.length) return;   // 本地有未傳資料時不覆蓋
+      /* 本地有還沒傳的記帳／留言／登記時不覆蓋。公積金的待傳不影響這一份 */
+      if (!d || state.queue.some(q => q.type !== "fund")) return;
       /* 刻意不碰 state.checks / shopping / cards：這些清單都是各自的，
          遠端殘留的舊值要忽略。 */
       state.expenses = d.expenses || [];
       state.board = d.board || [];
       state.owners = d.owners || {};
-      persist(); renderDay(current);
+      persist();
+      /* 只有用到這份資料的分頁才重畫，而且停在原地：別人記一筆帳，
+         正在購物清單打字的人不該被洗掉、拉回最上面 */
+      if (current === "wallet" || current === "board") rerender();
       boardChanged();   // 分頁上的未讀數與「有新留言」的提示
+    });
+    onSnapshot(doc(db, "trips", M.tripId, "shared", "fund"), snap => {
+      const d = snap.data();
+      if (!d || state.queue.some(q => q.type === "fund")) return;   // 本機有還沒傳的公積金就先不收
+      state.fund = Array.isArray(d.items) ? d.items : [];
+      persist();
+      if (current === "fund") rerender();
     });
     flush();
   }catch(e){

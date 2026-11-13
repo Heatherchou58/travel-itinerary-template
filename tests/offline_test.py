@@ -327,6 +327,65 @@ def photo_trip(src: str) -> dict:
     return trip
 
 
+def fund_trip(trip_id: str = "fundtest") -> dict:
+    """公積金：一個沒有日期的分頁（旅途工具）＋記帳（共用同一道鎖）＋一天（公積金花費選日期用）。"""
+    trip = json.loads(json.dumps(SETTLE_TRIP))
+    trip["meta"]["tripId"] = trip_id
+    trip["days"] = [
+        {"id": "fund", "nav": "🐷 公積金", "blocks": [{"type": "fund"}]},
+        {"id": "wallet", "nav": "💰 記帳", "blocks": [{"type": "expenses"}]},
+        {"id": "d1", "nav": "D1 測試", "date": "2027-05-01", "title": "Day 1", "blocks": [
+            {"type": "stop", "kind": "sight", "time": "10:00", "title": "測試景點", "notes": [], "links": []}]},
+    ]
+    return trip
+
+
+# 假的 Firebase：攔掉 gstatic 的三個模組，換成一份放在測試程式（Python）記憶體裡的資料庫，
+# 兩個瀏覽器（兩支手機）共用。setDoc 整份覆寫、onSnapshot 每 200ms 看一次版本，跟真的一樣是
+# 「整份文件」的語意。離線時（navigator.onLine 為 false）收不到更新，跟真的手機一樣。
+FAKE_FB = {
+    "firebase-app.js": "export const initializeApp = c => ({ c });",
+    "firebase-auth.js": ("export const getAuth = () => ({});\n"
+                         "export const signInAnonymously = async () => ({ user: { uid: 'fake-' + Math.random().toString(36).slice(2) } });"),
+    "firebase-firestore.js": """export const getFirestore = () => ({});
+export const doc = (db, ...p) => p.join('/');
+export async function setDoc(path, data){
+  if (!navigator.onLine) throw new Error('offline');
+  await window.__fbSet(path, JSON.stringify(data));
+}
+export function onSnapshot(path, cb){
+  let ver = -1;
+  const tick = async () => {
+    if (!navigator.onLine) return;
+    const r = await window.__fbGet(path);
+    if (r && r.v !== ver){ ver = r.v; cb({ data: () => JSON.parse(r.data), exists: () => true }); }
+  };
+  tick(); setInterval(tick, 200);
+  return () => {};
+}""",
+}
+
+
+def seed_shop(page) -> None:
+    """購物清單放幾項進本機再重新整理：UI 探針才量得到一項一列、代購結算、鉛筆打開的編輯欄。
+    其中一項是改版前的格式（「數量／備註」寫在 edits.note），確認舊資料照樣畫得出來。"""
+    page.evaluate("""() => {
+        const k = 'trip:kyushu-fukuoka-2026';
+        const d = JSON.parse(localStorage.getItem(k) || '{}');
+        d.shopping = {
+          added: [
+            { id: '+ux1', group: '藥妝店', name: '面膜', desc: '肌研 50ml', qty: 2, who: '媽媽' },
+            { id: '+ux2', group: '零食食品', name: 'KitKat 抹茶', who: '同事' },
+            { id: '+ux3', group: '伴手禮', name: '博多通りもん' } ],
+          edits: { '+ux1': { done: true, amount: 2560 }, '+ux3': { note: '3 盒' } },
+          removed: [], groups: [], closed: [] };
+        localStorage.setItem(k, JSON.stringify(d));
+    }""")
+    page.reload()
+    page.wait_for_load_state("networkidle")
+    page.wait_for_timeout(500)
+
+
 def transit_trip() -> dict:
     """沒開車的一天：三站＋住宿，交通方式有搭車也有步行。
     Google 的大眾運輸一次只能查兩點之間，所以整天只標地點、點某一站才看那一段怎麼搭。"""
@@ -578,9 +637,18 @@ def run(trip: str) -> bool:
                            ("unknown", unknown_block_trip()),
                            ("vault", vault_trip(make_vault(tmp))),
                            ("photo", photo_trip(photo_src)),
-                           ("transit", transit_trip())]:
+                           ("transit", transit_trip()),
+                           ("fund", fund_trip()), ("sync", fund_trip("synctest"))]:
             shutil.copytree(tmp / "site", tmp / name)
             swap_trip_data(tmp / name / "index.html", trip)
+        # 同步測試用假的 Firebase 設定：模組會被攔掉換成假的。萬一沒攔到，真的 SDK 拿這組
+        # 不存在的金鑰也登入不了，碰不到真正的雲端
+        sync_html = tmp / "sync" / "index.html"
+        sync_html.write_text(sync_html.read_text(encoding="utf-8").replace(
+            "const FIREBASE_CONFIG = null;",
+            'const FIREBASE_CONFIG = { "apiKey": "fake-key", "projectId": "fake-project" };'), encoding="utf-8")
+        if "fake-project" not in sync_html.read_text(encoding="utf-8"):
+            sys.exit("準備同步測試失敗：換不了 FIREBASE_CONFIG")
 
         # 勾選 key 的穩定性：同一個 tripId、同一個 origin，只差在清單中間插了一項。
         # key 若用陣列索引，插入後打勾會整排往下錯位。
@@ -1360,9 +1428,9 @@ def run(trip: str) -> bool:
                     and page.locator('.shop-g[data-group="優惠券"] .shop-amt').count() == 0,
                     f"{page.locator('.shop-g[data-group=\"優惠券\"] .shop-note').count()} 個備註／"
                     f"{page.locator('.shop-g[data-group=\"優惠券\"] .shop-amt').count()} 個金額")
-            r.check("購物：商品的群組有數量與金額欄位",
-                    page.locator('.shop-g[data-group="藥妝店"] .shop-note').count() == 1
-                    and page.locator('.shop-g[data-group="藥妝店"] .shop-amt').count() == 1)
+            r.check("購物：商品的群組有實付金額與價格標籤",
+                    page.locator('.shop-g[data-group="藥妝店"] .shop-amt').count() == 1
+                    and page.locator('.shop-g[data-group="藥妝店"] .sr-tag').count() == 1)
             # 券不是待辦事項，是拿出來給店員看的東西，所以也不給勾選框
             r.check("購物：券沒有勾選框",
                     page.locator('.shop-g[data-group="優惠券"] input[type=checkbox]').count() == 0,
@@ -1446,12 +1514,22 @@ def run(trip: str) -> bool:
             page.wait_for_timeout(400)
             r.check("購物：還原後項目回來了", page.locator(".shop-i").count() == 3)
 
-            # 新增項目與群組
-            page.locator('.shop-add[data-addto="藥妝店"] [name="n"]').fill("自己加的東西")
-            page.locator('.shop-add[data-addto="藥妝店"] button[type="submit"]').click()
-            page.wait_for_timeout(400)
+            # 新增群組（自己的分類）
             page.locator('.shop-addg [name="g"]').fill("超市")
             page.locator('.shop-addg button[type="submit"]').click()
+            page.wait_for_timeout(400)
+
+            # 新增項目：最上面只有一個新增欄位（使用者要「一直新增、不用自己找分類」）
+            form = page.locator("#shop-new")
+            r.check("購物：新增欄位在最上面（第一個群組之前）",
+                    page.evaluate("""() => { const f = document.getElementById('shop-new'),
+                                       g = document.querySelector('#main .shop-g');
+                                     return !!f && !!g && !!(f.compareDocumentPosition(g) & Node.DOCUMENT_POSITION_FOLLOWING); }"""))
+            r.check("購物：群組底下不再各有一個新增欄位", page.locator(".shop-add").count() == 0)
+            form.locator("#sn-n").fill("自己加的東西")
+            form.locator("#sn-g").select_option("藥妝店")
+            form.locator('[name="w"]').fill("同事")
+            form.locator('button[type="submit"]').click()
             page.wait_for_timeout(400)
             page.reload(wait_until="domcontentloaded")
             page.wait_for_timeout(1200)
@@ -1464,17 +1542,20 @@ def run(trip: str) -> bool:
                     page.locator('.shop-g[data-group="超市"]').count() == 1)
 
             # 新增時附圖片與連結：圖存在 IndexedDB（不進 localStorage，免得塞爆連記帳都存不了），
-            # 連結只收 http／https
+            # 連結只收 http／https。這兩個收在「附圖片或連結」裡
             PNG = base64.b64decode("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==")
-            idb_count = lambda: page.evaluate("""() => new Promise(ok => {
+            idb_keys = lambda: page.evaluate("""() => new Promise(ok => {
                 const r = indexedDB.open('trip:swaptest-2027:img');
                 r.onsuccess = () => { const db = r.result;
-                  if (!db.objectStoreNames.contains('img')){ db.close(); return ok(0); }
-                  const c = db.transaction('img').objectStore('img').count();
+                  if (!db.objectStoreNames.contains('img')){ db.close(); return ok([]); }
+                  const c = db.transaction('img').objectStore('img').getAllKeys();
                   c.onsuccess = () => { ok(c.result); db.close(); }; };
-                r.onerror = () => ok(-1); })""")
-            form = page.locator('.shop-add[data-addto="藥妝店"]')
-            form.locator('[name="n"]').fill("附圖的東西")
+                r.onerror = () => ok(null); })""")
+            idb_count = lambda: len(idb_keys() or [])
+            form = page.locator("#shop-new")
+            form.locator("#sn-n").fill("附圖的東西")
+            form.locator("#sn-g").select_option("藥妝店")
+            form.locator(".sn-more summary").click()
             form.locator('[name="u"]').fill("www.example.com/coupon")
             form.locator('[name="f"]').set_input_files({"name": "c.png", "mimeType": "image/png", "buffer": PNG})
             r.check("附圖片：選了圖，按鈕變成「已選圖片」", "已選圖片" in form.locator(".shop-file").inner_text())
@@ -1482,8 +1563,6 @@ def run(trip: str) -> bool:
             page.wait_for_timeout(800)
             mine = page.locator('.shop-g[data-group="藥妝店"] .shop-i', has_text="附圖的東西")
             src = lambda: mine.locator("img.shop-img").get_attribute("src") or ""
-            try: mine.locator("img.shop-img[src^='blob:']").wait_for(timeout=5000)
-            except Exception: pass
             # 圖是非同步從 IndexedDB 讀出來的，等它補上網址再檢查
             blob_ready = """() => [...document.querySelectorAll('img[data-uimg]')].some(i => i.src.startsWith('blob:'))"""
             try: page.wait_for_function(blob_ready, timeout=5000)
@@ -1506,24 +1585,26 @@ def run(trip: str) -> bool:
             try: page.wait_for_function(blob_ready, timeout=5000)
             except Exception: pass
             r.check("附圖片：重新整理後圖還在", src().startswith("blob:"), src()[:30])
-            # 不合格的連結擋下來：javascript: 點了會在網站裡執行程式
-            # 錯誤改成寫在畫面上的提示（原本是 alert）；同時確認沒有任何對話框跳出來——
-            # 這裡填的就是 javascript:alert(1)，有對話框就代表網址被執行了
+            # 不合格的連結擋下來：javascript: 點了會在網站裡執行程式。錯誤寫在欄位底下；
+            # 同時確認沒有任何對話框跳出來——這裡填的就是 javascript:alert(1)，有對話框就代表網址被執行了
             dialogs = []
             page.on("dialog", lambda d: (dialogs.append(d.message), d.dismiss()))
-            form.locator('[name="n"]').fill("壞連結")
+            form.locator("#sn-n").fill("壞連結")
+            form.locator(".sn-more summary").click()
             form.locator('[name="u"]').fill("javascript:alert(1)")
             form.locator('button[type="submit"]').click()
             page.wait_for_timeout(500)
-            said = page.locator("#toast").inner_text()
-            r.check("附連結：javascript: 這種網址擋下來、不新增、提示寫在畫面上",
-                    page.locator(".shop-i", has_text="壞連結").count() == 0 and "網址" in said and not dialogs,
+            said = page.locator("#sn-u-err").inner_text() if page.locator("#sn-u-err").is_visible() else ""
+            r.check("附連結：javascript: 這種網址擋下來、不新增、錯誤寫在欄位底下",
+                    page.locator(".shop-i", has_text="壞連結").count() == 0 and "網址" in said and not dialogs
+                    and page.locator("#sn-u").get_attribute("aria-invalid") == "true",
                     said + ("／對話框：" + "、".join(dialogs) if dialogs else ""))
-            # 券的群組加的連結，按鈕寫「開啟優惠券」
-            cform = page.locator('.shop-add[data-addto="優惠券"]')
-            cform.locator('[name="n"]').fill("自己加的券")
-            cform.locator('[name="u"]').fill("https://example.com/my-coupon")
-            cform.locator('button[type="submit"]').click()
+            # 優惠券也從同一個欄位加：分類選「優惠券」，內容／數量／幫誰買用不到，先收起來
+            form.locator("#sn-n").fill("自己加的券")
+            form.locator("#sn-g").select_option("優惠券")
+            r.check("優惠券：選了優惠券，內容／數量／幫誰買收起來", form.locator(".sn-goods").is_hidden())
+            form.locator('[name="u"]').fill("https://example.com/my-coupon")
+            form.locator('button[type="submit"]').click()
             page.wait_for_timeout(500)
             r.check("附連結：優惠券那組的按鈕寫「開啟優惠券」",
                     page.locator(".shop-i", has_text="自己加的券").locator(".shop-link").inner_text() == "開啟優惠券")
@@ -1537,14 +1618,16 @@ def run(trip: str) -> bool:
             r.check("附圖片：復原時限過了，IndexedDB 裡的圖也一起刪", mine.count() == 0 and idb_count() == 0,
                     f"還剩 {idb_count()} 張")
 
-            # 已經在清單裡的項目（這裡用 Excel 給的那一項）之後再補圖、換圖、移除圖
+            # 已經在清單裡的項目（這裡用 Excel 給的那一項）之後再補圖、換圖、移除圖。
+            # 「加商品圖片」收在鉛筆打開的編輯欄裡
             seed = page.locator('.shop-i[data-id="藥妝店:托買的東西"]')
-            r.check("補圖：沒有圖的項目有「加圖片」", seed.locator(".shop-addimg").count() == 1)
+            seed.locator("[data-sedit]").click()
+            r.check("補圖：沒有圖的項目，編輯欄裡有「加商品圖片」", seed.locator(".shop-addimg").count() == 1)
             seed.locator("[data-simg]").set_input_files({"name": "c.png", "mimeType": "image/png", "buffer": PNG})
             try: page.wait_for_function(blob_ready, timeout=5000)
             except Exception: pass
             seed_src = lambda: seed.locator("img.shop-img").get_attribute("src") or "" if seed.locator("img.shop-img").count() else ""
-            r.check("補圖：選了圖就出現在卡片上、「加圖片」收起來",
+            r.check("補圖：選了圖就出現在列上、「加商品圖片」收起來",
                     seed_src().startswith("blob:") and seed.locator(".shop-addimg").count() == 0 and idb_count() == 1,
                     seed_src()[:30])
             r.check("補圖：勾選和金額沒有被洗掉",
@@ -1561,25 +1644,194 @@ def run(trip: str) -> bool:
             r.check("補圖：放大後可以換一張或移除", acts.locator("[data-zimg]").count() == 1 and acts.locator("[data-zdel]").count() == 1)
             before = seed_src()
             acts.locator("[data-zimg]").set_input_files({"name": "d.png", "mimeType": "image/png", "buffer": PNG})
-            # 換圖是非同步的：等卡片上出現「新的」圖片網址
+            # 換圖是非同步的：等列上出現「新的」圖片網址
             try: page.wait_for_function("""o => { const i = document.querySelector('.shop-i[data-id="藥妝店:托買的東西"] img.shop-img');
                                                   return !!i && i.src.startsWith('blob:') && i.src !== o; }""", arg=before, timeout=5000)
             except Exception: pass
-            r.check("補圖：換一張後放大視窗關掉、卡片上還是有圖",
+            r.check("補圖：換一張後放大視窗關掉、列上還是有圖",
                     page.locator("#zoom[open]").count() == 0 and seed_src().startswith("blob:") and idb_count() == 1)
             seed.locator("img.shop-img").click()
             page.wait_for_timeout(300)
             acts.locator("[data-zdel]").click()
             page.wait_for_timeout(500)
-            r.check("補圖：移除圖片後回到「加圖片」、IndexedDB 也清掉",
+            seed.locator("[data-sedit]").click()
+            r.check("補圖：移除圖片後回到「加商品圖片」、IndexedDB 也清掉",
                     seed.locator("img.shop-img").count() == 0 and seed.locator(".shop-addimg").count() == 1 and idb_count() == 0,
                     f"還剩 {idb_count()} 張")
+            seed.locator("[data-scancel]").click()
+            r.check("編輯：取消會關掉編輯欄、焦點回到鉛筆",
+                    seed.locator(".sr-editbox").count() == 0
+                    and page.evaluate("document.activeElement.dataset.sedit || ''") == "藥妝店:托買的東西")
             page.locator('.shop-img[src*="img/"]').first.click()
             page.wait_for_timeout(300)
             r.check("補圖：Excel 給的圖放大後不能換、不能移除",
                     page.locator("#zoom .zoom-acts").inner_html().strip() == "")
             page.keyboard.press("Escape")
             page.wait_for_timeout(300)
+
+            # 自動分類：打名稱就先選好。比到最長的關鍵字（「杯麵」不是杯子、「衣架」不是衣服），
+            # 清單裡已經有同名的就跟著它現在的分類
+            wrong = {}
+            for word, want in [("面膜", "藥妝店"), ("吹風機", "電器 3C"), ("博多通りもん", "伴手禮"),
+                               ("UNIQLO 發熱衣", "衣服鞋包"), ("杯麵", "零食食品"), ("衣架", "生活用品"),
+                               ("電動牙刷", "電器 3C"), ("Donki 優惠券", "優惠券"), ("托買的東西", "藥妝店"),
+                               ("完全猜不到的東西", "其他")]:
+                form.locator("#sn-n").fill(word)
+                g = form.locator("#sn-g").input_value()
+                if g != want:
+                    wrong[word] = g
+            r.check("自動分類：打名稱就選好分類", not wrong, str(wrong))
+            form.locator("#sn-n").fill("面")
+            form.locator("#sn-g").select_option("伴手禮")
+            form.locator("#sn-n").fill("面膜")
+            r.check("自動分類：自己改過分類，再打字不會被蓋掉", form.locator("#sn-g").input_value() == "伴手禮",
+                    form.locator("#sn-g").input_value())
+
+            # 內容、數量、幫誰買一次填好；新增後停在原地（原本每加一項就被拉回最上面）
+            form.locator("#sn-g").select_option("藥妝店")
+            form.locator('[name="d"]').fill("肌研 50ml")
+            form.locator('[name="q"]').fill("2")
+            form.locator('[name="w"]').fill("媽媽")
+            add_btn = form.locator('button[type="submit"]')
+            add_btn.scroll_into_view_if_needed()
+            y0 = page.evaluate("scrollY")
+            add_btn.click()
+            page.wait_for_timeout(600)
+            y1 = page.evaluate("scrollY")
+            row = page.locator('.shop-g[data-group="藥妝店"] .shop-row', has_text="面膜")
+            r.check("購物：新增後項目出現在選好的分類", row.count() == 1)
+            r.check("購物：內容、數量、幫誰買都顯示在項目上",
+                    row.count() == 1 and all(x in row.inner_text() for x in ("肌研 50ml", "數量 2", "幫媽媽買")),
+                    row.inner_text() if row.count() else "")
+            r.check("購物：新增後停在原地、不跳回最上面", y0 > 200 and abs(y1 - y0) < 5, f"{y0} → {y1}")
+            r.check("購物：新增後欄位清空、游標回到名稱，可以接著打下一個",
+                    form.locator("#sn-n").input_value() == "" and form.locator('[name="w"]').input_value() == ""
+                    and page.evaluate("document.activeElement.id") == "sn-n")
+            r.check("購物：新增後提示加到哪一類", "藥妝店" in page.locator("#toast").inner_text(),
+                    page.locator("#toast").inner_text())
+            add_btn.click()
+            page.wait_for_timeout(200)
+            r.check("購物：新增欄位沒填名稱，錯誤寫在欄位底下",
+                    page.locator("#sn-n-err").is_visible() and page.locator("#sn-n").get_attribute("aria-invalid") == "true")
+
+            # 代購結算：「幫誰買」有填的，照人加總實付金額，打金額的時候就地更新
+            row.locator(".shop-amt").fill("2560")
+            page.wait_for_timeout(200)
+            settle = page.locator("#shop-settle").inner_text()
+            r.check("代購結算：照人加總實付金額（托買的東西 1,600＋面膜 2,560）",
+                    "媽媽" in settle and "AUD 4,160" in settle and "約 TWD 89,440" in settle, settle.replace("\n", " ")[:120])
+            r.check("代購結算：還沒填金額的列出來", "同事" in settle and "還沒填實付金額：自己加的東西" in settle,
+                    settle.replace("\n", " ")[:160])
+            r.check("代購結算：兩個人以上有總計", "全部代購" in settle)
+            r.check("代購結算：打金額時輸入框不失焦", page.evaluate("document.activeElement.classList.contains('shop-amt')"))
+
+            # 鉛筆：改內容、數量、幫誰買、分類。存了才重畫（分類變了要搬家）
+            row.locator("[data-sedit]").click()
+            box = row.locator(".sr-editbox")
+            r.check("編輯：鉛筆打開編輯欄，帶入目前的值",
+                    box.count() == 1 and box.locator('[name="d"]').input_value() == "肌研 50ml"
+                    and box.locator('[name="q"]').input_value() == "2" and box.locator('[name="w"]').input_value() == "媽媽"
+                    and row.locator("[data-sedit]").get_attribute("aria-expanded") == "true")
+            box.locator('[name="n"]').fill("")
+            box.locator('button[type="submit"]').click()
+            r.check("編輯：名稱清空不能存，錯誤寫在欄位底下",
+                    box.locator(".f-err").is_visible() and box.locator('[name="n"]').get_attribute("aria-invalid") == "true")
+            box.locator('[name="n"]').fill("面膜")
+            box.locator('[name="q"]').fill("3")
+            box.locator('[name="g"]').select_option("伴手禮")
+            box.locator('button[type="submit"]').click()
+            page.wait_for_timeout(400)
+            moved = page.locator('.shop-g[data-group="伴手禮"] .shop-row', has_text="面膜")
+            r.check("編輯：改分類後搬到新的群組，實付金額跟著走",
+                    moved.count() == 1 and page.locator('.shop-g[data-group="藥妝店"] .shop-row', has_text="面膜").count() == 0
+                    and moved.locator(".shop-amt").input_value() == "2560" and "數量 3" in moved.inner_text())
+            r.check("編輯：存完焦點回到那一項的鉛筆",
+                    page.evaluate("!!document.activeElement.closest('.shop-row')?.innerText.includes('面膜') && document.activeElement.matches('[data-sedit]')"))
+
+            # 價格標籤：拍一張，縮成 44px 的縮圖，點了放大。照片存 IndexedDB，key 是「id#tag」
+            moved.locator("[data-stag]").set_input_files({"name": "tag.png", "mimeType": "image/png", "buffer": PNG})
+            try: page.wait_for_function("""() => [...document.querySelectorAll('.sr-tag.has img')].some(i => i.src.startsWith('blob:'))""", timeout=5000)
+            except Exception: pass
+            tag_img = moved.locator(".sr-tag.has img")
+            r.check("價格標籤：拍了之後變成縮圖、有替代文字",
+                    tag_img.count() == 1 and (tag_img.get_attribute("src") or "").startswith("blob:")
+                    and "價格標籤" in (tag_img.get_attribute("alt") or ""))
+            r.check("價格標籤：照片存在 IndexedDB、key 是「項目 id#tag」",
+                    any(str(k).endswith("#tag") for k in (idb_keys() or [])), str(idb_keys()))
+            r.check("價格標籤：實付金額沒有被洗掉", moved.locator(".shop-amt").input_value() == "2560")
+            tag_img.click()
+            page.wait_for_timeout(300)
+            r.check("價格標籤：點了放大，可以換一張或移除",
+                    page.locator("#zoom[open]").count() == 1 and acts.locator("[data-zdel]").count() == 1)
+            page.keyboard.press("Escape")
+            page.wait_for_timeout(300)
+            page.reload(wait_until="domcontentloaded")
+            page.wait_for_timeout(1200)
+            page.locator(".nav-item").nth(1).click()
+            page.wait_for_timeout(600)
+            r.check("價格標籤：重新整理後還在", moved.locator(".sr-tag.has img").count() == 1)
+            # 刪掉這一項：價格標籤的照片也要等復原時限過了一起刪
+            moved.locator(".shop-x").click()
+            page.wait_for_function("!document.querySelector('#toast')?.classList.contains('show')", timeout=9000)
+            page.wait_for_timeout(500)
+            r.check("價格標籤：刪掉項目，復原時限過了照片也一起刪",
+                    not any(str(k).endswith("#tag") for k in (idb_keys() or [])), str(idb_keys()))
+
+            # 刪除也停在原地
+            page.locator(".shop-row").last.scroll_into_view_if_needed()
+            y0 = page.evaluate("scrollY")
+            page.locator(".shop-row").last.locator(".shop-x").click()
+            page.wait_for_timeout(500)
+            y1 = page.evaluate("scrollY")
+            r.check("購物：刪除後停在原地、不跳回最上面", y0 > 200 and abs(y1 - y0) < 60, f"{y0} → {y1}")
+            page.locator("#toast .toast-act").click()
+            page.wait_for_timeout(400)
+
+            # 收起來的群組（十幾張的優惠券）重畫、重新整理後維持收起來
+            page.locator('.shop-g[data-group="優惠券"] .shop-gn').click()
+            page.wait_for_timeout(200)
+            page.reload(wait_until="domcontentloaded")
+            page.wait_for_timeout(1200)
+            page.locator(".nav-item").nth(1).click()
+            page.wait_for_timeout(400)
+            closed = page.evaluate("""() => !document.querySelector('.shop-g[data-group="優惠券"]').open""")
+            page.locator('.shop-g[data-group="優惠券"] .shop-gn').click()
+            page.wait_for_timeout(200)
+            r.check("購物：收起來的群組重新整理後維持收起來", closed)
+
+            # 改版前的資料（大家手機上已經加的東西）：「數量／備註」在 edits.note、金額在 edits.amount。
+            # 要照樣畫得出來，打開編輯欄時「內容」帶入原本的備註，存了之後字不會不見
+            octx = browser.new_context()
+            op = octx.new_page()
+            op.goto(swap)
+            op.wait_for_load_state("networkidle")
+            op.evaluate("""() => localStorage.setItem('trip:swaptest-2027', JSON.stringify({ shopping: {
+                added: [ { id: '+old1', group: '藥妝店', name: '舊的面膜' },
+                         { id: '+old2', group: '超市', name: '舊的明太子', url: 'https://example.com/x' } ],
+                edits: { '+old1': { done: true, note: '2 盒 幫媽媽', amount: 1280 }, '藥妝店:托買的東西': { note: '舊備註' } },
+                removed: [], groups: ['超市'] } }))""")
+            op.reload(wait_until="domcontentloaded")
+            op.wait_for_timeout(1200)
+            op.locator(".nav-item").nth(1).click()
+            op.wait_for_timeout(400)
+            old = op.locator('.shop-g[data-group="藥妝店"] .shop-row', has_text="舊的面膜")
+            r.check("舊資料：改版前加的東西都在、在原本的群組",
+                    old.count() == 1 and op.locator('.shop-g[data-group="超市"] .shop-row', has_text="舊的明太子").count() == 1)
+            r.check("舊資料：勾選、金額、「數量／備註」都還在",
+                    old.locator("input[type=checkbox]").is_checked() and old.locator(".shop-amt").input_value() == "1280"
+                    and "2 盒 幫媽媽" in old.inner_text() and "舊備註" in op.locator('.shop-i[data-id="藥妝店:托買的東西"]').inner_text(),
+                    old.inner_text() if old.count() else "")
+            old.locator("[data-sedit]").click()
+            r.check("舊資料：編輯時「內容」帶入原本的備註",
+                    old.locator('.sr-editbox [name="d"]').input_value() == "2 盒 幫媽媽")
+            old.locator('.sr-editbox button[type="submit"]').click()
+            op.wait_for_timeout(300)
+            ed = op.evaluate("JSON.parse(localStorage.getItem('trip:swaptest-2027')).shopping")
+            a1 = next(a for a in ed["added"] if a["id"] == "+old1")
+            r.check("舊資料：存了之後備註搬進「內容」，勾選與金額不動",
+                    a1.get("desc") == "2 盒 幫媽媽" and "note" not in ed["edits"]["+old1"]
+                    and ed["edits"]["+old1"].get("done") is True and ed["edits"]["+old1"].get("amount") == 1280, str(ed["edits"]["+old1"]))
+            octx.close()
 
             # 點圖放大給店員看
             page.locator(".shop-img").first.click()
@@ -2438,7 +2690,14 @@ def run(trip: str) -> bool:
             page.goto(base)
             page.wait_for_load_state("networkidle")
             page.wait_for_timeout(800)
+            # 配色切換鍵：手機上要跟分頁同一列，不能自己佔一列（旅途工具變成四顆之後，
+            # 留在工具後面的話會被擠到下一列，所以搬到「資訊」右邊——使用者選的）
+            alone = page.evaluate("""() => { const s = document.getElementById('scheme').getBoundingClientRect();
+                return ![...document.querySelectorAll('.nav-aux .nav-item')].some(t => {
+                  const r = t.getBoundingClientRect(); return r.top < s.bottom && s.top < r.bottom; }); }""")
+            r.check("導覽：手機上配色切換鍵跟分頁在同一列（不會自己佔一列）", not alone)
             seed_board(page)   # 留言板空的話，下面的探針量不到留言列與 ✕
+            seed_shop(page)    # 購物清單空的話，量不到一項一列、編輯欄、代購結算
             page.get_by_role("tab", name=re.compile("留言板")).click()
             page.wait_for_timeout(300)
             r.check("留言板：UI 規則量到的是有留言的清單（不是空的）",
@@ -2519,6 +2778,10 @@ def run(trip: str) -> bool:
 
             def ux_pass(tab):
                 page.evaluate("document.querySelectorAll('#main details').forEach(d => d.open = true)")
+                if page.locator("#main [data-sedit]").count():   # 購物：鉛筆打開的編輯欄也要量
+                    page.locator("#main [data-sedit]").first.click()
+                    page.wait_for_timeout(100)
+                    page.evaluate("window.scrollTo(0, 0)")
                 if page.locator("#main .secret-ask").count():   # 私人資料的密語框按了才出現
                     page.locator("#main .secret-ask").first.click()
                     page.wait_for_timeout(100)
@@ -2619,6 +2882,7 @@ def run(trip: str) -> bool:
             page.wait_for_load_state("networkidle")
             page.wait_for_timeout(500)
             seed_board(page)
+            seed_shop(page)
             # 深色模式特有的第二條：面跟面要分得開。上面那支探針只量文字，量不到
             # 「說明框的底色跟卡片底色幾乎一樣」——使用者是看畫面才發現的，當時
             # 區別度只有 1.02（1.00 ＝ 完全同色）。
@@ -2650,6 +2914,9 @@ def run(trip: str) -> bool:
                     page.locator("#main .secret-ask").first.click()
                     page.wait_for_timeout(100)
                     page.evaluate("window.scrollTo(0, 0)")
+                if page.locator("#main [data-sedit]").count():
+                    page.locator("#main [data-sedit]").first.click()
+                    page.wait_for_timeout(100)
                 if page.locator("#w-pass").count():   # 記帳：鎖著與解開後都量
                     dark_fail += [f"{tab}（密碼鎖）：{x}" for x in page.evaluate(UX_PROBE)["contrast"]]
                     dark_flat += [f"{tab}（密碼鎖）：{x}" for x in page.evaluate(FLAT_PROBE)]
@@ -3044,6 +3311,215 @@ def run(trip: str) -> bool:
                     page.evaluate("!!document.getElementById('i-x') && document.body.firstElementChild.tagName === 'svg'"))
             r.check("共用程式：整段沒有 JS 例外", not app_err, "; ".join(app_err[:2]))
             ctx.close()
+
+            # 16 ── 公積金 ─────────────────────────────────
+            # 大家先各拿一筆錢放在一起，共同的花費從這裡付。使用者要的：記每個人給多少、錢花在哪。
+            # 都用日圓（當地貨幣，旁邊附約多少台幣）、大家同步（進同步佇列）、跟記帳共用 0000 那道鎖
+            fund_url = f"http://127.0.0.1:{port}/fund/"
+            ctx = browser.new_context(viewport={"width": 375, "height": 812})
+            page = ctx.new_page()
+            said, fund_err = [], []
+            page.on("dialog", lambda d: (said.append(d.message), d.dismiss()))
+            page.on("pageerror", lambda e: fund_err.append(str(e)))
+            page.goto(fund_url)
+            page.wait_for_load_state("networkidle")
+            page.wait_for_timeout(400)
+            r.check("公積金：分頁在「旅途工具」那一組",
+                    page.locator("#nav-tools #tab-fund").count() == 1 and page.locator("#nav-prep #tab-fund").count() == 0)
+            r.check("公積金：沒解鎖前只有密碼欄，標題寫公積金",
+                    page.locator("#w-pass").count() == 1 and page.locator("#f-add-in").count() == 0
+                    and "公積金" in page.locator("#main .subject").first.inner_text())
+            unlock_wallet(page)
+            r.check("公積金：輸入 0000 解開", page.locator("#f-add-in").count() == 1)
+            page.locator("#tab-wallet").click()
+            page.wait_for_timeout(300)
+            r.check("公積金：跟記帳共用同一道鎖（解開公積金，記帳也開了）",
+                    page.locator("#w-pass").count() == 0 and page.locator("#e-add").count() == 1)
+            page.locator("#tab-fund").click()
+            page.wait_for_timeout(300)
+
+            page.locator("#f-add-in").click()
+            page.wait_for_timeout(200)
+            r.check("公積金：沒選人、沒填金額，錯誤寫在欄位底下、焦點到第一個",
+                    page.locator("#f-who-err").is_visible() and page.locator("#f-give-err").is_visible()
+                    and page.locator("#f-give").get_attribute("aria-invalid") == "true"
+                    and page.evaluate("document.activeElement.name") == "fwho")
+            page.locator("#f-add-out").click()
+            page.wait_for_timeout(200)
+            r.check("公積金：花費沒填項目、金額，錯誤也寫在欄位底下",
+                    page.locator("#f-item-err").is_visible() and page.locator("#f-spend-err").is_visible()
+                    and page.locator("#f-item").get_attribute("aria-invalid") == "true")
+
+            for who, amt in [("A", "10000"), ("B", "10000")]:
+                page.locator("#f-who label.chip", has_text=who).click()
+                page.locator("#f-give").fill(amt)
+                page.locator("#f-add-in").click()
+                page.wait_for_timeout(300)
+            r.check("公積金：記下來有提示", "B 給了" in page.locator("#toast").inner_text(), page.locator("#toast").inner_text())
+            page.locator("#f-item").fill("加油")
+            page.locator("#f-spend").fill("3200")
+            page.locator("#f-add-out").click()
+            page.wait_for_timeout(300)
+            left = page.locator(".fund-left").inner_text()
+            r.check("公積金：還剩＝收到－花掉，附約多少台幣",
+                    "JPY 16,800" in left and "約 TWD 3,696" in left, left.replace("\n", " "))
+            sums = page.locator(".fund-sum").inner_text()
+            r.check("公積金：收到與花掉的合計", "JPY 20,000" in sums and "JPY 3,200" in sums, sums.replace("\n", " "))
+            people = {x.split("\n")[0]: x.split("\n")[-1] for x in page.locator(".fund-p").all_inner_texts()}
+            r.check("公積金：每個人給了多少（沒給的是 0）",
+                    people == {"A": "JPY 10,000", "B": "JPY 10,000", "C": "JPY 0", "D": "JPY 0"}, str(people))
+            first = page.locator("#main .exp-item").first.inner_text()
+            r.check("公積金：明細新的在上面，收入／支出寫出來",
+                    "加油" in first and "支出" in first and page.locator("#main .exp-item", has_text="收入").count() == 2, first)
+            r.check("公積金：進同步佇列（type=fund），大家都看得到",
+                    "fund" in page.evaluate("(JSON.parse(localStorage.getItem('trip:fundtest')||'{}').queue||[]).map(q => q.type)"))
+
+            # 另一個表單打到一半的字，重畫之後還在（雲端有更新時也會整頁重畫）
+            page.locator("#f-item").fill("停車費")
+            page.locator("#f-who label.chip", has_text="C").click()
+            page.locator("#f-give").fill("5000")
+            page.locator("#f-add-in").click()
+            page.wait_for_timeout(300)
+            r.check("公積金：另一個表單打到一半的字，重畫後還在", page.locator("#f-item").input_value() == "停車費")
+            page.locator("#f-spend").fill("800")
+            page.locator("#f-add-out").scroll_into_view_if_needed()
+            y0 = page.evaluate("scrollY")
+            page.locator("#f-add-out").click()
+            page.wait_for_timeout(400)
+            y1 = page.evaluate("scrollY")
+            r.check("公積金：新增後停在原地、不跳回最上面", y0 > 200 and abs(y1 - y0) < 5, f"{y0} → {y1}")
+            row = page.locator("#main .exp-item", has_text="停車費")
+            row.locator(".exp-del").click()
+            page.wait_for_timeout(300)
+            gone = page.locator("#main .exp-item", has_text="停車費").count() == 0
+            page.locator("#toast .toast-act").click()
+            page.wait_for_timeout(300)
+            r.check("公積金：刪除後可以按「復原」拿回來",
+                    gone and page.locator("#main .exp-item", has_text="停車費").count() == 1)
+            page.reload()
+            page.wait_for_load_state("networkidle")
+            page.wait_for_timeout(400)
+            r.check("公積金：重新整理後紀錄還在、不會再鎖起來",
+                    page.locator("#w-pass").count() == 0 and page.locator("#main .exp-item").count() == 5)
+            page.locator("#f-item").fill("大餐")
+            page.locator("#f-spend").fill("50000")
+            page.locator("#f-add-out").click()
+            page.wait_for_timeout(300)
+            r.check("公積金：花超過時還剩是負數、標紅", page.locator(".fund-left b.is-neg").count() == 1
+                    and "-" in page.locator(".fund-left b").inner_text(), page.locator(".fund-left b").inner_text())
+
+            # UI 規則：真實行程加了公積金分頁之後第 12 段也會量到，這裡先量測試副本
+            page.evaluate("document.querySelectorAll('#main details').forEach(d => d.open = true)")
+            page.evaluate("window.scrollTo(0, 0)")   # 量的是版面，不是捲到一半疊在置頂日期列底下的樣子
+            got = page.evaluate(UX_PROBE)
+            bad = [f"{k}：{x}" for k in ["contrast", "target", "spacing", "alt", "heading", "emoji", "label"] for x in got[k]]
+            if got["overflow"] > 0: bad.append(f"overflow：{got['overflow']}px")
+            r.check("公積金：UI 規則（對比、觸控、間距、標題、標籤、不橫向捲動）", not bad, "；".join(bad[:4]))
+            page.locator("#f-lock").click()
+            page.wait_for_timeout(300)
+            locked_ux = page.evaluate(UX_PROBE)
+            page.locator("#tab-wallet").click()
+            page.wait_for_timeout(300)
+            r.check("公積金：上鎖之後公積金與記帳一起鎖", page.locator("#w-pass").count() == 1)
+            r.check("公積金：密碼頁也過 UI 規則",
+                    not any(locked_ux[k] for k in ["contrast", "target", "spacing", "label"]), str({k: locked_ux[k] for k in ["contrast", "target", "spacing", "label"]}))
+            r.check("公積金：沒有 alert、沒有 JS 例外", not said and not fund_err, "; ".join((said + fund_err)[:2]))
+            ctx.close()
+
+            ctx = browser.new_context(viewport={"width": 375, "height": 812}, color_scheme="dark")
+            page = ctx.new_page()
+            page.goto(fund_url)
+            page.wait_for_load_state("networkidle")
+            unlock_wallet(page)
+            page.locator("#f-who label.chip", has_text="A").click()
+            page.locator("#f-give").fill("10000")
+            page.locator("#f-add-in").click()
+            page.wait_for_timeout(300)
+            dark = page.evaluate(UX_PROBE)["contrast"] + page.evaluate(FLAT_PROBE)
+            r.check("公積金：深色模式的對比、區塊分得開", not dark, "；".join(dark[:4]))
+            ctx.close()
+
+            # 17 ── 公積金的同步：存在雲端的另一份文件 ─────────────
+            # 用假的 Firebase（FAKE_FB）讓兩支「手機」共用一份雲端，驗三件事：
+            #   一、A 記一筆公積金，B 看得到
+            #   二、還沒更新的舊版程式（不知道有公積金）整份覆寫記帳那份文件，公積金不會被洗掉
+            #   三、只動了公積金的手機，不會拿本機（離線時沒收到別人的帳）的記帳去蓋雲端
+            store, ver = {}, [0]
+
+            def fb_set(path, data):
+                ver[0] += 1
+                store[path] = (ver[0], data)
+
+            def fb_get(path):
+                v = store.get(path)
+                return {"v": v[0], "data": v[1]} if v else None
+
+            def fake_ctx():
+                c = browser.new_context(viewport={"width": 375, "height": 812}, service_workers="block")
+                c.expose_function("__fbSet", fb_set)
+                c.expose_function("__fbGet", fb_get)
+                c.route("https://www.gstatic.com/firebasejs/**", lambda route: route.fulfill(
+                    status=200, body=FAKE_FB[route.request.url.rsplit("/", 1)[1]],
+                    headers={"content-type": "text/javascript", "access-control-allow-origin": "*"}))
+                return c
+
+            sync_url = f"http://127.0.0.1:{port}/sync/"
+            STATE, FUND = "trips/synctest/shared/state", "trips/synctest/shared/fund"
+            fund_items = lambda: json.loads(store[FUND][1])["items"] if FUND in store else []
+            state_exp = lambda: json.loads(store[STATE][1])["expenses"] if STATE in store else []
+            ca, cb = fake_ctx(), fake_ctx()
+            pa, pb = ca.new_page(), cb.new_page()
+            sync_err = []
+            for pg in (pa, pb):
+                pg.on("pageerror", lambda e: sync_err.append(str(e)))
+                pg.goto(sync_url)
+                pg.wait_for_load_state("domcontentloaded")
+                pg.wait_for_timeout(800)
+                unlock_wallet(pg)
+            r.check("同步：假的雲端連上了（顯示已同步）", pa.locator("#sync").inner_text() == "已同步",
+                    pa.locator("#sync").inner_text())
+            pa.locator("#f-who label.chip", has_text="A").click()
+            pa.locator("#f-give").fill("10000")
+            pa.locator("#f-add-in").click()
+            try: pb.wait_for_function("document.querySelector('.fund-left')?.innerText.includes('10,000')", timeout=5000)
+            except Exception: pass
+            r.check("同步：A 記的公積金，B 的畫面也出現", "10,000" in pb.locator(".fund-left").inner_text())
+            r.check("同步：公積金存在另一份文件（shared/fund），記帳那份沒有它",
+                    len(fund_items()) == 1 and "fund" not in json.loads(store.get(STATE, (0, "{}"))[1]))
+            # 二：舊版程式整份覆寫 shared/state（只有記帳、留言、登記）
+            fb_set(STATE, json.dumps({"expenses": [expense("A", 100, ["A", "B"])], "board": [], "owners": {}, "updatedAt": 1}))
+            pb.wait_for_timeout(1000)
+            r.check("同步：舊版程式覆寫記帳那份文件，公積金不受影響",
+                    len(fund_items()) == 1 and "10,000" in pb.locator(".fund-left").inner_text())
+            # 三：A 離線時記一筆公積金；B 這時記了一筆帳。A 上線後只寫公積金那份
+            ca.set_offline(True)
+            pa.locator("#f-item").fill("加油")
+            pa.locator("#f-spend").fill("3000")
+            pa.locator("#f-add-out").click()
+            pa.wait_for_timeout(300)
+            pb.locator("#tab-wallet").click()
+            pb.wait_for_timeout(300)
+            pb.locator("#e-item").fill("B 記的晚餐")
+            pb.locator("#e-local").fill("2000")
+            pb.locator("#e-add").click()
+            pb.wait_for_timeout(600)
+            before = len(state_exp())
+            ca.set_offline(False)
+            try: pa.wait_for_function("document.getElementById('sync').textContent === '已同步'", timeout=5000)
+            except Exception: pass
+            pa.wait_for_timeout(800)
+            r.check("同步：A 上線後只寫公積金那份，B 剛記的帳沒有被蓋掉",
+                    before == 2 and len(state_exp()) == 2 and len(fund_items()) == 2,
+                    f"記帳 {before} → {len(state_exp())} 筆、公積金 {len(fund_items())} 筆")
+            r.check("同步：A 上線後也收到 B 的帳",
+                    len(pa.evaluate("JSON.parse(localStorage.getItem('trip:synctest')).expenses")) == 2)
+            pb.locator("#tab-fund").click()
+            try: pb.wait_for_function("document.querySelector('#main')?.innerText.includes('加油')", timeout=5000)
+            except Exception: pass
+            r.check("同步：B 也看到 A 離線時記的公積金", "加油" in pb.locator("#main").inner_text())
+            r.check("同步：沒有 JS 例外", not sync_err, "; ".join(sync_err[:2]))
+            ca.close()
+            cb.close()
 
             browser.close()
 
