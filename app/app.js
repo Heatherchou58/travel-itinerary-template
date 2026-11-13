@@ -307,12 +307,12 @@ function cleanLink(v){
      三、都沒有 → 「其他」 */
 const SHOP_CATS = ["藥妝店", "零食食品", "伴手禮", "電器 3C", "衣服鞋包", "生活用品", "其他"];
 const SHOP_WORDS = {
-  "藥妝店": "藥妝 藥 面膜 化妝 化妝水 卸妝 洗面 洗顏 乳液 精華 防曬 隔離 粉底 口紅 唇膏 護唇 眼影 眼線 睫毛 腮紅 遮瑕 美妝 保養 乳霜 面霜 護手霜 眼霜 洗髮 潤髮 護髮 髮膜 沐浴 牙膏 漱口 眼藥 眼藥水 貼布 酸痛 痠痛 止痛 胃藥 感冒 頭痛 喉嚨 維他命 維生素 保健 酵素 益生菌 膠原 眼罩 蒸氣眼罩 休足 足貼 痘 隱形眼鏡 DHC 肌研 資生堂 花王 曼秀雷敦 樂敦 Biore 蜜妮 KATE Canmake 安耐曬 雪肌精 SK-II 合利他命 EVE 撒隆巴斯 露露倫 LuLuLun 高絲 Kose",
-  "零食食品": "零食 餅乾 巧克力 糖 糖果 軟糖 喉糖 洋芋片 薯片 泡麵 杯麵 拉麵 烏龍麵 咖哩 調味 調味料 醬 醬油 味噌 茶 茶包 綠茶 抹茶 焙茶 咖啡 果汁 飲料 酒 清酒 啤酒 燒酎 梅酒 威士忌 米 海苔 香鬆 罐頭 布丁 果凍 堅果 仙貝 米果 柿種 麵包 蛋糕 Pocky KitKat Calbee 卡樂比 明治 森永 固力果 Glico 樂天 Lotte",
+  "藥妝店": "藥妝 藥 面膜 化妝 化妝水 卸妝 洗面 洗顏 乳液 精華 防曬 隔離 粉底 口紅 唇膏 護唇 眼影 眼線 睫毛 腮紅 遮瑕 美妝 保養 乳霜 面霜 護手霜 眼霜 洗髮 潤髮 護髮 髮膜 沐浴 牙膏 牙刷 牙線 漱口 眼藥 眼藥水 貼布 酸痛 痠痛 止痛 胃藥 感冒 頭痛 喉嚨 維他命 維生素 保健 酵素 益生菌 膠原 眼罩 蒸氣眼罩 蒸汽眼罩 休足 足貼 痘 隱形眼鏡 面速力達母 小護士 龍角散 太田胃散 命の母 綠油精 萬金油 安美露 退熱 冰涼貼 繃帶 OK繃 口罩 棉花棒 衛生棉 護墊 濕紙巾 防蚊 入浴劑 溫泉粉 泡澡 沐浴鹽 DHC 肌研 資生堂 花王 曼秀雷敦 樂敦 Biore 蜜妮 KATE Canmake 安耐曬 雪肌精 SK-II 合利他命 EVE 撒隆巴斯 露露倫 LuLuLun 高絲 Kose",
+  "零食食品": "零食 餅乾 巧克力 糖 糖果 軟糖 喉糖 洋芋片 薯片 泡麵 杯麵 拉麵 烏龍麵 咖哩 火鍋 調味 調味料 醬 醬油 味噌 味醂 高湯 柚子胡椒 七味粉 山葵 蜂蜜 果醬 茶 茶包 綠茶 抹茶 焙茶 咖啡 咖啡豆 果汁 飲料 酒 清酒 啤酒 燒酎 梅酒 威士忌 米 海苔 香鬆 罐頭 布丁 果凍 堅果 仙貝 米果 柿種 煎餅 麻糬 大福 銅鑼燒 泡芙 冰淇淋 麵包 蛋糕 和三盆 金平糖 Pocky KitKat Calbee 卡樂比 明治 森永 固力果 Glico 樂天 Lotte",
   "伴手禮": "伴手禮 名產 土產 禮盒 送禮 禮物 銘菓 和菓子 菓子 羊羹 通りもん 博多通りもん 小雞蛋糕 ひよ子 明太子 梅枝餅 長崎蛋糕 蜂蜜蛋糕 白色戀人 東京芭娜娜 六花亭 薯條三兄弟 鈴懸",
-  "電器 3C": "電器 3C 相機 鏡頭 拍立得 耳機 喇叭 充電 充電器 行動電源 電池 傳輸線 轉接 轉接頭 USB 記憶卡 SD 吹風機 吹風 捲髮 離子夾 刮鬍刀 電動 電動牙刷 電鍋 電子鍋 熱水壺 美容儀 手機 平板 筆電 電腦 鍵盤 滑鼠 Switch 遊戲 卡帶 Nintendo 任天堂 Sony Panasonic 國際牌 Dyson 象印 虎牌 Apple iPhone iPad",
-  "衣服鞋包": "衣 衣服 外套 大衣 羽絨 發熱衣 Heattech 上衣 T恤 襯衫 毛衣 帽T 褲 褲子 牛仔褲 裙 洋裝 內衣 襪 襪子 鞋 球鞋 靴 拖鞋 帽 帽子 圍巾 手套 包 包包 背包 後背包 錢包 皮夾 托特包 眼鏡 太陽眼鏡 飾品 項鍊 耳環 戒指 手錶 UNIQLO GU 優衣庫",
-  "生活用品": "生活 文具 筆 原子筆 筆記本 便利貼 貼紙 膠帶 毛巾 浴巾 杯 杯子 馬克杯 保溫瓶 水壺 碗 盤 筷 餐具 便當盒 收納 衣架 清潔 洗衣 洗衣精 柔軟精 芳香 擴香 香氛 蠟燭 雨傘 傘 玩具 公仔 扭蛋 模型 樂高 吉伊卡哇 寶可夢 三麗鷗 卡比 無印 大創 Daiso 3COINS 宜得利 Nitori"
+  "電器 3C": "電器 3C 相機 鏡頭 拍立得 耳機 喇叭 音響 充電 充電器 行動電源 電池 傳輸線 轉接 轉接頭 USB 記憶卡 SD 吹風機 吹風 捲髮 離子夾 刮鬍刀 電動 電動牙刷 電鍋 電子鍋 熱水壺 氣炸 烤箱 微波爐 鬆餅機 章魚燒機 果汁機 咖啡機 空氣清淨機 加濕器 除濕機 電扇 吸塵器 掃地機器人 按摩槍 按摩器 體重計 美容儀 手機 平板 筆電 電腦 螢幕 鍵盤 滑鼠 智慧手錶 Switch 遊戲 卡帶 Nintendo 任天堂 Sony Panasonic 國際牌 Dyson 象印 虎牌 Apple iPhone iPad",
+  "衣服鞋包": "衣 衣服 外套 大衣 羽絨 發熱衣 Heattech 上衣 T恤 襯衫 毛衣 帽T 睡衣 褲 褲子 牛仔褲 裙 洋裝 內衣 襪 襪子 鞋 球鞋 靴 拖鞋 帽 帽子 圍巾 手套 皮帶 領帶 包 包包 背包 後背包 錢包 皮夾 托特包 眼鏡 太陽眼鏡 飾品 項鍊 耳環 戒指 手錶 UNIQLO GU 優衣庫",
+  "生活用品": "生活 文具 筆 原子筆 筆記本 便利貼 貼紙 膠帶 明信片 毛巾 浴巾 手帕 杯 杯子 馬克杯 保溫瓶 水壺 碗 盤 筷 餐具 吸管 便當盒 保鮮盒 平底鍋 湯鍋 砧板 菜刀 剪刀 指甲剪 鏡子 梳子 髮夾 髮圈 收納 衣架 環保袋 購物袋 清潔 洗衣 洗衣精 柔軟精 芳香 擴香 香氛 蠟燭 雨傘 傘 玩具 公仔 扭蛋 模型 樂高 吉伊卡哇 寶可夢 三麗鷗 卡比 無印 大創 Daiso 3COINS 宜得利 Nitori"
 };
 /* 先拆好：[關鍵字（小寫）, 分類, 是不是英數]，比對時不用每次重拆 */
 const SHOP_KW = Object.entries(SHOP_WORDS).flatMap(([g, words]) =>
@@ -398,7 +398,7 @@ function shopNewHTML(b, groups, coupon){
   const pick = d.g && opts.includes(d.g) ? d.g : (guessShopGroup(d.n, b) || "其他");
   return `<form class="shop-new" id="shop-new" novalidate>
     <h3 class="sn-h">新增要買的東西</h3>
-    <label class="f-lbl">名稱<input class="input" name="n" id="sn-n" autocomplete="off" value="${esc(d.n || "")}"></label>
+    <label class="f-lbl">名稱<input class="input" name="n" id="sn-n" autocomplete="off" enterkeyhint="done" value="${esc(d.n || "")}"></label>
     <p class="f-err" id="sn-n-err" hidden></p>
     <div class="sn-goods"${coupon.has(pick) ? " hidden" : ""}>
       <label class="f-lbl">內容（選填）<input class="input" name="d" placeholder="例如：50ml、抹茶口味" autocomplete="off" value="${esc(d.d || "")}"></label>
@@ -409,7 +409,7 @@ function shopNewHTML(b, groups, coupon){
     </div>
     <label class="f-lbl">分類<select class="input" name="g" id="sn-g" aria-describedby="sn-hint"${d.g ? ' data-touched="1"' : ""}>
       ${opts.map(o => `<option${o === pick ? " selected" : ""}>${esc(o)}</option>`).join("")}</select></label>
-    <p class="sn-hint" id="sn-hint">打名稱時會自動選好分類，不對可以改</p>
+    <p class="sn-hint" id="sn-hint">打名稱時會自動選好分類，不對可以改；打完按 Enter 就能加</p>
     <details class="sn-more"${d.u ? " open" : ""}><summary>附圖片或連結（選填）</summary>
       <div class="shop-extra">
         <label class="shop-file"><input type="file" name="f" accept="image/*" hidden>${ic("camera")}<span>附圖片</span></label>

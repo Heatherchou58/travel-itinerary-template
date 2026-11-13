@@ -1675,6 +1675,12 @@ def run(trip: str) -> bool:
             for word, want in [("面膜", "藥妝店"), ("吹風機", "電器 3C"), ("博多通りもん", "伴手禮"),
                                ("UNIQLO 發熱衣", "衣服鞋包"), ("杯麵", "零食食品"), ("衣架", "生活用品"),
                                ("電動牙刷", "電器 3C"), ("Donki 優惠券", "優惠券"), ("托買的東西", "藥妝店"),
+                               # 這幾個是上線後在手機上實際打進去才發現會掉到「其他」的
+                               ("面速力達母", "藥妝店"), ("龍角散", "藥妝店"), ("口罩", "藥妝店"),
+                               ("牙刷", "藥妝店"), ("溫泉粉", "藥妝店"), ("空氣清淨機", "電器 3C"),
+                               ("指甲剪", "生活用品"), ("銅鑼燒", "零食食品"),
+                               # 單字詞會帶錯組，所以關鍵字表裡刻意不放「鍋」「書」
+                               ("火鍋料", "零食食品"), ("電鍋", "電器 3C"),
                                ("完全猜不到的東西", "其他")]:
                 form.locator("#sn-n").fill(word)
                 g = form.locator("#sn-g").input_value()
@@ -1686,8 +1692,19 @@ def run(trip: str) -> bool:
             form.locator("#sn-n").fill("面膜")
             r.check("自動分類：自己改過分類，再打字不會被蓋掉", form.locator("#sn-g").input_value() == "伴手禮",
                     form.locator("#sn-g").input_value())
+            # 連續新增最快的路：打名稱直接按 Enter（手機鍵盤上那顆要是「完成」不是換行）
+            form.locator("#sn-g").select_option("藥妝店")
+            form.locator("#sn-n").fill("按 Enter 加的")
+            form.locator("#sn-n").press("Enter")
+            page.wait_for_timeout(500)
+            r.check("購物：名稱欄按 Enter 就新增，游標留在名稱",
+                    page.locator(".shop-row", has_text="按 Enter 加的").count() == 1
+                    and page.evaluate("document.activeElement.id") == "sn-n"
+                    and form.locator("#sn-n").get_attribute("enterkeyhint") == "done")
 
             # 內容、數量、幫誰買一次填好；新增後停在原地（原本每加一項就被拉回最上面）
+            # 名稱剛才被 Enter 送出清掉了，重新打一次
+            form.locator("#sn-n").fill("面膜")
             form.locator("#sn-g").select_option("藥妝店")
             form.locator('[name="d"]').fill("肌研 50ml")
             form.locator('[name="q"]').fill("2")
