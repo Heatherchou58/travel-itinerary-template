@@ -48,9 +48,9 @@
   <div class="sidenav">
     <div class="nav-aux">
       <div class="nav-group" id="nav-prep" role="tablist" aria-label="準備資訊"></div>
-      <div class="nav-group" id="nav-tools" role="tablist" aria-label="旅途工具"></div>
-      <!-- 配色切換不是分頁，放在 tablist 外面 -->
+      <!-- 配色切換不是分頁，放在 tablist 外面。在「資訊」右邊：工具有四顆，手機上那一列塞滿了 -->
       <button class="scheme" id="scheme" type="button"></button>
+      <div class="nav-group" id="nav-tools" role="tablist" aria-label="旅途工具"></div>
     </div>
     <nav class="nav-bar" id="nav" role="tablist" aria-label="每日行程"></nav>
   </div>
@@ -463,6 +463,15 @@ const TRIP_DATA = {
       "blocks": [
         {
           "type": "expenses"
+        }
+      ]
+    },
+    {
+      "id": "fund",
+      "nav": "🐷 公積金",
+      "blocks": [
+        {
+          "type": "fund"
         }
       ]
     },
